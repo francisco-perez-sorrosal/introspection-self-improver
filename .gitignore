@@ -1,0 +1,30 @@
+# Generated Pi runtime state
+.pi/bin/
+.pi/mcp-session.json
+.pi/mcporter.json
+
+# Local capability bindings — endpoints and credentials never belong in the repo
+.pi/mcp.local.json
+
+# τ²-bench checkout. Pinned by benchmark/benchmark_lock.yaml and reproduced by
+# `make bootstrap`. Deliberately untracked: the evaluator is not ours to modify,
+# and keeping it out of our history makes that structural rather than procedural.
+benchmark/vendor/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Local Claude Code settings
+.claude/settings.local.json
+.claude/praxion-rules.yaml.example

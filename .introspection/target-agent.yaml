@@ -1,0 +1,5 @@
+name: target-agent
+path: target-agent
+description: Banking support agent evaluated by tau2-bench; the harness under improvement.
+runtime:
+  llm_mode: managed

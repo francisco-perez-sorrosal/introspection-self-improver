@@ -1,0 +1,9 @@
+# Generated Pi runtime state
+.pi/bin/
+.pi/mcp-session.json
+.pi/mcporter.json
+
+# Concrete binding for the tau tool bridge. Derived from mcp.local.example.json by
+# `make bootstrap`; both values are supplied per episode as TAU_MCP_URL / TAU_MCP_TOKEN.
+# Recipe validation rejects committing this file.
+.pi/mcp.local.json

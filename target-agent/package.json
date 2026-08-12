@@ -1,0 +1,38 @@
+{
+  "name": "target-agent",
+  "version": "0.1.0",
+  "description": "Banking support agent evaluated by tau2-bench; the harness under improvement.",
+  "keywords": [
+    "pi-package",
+    "managed-agent",
+    "recipe"
+  ],
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "pi": {
+    "agents": [
+      "./agents/*.yaml"
+    ],
+    "skills": [],
+    "mcp": {
+      "servers": [
+        {
+          "id": "tau",
+          "required": true,
+          "tools": {
+            "include": [
+              "*"
+            ],
+            "exclude": []
+          }
+        }
+      ]
+    }
+  }
+}

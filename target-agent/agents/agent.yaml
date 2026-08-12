@@ -1,0 +1,36 @@
+name: agent
+description: Banking support agent evaluated by tau2-bench; the harness under improvement.
+
+# FROZEN. `model.name` and `model.thinking_level` are comparison variables, not harness
+# surface — a generation that raised either would "improve" by being given a better model
+# rather than a better harness. Their locked values live in benchmark/benchmark_lock.yaml
+# and the runner refuses to start when the two disagree.
+#
+# The `model:` block is the legacy spelling of `ai.model`. It is used deliberately: the
+# vendored checker behind `introspection check` does not yet accept `ai:`, and a recipe that
+# fails validation fails the pre-commit hook and CI. Revisit when the checker catches up.
+model:
+  name: anthropic/claude-sonnet-4-6
+  thinking_level: low
+
+# Empty on purpose, and load-bearing twice over. The baseline gets only the tools tau hands
+# it (§13), and withholding `read`/`bash` denies a locally-hosted agent any path to the task
+# definitions and gold state sitting in benchmark/vendor/ (§22.1).
+tools: []
+
+skills: []
+subagents: []
+
+# The tau environment arrives as MCP tools. `include: ["*"]` takes whatever the bridge
+# advertises; the bridge is what pins that set, by asserting its catalog against
+# benchmark_lock.yaml before the first episode runs.
+#
+# Pi may issue several tool calls in one assistant turn. The bridge serializes them so each
+# becomes exactly one tau turn — done there rather than with a recipe `session` setting,
+# which the vendored checker also rejects.
+mcp:
+  mode: tools
+  servers:
+    tau:
+      include:
+        - "*"
