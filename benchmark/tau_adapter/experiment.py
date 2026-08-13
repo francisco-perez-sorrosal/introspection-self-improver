@@ -146,6 +146,37 @@ def prepare_round_dir(out_dir: Path, overwrite: bool) -> str | None:
     return "resuming interrupted run — τ re-runs only the missing (trial, task, seed) pairs"
 
 
+def pushed_main_sha(repo_root: Path = REPO_ROOT) -> str | None:
+    """What origin/main points at, freshly fetched — best effort, None when unknowable.
+
+    The platform mints immutable runtime versions from pushed main (`recipe_ref: main`), so
+    on the dev lane this is the commit `recipe_git_commit_sha` will name — while the dev
+    overlay serves the work-tree's bytes. A HEAD ahead of origin/main therefore runs the
+    right code but records the wrong arm: the lineage softness v2 §2.5 documents, caught
+    here at pre-flight instead of after the money is spent.
+    """
+    try:
+        subprocess.run(  # noqa: S603, S607 - best effort; a failed fetch just means stale info
+            ["git", "fetch", "--quiet", "origin", "main"],
+            cwd=repo_root,
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+        proc = subprocess.run(  # noqa: S603, S607
+            ["git", "rev-parse", "origin/main"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    sha = proc.stdout.strip()
+    return sha if proc.returncode == 0 and sha else None
+
+
 def generation_of(out_dir: Path) -> str | None:
     """The generation directory component of a results path, if any."""
     for part in Path(out_dir).parts:

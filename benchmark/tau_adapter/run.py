@@ -54,6 +54,7 @@ from tau_adapter.experiment import (
     enforce_snapshot,
     generation_of,
     prepare_round_dir,
+    pushed_main_sha,
     repo_arm_state,
 )
 from tau_adapter.pi_agent import PiRecipeAgent
@@ -446,6 +447,20 @@ def main() -> int:
             "commit that is not what runs. Commit them, or pass --allow-dirty for a "
             "debugging run whose rows are marked arm_sha_ok=false:\n  " + "\n  ".join(dirty_paths)
         )
+    if args.transport == TRANSPORT_PLATFORM and locked_mode and not args.allow_dirty:
+        # The platform mints runtime versions from pushed main, and `recipe_git_commit_sha`
+        # names that pin — while `introspection dev` serves the work-tree's bytes. Running
+        # ahead of origin/main therefore runs the right code but records the wrong arm; the
+        # A.0b-era probe hit exactly this (every row arm_sha_ok=false after two local-only
+        # commits). Caught here, before the money is spent.
+        pushed = pushed_main_sha()
+        if pushed and arm_sha and pushed != arm_sha:
+            raise SystemExit(
+                f"HEAD ({arm_sha[:12]}) is ahead of origin/main ({pushed[:12]}), and the "
+                "platform pins lineage to pushed main. Push, let the runtime version build, "
+                "and rerun — or pass --allow-dirty for a debugging run whose rows are "
+                "marked arm_sha_ok=false."
+            )
 
     out_dir = Path(args.out).resolve()
     # Before --overwrite can delete anything: a run aimed at the wrong experiment directory
@@ -829,7 +844,9 @@ def main() -> int:
             + "\n   ".join(sha_mismatches)
             + "\n   The round's artifacts are on disk but must not be cited as this arm's."
         )
-        return 1
+        # --allow-dirty already declared this run's lineage soft; the rows say so
+        # (arm_sha_ok=false), so the run reports rather than fails.
+        return 0 if args.allow_dirty else 1
     return 0
 
 
