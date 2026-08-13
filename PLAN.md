@@ -1,7 +1,14 @@
 # PLAN — Milestones to the Demonstrated Self-Improving Loop
 
-**Status:** living tracker. Check boxes (with dates) as items land; where this file and
-the code disagree, the code wins and this file gets fixed.\
+> **SUPERSEDED (2026-08-13) — do not follow.** The evaluation goal changed: no
+> apples-to-apples comparison with published τ²-bench numbers; the experiment now
+> measures harness improvement across generations against a hidden held-out set,
+> per `self_improving_agent_evaluation_protocol.md`. The forward tracker is
+> `SIA_EVALUATION_PLAN.md`. This file is retained as history of the M1/M2 build-out
+> (whose machinery the new plan adapts); its M3/M4 milestones, pass^k reporting, and
+> discovery/validation/test split model are obsolete.
+
+**Status:** superseded — historical record only.\
 **Specification:** `introspection_self_improving_agent_mvp_v2.md` (v2). The milestones
 below are v2 §4's dependency-ordered workstreams grouped into four checkable stages; this
 file owns milestone tracking only and introduces no design of its own. Invariants live in
