@@ -15,6 +15,24 @@ from tau_adapter.lock import Lock, LockError, assert_recipe_matches_lock, assert
 TOOLS = ["KB_search", "get_current_time"]
 
 
+def _protocol_block(**overrides) -> dict:
+    block = {
+        "generations": 3,
+        "improvement_tasks_per_generation": 3,
+        "held_out_tasks": 5,
+        "allow_within_batch_verification": False,
+        "holdout_visibility": {
+            "expose_tasks_to_orchestrator": False,
+            "expose_traces_to_orchestrator": False,
+            "expose_per_task_results_to_orchestrator": False,
+            "expose_aggregate_score_to_orchestrator": False,
+        },
+        "require_human_approval": True,
+    }
+    block.update(overrides)
+    return block
+
+
 def _lock(**frozen_overrides) -> Lock:
     frozen = {
         "status": "PROVISIONAL",
@@ -84,6 +102,65 @@ def test_experiment_name_must_be_a_directory_slug() -> None:
     # directory name.
     with pytest.raises(LockError, match="slug"):
         _ = Lock(raw={"experiment": {"seq": 1, "name": "Bad Name"}}).experiment_id
+
+
+def test_protocol_block_parses_into_config() -> None:
+    protocol = Lock(raw={"protocol": _protocol_block()}).protocol
+    assert protocol.generations == 3
+    assert protocol.improvement_tasks_per_generation == 3
+    assert protocol.held_out_tasks == 5
+    assert protocol.allow_within_batch_verification is False
+    assert protocol.require_human_approval is True
+    assert protocol.holdout_visibility.expose_aggregate_score_to_orchestrator is False
+
+
+def test_missing_protocol_block_is_refused() -> None:
+    with pytest.raises(LockError, match="missing the protocol block"):
+        _ = Lock(raw={}).protocol
+
+
+@pytest.mark.parametrize(
+    "key", ["generations", "improvement_tasks_per_generation", "held_out_tasks"]
+)
+@pytest.mark.parametrize("bad", [0, -1, "3", True, None])
+def test_protocol_sizes_must_be_positive_integers(key, bad) -> None:
+    with pytest.raises(LockError, match=rf"protocol\.{key}"):
+        _ = Lock(raw={"protocol": _protocol_block(**{key: bad})}).protocol
+
+
+@pytest.mark.parametrize("key", ["allow_within_batch_verification", "require_human_approval"])
+def test_protocol_flags_must_be_bools(key) -> None:
+    with pytest.raises(LockError, match=rf"protocol\.{key}.*must be a bool"):
+        _ = Lock(raw={"protocol": _protocol_block(**{key: "false"})}).protocol
+
+
+def test_protocol_unknown_key_is_refused() -> None:
+    with pytest.raises(LockError, match="unknown keys: batch_size"):
+        _ = Lock(raw={"protocol": _protocol_block(batch_size=10)}).protocol
+
+
+def test_a_second_trials_knob_is_refused() -> None:
+    # Held-out trials are frozen.num_trials; a protocol key claiming to be that knob would
+    # let the two disagree silently.
+    with pytest.raises(LockError, match=r"frozen\.num_trials"):
+        _ = Lock(raw={"protocol": _protocol_block(held_out_trials_per_task=1)}).protocol
+
+
+def test_holdout_visibility_requires_the_exact_flag_set() -> None:
+    incomplete = _protocol_block(
+        holdout_visibility={"expose_tasks_to_orchestrator": False, "expose_scores": False}
+    )
+    with pytest.raises(LockError, match="unknown keys: expose_scores"):
+        _ = Lock(raw={"protocol": incomplete}).protocol
+    missing_one = _protocol_block()
+    del missing_one["holdout_visibility"]["expose_traces_to_orchestrator"]
+    with pytest.raises(LockError, match=r"holdout_visibility\.expose_traces_to_orchestrator"):
+        _ = Lock(raw={"protocol": missing_one}).protocol
+
+
+def test_holdout_visibility_must_be_a_mapping() -> None:
+    with pytest.raises(LockError, match="holdout_visibility must be a mapping"):
+        _ = Lock(raw={"protocol": _protocol_block(holdout_visibility=False)}).protocol
 
 
 def test_recipe_model_mismatch_is_refused(tmp_path) -> None:

@@ -32,6 +32,72 @@ class LockError(RuntimeError):
 # it is read.
 _EXPERIMENT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
+_HOLDOUT_VISIBILITY_KEYS = (
+    "expose_tasks_to_orchestrator",
+    "expose_traces_to_orchestrator",
+    "expose_per_task_results_to_orchestrator",
+    "expose_aggregate_score_to_orchestrator",
+)
+_PROTOCOL_INT_KEYS = ("generations", "improvement_tasks_per_generation", "held_out_tasks")
+_PROTOCOL_BOOL_KEYS = ("allow_within_batch_verification", "require_human_approval")
+_PROTOCOL_KEYS = (*_PROTOCOL_INT_KEYS, *_PROTOCOL_BOOL_KEYS, "holdout_visibility")
+
+
+@dataclass(frozen=True)
+class HoldoutVisibility:
+    """The firewall flags, spelled out so the configuration states the isolation explicitly."""
+
+    expose_tasks_to_orchestrator: bool
+    expose_traces_to_orchestrator: bool
+    expose_per_task_results_to_orchestrator: bool
+    expose_aggregate_score_to_orchestrator: bool
+
+
+@dataclass(frozen=True)
+class ProtocolConfig:
+    """The experiment's generation-protocol configuration, validated on read.
+
+    G batches of B tasks drive generations H_0 → H_G; T held-out tasks measure them. The
+    sizes here are what the partition manifest is proposed from and verified against.
+    Deliberately absent: `held_out_trials_per_task` — held-out trials are `frozen.num_trials`,
+    one knob, and a second key claiming to be that knob is refused rather than reconciled.
+    """
+
+    generations: int
+    improvement_tasks_per_generation: int
+    held_out_tasks: int
+    allow_within_batch_verification: bool
+    holdout_visibility: HoldoutVisibility
+    require_human_approval: bool
+
+
+def _protocol_positive_int(section: dict, key: str) -> int:
+    value = section.get(key)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise LockError(f"protocol.{key} {value!r} must be a positive integer")
+    return value
+
+
+def _protocol_bool(section: dict, key: str, parent: str = "protocol") -> bool:
+    value = section.get(key)
+    if not isinstance(value, bool):
+        raise LockError(f"{parent}.{key} {value!r} must be a bool")
+    return value
+
+
+def _parse_holdout_visibility(section: dict) -> HoldoutVisibility:
+    visibility = section.get("holdout_visibility")
+    if not isinstance(visibility, dict):
+        raise LockError("protocol.holdout_visibility must be a mapping of the four expose flags")
+    unknown = sorted(set(visibility) - set(_HOLDOUT_VISIBILITY_KEYS))
+    if unknown:
+        raise LockError(f"protocol.holdout_visibility has unknown keys: {', '.join(unknown)}")
+    flags = {
+        key: _protocol_bool(visibility, key, parent="protocol.holdout_visibility")
+        for key in _HOLDOUT_VISIBILITY_KEYS
+    }
+    return HoldoutVisibility(**flags)
+
 
 @dataclass(frozen=True)
 class Lock:
@@ -146,6 +212,35 @@ class Lock:
     @property
     def enforce_communication_protocol(self) -> bool:
         return bool(self._frozen("enforce_communication_protocol"))
+
+    @property
+    def protocol(self) -> ProtocolConfig:
+        """The generation-protocol block, parsed and validated as one unit.
+
+        Frozen for the experiment's duration like everything else here — it rides the
+        freeze fingerprint automatically through `raw`. Unknown keys are refused so a typo
+        cannot silently configure nothing.
+        """
+        section = self.raw.get("protocol")
+        if not isinstance(section, dict):
+            raise LockError(
+                "benchmark_lock.yaml is missing the protocol block (generations, "
+                "improvement_tasks_per_generation, held_out_tasks, "
+                "allow_within_batch_verification, holdout_visibility, require_human_approval)"
+            )
+        if "held_out_trials_per_task" in section:
+            raise LockError(
+                "protocol.held_out_trials_per_task is not a knob: held-out trials are "
+                "frozen.num_trials — one knob, never two. Remove the protocol key."
+            )
+        unknown = sorted(set(section) - set(_PROTOCOL_KEYS))
+        if unknown:
+            raise LockError(f"protocol block has unknown keys: {', '.join(unknown)}")
+        return ProtocolConfig(
+            **{key: _protocol_positive_int(section, key) for key in _PROTOCOL_INT_KEYS},
+            **{key: _protocol_bool(section, key) for key in _PROTOCOL_BOOL_KEYS},
+            holdout_visibility=_parse_holdout_visibility(section),
+        )
 
     @property
     def policy_sha256(self) -> str | None:
