@@ -55,6 +55,22 @@ def test_missing_frozen_field_names_itself() -> None:
         _ = Lock(raw={"frozen": {}}).num_trials
 
 
+def test_experiment_id_reads_from_the_lock() -> None:
+    assert Lock(raw={"experiment": {"id": "dummy"}}).experiment_id == "dummy"
+
+
+def test_missing_experiment_id_is_refused() -> None:
+    with pytest.raises(LockError, match=r"experiment\.id"):
+        _ = Lock(raw={}).experiment_id
+
+
+def test_experiment_id_must_be_a_directory_slug() -> None:
+    # The id becomes a results/ path component, so anything a filesystem or a reader could
+    # mis-handle is refused at the source rather than becoming a strange directory name.
+    with pytest.raises(LockError, match="slug"):
+        _ = Lock(raw={"experiment": {"id": "Bad Name"}}).experiment_id
+
+
 def test_recipe_model_mismatch_is_refused(tmp_path) -> None:
     agent_yaml = tmp_path / "agent.yaml"
     agent_yaml.write_text(
@@ -91,6 +107,7 @@ def test_the_committed_recipe_agrees_with_the_committed_lock() -> None:
 
 def test_the_committed_lock_is_internally_consistent() -> None:
     real = lockmod.load_lock()
+    assert real.experiment_id, "the lock must name the experiment its freeze defines"
     assert real.policy_sha256, "run `make policy`"
     assert real.tool_catalog, "run `make policy`"
     assert real.raw["policy"]["source_domain"] == real.domain

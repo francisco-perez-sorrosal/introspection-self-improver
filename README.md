@@ -37,7 +37,7 @@ reportable** — see *Two run modes* below.
 | `target-agent/` | The harness under improvement (H_n). An Introspection Recipe. | The improvement loop, via pull request |
 | `benchmark/` | The objective and the seam to it. τ² pinned by commit, the adapter, the lock. | Humans only |
 | `contract/` | The permission envelope the orchestrator works inside. | Humans only |
-| `results/` | Per-generation record: trajectories, Pi sessions, graded outcome. | Append-only |
+| `results/` | Per-experiment, per-generation record: trajectories, Pi sessions, graded outcome. | Append-only |
 
 The dependency runs one way — `benchmark/` reaches `target-agent/` by path, never the reverse
 — so the Recipe can be split into its own repository with `git subtree split` when the agent is
@@ -93,11 +93,11 @@ The rendezvous is driven by the bridge, not by the transport, so the same seam r
 | Prerequisites | none | login, pushed repo, App grant, Runtime, dev API-key agent |
 
 Both are implemented. `local` contacts nothing, so no task and therefore no conversation exists
-— Pi's session file under `results/<gen>/<run>/pi_sessions/` is the only record. `platform` makes
+— Pi's session file under `results/<experiment>/<gen>/<run>/pi_sessions/` is the only record. `platform` makes
 every episode a real task, so the exchange is readable afterwards:
 
 ```bash
-make single_task TRANSPORT=platform          # writes results/<gen>/<task>_platform/
+make single_task TRANSPORT=platform          # writes results/<experiment>/<gen>/<task>_platform/
 introspection conversations export <task-id> --format trajectory
 ```
 
@@ -153,7 +153,9 @@ returns full spans, cost and usage. What deletion destroys is presentation — t
 the task's `title` as the conversation's summary line, so a deleted task demotes its conversation
 to a bare id in the UI. The record survived; its name did not. The transport therefore sets the τ
 episode label (`τ²-bench <domain> <task>`) as the task title and archives the row, which keeps
-the summary and hides the finished task from the default list. Archiving also settles the task:
+the summary and hides the finished task from the default list. The label ends in `[exp:<id>]`
+— the lock's experiment id — so platform evidence stays separable across experiments even when
+two share a recipe commit. Archiving also settles the task:
 the archived row came back `status: cancelled` with `completed_at` stamped at archive time, ~74s
 after creation rather than after the 600s idle timeout, so the sandbox is released immediately —
 the inactivity timeout remains only as the backstop for episodes that never reach `close()`.
@@ -209,6 +211,21 @@ documented is not frozen:
   the live `env.get_policy()` (at episode start).
 
 Reward is computed only by `tau2 evaluate-trajs`, only via `make grade`.
+
+## One experiment, one freeze
+
+`results/` carries one level above generations: `results/experiment_<id>/generation_NNN/<run>/`.
+The id comes from `benchmark_lock.yaml` (`experiment.id`) — the lock defines the freeze, so the
+lock names the experiment — and the runner refuses any `results/` path outside the lock's
+experiment directory, before `--overwrite` could delete anything. Changing models, retrieval
+config, splits or trial counts is a new experiment id, never a new value under the old one.
+
+Once the lock stops being `PROVISIONAL`, the first run into an experiment writes
+`experiment.yaml` beside its generations — a fingerprint of the parsed freeze (lock values plus
+split manifest) — and every later run must match it. Values are compared, not file bytes, so a
+comment edit never trips the check while a re-decided frozen value refuses the run with
+"start a new experiment". `results/experiment_dummy/` is the pre-freeze bring-up bucket:
+`PROVISIONAL` runs land there, unenforced and unreportable.
 
 **The lock is currently `PROVISIONAL`** — most values let the pipe move and are not an
 experiment's freeze. Two values need a decision before G0:

@@ -7,6 +7,16 @@
 # Changing any value invalidates cross-generation comparison. Start a new experiment
 # instead, and say so in the results directory.
 
+# "Say so in the results directory" is mechanical, not aspirational: this id names the
+# experiment the frozen values below define, and every run writes under
+# results/experiment_<id>/<generation>/ — the runner refuses any other results/ path.
+# One experiment is one freeze: re-deciding a frozen value means a NEW id here, never a
+# new value under the old one. While frozen.status is PROVISIONAL the id stays `dummy`
+# (the bring-up bucket, no snapshot enforcement); the real id is assigned when the freeze
+# is re-decided before G0.
+experiment:
+  id: dummy
+
 benchmark:
   repository: sierra-research/tau2-bench
   # Exact commit, never a range: v1.0.1 changed banking_knowledge grading and task data,

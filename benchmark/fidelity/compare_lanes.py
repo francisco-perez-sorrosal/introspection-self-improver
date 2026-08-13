@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare two graded runs of the same task and say which differences matter.
 
-    python fidelity/compare_lanes.py results/<gen>/task_001 results/<gen>/task_001_platform
+    python fidelity/compare_lanes.py results/<experiment>/<gen>/task_001 results/<experiment>/<gen>/task_001_platform
 
 Exits non-zero only when an adapter invariant fails. A different reward, a different trajectory
 shape or a different message count is *not* a failure: per-task reward here is a draw, so the

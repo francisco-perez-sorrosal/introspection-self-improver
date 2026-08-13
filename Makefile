@@ -5,7 +5,14 @@
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
-GEN    := generation_000
+GEN    ?= generation_000
+
+# One experiment is one freeze. The id comes from benchmark_lock.yaml (experiment.id), so the
+# results path is derived — results/experiment_<id>/$(GEN)/<run> — never chosen per invocation.
+# run.py additionally refuses any results/ path outside the lock's experiment, so a stale or
+# empty value here cannot land a run in the wrong experiment's record.
+EXPDIR  := $(shell python3 $(BENCH)/scripts/experiment_id.py --dir)
+RESULTS := results/$(EXPDIR)/$(GEN)
 
 # Where the agent runs. `local` is a Pi subprocess here and produces no Introspection evidence.
 # `platform` runs every episode as a task in the development environment — conversations, traces,
@@ -41,6 +48,10 @@ help:
 	@echo ""
 	@echo "TRANSPORT=local|platform   where the agent runs (default local)"
 	@echo "LAUNCHER=pi|introspection  how to start it locally (default pi)"
+	@echo "GEN=generation_NNN         generation directory under results/$(EXPDIR)/"
+	@echo ""
+	@echo "The experiment comes from benchmark_lock.yaml (experiment.id): results land under"
+	@echo "results/$(EXPDIR)/$(GEN)/ and the runner refuses any other results/ path."
 	@echo ""
 	@echo "  make single_task                     one task, agent on this machine"
 	@echo "  make single_task TRANSPORT=platform  same task, agent on a dev runtime,"
@@ -69,16 +80,16 @@ policy:
 smoke:
 	@$(RUN) python tau_adapter/run.py --domain mock --task-ids create_task_1 \
 		--transport $(TRANSPORT) --launcher $(LAUNCHER) \
-		--out ../results/$(GEN)/mock_smoke --overwrite
-	@$(MAKE) --no-print-directory grade OUT=results/$(GEN)/mock_smoke
+		--out ../$(RESULTS)/mock_smoke --overwrite
+	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/mock_smoke
 
 # One task on the locked domain — the working loop while iterating on the harness.
 TASK ?= task_001
 single_task:
 	@$(RUN) python tau_adapter/run.py --task-ids $(TASK) \
 		--transport $(TRANSPORT) --launcher $(LAUNCHER) \
-		--out ../results/$(GEN)/$(TASK)$(SUFFIX) --overwrite
-	@$(MAKE) --no-print-directory grade OUT=results/$(GEN)/$(TASK)$(SUFFIX)
+		--out ../$(RESULTS)/$(TASK)$(SUFFIX) --overwrite
+	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/$(TASK)$(SUFFIX)
 
 # The whole locked task split. Omitting --task-ids is what selects every task; the runner
 # prints the episode count and the concurrency it will use before starting.
@@ -88,8 +99,8 @@ single_task:
 # the per-generation cost estimate rather than something to run casually.
 bench:
 	@$(RUN) python tau_adapter/run.py --transport $(TRANSPORT) --launcher $(LAUNCHER) \
-		--out ../results/$(GEN)/bench_full$(SUFFIX) --overwrite
-	@$(MAKE) --no-print-directory grade OUT=results/$(GEN)/bench_full$(SUFFIX)
+		--out ../$(RESULTS)/bench_full$(SUFFIX) --overwrite
+	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/bench_full$(SUFFIX)
 
 # Runs the same task in both lanes and compares them. Adapter-owned properties are asserted; the
 # reward is not, because a per-task reward here is a draw and comparing two of them proves nothing.
@@ -98,11 +109,11 @@ fidelity:
 	@$(MAKE) --no-print-directory single_task TASK=$(TASK) TRANSPORT=local
 	@$(MAKE) --no-print-directory single_task TASK=$(TASK) TRANSPORT=platform
 	@$(RUN) python fidelity/compare_lanes.py \
-		$(CURDIR)/results/$(GEN)/$(TASK) $(CURDIR)/results/$(GEN)/$(TASK)_platform
+		$(CURDIR)/$(RESULTS)/$(TASK) $(CURDIR)/$(RESULTS)/$(TASK)_platform
 
 # The only sanctioned way to produce a number. Calls tau's own evaluate_trajectories; the wrapper
 # exists solely to grade against the retrieval config the run recorded, instead of letting the
 # evaluator fall back to a config the run never used. See scripts/grade.py.
 grade:
-	@test -n "$(OUT)" || (echo "usage: make grade OUT=results/<gen>/<run>" && exit 1)
+	@test -n "$(OUT)" || (echo "usage: make grade OUT=results/<experiment>/<gen>/<run>" && exit 1)
 	@$(RUN) python scripts/grade.py $(CURDIR)/$(OUT)/results.json

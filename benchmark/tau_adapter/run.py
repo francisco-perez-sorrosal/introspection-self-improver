@@ -43,6 +43,7 @@ from tau_adapter.dev_lane import (
     resolve_runtime_id,
     warm_runtime,
 )
+from tau_adapter.experiment import enforce_snapshot
 from tau_adapter.pi_agent import PiRecipeAgent
 from tau_adapter.policy_region import extract_policy, replace_policy
 from tau_adapter.tool_bridge import ToolBridge
@@ -326,6 +327,10 @@ def main() -> int:
         recipe_policy = extract_policy((recipe_dir / "SYSTEM.md").read_text(encoding="utf-8"))
 
     out_dir = Path(args.out).resolve()
+    # Before --overwrite can delete anything: a run aimed at the wrong experiment directory
+    # must refuse here rather than clear another freeze's record first. Also verifies — or,
+    # for a non-PROVISIONAL lock, creates — the experiment's freeze snapshot.
+    experiment_status = enforce_snapshot(lock, out_dir)
     if out_dir.exists() and any(out_dir.iterdir()):
         if not args.overwrite:
             raise SystemExit(
@@ -371,9 +376,13 @@ def main() -> int:
 
     # What the platform task row — and therefore its conversation's summary line in the
     # dashboard — reads as. A sweep cannot name the specific τ task per episode (the factory
-    # does not learn which simulation it serves), so it falls back to the domain alone.
-    episode_label = f"τ²-bench {domain}" + (
-        f" {args.task_ids[0]}" if args.task_ids and len(args.task_ids) == 1 else ""
+    # does not learn which simulation it serves), so it falls back to the domain alone. The
+    # experiment suffix keeps platform evidence separable even where two experiments share a
+    # recipe commit — e.g. a user-simulator-only change.
+    episode_label = (
+        f"τ²-bench {domain}"
+        + (f" {args.task_ids[0]}" if args.task_ids and len(args.task_ids) == 1 else "")
+        + f" [exp:{lock.experiment_id}]"
     )
 
     def create_agent(tools, domain_policy, **kwargs):
@@ -444,6 +453,10 @@ def main() -> int:
 
     banner = "locked" if locked_mode else "DIAGNOSTIC — results are not reportable"
     print(f"\n── tau-adapter: {domain} [{banner}]")
+    print(
+        f"   experiment    {lock.experiment_id}"
+        + (f" — {experiment_status}" if experiment_status else "")
+    )
     print(f"   recipe        {recipe_dir}")
     print(f"   transport     {args.transport}")
     if args.transport == TRANSPORT_PLATFORM:
@@ -499,6 +512,7 @@ def main() -> int:
         json.dumps(
             {
                 "mode": "locked" if locked_mode else "diagnostic",
+                "experiment": lock.experiment_id,
                 "domain": domain,
                 "transport": args.transport,
                 "launcher": args.launcher if args.transport == TRANSPORT_LOCAL else None,

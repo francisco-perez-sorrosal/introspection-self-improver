@@ -28,6 +28,10 @@ class LockError(RuntimeError):
     pass
 
 
+# The experiment id becomes a results/ path component, so it is validated where it is read.
+_EXPERIMENT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+
+
 @dataclass(frozen=True)
 class Lock:
     raw: dict[str, Any]
@@ -56,6 +60,19 @@ class Lock:
     @property
     def provisional(self) -> bool:
         return str(self._frozen("status", default="")).upper() == "PROVISIONAL"
+
+    @property
+    def experiment_id(self) -> str:
+        """The experiment the frozen values define. One experiment is one freeze."""
+        value = str((self.raw.get("experiment") or {}).get("id") or "")
+        if not value:
+            raise LockError("benchmark_lock.yaml is missing experiment.id")
+        if not _EXPERIMENT_ID_RE.match(value):
+            raise LockError(
+                f"experiment.id {value!r} is not a directory slug: lowercase letters, "
+                "digits, '-' and '_' only, starting with a letter or digit"
+            )
+        return value
 
     @property
     def agent_model(self) -> str:
