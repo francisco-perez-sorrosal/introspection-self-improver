@@ -3,10 +3,7 @@
     {
       "id": "tau",
       "transport": "streamable_http",
-      "url": "${TAU_MCP_URL}",
-      "headers": {
-        "Authorization": "Bearer ${TAU_MCP_TOKEN}"
-      }
+      "url": "${TAU_MCP_URL}"
     }
   ]
 }

@@ -80,7 +80,12 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         assert_matches_environment(self._recipe_policy, self.domain_policy, self._domain)
 
         if not self._started:
-            self._bridge.start()
+            # The bridge is started by the runner and shared by every episode: the development
+            # lane's `introspection dev` attachment is handed one URL before the first episode
+            # and holds it for the whole run, so a per-episode bridge could not be reached.
+            # Safe at max_concurrency 1, where only one episode is ever in flight.
+            # What must NOT be shared is rendezvous state — see reset_for_episode.
+            self._bridge.reset_for_episode()
             env = dict(self._base_env)
             env.update(self._bridge.env())
             self._transport.start(env)
@@ -101,10 +106,8 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         message: Message | None = None,
         state: PiAgentState | None = None,
     ) -> None:
-        try:
-            self._transport.close()
-        finally:
-            self._bridge.stop()
+        # Only the transport: the bridge outlives this episode and is stopped by the runner.
+        self._transport.close()
 
     # -------------------------------------------------------------------- stepping
 

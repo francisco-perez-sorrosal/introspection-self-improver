@@ -31,16 +31,30 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from fidelity.lane_report import NORMAL_TERMINATIONS
 from tau_adapter import lock as lockmod
+from tau_adapter.dev_lane import (
+    DevAttachment,
+    assert_no_connected_binding,
+    resolve_runtime_id,
+    warm_runtime,
+)
 from tau_adapter.pi_agent import PiRecipeAgent
 from tau_adapter.policy_region import extract_policy, replace_policy
 from tau_adapter.tool_bridge import ToolBridge
 from tau_adapter.transport_local import LAUNCHER_CLI, LAUNCHER_PI, LAUNCHERS, LocalPiTransport
+from tau_adapter.transport_platform import PlatformTransport
 
 AGENT_KEY = "pi_recipe"
+
+TRANSPORT_LOCAL = "local"
+TRANSPORT_PLATFORM = "platform"
+TRANSPORTS = (TRANSPORT_LOCAL, TRANSPORT_PLATFORM)
+DEFAULT_RUNTIME = "target-agent"
 
 # Gitignored, and inside the work tree on purpose — see _materialise_workspace.
 DIAGNOSTIC_WORKSPACE = lockmod.REPO_ROOT / ".diagnostic-workspace"
@@ -133,6 +147,81 @@ def _assert_recipe_valid() -> None:
         )
 
 
+def _platform_accounting(task_ids: list[str]) -> dict[str, Any]:
+    """Read cost, usage and lineage back out of the platform for each episode.
+
+    The platform lane leaves τ's own cost metric as `nan`, because AG-UI events carry no token
+    usage — the numbers live on the conversation record instead. Fetching them here keeps a
+    generation's record self-contained rather than only reproducible by hand, and picks up the
+    lineage field the local lane has no equivalent for.
+    """
+    accounting: dict[str, Any] = {}
+    for task_id in task_ids:
+        try:
+            proc = subprocess.run(  # noqa: S603
+                ["introspection", "conversations", "get", task_id, "-o", "json"],  # noqa: S607
+                cwd=lockmod.REPO_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )
+            if proc.returncode != 0:
+                accounting[task_id] = {"error": (proc.stderr or proc.stdout).strip()[:200]}
+                continue
+            export = json.loads(proc.stdout) or {}
+            conversation = export.get("conversation") or {}
+            meta = export.get("meta") or {}
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+            accounting[task_id] = {"error": f"{type(exc).__name__}: {exc}"}
+            continue
+        accounting[task_id] = {
+            key: conversation.get(key)
+            for key in ("cost", "usage", "metrics", "recipe_git_commit_sha")
+        }
+        # Recorded rather than assumed. "The episode finished" is otherwise an inference from the
+        # reward, and a reward can be produced while the conversation is still open — the export
+        # says so itself, and `complete: false` means this record is a snapshot of something that
+        # had not settled when it was read.
+        accounting[task_id]["evidence_complete"] = meta.get("complete")
+        accounting[task_id]["item_count"] = meta.get("item_count")
+    return accounting
+
+
+def _platform_task_ids(results: Any) -> list[str]:
+    """Every platform task id the run touched, read back off the trajectory.
+
+    `pi_session_ref` carries the host-side episode identity for whichever transport ran; on the
+    platform lane that is the task id, which is also the conversation id.
+    """
+    refs = set()
+    for sim in results.simulations:
+        for message in sim.messages:
+            raw = getattr(message, "raw_data", None) or {}
+            ref = raw.get("pi_session_ref")
+            if ref:
+                refs.add(str(ref))
+    return sorted(refs)
+
+
+def _episode_summary(sim: Any) -> dict[str, Any]:
+    """Whether one episode ran to a graded end — stated, never inferred from the reward.
+
+    `completed` means τ itself ended the episode normally *and* graded it. That is the same
+    definition the fidelity checker asserts post-hoc, shared here so both lanes answer "did this
+    task finish successfully?" identically at run time. Any other termination is infrastructure
+    or protocol, and a reward attached to it must not be read as a measurement.
+    """
+    reward = getattr(getattr(sim, "reward_info", None), "reward", None)
+    termination = str(sim.termination_reason)
+    return {
+        "task_id": str(sim.task_id),
+        "termination": termination,
+        "reward": reward,
+        "completed": termination in NORMAL_TERMINATIONS and reward is not None,
+    }
+
+
 def _build_env_for_pi() -> dict[str, str]:
     env = dict(os.environ)
     # One fewer network round trip per episode; nothing else about Pi's behaviour changes.
@@ -162,6 +251,38 @@ def main() -> int:
         "--overwrite",
         action="store_true",
         help="replace an existing --out directory instead of refusing",
+    )
+    parser.add_argument(
+        "--transport",
+        choices=TRANSPORTS,
+        default=TRANSPORT_LOCAL,
+        help=(
+            "where the agent runs. 'local' (default) is a Pi subprocess on this machine and "
+            "produces no Introspection evidence. 'platform' runs each episode as a task in the "
+            "development environment, which yields conversations, traces and lineage, and starts "
+            "`introspection dev` itself to route the τ bridge back here."
+        ),
+    )
+    parser.add_argument(
+        "--runtime",
+        default=DEFAULT_RUNTIME,
+        help="Runtime name to resolve for --transport platform (TAU_RUNTIME_ID overrides the id)",
+    )
+    parser.add_argument(
+        "--environment",
+        default="development",
+        choices=("development", "staging", "production"),
+        help="platform environment. Only development serves the local work-tree via `dev`.",
+    )
+    parser.add_argument(
+        "--bridge-port",
+        type=int,
+        default=0,
+        help=(
+            "loopback port for the τ MCP bridge. 0 (default) takes an ephemeral one, which is "
+            "fine because the runner starts the bridge before anything needs its URL. Pin it "
+            "only to point a hand-started `introspection dev --mcp` at a known address."
+        ),
     )
     parser.add_argument(
         "--launcher",
@@ -218,20 +339,63 @@ def main() -> int:
     base_env = _build_env_for_pi()
     launch_argv: list[str] = []
 
+    # Run-scoped, not per-episode. The development lane hands one URL to `introspection dev`
+    # before the first episode and holds it for the whole run, so the bridge has to outlive an
+    # episode. Built from the probe environment's tools because the schemas are what it
+    # advertises, and the tool surface is asserted identical to the lock.
+    bridge = ToolBridge(tau_tools=probe_env.get_tools(), port=args.bridge_port)
+    bridge.start()
+
+    dev: DevAttachment | None = None
+    runtime_id: str | None = None
+    if args.transport == TRANSPORT_PLATFORM:
+        if not locked_mode:
+            raise SystemExit(
+                "the platform transport serves the Recipe from the git work-tree, so it cannot "
+                "run diagnostic mode: that materialises a modified Recipe elsewhere. Use "
+                "--transport local for a non-locked domain."
+            )
+        runtime_id = resolve_runtime_id(args.runtime, lockmod.REPO_ROOT)
+        assert_no_connected_binding(runtime_id, args.environment, lockmod.REPO_ROOT)
+        dev = DevAttachment(
+            mcp_url=bridge.url, repo_root=lockmod.REPO_ROOT, runtime_name=args.runtime
+        )
+        dev.start()
+        # Before the first episode, never during one.
+        warm_runtime(
+            runtime_id=runtime_id,
+            environment=args.environment,
+            repo_root=lockmod.REPO_ROOT,
+            dev_target=dev.dev_target,
+        )
+
     def create_agent(tools, domain_policy, **kwargs):
         declared = kwargs.get("llm")
         if declared is not None and declared != lock.agent_llm_declared:
             raise lockmod.LockError(
                 f"--agent-llm is {declared!r} but the lock declares {lock.agent_llm_declared!r}"
             )
-        bridge = ToolBridge(tau_tools=tools)
-        transport = LocalPiTransport(
-            recipe_dir=recipe_dir,
-            session_dir=session_dir,
-            launcher=args.launcher,
-            workspace_dir=workspace_dir,
-        )
-        launch_argv[:] = transport.argv()
+        transport: Any
+        if args.transport == TRANSPORT_PLATFORM:
+            assert runtime_id is not None
+            transport = PlatformTransport(
+                runtime_id=runtime_id,
+                repo_root=lockmod.REPO_ROOT,
+                environment=args.environment,
+                # Must exceed the gap while τ's user simulator thinks (2-12s healthy, up to its
+                # 60s per-attempt ceiling plus retries), or the sandbox is torn down mid-episode.
+                idle_timeout_seconds=int(lock.timeout_seconds),
+                dev_target=dev.dev_target if dev else None,
+            )
+            launch_argv[:] = ["introspection", "tasks", "create", "--runtime-id", runtime_id]
+        else:
+            transport = LocalPiTransport(
+                recipe_dir=recipe_dir,
+                session_dir=session_dir,
+                launcher=args.launcher,
+                workspace_dir=workspace_dir,
+            )
+            launch_argv[:] = transport.argv()
         return PiRecipeAgent(
             tools=tools,
             domain_policy=domain_policy,
@@ -273,7 +437,13 @@ def main() -> int:
     banner = "locked" if locked_mode else "DIAGNOSTIC — results are not reportable"
     print(f"\n── tau-adapter: {domain} [{banner}]")
     print(f"   recipe        {recipe_dir}")
-    print(f"   launcher      {_launcher_description(args.launcher)}")
+    print(f"   transport     {args.transport}")
+    if args.transport == TRANSPORT_PLATFORM:
+        print(f"   runtime       {args.runtime} ({runtime_id}) in {args.environment}")
+        print(f"   dev target    {dev.dev_target if dev else '(none)'}")
+    else:
+        print(f"   launcher      {_launcher_description(args.launcher)}")
+    print(f"   τ bridge      {bridge.url.rsplit('/', 1)[0]}/<token>")
     print(f"   agent model   {lock.agent_model} (thinking: {lock.agent_thinking_level})")
     print(f"   user model    {lock.user_llm}")
     print(f"   retrieval     {retrieval or 'default/none'}")
@@ -295,25 +465,51 @@ def main() -> int:
         episodes = len(tasks) * lock.num_trials
         print(
             f"\n   full sweep: {episodes} episode(s) at max_concurrency="
-            f"{lock.max_concurrency}. Raising concurrency needs a lock change; the bridge "
-            "binds a port per episode and should support it, but that is untested."
+            f"{lock.max_concurrency}. Raising concurrency needs a lock change and more than "
+            "that: one run-scoped bridge serves every episode, which is only safe while a "
+            "single episode is in flight."
         )
     print()
 
     started = time.monotonic()
-    results = run_tasks(config, tasks, save_path=results_path, save_dir=out_dir)
+    try:
+        results = run_tasks(config, tasks, save_path=results_path, save_dir=out_dir)
+    finally:
+        # Both outlive every episode, so nothing else will release them.
+        if dev is not None:
+            dev.stop()
+        bridge.stop()
     elapsed = time.monotonic() - started
+    episode_summaries = [_episode_summary(sim) for sim in results.simulations]
 
     # Beside τ's results, never inside them: τ owns its own schema. Two launchers produce
     # identically-shaped results, so without this a run directory cannot say which one made it
     # — and "label every score with its configuration" has to survive past the terminal.
+    # The file doubles as the run's completion sentinel: it is written only after `run_tasks`
+    # returned, so a directory holding results.json without it is an interrupted run.
     (out_dir / "run_metadata.json").write_text(
         json.dumps(
             {
                 "mode": "locked" if locked_mode else "diagnostic",
                 "domain": domain,
-                "launcher": args.launcher,
+                "transport": args.transport,
+                "launcher": args.launcher if args.transport == TRANSPORT_LOCAL else None,
                 "launch_argv": launch_argv,
+                "episodes": episode_summaries,
+                "platform": (
+                    {
+                        "runtime": args.runtime,
+                        "runtime_id": runtime_id,
+                        "environment": args.environment,
+                        "dev_target": dev.dev_target if dev else None,
+                        # Task id doubles as the conversation id: the anchor that links a score
+                        # back to the platform evidence that produced it.
+                        "task_ids": _platform_task_ids(results),
+                        "accounting": _platform_accounting(_platform_task_ids(results)),
+                    }
+                    if args.transport == TRANSPORT_PLATFORM
+                    else None
+                ),
                 "recipe_dir": str(recipe_dir),
                 "toolchain": {
                     "introspection": _tool_version("introspection", "--version"),
@@ -327,13 +523,23 @@ def main() -> int:
         encoding="utf-8",
     )
 
+    if not results.simulations:
+        # A run that produced no episode must not exit like one that did: the directory would
+        # look complete at a glance, and its absence of evidence read as evidence.
+        print(f"\n── NO simulations were produced in {elapsed:.0f}s; this run is not a record")
+        return 1
+
     ConsoleDisplay.display_agent_metrics(compute_metrics(results))
     print(f"\n── {len(results.simulations)} simulation(s) in {elapsed:.0f}s → {results_path}")
-    for sim in results.simulations:
-        reward = getattr(getattr(sim, "reward_info", None), "reward", None)
+    for sim, episode in zip(results.simulations, episode_summaries, strict=True):
+        verdict = (
+            "completed"
+            if episode["completed"]
+            else "DID NOT COMPLETE — infrastructure or protocol, not a graded outcome"
+        )
         print(
             f"   {sim.task_id}: termination={sim.termination_reason} "
-            f"messages={len(sim.messages)} reward={reward}"
+            f"messages={len(sim.messages)} reward={episode['reward']}  [{verdict}]"
         )
     print(
         "\n   Reward above is tau's own in-run evaluation. The reported number comes from\n"

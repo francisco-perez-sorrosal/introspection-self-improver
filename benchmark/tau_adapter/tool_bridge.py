@@ -26,7 +26,7 @@ import secrets
 import socket
 import sys
 import threading
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
@@ -44,6 +44,17 @@ DEFAULT_SERVER_ID = "tau"
 # local and fast; this exists so a seam bug fails loudly instead of hanging an episode. It is
 # harness plumbing, unrelated to τ's own --max-steps-seconds budget.
 RESULT_WAIT_SECONDS = 300.0
+
+# How long a wait may run before it is reported as a stall, rather than only at the ceiling.
+#
+# This exists because of an asymmetry that hides real failures. In the development lane the
+# sandbox's own MCP daemon abandons a call after about 30s, so if τ has not posted by then the
+# agent sees a tool error and carries on — while this handler is still waiting, quietly, for
+# another four and a half minutes. The episode can then be graded 1.0 on the answers that did
+# work, with a broken rendezvous recorded nowhere. Observed once, intermittently: a `tools/call`
+# span of 30090ms against `mcp upstream timed out`. Warning at the shorter horizon means the
+# next occurrence names itself.
+STALL_WARN_SECONDS = 25.0
 
 #: Set TAU_ADAPTER_TRACE=1 to print every rendezvous pairing to stderr. The rendezvous is the
 #: highest-risk part of the seam and its failure mode is a hang, which leaves no evidence
@@ -112,8 +123,20 @@ class _Mailbox:
         with self._lock:
             self.awaited.append(key)
         _trace(f"await  {key.tool_name} args={key.arguments}")
+        slot = self._slot(key)
+        # Two-stage wait: report the stall at the horizon where the caller has probably already
+        # given up, then keep waiting to the ceiling in case the result is merely slow.
+        with contextlib.suppress(queue.Empty):
+            return slot.get(timeout=min(STALL_WARN_SECONDS, timeout))
+        logger.warning(
+            f"rendezvous stalled: no result for {key.tool_name} after "
+            f"{STALL_WARN_SECONDS:.0f}s. The caller's MCP daemon has likely abandoned this call "
+            f"already, so the agent will see a tool error even if the result arrives.\n"
+            f"  awaited: {key.arguments[:200]}\n"
+            f"  posted so far: {[(k.tool_name, k.arguments[:60]) for k in self.posted][-5:]}"
+        )
         try:
-            return self._slot(key).get(timeout=timeout)
+            return slot.get(timeout=max(timeout - STALL_WARN_SECONDS, 0.0))
         except queue.Empty as exc:
             raise ToolResultTimeout(
                 f"no result for {key.tool_name} within {timeout:.0f}s.\n"
@@ -121,36 +144,6 @@ class _Mailbox:
                 f"  posted keys this episode: "
                 f"{[(k.tool_name, k.arguments[:80]) for k in self.posted][-5:]}"
             ) from exc
-
-
-class _BearerTokenGate:
-    """Reject anything without the episode's bearer token.
-
-    The bridge holds live authority over the benchmark environment on a loopback port. A
-    per-episode token means no other local process can drive it, and it costs one comparison.
-    """
-
-    def __init__(self, app: Any, token: str) -> None:
-        self._app = app
-        self._expected = f"Bearer {token}"
-
-    async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
-        if scope.get("type") != "http":
-            await self._app(scope, receive, send)
-            return
-        headers = dict(scope.get("headers") or [])
-        presented = headers.get(b"authorization", b"").decode("utf-8", "replace")
-        if not secrets.compare_digest(presented, self._expected):
-            await send(
-                {
-                    "type": "http.response.start",
-                    "status": 401,
-                    "headers": [(b"content-type", b"text/plain; charset=utf-8")],
-                }
-            )
-            await send({"type": "http.response.body", "body": b"unauthorized"})
-            return
-        await self._app(scope, receive, send)
 
 
 class ToolBridge:
@@ -161,10 +154,15 @@ class ToolBridge:
         tau_tools: Iterable[Any],
         server_id: str = DEFAULT_SERVER_ID,
         token: str | None = None,
+        port: int = 0,
     ) -> None:
         self._tau_tools = list(tau_tools)
         self.server_id = server_id
         self.token = token or secrets.token_urlsafe(24)
+        # 0 asks the OS for an ephemeral port, which is right for the local lane: the URL reaches
+        # the Pi subprocess through its environment, so nothing has to predict it. Pinning matters
+        # only when `introspection dev --mcp tau=<url>` is started by hand, before the run.
+        self.requested_port = port
         self.tau_tool_names = [t.name for t in self._tau_tools]
         # pi name -> τ name. Built forwards; raises on a collision.
         self.name_map = build_name_map(server_id, self.tau_tool_names)
@@ -183,7 +181,7 @@ class ToolBridge:
         """Bind, serve in a background thread, and return the MCP endpoint URL."""
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self._socket.bind(("127.0.0.1", 0))
+        self._socket.bind(("127.0.0.1", self.requested_port))
         self._port = self._socket.getsockname()[1]
 
         low = LowLevelServer(
@@ -192,7 +190,7 @@ class ToolBridge:
             on_list_tools=self._on_list_tools,
             on_call_tool=self._on_call_tool,
         )
-        app = _BearerTokenGate(low.streamable_http_app(streamable_http_path="/mcp"), self.token)
+        app = low.streamable_http_app(streamable_http_path=self.path)
         config = uvicorn.Config(app, log_level="warning", lifespan="on", access_log=False)
         self._server = uvicorn.Server(config)
 
@@ -220,15 +218,29 @@ class ToolBridge:
                 self._socket.close()
 
     @property
+    def path(self) -> str:
+        """The endpoint path, with the token as its last segment.
+
+        The token is in the URL rather than an `Authorization` header because the development
+        lane can only convey a URL: `introspection dev --mcp tau=<url>` carries no credentials,
+        and a *connected* MCP binding — the documented place for headers — replaces the URL with
+        its own, which cannot reach this machine from a cloud sandbox. One mechanism serves both
+        lanes, so the two cannot drift apart.
+        """
+        return f"/mcp/{self.token}"
+
+    @property
     def url(self) -> str:
         if self._port is None:
             raise RuntimeError("tool bridge not started")
-        return f"http://127.0.0.1:{self._port}/mcp"
+        return f"http://127.0.0.1:{self._port}{self.path}"
 
     def env(self) -> dict[str, str]:
-        """The two variables that bind this bridge to the Recipe's declared `tau` server."""
-        prefix = self.server_id.upper()
-        return {f"{prefix}_MCP_URL": self.url, f"{prefix}_MCP_TOKEN": self.token}
+        """What binds this bridge to the Recipe's declared `tau` server.
+
+        One variable, because the URL carries the credential in its path. See `path`.
+        """
+        return {f"{self.server_id.upper()}_MCP_URL": self.url}
 
     # -------------------------------------------------------------------- results
 
@@ -241,6 +253,19 @@ class ToolBridge:
         the model saw.
         """
         self._mailbox.post(_Key.of(tool_name, arguments), content, is_error)
+
+    def reset_for_episode(self) -> None:
+        """Drop every rendezvous slot. Called at episode start; the bridge itself lives on.
+
+        The bridge outlives the episode — the development lane's `dev` attachment holds its URL
+        for the whole run — but rendezvous state must not. A result posted for a call whose
+        handler had already given up stays queued under its name-and-arguments key, and the next
+        episode of the *same task* asks with identical arguments: it would receive the stale
+        result instantly and shift every later pairing by one, silently. A τ infrastructure
+        retry sets up exactly that sequence. Any handler still parked on the old mailbox times
+        out on its own ceiling; nothing can legitimately cross an episode boundary.
+        """
+        self._mailbox = _Mailbox()
 
     # ------------------------------------------------------------------- handlers
 
