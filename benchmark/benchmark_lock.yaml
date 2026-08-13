@@ -8,16 +8,18 @@
 # instead, and say so in the results directory.
 
 # "Say so in the results directory" is mechanical, not aspirational: seq + name derive the
-# experiment id (`<seq, zero-padded to 3>_<name>`, here 001_bm25-sonnet46) naming the freeze
+# experiment id (`<seq, zero-padded to 3>_<name>`, here 002_bm25-sonnet46) naming the freeze
 # the values below define, and every run writes under results/experiment_<id>/<generation>/
 # — the runner refuses any other results/ path. One experiment is one freeze: re-deciding a
 # frozen value means bumping `seq` here (a NEW experiment), never a new value under the old
 # one; `name` is a configuration nickname and may repeat across experiments — the sequence
-# is the identity. `dummy` was the bring-up bucket while the lock was still provisional (no
-# snapshot enforcement; its runs, removed from the working tree 2026-08-13, are in git
-# history); this experiment was assigned when the freeze was decided, 2026-08-13.
+# is the identity — which is why seq 2 keeps 001's name: same model pair, same retrieval
+# freeze, new protocol. Experiment 001 closed 2026-08-13 as the bring-up freeze
+# (results/experiment_001_bm25-sonnet46/README.md); seq 2 is the generation protocol's
+# debug experiment (SIA_EVALUATION_PLAN.md D3), opened PROVISIONAL 2026-08-13 so plan
+# Phases 2-3 have a runnable context, values final when Phase 4 freezes it.
 experiment:
-  seq: 1
+  seq: 2
   name: bm25-sonnet46
 
 benchmark:
@@ -48,13 +50,43 @@ benchmark:
   task_set_name: banking_knowledge
   task_split_name: base
 
+# The generation protocol's experiment configuration (SIA_EVALUATION_PLAN.md §3;
+# self_improving_agent_evaluation_protocol.md §26). Frozen with everything else in this
+# file: the partition manifest is proposed from these sizes and verified against them,
+# and (G*B)+T must fit the domain's 97 tasks. Debug scale per D3 — seq 2 proves the loop
+# end to end before the full G=5/B=10/T=47 experiment freezes under the next seq.
+protocol:
+  generations: 3
+  improvement_tasks_per_generation: 3
+  held_out_tasks: 5
+
+  # Re-running the just-consumed batch after a mutation would be intervention
+  # verification, never generalization (protocol §15). Off for the debug experiment —
+  # the loop stays maximally simple and every batch is spent exactly once.
+  allow_within_batch_verification: false
+
+  # The held-out firewall, stated as configuration: nothing about the held-out set —
+  # tasks, trajectories, per-task rewards, aggregates — reaches the orchestrator before
+  # reveal. Held-out trials per task are frozen.num_trials below — one knob, never two;
+  # a held_out_trials_per_task key here is refused by the lock parser.
+  holdout_visibility:
+    expose_tasks_to_orchestrator: false
+    expose_traces_to_orchestrator: false
+    expose_per_task_results_to_orchestrator: false
+    expose_aggregate_score_to_orchestrator: false
+
+  # Every mutation lands as a PR a human reviews and merges; the agent never merges its
+  # own work. The merge commit is the next generation.
+  require_human_approval: true
+
 frozen:
-  # FROZEN 2026-08-13 for experiment 001_bm25-sonnet46 (closed — see
-  # results/experiment_001_bm25-sonnet46/README.md). Every value below
-  # is this experiment's freeze; changing any one means a NEW experiment (bump seq), never
-  # a new value under this one. The first run snapshots the parsed freeze into
-  # results/experiment_001_bm25-sonnet46/experiment.yaml, and every later run must match it.
-  status: FROZEN
+  # PROVISIONAL while experiment 002 is brought up (SIA_EVALUATION_PLAN.md Phases 1-3):
+  # no freeze snapshot is written or enforced, and nothing under
+  # results/experiment_002_bm25-sonnet46/ is a citable record yet. Plan Phase 4 finalizes
+  # the values and flips this to FROZEN; from that first run on, the snapshot in the
+  # results directory refuses any drift. Changing a value after that means a NEW
+  # experiment (bump seq), never a new value under this one.
+  status: PROVISIONAL
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which
@@ -115,13 +147,14 @@ frozen:
     temperature: 0.0
     timeout: 60
 
-  # 4 was experiment 001's freeze. Episode-level reward is a draw — ten runs of one task
-  # under one frozen configuration split 6/4 (formerly results/experiment_dummy/, now git
-  # history). The generation protocol freezes 1 from the next experiment onward
-  # (SIA_EVALUATION_PLAN.md D2): variance pools across the held-out set instead of within
-  # one task, deltas inside the binomial noise band are noise, and pass^k is never used
-  # for generations.
-  num_trials: 4
+  # 1 per SIA_EVALUATION_PLAN.md D2: every task runs once, and statistical power comes
+  # from pooling across the held-out set rather than repeating one task — deltas inside
+  # the binomial noise band (±7 pp at T=47) are noise, and pass^k is never used for
+  # generations. 4 was experiment 001's doctrine, motivated by episode-level reward being
+  # a draw (ten runs of one task split 6/4 — in git history); D2 reverses it. This value
+  # is also the held-out trials per task — the one knob; the protocol block above
+  # deliberately has no second one.
+  num_trials: 1
   seed: 300
 
   # Execution budgets. Exactly how a later generation can "improve" by being allowed to do

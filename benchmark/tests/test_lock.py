@@ -10,6 +10,7 @@ import pytest
 import yaml
 
 from tau_adapter import lock as lockmod
+from tau_adapter import split as splitmod
 from tau_adapter.lock import Lock, LockError, assert_recipe_matches_lock, assert_tool_catalog
 
 TOOLS = ["KB_search", "get_current_time"]
@@ -206,3 +207,28 @@ def test_the_committed_lock_is_internally_consistent() -> None:
     assert real.raw["policy"]["source_retrieval_config"] == real.retrieval_config
     # Declared-and-unused, but it must not read misleadingly.
     assert real.agent_llm_declared == real.agent_model
+    # Parsing is the validation: the generation protocol's configuration must be present
+    # and well-formed in the committed lock.
+    assert real.protocol.generations >= 1
+
+
+def test_the_committed_manifest_matches_the_committed_lock() -> None:
+    """Structure only — content checks against task data are scripts/propose_split.py --verify.
+
+    The vendored checkout is gitignored, so this guards what a fresh clone can guard: the
+    committed partition carries exactly the batches and sizes the committed lock's
+    protocol block promises, with no task assigned twice.
+    """
+    real = lockmod.load_lock()
+    manifest = splitmod.load_manifest()
+    lists = splitmod.partition_lists(manifest)
+    sizes = splitmod.partition_sizes(
+        real.protocol.generations,
+        real.protocol.improvement_tasks_per_generation,
+        real.protocol.held_out_tasks,
+    )
+    assert manifest["version"] == splitmod.MANIFEST_VERSION
+    assert manifest["domain"] == real.domain
+    assert {name: len(ids) for name, ids in lists.items()} == sizes
+    all_ids = [task_id for ids in lists.values() for task_id in ids]
+    assert len(all_ids) == len(set(all_ids))

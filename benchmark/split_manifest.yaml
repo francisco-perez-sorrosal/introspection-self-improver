@@ -1,97 +1,47 @@
-# The three-way task split. A split is nothing more than three lists of tau task ids,
-# because tau selects tasks with --task-ids; resizing between experiments costs an edit,
-# not a redesign.
+# The generation protocol's task partition: G disjoint improvement batches plus the
+# fixed held-out set, as lists of tau task ids because tau selects tasks with
+# --task-ids. Sizes derive from the lock's protocol block; resizing between
+# experiments costs an edit there, not a redesign here.
 #
-# Rules:
-#   discovery  — fully inspectable. The only set the orchestrator learns from.
-#   validation — aggregate outcomes only. Exposing a validation failure in detail turns
-#                validation into more discovery data.
-#   test       — never inspected during optimisation. Predetermined checkpoints only.
-# Tasks in none of the three are unused during optimisation and remain available for
-# the full-domain checkpoint runs.
+# Rules (SIA_EVALUATION_PLAN.md D1/D9; invariants in CLAUDE.md):
+#   batch_NN — the improvement batch consumed by generation NN. Platform lane,
+#              fully observable by design, used once and never reused.
+#   held_out — measured once per generation on the local lane. Tasks, trajectories,
+#              and rewards stay out of tree (the vault) until the experiment's reveal.
+# Tasks in neither list are unused by this experiment.
 #
 # Proposed by scripts/propose_split.py --seed 20260812: stratified over reward_basis,
 # dominant required-document category, and required-document count; frozen by hand.
-# Changing any list invalidates the experiment — a new experiment id, never new lists
-# under the old one (benchmark_lock.yaml). Verify with scripts/propose_split.py --verify.
+# Changing any list invalidates the experiment — a new experiment id (bump
+# experiment.seq in benchmark_lock.yaml), never new lists under the old one. Verify
+# with scripts/propose_split.py --verify.
 #
-# Held-out enforcement (v1 §22.10, decided 2026-08-13): procedural, outputs out of tree. Test
-# ids are listed here because the runner needs them; test-split simulation output must stay out
-# of the orchestrator's working tree, and every writeup states the boundary is procedural, not
-# mechanical.
+# Experiment 002 bring-up partition at debug scale (D3). PROVISIONAL like the lock: re-proposed
+# or confirmed when plan Phase 4 freezes seq 2; held-out enforcement is structural on the
+# platform (no evidence exists) and procedural on local artifacts (out-of-tree vault, muted
+# grading).
 
-version: 1
+version: 2
 domain: banking_knowledge
 task_split_name: base
 
-discovery:
-  - task_001
-  - task_003
-  - task_004
-  - task_006
-  - task_008
-  - task_010
-  - task_021
-  - task_022
-  - task_023
-  - task_024
-  - task_029
+batches:
+  batch_01:
+    - task_023
+    - task_059
+    - task_091
+  batch_02:
+    - task_036
+    - task_045
+    - task_090
+  batch_03:
+    - task_048
+    - task_055
+    - task_098
+
+held_out:
+  - task_017
   - task_033
-  - task_038
-  - task_043
   - task_050
-  - task_054
-  - task_055
-  - task_056
-  - task_059
-  - task_061
   - task_062
   - task_068
-  - task_073
-  - task_076
-  - task_078
-  - task_081
-  - task_082
-  - task_086
-  - task_096
-  - task_098
-
-validation:
-  - task_016
-  - task_019
-  - task_034
-  - task_037
-  - task_047
-  - task_049
-  - task_052
-  - task_057
-  - task_065
-  - task_067
-  - task_072
-  - task_079
-  - task_088
-  - task_093
-  - task_099
-
-test:
-  - task_007
-  - task_017
-  - task_026
-  - task_027
-  - task_032
-  - task_036
-  - task_039
-  - task_045
-  - task_053
-  - task_058
-  - task_066
-  - task_069
-  - task_070
-  - task_080
-  - task_083
-  - task_087
-  - task_089
-  - task_090
-  - task_094
-  - task_102
-
