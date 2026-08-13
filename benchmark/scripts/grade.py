@@ -27,7 +27,9 @@ kwargs builder, calls the original, and adds one key.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -40,6 +42,32 @@ def _resolve_recorded_retrieval(results_path: Path) -> tuple[str | None, dict | 
     """What retrieval configuration produced this trajectory."""
     info = json.loads(results_path.read_text(encoding="utf-8")).get("info") or {}
     return info.get("retrieval_config"), info.get("retrieval_config_kwargs")
+
+
+@contextlib.contextmanager
+def _fd_silence():
+    """Silence stdout and stderr at the file-descriptor level for the duration.
+
+    `redirect_stdout` is not enough here: τ grades through a rich Console that resolves
+    `sys.stdout` late (redirectable) but logs through loguru, whose sink holds the original
+    stderr stream object from import time. Held-out grading must leak nothing either way,
+    so the descriptors themselves point at /dev/null while the evaluator runs.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    saved = (os.dup(1), os.dup(2))
+    devnull = os.open(os.devnull, os.O_WRONLY)
+    try:
+        os.dup2(devnull, 1)
+        os.dup2(devnull, 2)
+        yield
+    finally:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.dup2(saved[0], 1)
+        os.dup2(saved[1], 2)
+        for fd in (*saved, devnull):
+            os.close(fd)
 
 
 def main() -> int:
@@ -55,7 +83,24 @@ def main() -> int:
         action="store_true",
         help="re-grade against current task definitions instead of the embedded ones",
     )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help=(
+            "grade without printing anything graded: the evaluator's whole output is "
+            "silenced at the descriptor level and only a reward-free confirmation line "
+            "remains. Requires --output-dir — a quiet grade with no persisted output "
+            "would grade into nothing."
+        ),
+    )
     args = parser.parse_args()
+
+    if args.quiet and not args.output_dir:
+        raise SystemExit(
+            "--quiet without --output-dir would compute rewards and put them nowhere. "
+            "Point --output-dir at where the graded results should be persisted (for a "
+            "held-out round, the vault's graded/ directory)."
+        )
 
     results_path = Path(args.results).resolve()
     if not results_path.is_file():
@@ -92,11 +137,20 @@ def main() -> int:
 
         print("no retrieval config recorded (domain has no knowledge base); grading as-is")
 
-    et.evaluate_trajectories(
-        [str(results_path)],
-        output_dir=args.output_dir,
-        fresh_tasks=args.fresh_tasks,
-    )
+    if args.quiet:
+        with _fd_silence():
+            et.evaluate_trajectories(
+                [str(results_path)],
+                output_dir=args.output_dir,
+                fresh_tasks=args.fresh_tasks,
+            )
+        print(f"graded → {args.output_dir} (quiet: nothing graded was printed)")
+    else:
+        et.evaluate_trajectories(
+            [str(results_path)],
+            output_dir=args.output_dir,
+            fresh_tasks=args.fresh_tasks,
+        )
     return 0
 
 
