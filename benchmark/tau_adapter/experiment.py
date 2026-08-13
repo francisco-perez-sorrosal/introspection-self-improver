@@ -35,6 +35,10 @@ SNAPSHOT_NAME = "experiment.yaml"
 #: results.json without it is an interrupted run, which resumes rather than refuses.
 COMPLETION_SENTINEL = "run_metadata.json"
 
+#: The held-out wrapper's console log. Created before the runner starts (it is the redirect
+#: target), so the round-directory lifecycle must not read its presence as prior results.
+CONSOLE_LOG = "console.log"
+
 #: The surface `introspection dev` serves: the Recipe tree plus the Runtime manifest that
 #: resolves it. Dirt anywhere else cannot change what an episode runs.
 SERVED_RECIPE_PATHS = ("target-agent", ".introspection")
@@ -135,7 +139,8 @@ def prepare_round_dir(out_dir: Path, overwrite: bool) -> str | None:
         shutil.rmtree(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         return "previous contents overwritten"
-    if not out_dir.exists() or not any(out_dir.iterdir()):
+    evidence = out_dir.exists() and any(p.name != CONSOLE_LOG for p in out_dir.iterdir())
+    if not evidence:
         out_dir.mkdir(parents=True, exist_ok=True)
         return None
     if (out_dir / COMPLETION_SENTINEL).exists():

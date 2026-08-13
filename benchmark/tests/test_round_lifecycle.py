@@ -21,6 +21,16 @@ def test_fresh_directory_returns_no_status(tmp_path):
     assert out.is_dir()
 
 
+def test_a_console_log_alone_is_not_prior_results(tmp_path):
+    # The held-out wrapper creates console.log before the runner starts (it is the redirect
+    # target); a fresh round must not read as "resuming" — that lie would land in
+    # run_metadata.json as resumed=true and stay in the record.
+    out = tmp_path / "round"
+    out.mkdir()
+    (out / "console.log").write_text("===== stage header\n", encoding="utf-8")
+    assert prepare_round_dir(out, overwrite=False) is None
+
+
 def test_completed_round_refuses_without_overwrite(tmp_path):
     out = tmp_path / "round"
     out.mkdir()

@@ -13,6 +13,7 @@ from the vault's contents.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -23,12 +24,11 @@ from typing import IO, Any
 
 from tau_adapter import manifest as manifestmod
 from tau_adapter import split as splitmod
-from tau_adapter.experiment import COMPLETION_SENTINEL
+from tau_adapter.experiment import COMPLETION_SENTINEL, CONSOLE_LOG
 from tau_adapter.lock import BENCHMARK_DIR, Lock
 
 VAULT_ENV = "SIA_VAULT_DIR"
 DEFAULT_VAULT = Path.home() / ".sia_vault"
-CONSOLE_LOG = "console.log"
 GRADED_DIR = "graded"
 #: τ's evaluator names its output `updated_<input filename>`; the runner's file is results.json.
 GRADED_RESULTS = "updated_results.json"
@@ -96,9 +96,28 @@ def run_round(
         rows=manifestmod.read_manifest(round_dir),
         graded_present=graded_path.exists(),
         already_measured=already_measured,
+        incident_totals=_incident_totals(round_dir),
     )
     print(report)
     return 0 if complete else 1
+
+
+def _incident_totals(round_dir: Path) -> dict[str, int] | None:
+    """The round's seam-incident counters, projected out of the sealed record.
+
+    run_metadata.json carries graded values elsewhere in the file; only the counters leave
+    this function. This is what lets a sealed round still answer the attribution question —
+    was the seam healthy? — without anyone opening the console log.
+    """
+    path = round_dir / COMPLETION_SENTINEL
+    if not path.exists():
+        return None
+    try:
+        meta = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    totals = (meta.get("incidents") or {}).get("totals") or {}
+    return {key: int(value) for key, value in totals.items()}
 
 
 def completeness_report(
@@ -111,6 +130,7 @@ def completeness_report(
     rows: list[dict[str, Any]],
     graded_present: bool,
     already_measured: bool,
+    incident_totals: dict[str, int] | None = None,
 ) -> tuple[str, bool]:
     """The terminal's entire view of a held-out round. Counts, paths — nothing graded."""
     expected = expected_tasks * num_trials
@@ -127,6 +147,7 @@ def completeness_report(
         f" ({expected_tasks} task(s) x {num_trials} trial(s))"
         + ("" if completed >= expected else " — INCOMPLETE"),
         f"   manifest      {manifestmod.MANIFEST_NAME}: {len(rows)} row(s)",
+        f"   incidents     {_incident_text(incident_totals)}",
         (
             f"   graded        {GRADED_DIR}/{GRADED_RESULTS} — persisted, not shown"
             if graded_present
@@ -145,6 +166,14 @@ def completeness_report(
             "   missing (trial, task, seed) pairs; completed episodes are not re-spent.",
         ]
     return "\n".join(lines), complete
+
+
+def _incident_text(totals: dict[str, int] | None) -> str:
+    """One line of seam health. Counters are infrastructure facts, never graded outcomes."""
+    if totals is None:
+        return "unknown — the run left no metadata"
+    noted = ", ".join(f"{key}={value}" for key, value in sorted(totals.items()) if value)
+    return f"{noted} — seam counters, not graded outcomes" if noted else "none"
 
 
 def _runner_argv(round_dir: Path) -> list[str]:

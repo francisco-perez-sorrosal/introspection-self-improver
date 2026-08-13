@@ -6,6 +6,7 @@ print graded figures on purpose — the wrapper's own stdout carries counts and 
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -60,7 +61,12 @@ def _fake_child(rows_completed: int = 5):
         target = Path(argv[argv.index("--out") + 1]) if "--out" in argv else None
         if target is not None:  # the runner stage
             (target / "results.json").write_text("{}", encoding="utf-8")
-            (target / COMPLETION_SENTINEL).write_text("{}", encoding="utf-8")
+            # Realistic metadata: graded values elsewhere in the file, counters projected out.
+            metadata = {
+                "incidents": {"totals": {"stream_reattaches": 2, "stall_warnings": 0}},
+                "episodes": [{"task_id": "task_001", "reward": 1.0}],
+            }
+            (target / COMPLETION_SENTINEL).write_text(json.dumps(metadata), encoding="utf-8")
             write_manifest(target, _rows(rows_completed))
         else:  # the grading stage
             graded = Path(argv[argv.index("--output-dir") + 1])
@@ -93,6 +99,7 @@ def test_run_round_seals_child_output_and_prints_counts_only(tmp_path, capsys):
     assert "5/5 completed" in out
     assert "5 task(s) x 1 trial(s)" in out
     assert "5 row(s)" in out
+    assert "incidents     stream_reattaches=2 — seam counters, not graded outcomes" in out
     assert "graded/updated_results.json — persisted, not shown" in out
     assert "read at reveal" in out
     console = (tmp_path / "experiment_002_exp-b" / "generation_000" / "console.log").read_text(
