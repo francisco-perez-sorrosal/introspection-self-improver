@@ -203,3 +203,14 @@ Found while implementing, and load-bearing:
   backend is constant by construction — and retrieval *usage* (query formulation, k, iteration,
   stopping) remains mutable harness territory. Re-deciding this value means a new experiment,
   never a new value under the old id.
+- The document names experiments by a single `experiment.id` in the lock. Since 2026-08-13 the
+  id is *derived*: `experiment.seq` (zero-padded to three digits) + `experiment.name`, giving
+  `001_bm25-sonnet46` and the results directory `results/experiment_001_bm25-sonnet46/`. The
+  sequence exists because a descriptive name can legitimately repeat — a second freeze of the
+  same bm25 + Sonnet 4.6 configuration is `002_bm25-sonnet46`, a different experiment — so the
+  name alone cannot be the identity. Re-deciding a freeze bumps `seq`; everything the document
+  says about "a new id" reads as "a new seq". The pre-rename directory
+  `results/experiment_bm25-sonnet46/` was migrated to `results/experiment_001_bm25-sonnet46/`
+  (snapshot id and fingerprint refreshed, recorded `experiment` fields rewritten); platform
+  task titles from before the rename keep their old `[exp:bm25-sonnet46]` suffix — they are
+  records of what the platform actually displayed, not re-labeled evidence.

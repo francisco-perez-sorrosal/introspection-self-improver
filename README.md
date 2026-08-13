@@ -216,17 +216,21 @@ Reward is computed only by `tau2 evaluate-trajs`, only via `make grade`.
 ## One experiment, one freeze
 
 `results/` carries one level above generations: `results/experiment_<id>/generation_NNN/<run>/`.
-The id comes from `benchmark_lock.yaml` (`experiment.id`) — the lock defines the freeze, so the
-lock names the experiment — and the runner refuses any `results/` path outside the lock's
-experiment directory, before `--overwrite` could delete anything. Changing models, retrieval
-config, splits or trial counts is a new experiment id, never a new value under the old one.
+The id derives from `benchmark_lock.yaml` — `experiment.seq` (zero-padded to three digits) plus
+`experiment.name`, e.g. `001_bm25-sonnet46` — the lock defines the freeze, so the lock names the
+experiment — and the runner refuses any `results/` path outside the lock's experiment directory,
+before `--overwrite` could delete anything. Changing models, retrieval config, splits or trial
+counts is a new experiment (bump `seq`), never a new value under the old one; the name is a
+configuration nickname and may repeat — `002_bm25-sonnet46` is a second, distinct freeze of the
+same configuration.
 
 Once the lock stops being `PROVISIONAL`, the first run into an experiment writes
 `experiment.yaml` beside its generations — a fingerprint of the parsed freeze (lock values plus
 split manifest) — and every later run must match it. Values are compared, not file bytes, so a
 comment edit never trips the check while a re-decided frozen value refuses the run with
-"start a new experiment". `results/experiment_dummy/` is the pre-freeze bring-up bucket:
-`PROVISIONAL` runs land there, unenforced and unreportable.
+"start a new experiment". `results/experiment_dummy/` was the pre-freeze bring-up bucket
+(`PROVISIONAL` runs landed there, unenforced and unreportable); it was removed from the
+working tree on 2026-08-13 and lives in git history.
 
 **The lock is currently `PROVISIONAL`** — most values let the pipe move and are not an
 experiment's freeze. Two values need a decision before G0:

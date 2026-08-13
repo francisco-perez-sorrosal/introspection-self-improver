@@ -10,7 +10,12 @@ from __future__ import annotations
 import json
 
 from tau_adapter.transport import AssistantTurn, TransportFailure
-from tau_adapter.transport_platform import PlatformTransport, StreamAssembler, _StreamSession
+from tau_adapter.transport_platform import (
+    PlatformTransport,
+    StreamAssembler,
+    _StreamSession,
+    original_title_of,
+)
 
 RUN = "019ff8c7-8167-711a-8eb4-3d07ee88b44f"
 TASK = "019ff8c7-8167-711a-8eb4-3d08870f89b9"
@@ -398,20 +403,44 @@ def test_close_retitles_and_archives_the_task_never_deletes(monkeypatch) -> None
 
     Deleting the task keeps the conversation export intact but demotes the row to a bare
     conversation id in the UI — observed on real episodes. Close must retitle and archive,
-    and it must be idempotent: a second close repeats nothing.
+    and it must be idempotent: a second close repeats nothing. The platform's auto-title is
+    read first and preserved after ` - `, so the interim label loses nothing.
     """
-    transport = PlatformTransport(
-        runtime_id="rt", repo_root=".", episode_label="τ²-bench banking_knowledge task_001"
-    )
+    label = "[exp_001:bm25-sonnet46] τ²-bench banking_knowledge task_001"
+    transport = PlatformTransport(runtime_id="rt", repo_root=".", episode_label=label)
+    transport._task_id = "task-1"
+    calls: list[list[str]] = []
+
+    def cli(args, timeout):
+        calls.append(args)
+        return {"title": "Wanted to change the email address"} if args[1] == "get" else {}
+
+    monkeypatch.setattr(transport, "_cli", cli)
+    transport.close()
+    transport.close()
+    assert calls == [
+        ["tasks", "get", "task-1"],
+        ["tasks", "update", "task-1", "--title", f"{label} - Wanted to change the email address"],
+        ["tasks", "archive", "task-1", "-y"],
+    ]
+    assert transport.original_title == "Wanted to change the email address"
+
+
+def test_close_without_a_platform_title_labels_bare(monkeypatch) -> None:
+    # A task whose title is empty (or already one of the harness's own labels) contributes
+    # no ` - ` suffix; the interim label stands alone rather than trailing a dash.
+    label = "[exp_001:bm25-sonnet46] τ²-bench banking_knowledge"
+    transport = PlatformTransport(runtime_id="rt", repo_root=".", episode_label=label)
     transport._task_id = "task-1"
     calls: list[list[str]] = []
     monkeypatch.setattr(transport, "_cli", lambda args, timeout: calls.append(args) or {})
     transport.close()
-    transport.close()
     assert calls == [
-        ["tasks", "update", "task-1", "--title", "τ²-bench banking_knowledge task_001"],
+        ["tasks", "get", "task-1"],
+        ["tasks", "update", "task-1", "--title", label],
         ["tasks", "archive", "task-1", "-y"],
     ]
+    assert transport.original_title == ""
 
 
 def test_close_without_a_label_still_archives(monkeypatch) -> None:
@@ -420,4 +449,25 @@ def test_close_without_a_label_still_archives(monkeypatch) -> None:
     calls: list[list[str]] = []
     monkeypatch.setattr(transport, "_cli", lambda args, timeout: calls.append(args) or {})
     transport.close()
-    assert calls == [["tasks", "archive", "task-1", "-y"]]
+    assert calls == [
+        ["tasks", "get", "task-1"],
+        ["tasks", "archive", "task-1", "-y"],
+    ]
+
+
+def test_original_title_is_recovered_from_under_harness_labels() -> None:
+    # The three label shapes the runner writes all start with the experiment tag (legacy
+    # rows with `τ²-bench`) and keep the platform's own title after ` - `; anything else is
+    # the platform's title itself.
+    assert original_title_of("Wanted to change the email address") == (
+        "Wanted to change the email address"
+    )
+    assert (
+        original_title_of(
+            "[exp_001:bm25-sonnet46] τ²-bench banking task_004 trial 3 gen_000 - Wanted to change"
+        )
+        == "Wanted to change"
+    )
+    assert original_title_of("[exp_001:bm25-sonnet46] τ²-bench banking_knowledge") == ""
+    assert original_title_of("τ²-bench banking task_004 trial0 gen000 [exp:bm25-sonnet46]") == ""
+    assert original_title_of("") == ""

@@ -28,8 +28,9 @@ class LockError(RuntimeError):
     pass
 
 
-# The experiment id becomes a results/ path component, so it is validated where it is read.
-_EXPERIMENT_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
+# The experiment name becomes part of a results/ path component, so it is validated where
+# it is read.
+_EXPERIMENT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
 
 @dataclass(frozen=True)
@@ -62,17 +63,41 @@ class Lock:
         return str(self._frozen("status", default="")).upper() == "PROVISIONAL"
 
     @property
-    def experiment_id(self) -> str:
-        """The experiment the frozen values define. One experiment is one freeze."""
-        value = str((self.raw.get("experiment") or {}).get("id") or "")
+    def experiment_seq(self) -> int:
+        """The experiment's sequence number, disambiguating same-named configurations.
+
+        Two freezes may share a descriptive name (a second bm25 + Sonnet 4.6 experiment is
+        still a new freeze), so the name alone cannot be the identity — the sequence is.
+        """
+        value = (self.raw.get("experiment") or {}).get("seq")
+        if value is None:
+            raise LockError("benchmark_lock.yaml is missing experiment.seq")
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise LockError(f"experiment.seq {value!r} must be a positive integer")
+        return value
+
+    @property
+    def experiment_name(self) -> str:
+        """The experiment's descriptive slug (configuration nickname, not the identity)."""
+        value = str((self.raw.get("experiment") or {}).get("name") or "")
         if not value:
-            raise LockError("benchmark_lock.yaml is missing experiment.id")
-        if not _EXPERIMENT_ID_RE.match(value):
+            raise LockError("benchmark_lock.yaml is missing experiment.name")
+        if not _EXPERIMENT_NAME_RE.match(value):
             raise LockError(
-                f"experiment.id {value!r} is not a directory slug: lowercase letters, "
+                f"experiment.name {value!r} is not a directory slug: lowercase letters, "
                 "digits, '-' and '_' only, starting with a letter or digit"
             )
         return value
+
+    @property
+    def experiment_id(self) -> str:
+        """The experiment the frozen values define, e.g. `001_bm25-sonnet46`.
+
+        One experiment is one freeze. The id is derived — zero-padded sequence + name —
+        so every consumer (results paths, snapshots, manifests, refusal messages) agrees
+        on the one unique string that names this freeze.
+        """
+        return f"{self.experiment_seq:03d}_{self.experiment_name}"
 
     @property
     def agent_model(self) -> str:

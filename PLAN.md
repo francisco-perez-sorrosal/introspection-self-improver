@@ -91,8 +91,11 @@ Tasks:
 
 Exit criteria:
 
-- [x] `grep -c PROVISIONAL benchmark/benchmark_lock.yaml` → 0, and `experiment.id` =
-      `bm25-sonnet46` (`experiment_id.py --dir` → `experiment_bm25-sonnet46`) (2026-08-13).
+- [x] `grep -c PROVISIONAL benchmark/benchmark_lock.yaml` → 0, and the experiment id derives
+      to `001_bm25-sonnet46` (`experiment_id.py --dir` → `experiment_001_bm25-sonnet46`)
+      (2026-08-13; frozen as `experiment.id: bm25-sonnet46`, renamed the same day to the
+      seq+name scheme — `experiment.seq: 1` + `experiment.name: bm25-sonnet46`, results
+      migrated to `results/experiment_001_bm25-sonnet46/`).
 - [x] `benchmark/split_manifest.yaml` holds three disjoint lists (30/15/20), ACTION tasks
       in 3/1/2 — `scripts/propose_split.py --verify` passes (2026-08-13).
 - [x] The five W0 items read true against the code (2026-08-13).

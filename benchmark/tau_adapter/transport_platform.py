@@ -201,6 +201,19 @@ class _StreamSession:
         self.thread: threading.Thread | None = None
 
 
+def original_title_of(current: str) -> str:
+    """The platform's own title for a task, dug out from under the harness labels.
+
+    The runner titles a task up to three times — the during-run fallback, the close-time
+    interim, and the post-run per-episode label — and each starts with the experiment tag
+    (`[exp_NNN:name]`; pre-rename rows started with `τ²-bench`) and preserves the platform's
+    auto-generated title after ` - `. A title not of the harness's making IS the original.
+    """
+    if current.startswith(("[exp", "τ²-bench")):
+        return current.split(" - ", 1)[1].strip() if " - " in current else ""
+    return current.strip()
+
+
 class PlatformTransport:
     """One Introspection task per episode, one run per user turn."""
 
@@ -225,6 +238,10 @@ class PlatformTransport:
         self._episode_label = episode_label
 
         self._task_id: str | None = None
+        # The platform's auto-generated title, captured at close() before the interim retitle
+        # overwrites it. None means "never read" (fetch failed or close never ran), which the
+        # runner's post-run pass distinguishes from "" (read, and there was nothing to keep).
+        self.original_title: str | None = None
         self._run_id: str | None = None
         # Set once the in-flight turn's run id is known. The reader thread needs it to recover
         # an overlapped attach that lost its race with `tasks prompt` — see _on_stream_end.
@@ -288,10 +305,22 @@ class PlatformTransport:
         self._stop_stream()
         if self._task_id is None:
             return
+        # The platform auto-titles the conversation from its content ("Wanted to change the
+        # email address…"), and that summary is worth keeping: read it before the retitle
+        # below destroys it, keep it for the runner's post-run label pass, and carry it in
+        # the interim title so even an interrupted run's row stays readable.
+        try:
+            task = self._cli(["tasks", "get", self._task_id], timeout=60)
+            self.original_title = original_title_of(str((task or {}).get("title") or ""))
+        except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+            logger.debug(f"could not read title of task {self._task_id}: {exc}")
         if self._episode_label:
+            title = self._episode_label + (
+                f" - {self.original_title}" if self.original_title else ""
+            )
             try:
                 self._cli(
-                    ["tasks", "update", self._task_id, "--title", self._episode_label],
+                    ["tasks", "update", self._task_id, "--title", title],
                     timeout=60,
                 )
             except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:

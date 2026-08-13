@@ -8,8 +8,9 @@ BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
 GEN    ?= generation_000
 
-# One experiment is one freeze. The id comes from benchmark_lock.yaml (experiment.id), so the
-# results path is derived — results/experiment_<id>/$(GEN)/<run> — never chosen per invocation.
+# One experiment is one freeze. The id derives from benchmark_lock.yaml (experiment.seq +
+# experiment.name → <seq>_<name>, e.g. 001_bm25-sonnet46), so the results path is derived —
+# results/experiment_<id>/$(GEN)/<run> — never chosen per invocation.
 # run.py additionally refuses any results/ path outside the lock's experiment, so a stale or
 # empty value here cannot land a run in the wrong experiment's record.
 EXPDIR  := $(shell python3 $(BENCH)/scripts/experiment_id.py --dir)
@@ -69,8 +70,9 @@ help:
 	@echo "GEN=generation_NNN         generation directory under results/$(EXPDIR)/"
 	@echo "ARM=baseline|candidate     which harness arm a round belongs to (default baseline)"
 	@echo ""
-	@echo "The experiment comes from benchmark_lock.yaml (experiment.id): results land under"
-	@echo "results/$(EXPDIR)/$(GEN)/ and the runner refuses any other results/ path."
+	@echo "The experiment comes from benchmark_lock.yaml (experiment.seq + experiment.name):"
+	@echo "results land under results/$(EXPDIR)/$(GEN)/ and the runner refuses any other"
+	@echo "results/ path."
 	@echo ""
 	@echo "  make single_task                     one task, agent on this machine"
 	@echo "  make single_task TRANSPORT=platform  same task, agent on a dev runtime,"

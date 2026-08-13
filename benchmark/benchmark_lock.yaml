@@ -7,15 +7,19 @@
 # Changing any value invalidates cross-generation comparison. Start a new experiment
 # instead, and say so in the results directory.
 
-# "Say so in the results directory" is mechanical, not aspirational: this id names the
-# experiment the frozen values below define, and every run writes under
-# results/experiment_<id>/<generation>/ — the runner refuses any other results/ path.
-# One experiment is one freeze: re-deciding a frozen value means a NEW id here, never a
-# new value under the old one. `dummy` was the bring-up bucket while the lock was still
-# provisional (no snapshot enforcement; its runs are retired under results/experiment_dummy/);
-# this id was assigned when the freeze was re-decided (H2, PLAN.md M1, 2026-08-13).
+# "Say so in the results directory" is mechanical, not aspirational: seq + name derive the
+# experiment id (`<seq, zero-padded to 3>_<name>`, here 001_bm25-sonnet46) naming the freeze
+# the values below define, and every run writes under results/experiment_<id>/<generation>/
+# — the runner refuses any other results/ path. One experiment is one freeze: re-deciding a
+# frozen value means bumping `seq` here (a NEW experiment), never a new value under the old
+# one; `name` is a configuration nickname and may repeat across experiments — the sequence
+# is the identity. `dummy` was the bring-up bucket while the lock was still provisional (no
+# snapshot enforcement; its runs, removed from the working tree 2026-08-13, are in git
+# history); this experiment was assigned when the freeze was re-decided (H2, PLAN.md M1,
+# 2026-08-13).
 experiment:
-  id: bm25-sonnet46
+  seq: 1
+  name: bm25-sonnet46
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -46,10 +50,10 @@ benchmark:
   task_split_name: base
 
 frozen:
-  # FROZEN 2026-08-13 (H2, PLAN.md M1) for experiment bm25-sonnet46. Every value below is
-  # this experiment's freeze; changing any one means a NEW experiment id, never a new value
-  # under this one. The first run snapshots the parsed freeze into
-  # results/experiment_bm25-sonnet46/experiment.yaml, and every later run must match it.
+  # FROZEN 2026-08-13 (H2, PLAN.md M1) for experiment 001_bm25-sonnet46. Every value below
+  # is this experiment's freeze; changing any one means a NEW experiment (bump seq), never
+  # a new value under this one. The first run snapshots the parsed freeze into
+  # results/experiment_001_bm25-sonnet46/experiment.yaml, and every later run must match it.
   status: FROZEN
 
   # The model that actually serves the agent. Authoritative copy lives in
@@ -112,7 +116,8 @@ frozen:
     timeout: 60
 
   # 4 (H2, PLAN.md M1). Episode-level reward is a draw — ten runs of one task under one
-  # frozen configuration split 6/4 (results/experiment_dummy/) — so a single trial supports
+  # frozen configuration split 6/4 (formerly results/experiment_dummy/, now git history) —
+  # so a single trial supports
   # a gate, never a comparison. pass^k is reported up to k=4 alongside pass^1. The
   # full-domain checkpoint runs at ×1 by the same decision: the recognizable 97-task number
   # costs $25 instead of $100 and is labeled single-trial wherever it is reported.

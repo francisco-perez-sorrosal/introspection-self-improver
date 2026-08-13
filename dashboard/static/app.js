@@ -919,7 +919,12 @@ async function init() {
   const select = $("#experiment-select");
   select.replaceChildren();
   for (const experiment of experiments) {
-    const option = el("option", null, `${experiment.id}${experiment.has_snapshot ? " ❄" : ""}`);
+    // experiment_<seq>_<name> directories read as "exp_001 · bm25-sonnet46"; legacy
+    // pre-sequence directories (experiment_dummy) fall back to their bare id.
+    const label = experiment.seq
+      ? `exp_${experiment.seq} · ${experiment.name}`
+      : experiment.id;
+    const option = el("option", null, `${label}${experiment.has_snapshot ? " ❄" : ""}`);
     option.value = experiment.dirname;
     select.appendChild(option);
   }

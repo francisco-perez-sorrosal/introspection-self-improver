@@ -61,7 +61,7 @@ from tau_adapter.pi_agent import PiRecipeAgent
 from tau_adapter.policy_region import extract_policy, replace_policy
 from tau_adapter.tool_bridge import ToolBridge
 from tau_adapter.transport_local import LAUNCHER_CLI, LAUNCHER_PI, LAUNCHERS, LocalPiTransport
-from tau_adapter.transport_platform import PlatformTransport
+from tau_adapter.transport_platform import PlatformTransport, original_title_of
 
 AGENT_KEY = "pi_recipe"
 
@@ -238,33 +238,52 @@ def _platform_accounting(task_ids: list[str]) -> dict[str, Any]:
     return accounting
 
 
+def _experiment_tag(lock: lockmod.Lock) -> str:
+    """The title prefix naming the experiment, e.g. `[exp_001:bm25-sonnet46]`."""
+    return f"[exp_{lock.experiment_seq:03d}:{lock.experiment_name}]"
+
+
 def _retitle_episodes(
     payload: dict[str, Any],
     domain: str,
     generation: str | None,
-    experiment_id: str,
+    experiment_tag: str,
+    original_titles: dict[str, str],
 ) -> tuple[dict[str, str], int]:
     """Post-run label pass: name every platform task after the τ episode it served.
 
     The agent factory never learns which simulation it serves, so a sweep's tasks are titled
     with the domain alone at episode end. Ground truth arrives only when τ's runner returns —
     each simulation's raw_data names its task — so the labels are applied here, from the
-    record, rather than guessed during the run (the retitle works on archived rows). One CLI
-    call per episode; failures are counted, never fatal, and never touch the score.
+    record, rather than guessed during the run (the retitle works on archived rows).
+
+    The platform's own auto-title (its summary of the conversation) is preserved after
+    ` - `: the transports captured it at close() before their interim retitle, so the common
+    case costs nothing extra. A row this process did not close — a resumed run's archived
+    episode — is read back with one `tasks get` and the original recovered from under the
+    label. One `tasks update` per episode; failures are counted, never fatal, and never
+    touch the score.
     """
     gen_short = ""
     if generation and generation.startswith("generation_"):
-        gen_short = f" gen{generation.removeprefix('generation_')}"
+        gen_short = f" gen_{generation.removeprefix('generation_')}"
     labels: dict[str, str] = {}
     failed = 0
     for sim in payload.get("simulations") or []:
         ref = manifestmod.session_ref_of(sim)
         if not ref:
             continue
+        original = original_titles.get(ref)
+        if original is None:
+            try:
+                task = _cli_json(["tasks", "get", ref], timeout=60)
+                original = original_title_of(str((task or {}).get("title") or ""))
+            except (OSError, subprocess.SubprocessError, json.JSONDecodeError, RuntimeError):
+                original = ""
         label = (
-            f"τ²-bench {domain} {sim.get('task_id')} trial{sim.get('trial')}"
-            f"{gen_short} [exp:{experiment_id}]"
-        )
+            f"{experiment_tag} τ²-bench {domain} {sim.get('task_id')} "
+            f"trial {sim.get('trial')}{gen_short}"
+        ) + (f" - {original}" if original else "")
         try:
             _cli_json(["tasks", "update", ref, "--title", label], timeout=60)
             labels[ref] = label
@@ -507,13 +526,11 @@ def main() -> int:
     # What a platform task row reads as while its episode is still running. A sweep cannot
     # name the specific τ task at creation time (the factory does not learn which simulation
     # it serves), so this is the during-run fallback; the post-run retitle pass upgrades every
-    # row to `<domain> <task> trial<k> gen<NNN>` from τ's own record once it exists. The
-    # experiment suffix keeps platform evidence separable even where two experiments share a
-    # recipe commit — e.g. a user-simulator-only change.
-    episode_label = (
-        f"τ²-bench {domain}"
-        + (f" {task_ids[0]}" if task_ids and len(task_ids) == 1 else "")
-        + f" [exp:{lock.experiment_id}]"
+    # row to `[exp_NNN:name] τ²-bench <domain> <task> trial <k> gen_NNN - <platform title>`
+    # from τ's own record once it exists. The experiment tag keeps platform evidence separable
+    # even where two experiments share a recipe commit — e.g. a user-simulator-only change.
+    episode_label = f"{_experiment_tag(lock)} τ²-bench {domain}" + (
+        f" {task_ids[0]}" if task_ids and len(task_ids) == 1 else ""
     )
 
     # Every transport constructed, one per episode *attempt*. This is the queue-tolerant side
@@ -681,8 +698,15 @@ def main() -> int:
     retitle_failures = 0
     accounting: dict[str, Any] = {}
     if is_platform:
+        # What the platform's auto-titles were before close() relabeled the tasks, keyed by
+        # task id — so the retitle pass can preserve them without a per-episode `tasks get`.
+        original_titles = {
+            t.session_ref: t.original_title
+            for t in episode_transports
+            if getattr(t, "session_ref", None) and getattr(t, "original_title", None) is not None
+        }
         labels, retitle_failures = _retitle_episodes(
-            payload, domain, generation, lock.experiment_id
+            payload, domain, generation, _experiment_tag(lock), original_titles
         )
         referenced = sorted(
             {

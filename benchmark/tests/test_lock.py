@@ -55,20 +55,35 @@ def test_missing_frozen_field_names_itself() -> None:
         _ = Lock(raw={"frozen": {}}).num_trials
 
 
-def test_experiment_id_reads_from_the_lock() -> None:
-    assert Lock(raw={"experiment": {"id": "dummy"}}).experiment_id == "dummy"
+def test_experiment_id_derives_from_seq_and_name() -> None:
+    # Zero-padded so two freezes of the same configuration sort and read as a sequence:
+    # 001_bm25-sonnet46, 002_bm25-sonnet46, …
+    lock = Lock(raw={"experiment": {"seq": 1, "name": "bm25-sonnet46"}})
+    assert lock.experiment_id == "001_bm25-sonnet46"
 
 
-def test_missing_experiment_id_is_refused() -> None:
-    with pytest.raises(LockError, match=r"experiment\.id"):
-        _ = Lock(raw={}).experiment_id
+def test_missing_experiment_seq_is_refused() -> None:
+    with pytest.raises(LockError, match=r"experiment\.seq"):
+        _ = Lock(raw={"experiment": {"name": "dummy"}}).experiment_id
 
 
-def test_experiment_id_must_be_a_directory_slug() -> None:
-    # The id becomes a results/ path component, so anything a filesystem or a reader could
-    # mis-handle is refused at the source rather than becoming a strange directory name.
+def test_missing_experiment_name_is_refused() -> None:
+    with pytest.raises(LockError, match=r"experiment\.name"):
+        _ = Lock(raw={"experiment": {"seq": 1}}).experiment_id
+
+
+@pytest.mark.parametrize("bad_seq", [0, -3, "1", True])
+def test_experiment_seq_must_be_a_positive_integer(bad_seq) -> None:
+    with pytest.raises(LockError, match="positive integer"):
+        _ = Lock(raw={"experiment": {"seq": bad_seq, "name": "dummy"}}).experiment_id
+
+
+def test_experiment_name_must_be_a_directory_slug() -> None:
+    # The name becomes part of a results/ path component, so anything a filesystem or a
+    # reader could mis-handle is refused at the source rather than becoming a strange
+    # directory name.
     with pytest.raises(LockError, match="slug"):
-        _ = Lock(raw={"experiment": {"id": "Bad Name"}}).experiment_id
+        _ = Lock(raw={"experiment": {"seq": 1, "name": "Bad Name"}}).experiment_id
 
 
 def test_recipe_model_mismatch_is_refused(tmp_path) -> None:

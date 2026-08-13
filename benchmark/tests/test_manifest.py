@@ -50,7 +50,7 @@ def _payload() -> dict:
 
 def _context(**overrides) -> RoundContext:
     fields = dict(
-        experiment_id="bm25-sonnet46",
+        experiment_id="001_bm25-sonnet46",
         transport="platform",
         generation="generation_000",
         arm_sha="abc123",
@@ -64,7 +64,12 @@ def _context(**overrides) -> RoundContext:
             }
         },
         incidents_by_ref={"conv-aaa": {"stall_warnings": 2, "prompt_409": 0}},
-        labels_by_ref={"conv-aaa": "τ²-bench banking task_001 trial0 gen000 [exp:bm25-sonnet46]"},
+        labels_by_ref={
+            "conv-aaa": (
+                "[exp_001:bm25-sonnet46] τ²-bench banking task_001 trial 0 gen_000"
+                " - Wanted to change the email address on their account"
+            )
+        },
     )
     fields.update(overrides)
     return RoundContext(**fields)
@@ -80,7 +85,7 @@ def test_rows_join_accounting_incidents_and_labels_by_session_ref():
     assert joined["total_tokens"] == 1000
     assert joined["evidence_complete"] is True
     assert joined["stall_warnings"] == 2
-    assert joined["label"].endswith("[exp:bm25-sonnet46]")
+    assert joined["label"].startswith("[exp_001:bm25-sonnet46]")
     assert joined["completed"] is True
     assert joined["seed"] == 111
 

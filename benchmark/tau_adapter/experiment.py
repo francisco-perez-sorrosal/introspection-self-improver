@@ -2,9 +2,10 @@
 
 results/ carries one level above generations — results/experiment_<id>/generation_NNN/ —
 so runs produced under different freezes (models, retrieval configs, splits, trial
-counts) can never interleave in one directory. The id comes from benchmark_lock.yaml
-(`experiment.id`): the lock defines the freeze, so the lock names the experiment, and
-the runner derives the path rather than trusting a caller to choose it.
+counts) can never interleave in one directory. The id derives from benchmark_lock.yaml
+(`experiment.seq` + `experiment.name`, e.g. 001_bm25-sonnet46): the lock defines the
+freeze, so the lock names the experiment, and the runner derives the path rather than
+trusting a caller to choose it.
 
 Once the lock stops being PROVISIONAL, the first run into an experiment snapshots the
 parsed freeze (lock values plus split manifest) into experiment.yaml, and every later
@@ -64,8 +65,8 @@ def experiment_dir_for(out_dir: Path, lock: Lock, results_root: Path = RESULTS_R
             f"--out resolves to results/{relative}, but the lock's experiment is "
             f"{lock.experiment_id!r}: every run under results/ lives at "
             f"results/{expected}/<generation>/<run>. The path derives from "
-            "benchmark_lock.yaml experiment.id — a different freeze means a new "
-            "experiment id there, not a different output path."
+            "benchmark_lock.yaml experiment.seq + experiment.name — a different freeze "
+            "means a new experiment (bump seq) there, not a different output path."
         )
     return results_root.resolve() / expected
 
@@ -106,7 +107,7 @@ def enforce_snapshot(
                 f"the freeze no longer matches {snapshot_path.name} in "
                 f"results/{exp_dir.name}: a lock or split-manifest value changed after "
                 "this experiment started. A freeze is never re-decided under the same "
-                "experiment id — set a new experiment.id in benchmark_lock.yaml and rerun."
+                "experiment id — bump experiment.seq in benchmark_lock.yaml and rerun."
             )
         return f"freeze snapshot verified ({SNAPSHOT_NAME})"
     if lock.provisional:

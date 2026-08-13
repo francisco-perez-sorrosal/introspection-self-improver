@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from math import comb
@@ -301,7 +302,9 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         "mode": (metadata or {}).get("mode")
         or ("locked" if info.get("retrieval_config") else None),
         "incident_totals": incident_totals,
-        "incident_count": sum(v for v in incident_totals.values() if isinstance(v, int)),
+        "incident_count": sum(
+            v for v in incident_totals.values() if isinstance(v, int)
+        ),
         "arm_sha": arm.get("sha"),
         "arm_dirty": bool(arm.get("dirty_paths")),
         "arm_mismatches": len(platform_meta.get("arm_sha_mismatches") or []),
@@ -384,6 +387,23 @@ def generation_extras(generation_dir: Path) -> dict:
     return extras
 
 
+# The runner derives experiment directories as experiment_<seq>_<name> (seq zero-padded to
+# three digits, from benchmark_lock.yaml experiment.seq/name). Legacy bring-up directories
+# (experiment_dummy) predate the sequence and carry only a name.
+EXPERIMENT_DIR_RE = re.compile(r"^experiment_(\d{3})_(.+)$")
+
+
+def experiment_identity(dirname: str) -> dict:
+    """Split a results directory name into the experiment's id, sequence and name."""
+    suffix = dirname.removeprefix("experiment_")
+    match = EXPERIMENT_DIR_RE.match(dirname)
+    return {
+        "id": suffix,
+        "seq": match.group(1) if match else None,
+        "name": match.group(2) if match else suffix,
+    }
+
+
 def experiment_payload(results_root: Path, dirname: str) -> dict:
     experiment_dir = (results_root / dirname).resolve()
     experiment_dir.relative_to(results_root)  # traversal guard: must stay inside
@@ -421,7 +441,7 @@ def experiment_payload(results_root: Path, dirname: str) -> dict:
     return clean(
         {
             "dirname": dirname,
-            "id": dirname.removeprefix("experiment_"),
+            **experiment_identity(dirname),
             "snapshot": snapshot,
             "readme": readme,
             "generations": generations,
@@ -447,7 +467,7 @@ def experiments_index(results_root: Path) -> list[dict]:
         entries.append(
             {
                 "dirname": path.name,
-                "id": path.name.removeprefix("experiment_"),
+                **experiment_identity(path.name),
                 "has_snapshot": snapshot_path.exists(),
                 "snapshot": parse_flat_yaml(snapshot_path.read_text(encoding="utf-8"))
                 if snapshot_path.exists()

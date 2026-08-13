@@ -19,7 +19,7 @@ from tau_adapter.experiment import (
 from tau_adapter.lock import Lock
 
 
-def _lock(experiment_id: str = "exp_a", status: str = "FROZEN", **frozen_overrides) -> Lock:
+def _lock(experiment_name: str = "exp-a", status: str = "FROZEN", **frozen_overrides) -> Lock:
     frozen = {
         "status": status,
         "agent_model": "anthropic/claude-sonnet-4-6",
@@ -30,7 +30,7 @@ def _lock(experiment_id: str = "exp_a", status: str = "FROZEN", **frozen_overrid
     frozen.update(frozen_overrides)
     return Lock(
         raw={
-            "experiment": {"id": experiment_id},
+            "experiment": {"seq": 1, "name": experiment_name},
             "benchmark": {
                 "domain": "banking_knowledge",
                 "retrieval_config": "bm25",
@@ -60,7 +60,7 @@ def test_paths_outside_results_are_left_alone(tmp_path) -> None:
 def test_a_path_in_the_wrong_experiment_is_refused(tmp_path) -> None:
     results = tmp_path / "results"
     out = results / "experiment_other" / "generation_000" / "task_001"
-    with pytest.raises(ExperimentError, match="experiment_exp_a"):
+    with pytest.raises(ExperimentError, match="experiment_001_exp-a"):
         experiment_dir_for(out, _lock(), results_root=results)
 
 
@@ -69,7 +69,7 @@ def test_the_pre_experiment_layout_is_refused(tmp_path) -> None:
     # write there any more.
     results = tmp_path / "results"
     out = results / "generation_000" / "task_001"
-    with pytest.raises(ExperimentError, match="experiment_exp_a"):
+    with pytest.raises(ExperimentError, match="experiment_001_exp-a"):
         experiment_dir_for(out, _lock(), results_root=results)
 
 
@@ -83,15 +83,15 @@ def test_fingerprint_tracks_values_not_bytes(tmp_path) -> None:
 
 def test_first_frozen_run_writes_the_snapshot(tmp_path) -> None:
     results, split = tmp_path / "results", _split_manifest(tmp_path)
-    out = results / "experiment_exp_a" / "generation_000" / "task_001"
+    out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     status = enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
     assert status is not None and "created" in status
-    assert (results / "experiment_exp_a" / "experiment.yaml").exists()
+    assert (results / "experiment_001_exp-a" / "experiment.yaml").exists()
 
 
 def test_a_matching_snapshot_verifies(tmp_path) -> None:
     results, split = tmp_path / "results", _split_manifest(tmp_path)
-    out = results / "experiment_exp_a" / "generation_000" / "task_001"
+    out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
     status = enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
     assert status is not None and "verified" in status
@@ -99,9 +99,9 @@ def test_a_matching_snapshot_verifies(tmp_path) -> None:
 
 def test_freeze_drift_refuses_the_run(tmp_path) -> None:
     results, split = tmp_path / "results", _split_manifest(tmp_path)
-    out = results / "experiment_exp_a" / "generation_000" / "task_001"
+    out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
-    with pytest.raises(ExperimentError, match="new experiment"):
+    with pytest.raises(ExperimentError, match=r"bump experiment\.seq"):
         enforce_snapshot(_lock(num_trials=1), out, results_root=results, split_manifest_path=split)
 
 
@@ -109,7 +109,7 @@ def test_a_split_manifest_change_is_freeze_drift(tmp_path) -> None:
     # The split is part of the freeze: re-cutting discovery/validation/test under an
     # experiment that already holds results would invalidate every held-out claim.
     results, split = tmp_path / "results", _split_manifest(tmp_path)
-    out = results / "experiment_exp_a" / "generation_000" / "task_001"
+    out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
     _split_manifest(tmp_path, {"discovery": ["task_001"], "validation": [], "test": []})
     with pytest.raises(ExperimentError, match="split-manifest"):
@@ -118,19 +118,19 @@ def test_a_split_manifest_change_is_freeze_drift(tmp_path) -> None:
 
 def test_a_provisional_lock_writes_no_snapshot(tmp_path) -> None:
     results, split = tmp_path / "results", _split_manifest(tmp_path)
-    out = results / "experiment_exp_a" / "generation_000" / "task_001"
+    out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     status = enforce_snapshot(
         _lock(status="PROVISIONAL"), out, results_root=results, split_manifest_path=split
     )
     assert status is not None and "PROVISIONAL" in status
-    assert not (results / "experiment_exp_a" / "experiment.yaml").exists()
+    assert not (results / "experiment_001_exp-a" / "experiment.yaml").exists()
 
 
 def test_a_frozen_experiment_cannot_be_reentered_as_provisional(tmp_path) -> None:
     # Flipping the lock back to PROVISIONAL is itself a freeze change; the snapshot, once
     # written, is checked by every run regardless of the lock's current status.
     results, split = tmp_path / "results", _split_manifest(tmp_path)
-    out = results / "experiment_exp_a" / "generation_000" / "task_001"
+    out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
     with pytest.raises(ExperimentError):
         enforce_snapshot(

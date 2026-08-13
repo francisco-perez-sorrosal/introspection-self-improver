@@ -18,7 +18,9 @@ python3 dashboard/serve.py --open --results-root ../results --port 8787
 ```
 
 `results_root` is resolved relative to `dashboard/`; CLI flags override it. The
-experiment dropdown lists every `results/experiment_*/` directory found there.
+experiment dropdown lists every `results/experiment_*/` directory found there —
+`experiment_<seq>_<name>` directories read as `exp_001 · bm25-sonnet46`, legacy
+pre-sequence ones (`experiment_dummy`) by their bare id.
 
 ## What it shows
 

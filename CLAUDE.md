@@ -69,7 +69,8 @@ Loop: run τ tasks → collect Introspection evidence → `operate` (discover si
   0.0 four times (16–44 messages, $0.10–$0.51). τ's `--seed` cannot fix this: it seeds τ's own
   sampling, and Pi owns the agent's. Treat any single-trial per-task reward as a draw, raise
   `num_trials` before G0, and report pass^k. Evidence:
-  `results/experiment_dummy/generation_000/task_001_trials/`.
+  `results/experiment_dummy/generation_000/task_001_trials/` — removed from the working tree
+  with the 2026-08-13 fresh start; recover it from git history at that path.
 - **In every inspectable run, reward tracked one retrieved document.** 1.0 iff `KB_search`
   returned `doc_credit_cards_gold_rewards_card_005` (`Annual fee: $0.00`, `2.5% cash back`), which
   is the task's answer; 0.0 whenever it did not. The failing agents reasoned correctly on worse
@@ -166,11 +167,13 @@ results/        experiment_<id>/generation_NNN/ ...
 dashboard/      read-only results viewer over results/ (make dashboard; never a pipeline participant)
 ```
 
-One experiment is one freeze: `experiment.id` in `benchmark_lock.yaml` names it, results derive
-to `results/experiment_<id>/` (the runner refuses any other `results/` path), and once the lock
+One experiment is one freeze: `experiment.seq` + `experiment.name` in `benchmark_lock.yaml`
+name it (id = `<seq, zero-padded to 3>_<name>`, e.g. `001_bm25-sonnet46`; a re-decided freeze
+bumps `seq`, and the name may repeat across experiments), results derive to
+`results/experiment_<id>/` (the runner refuses any other `results/` path), and once the lock
 is no longer `PROVISIONAL` the first run snapshots the freeze into that directory's
-`experiment.yaml`, which every later run must match. `experiment_dummy` is the pre-freeze
-bring-up bucket.
+`experiment.yaml`, which every later run must match. `experiment_dummy` was the pre-freeze
+bring-up bucket, removed from the working tree 2026-08-13 (in git history).
 
 Inside `benchmark/tau_adapter/`, the seam is split by what each piece owns: `tool_bridge.py` (the
 MCP server and the rendezvous), `transport.py` (the host-agnostic protocol), `transport_local.py`
