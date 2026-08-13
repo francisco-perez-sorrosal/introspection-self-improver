@@ -28,7 +28,7 @@ def feed_all(assembler: StreamAssembler, events: list[dict]) -> list:
     return out
 
 
-def test_text_message_assembles_from_its_deltas() -> None:
+def test_text_message_assembles_from_its_deltas_and_flushes_at_run_end() -> None:
     turns = feed_all(
         StreamAssembler(),
         [
@@ -36,6 +36,7 @@ def test_text_message_assembles_from_its_deltas() -> None:
             {"type": "TEXT_MESSAGE_CONTENT", "messageId": f"{RUN}:text:0", "delta": "Hello, "},
             {"type": "TEXT_MESSAGE_CONTENT", "messageId": f"{RUN}:text:0", "delta": "world"},
             {"type": "TEXT_MESSAGE_END", "messageId": f"{RUN}:text:0"},
+            {"type": "RUN_FINISHED", "runId": RUN, "threadId": TASK},
         ],
     )
     assert turns == [AssistantTurn(text="Hello, world", tool_calls=())]
@@ -165,17 +166,21 @@ def test_an_empty_text_message_yields_no_turn() -> None:
         [
             {"type": "TEXT_MESSAGE_START", "messageId": f"{RUN}:text:0", "role": "assistant"},
             {"type": "TEXT_MESSAGE_END", "messageId": f"{RUN}:text:0"},
+            {"type": "RUN_FINISHED", "runId": RUN, "threadId": TASK},
         ],
     )
     assert turns == []
 
 
-def test_text_and_tool_call_arrive_as_separate_turns() -> None:
-    """A divergence from the local lane, recorded here rather than smoothed over.
+def test_narration_reassembles_with_its_tool_call() -> None:
+    """The message τ receives is the message Pi produced — one turn, text AND call.
 
-    Pi emits one message that can carry narration *and* a tool call — the protocol violation the
-    adapter forwards unaltered. The platform streams them as separate event groups, so this lane
-    produces two compliant messages where the local lane produces one non-compliant one.
+    Pi emits a single assistant message carrying narration and a tool call; AG-UI streams
+    them as separate event groups. Forwarding that split let τ take the narration alone and
+    hand the floor to its user simulator while the sandbox sat parked on the bridge — the
+    A.0b gate measured 3/12 platform episodes burning their whole 600s budget that way
+    (gates/a0b.json, 2026-08-13). The call must still surface the moment TOOL_CALL_END
+    arrives, not at RUN_FINISHED: the sandbox's MCP daemon abandons a parked call in ~15s.
     """
     turns = feed_all(
         StreamAssembler(),
@@ -192,8 +197,40 @@ def test_text_and_tool_call_arrive_as_separate_turns() -> None:
             {"type": "TOOL_CALL_END", "toolCallId": "c1"},
         ],
     )
-    assert [t.text for t in turns] == ["Let me look.", None]
-    assert [bool(t.tool_calls) for t in turns] == [False, True]
+    assert len(turns) == 1
+    assert turns[0].text == "Let me look."
+    assert [c.pi_name for c in turns[0].tool_calls] == ["mcp_tau_KB_search_77c5623a9f"]
+
+
+def test_narration_after_a_result_attaches_forward_or_flushes() -> None:
+    """Text landing after the first call buffers for the run's next call, else flushes at end."""
+    assembler = StreamAssembler()
+    first = feed_all(
+        assembler,
+        [
+            {"type": "TEXT_MESSAGE_START", "messageId": f"{RUN}:text:0", "role": "assistant"},
+            {"type": "TEXT_MESSAGE_CONTENT", "messageId": f"{RUN}:text:0", "delta": "Checking."},
+            {"type": "TEXT_MESSAGE_END", "messageId": f"{RUN}:text:0"},
+            {
+                "type": "TOOL_CALL_START",
+                "toolCallId": "c1",
+                "toolCallName": "mcp_tau_KB_search_77c5623a9f",
+            },
+            {"type": "TOOL_CALL_ARGS", "toolCallId": "c1", "delta": "{}"},
+            {"type": "TOOL_CALL_END", "toolCallId": "c1"},
+        ],
+    )
+    assert len(first) == 1 and first[0].text == "Checking."
+    rest = feed_all(
+        assembler,
+        [
+            {"type": "TEXT_MESSAGE_START", "messageId": f"{RUN}:text:1", "role": "assistant"},
+            {"type": "TEXT_MESSAGE_CONTENT", "messageId": f"{RUN}:text:1", "delta": "Found it."},
+            {"type": "TEXT_MESSAGE_END", "messageId": f"{RUN}:text:1"},
+            {"type": "RUN_FINISHED", "runId": RUN, "threadId": TASK},
+        ],
+    )
+    assert rest == [AssistantTurn(text="Found it.", tool_calls=())]
 
 
 def test_interleaved_tool_calls_do_not_cross_contaminate() -> None:

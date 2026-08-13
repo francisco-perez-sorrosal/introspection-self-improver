@@ -61,10 +61,18 @@ SETTLE_GRACE_SECONDS = 300.0
 class StreamAssembler:
     """Turn AG-UI events into τ-shaped assistant turns.
 
-    Emits one turn per completed text message and one per completed tool call. Deliberately not
-    merged: τ's protocol expects a message to carry either narration or tool calls, and the
-    platform streams them as separate event groups, so merging them would be the adapter
-    inventing a message shape the host never produced.
+    Reassembles what the platform streams apart. Pi emits ONE assistant message that can
+    carry narration *and* a tool call — the platform's own GenAI spans record exactly that
+    shape — but AG-UI streams the parts as separate TEXT and TOOL_CALL event groups. This
+    class's first design forwarded that split, on the view that merging would invent a
+    message shape; the A.0b gate then observed the consequence the constraints file had
+    pre-registered: τ takes the narration alone, hands the floor to its user simulator, and
+    the sandbox sits parked on the bridge until its MCP daemon abandons the call — three of
+    twelve gate episodes burned their entire 600s budget that way. So a run's narration is
+    buffered and attached to that run's first tool call (text-only runs flush at
+    RUN_FINISHED): the turn τ receives is the message the host actually produced, which is
+    what a pipe owes it. Adopted by operator decision at the A.0b gate, 2026-08-13 — see
+    `contract/constraints.md` § platform-lane divergences.
 
     Fed each event exactly once. Arguments arrive as `TOOL_CALL_ARGS` deltas and are
     concatenated in arrival order; re-feeding an event would corrupt them, and a corrupted
@@ -74,6 +82,7 @@ class StreamAssembler:
 
     def __init__(self) -> None:
         self._text: dict[str, list[str]] = {}
+        self._pending_text: list[str] = []
         self._call_name: dict[str, str] = {}
         self._call_args: dict[str, list[str]] = {}
         self.finished = False
@@ -88,10 +97,10 @@ class StreamAssembler:
             self._text.setdefault(str(event.get("messageId")), []).append(event.get("delta") or "")
         elif kind == "TEXT_MESSAGE_END":
             text = "".join(self._text.pop(str(event.get("messageId")), [])).strip()
-            # An empty text message is not a turn. τ would record a contentless assistant
-            # message and hand the floor to the user simulator with nothing said.
+            # Buffered, never emitted on its own: this may be the narration half of a message
+            # whose tool call is still streaming. An empty segment is still not narration.
             if text:
-                return [AssistantTurn(text=text, tool_calls=())]
+                self._pending_text.append(text)
 
         elif kind == "TOOL_CALL_START":
             call_id = str(event.get("toolCallId"))
@@ -108,6 +117,11 @@ class StreamAssembler:
             return [TransportFailure(reason=f"run error: {event.get('message') or 'unknown'}")]
         elif kind == "RUN_FINISHED":
             self.finished = True
+            # A run that narrated without calling any tool flushes its text here — the one
+            # case where narration IS the whole message the host produced.
+            pending = self._take_pending()
+            if pending:
+                return [AssistantTurn(text=pending, tool_calls=())]
 
         # Ignored on purpose:
         #   REASONING_* — τ's AssistantMessage has no reasoning field, so the local lane drops
@@ -142,10 +156,20 @@ class StreamAssembler:
             ]
         return [
             AssistantTurn(
-                text=None,
+                # The run's buffered narration rides with its first call — one τ message,
+                # the shape Pi actually emitted. τ sees the call immediately (no waiting for
+                # RUN_FINISHED), so the sandbox's parked MCP call is answered while its
+                # daemon is still listening.
+                text=self._take_pending(),
                 tool_calls=(PiToolCall(id=call_id, pi_name=pi_name, arguments=arguments),),
             )
         ]
+
+    def _take_pending(self) -> str | None:
+        """The run's buffered narration, joined; consumed on attach or flush."""
+        joined = "\n\n".join(self._pending_text)
+        self._pending_text = []
+        return joined or None
 
 
 class _StreamSession:

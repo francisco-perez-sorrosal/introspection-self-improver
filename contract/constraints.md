@@ -99,22 +99,27 @@ adapter-fidelity gate will eventually measure.
    lock records it as declared-and-unused and keeps it equal to the real value.
 4. **Platform-lane divergences** (`TRANSPORT=platform` only, so they bound cross-lane comparison
    rather than cross-generation comparison):
-   - **Narration and tool calls arrive as separate messages.** Pi emits one message that can carry
-     both — the protocol violation the adapter forwards unaltered — while the platform streams them
-     as distinct AG-UI event groups. So this lane produces two compliant messages where the local
-     lane produces one non-compliant one, and `enforce_communication_protocol` has nothing to act
-     on. The adapter does not merge them: inventing a message shape the host never produced is the
-     one thing it must not do. One latent consequence is recorded rather than fixed, because
-     fixing it means revisiting that stance: if narration precedes a tool call *inside one run*,
-     τ takes the text branch and hands the floor to its user simulator while the call turn is
-     still queued and the sandbox is parked on the bridge — the sandbox abandons the call at its
-     ~30 s budget, and the queued stale turn then desynchronises every later exchange in the
-     episode. Not yet observed in a graded run (the locked recipe is told not to mix narration
-     with calls); if a platform episode presents as a mid-turn wedge with this shape, attribute
-     it to the split, not to the rendezvous. The candidate remedy — reassembling text and calls
-     that Pi emitted as one message, using τ's tool-result boundary — reconstructs Pi's real
-     message shape rather than inventing one, but it changes the graded surface and is a human
-     decision, not an adapter patch.
+   - **Narration and tool calls are reassembled into the one message Pi produced.** Pi emits a
+     single assistant message that can carry narration *and* a tool call; the platform streams
+     the parts as distinct AG-UI event groups. The transport's first design forwarded that
+     split, on the view that merging would invent a message shape — and recorded the latent
+     consequence here rather than fixing it: narration taken alone hands τ's floor to the user
+     simulator while the sandbox sits parked on the bridge. The A.0b gate then observed exactly
+     that (first run 2026-08-13, `gates/a0b.json`): 3 of 12 platform episodes hit τ's 600 s
+     ceiling, each with 5–6 rendezvous stalls — the sandbox's MCP daemon abandoning parked
+     calls at ~15 s ("MCP daemon: Timeout; remote outcome is unknown"), Pi's tool executor
+     erroring at 120 s, the agent retrying against phantom failures while the trajectory
+     recorded valid results. Example conversations: `019ffbcd-cacd-…` (graded 0 on timeout)
+     and `019ffbeb-01e4-…` (an attempt τ retried past; kept as an orphan). The platform's own
+     GenAI spans settle whose shape is real: the model's output is one message with
+     `[thinking, text, tool_call]`. The remedy — buffering a run's narration and attaching it
+     to that run's first tool call, flushing text-only at RUN_FINISHED — therefore
+     *reconstructs* the shape the host produced rather than inventing one, and the call still
+     surfaces the instant it exists, so the parked sandbox is answered while its daemon is
+     listening. Adopted by operator decision at the A.0b gate, 2026-08-13. Consequence: both
+     lanes now present the same mixed message, `enforce_communication_protocol` governs them
+     identically, and the two-compliant-messages divergence this bullet used to record no
+     longer exists.
    - **Reasoning is streamed and dropped.** `REASONING_*` events are discarded for the same reason
      the local lane drops Pi's `thinking` blocks: τ's `AssistantMessage` has nowhere to put them.
    - **Per-message cost and usage are absent**, because AG-UI events carry none. τ's own cost
