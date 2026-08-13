@@ -4,9 +4,11 @@ Demonstrate a **genuinely self-improving agent harness** built on Introspection'
 operational and improvement primitives, with τ²-bench `banking_knowledge` supplying an
 **immutable external objective**.
 
-The full design is `introspection_self_improving_agent_mvp.md` (§ references below point into it).
-That document is the specification; this file is the always-loaded subset an agent must not
-get wrong.
+The forward guide is `introspection_self_improving_agent_mvp_v2.md` — grounded in the built
+system, it holds the remaining path and the orchestrator-integration design, and it is the
+specification. v1 (`introspection_self_improving_agent_mvp.md`) is superseded design history;
+the § references below still point into v1, and v2's Appendix A maps every v1 section to its
+disposition. This file is the always-loaded subset an agent must not get wrong.
 
 ## The four roles
 
@@ -63,7 +65,8 @@ Loop: run τ tasks → collect Introspection evidence → `operate` (discover si
   runs of `banking_knowledge/task_001` under one frozen configuration returned 1.0 six times and
   0.0 four times (16–44 messages, $0.10–$0.51). τ's `--seed` cannot fix this: it seeds τ's own
   sampling, and Pi owns the agent's. Treat any single-trial per-task reward as a draw, raise
-  `num_trials` before G0, and report pass^k. Evidence: `results/generation_000/task_001_trials/`.
+  `num_trials` before G0, and report pass^k. Evidence:
+  `results/experiment_dummy/generation_000/task_001_trials/`.
 - **In every inspectable run, reward tracked one retrieved document.** 1.0 iff `KB_search`
   returned `doc_credit_cards_gold_rewards_card_005` (`Annual fee: $0.00`, `2.5% cash back`), which
   is the task's answer; 0.0 whenever it did not. The failing agents reasoned correctly on worse
@@ -147,7 +150,7 @@ dashboard, browser automation, or direct API calls for an operator action the CL
 - When an effect is smaller than the split can resolve, record it as **directional** and say so.
 - Rejected hypotheses and failed mutations are first-class results — record them.
 - Every generation leaves an evidence → signal → hypothesis → mutation → result record under
-  `results/generation_NNN/` (§16, §24), with stable Introspection identifiers linking each
+  `results/experiment_<id>/generation_NNN/` (§16, §24), with stable Introspection identifiers linking each
   conclusion back to real evidence.
 
 ## Layout (§23)
@@ -156,17 +159,26 @@ dashboard, browser automation, or direct API calls for an operator action the CL
 target-agent/   the Introspection recipe under improvement
 benchmark/      tau_adapter/ (the seam) · scripts/ · tests/ · split_manifest.yaml · benchmark_lock.yaml
 contract/       protocol.md · constraints.md
-results/        generation_000/ ...
+results/        experiment_<id>/generation_NNN/ ...
 ```
+
+One experiment is one freeze: `experiment.id` in `benchmark_lock.yaml` names it, results derive
+to `results/experiment_<id>/` (the runner refuses any other `results/` path), and once the lock
+is no longer `PROVISIONAL` the first run snapshots the freeze into that directory's
+`experiment.yaml`, which every later run must match. `experiment_dummy` is the pre-freeze
+bring-up bucket.
 
 Inside `benchmark/tau_adapter/`, the seam is split by what each piece owns: `tool_bridge.py` (the
 MCP server and the rendezvous), `transport.py` (the host-agnostic protocol), `transport_local.py`
 and `transport_platform.py` (the two hosts), `dev_lane.py` (the `introspection dev` attachment and
-its platform preconditions), `pi_agent.py` (τ's agent interface), `lock.py`, `run.py`.
+its platform preconditions), `pi_agent.py` (τ's agent interface), `experiment.py` (the
+experiment level of `results/` and its freeze snapshot), `lock.py`, `run.py`.
 
-§23 also lists `benchmark/fidelity/` and `contract/learning_record.schema.yaml`. Neither exists
-yet: the fidelity gate has not been built and no learning record has been written, so creating
-either now would be an empty promise. They arrive with §15 Phase A.0 and G0 respectively.
+§23 also lists `benchmark/fidelity/` and `contract/learning_record.schema.yaml`. The first now
+exists as the cross-lane instrument (`make fidelity`, `benchmark/fidelity/compare_lanes.py`);
+the stock-agent adapter gate it was named for cannot run as v1 specified and is re-specified in
+v2 §4 W4, which has not run. The learning-record schema still does not exist and arrives with
+the first improvement generation (v2 §4 W7), so creating it now would be an empty promise.
 
 No `orchestrator/` directory. Claude Code is the orchestrator; a directory by that name would
 imply a second agent implementation exists.
