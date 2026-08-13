@@ -1,0 +1,89 @@
+# The per-transition improvement record: the evidence → signal → hypothesis → mutation →
+# result chain (protocol §24), one YAML file per transition at
+#   results/experiment_<id>/improvement_records/gen_<g>_to_<g+1>.yaml
+# written while the transition happens, never reconstructed afterwards.
+#
+# This file is the schema's single source: tau_adapter/records.py loads it to validate
+# records — edit the field list here, not there. Rules a field list cannot state live in
+# that module and are summarized here:
+#
+#   * outcome `accepted` names a candidate_commit distinct from source_commit (the merge
+#     commit IS the next generation, tagged exp<seq>-g<NNN>).
+#   * outcome `rejected` or `identity` pins H_(g+1) = H_g (decision D5): candidate_commit
+#     is null or equals source_commit, the held-out evaluation is skipped, and the result
+#     is carried forward at reveal.
+#   * held_out_result stays null until `make reveal` fills it — during optimization the
+#     record exists precisely so the conclusion can be audited without the measurement.
+#   * every record cites at least one Introspection conversation id: a claim without the
+#     executions behind it is a fabricated signal (CLAUDE.md invariants).
+
+version: 1
+
+outcomes: [accepted, rejected, identity]
+
+# kind: str | int | mapping | list. required_keys applies to mappings.
+# prose_required_for: outcomes for which the field must be non-empty prose — an identity
+# transition with no viable hypothesis may leave hypothesis/proposed_change terse, but an
+# accepted or rejected mutation must say what was claimed and why.
+fields:
+  transition:
+    kind: mapping
+    required: true
+    required_keys: [from_generation, to_generation]
+    description: integers; to_generation = from_generation + 1, matching the filename
+  experiment:
+    kind: str
+    required: true
+    description: the experiment id this record belongs to, e.g. 002_bm25-sonnet46
+  outcome:
+    kind: str
+    required: true
+    description: one of the outcomes above (D5)
+  batch:
+    kind: mapping
+    required: true
+    required_keys: [name, task_ids]
+    description: the improvement batch consumed by this transition (batch_NN + its tasks)
+  evidence:
+    kind: mapping
+    required: true
+    required_keys: [conversation_ids, summary]
+    description: what was inspected — stable Introspection ids plus a prose account
+  signals:
+    kind: list
+    required: true
+    description: discovered signals, each with a description and a prevalence stated n/B
+  counterevidence:
+    kind: str
+    required: true
+    description: what argued against the hypothesis; "none found" is a legitimate value
+  hypothesis:
+    kind: str
+    required: true
+    prose_required_for: [accepted, rejected]
+  owning_layer:
+    kind: str
+    required: true
+    description: the mutable harness layer the change targets (prompt, retrieval usage, ...)
+  proposed_change:
+    kind: str
+    required: true
+    prose_required_for: [accepted, rejected]
+  mutation:
+    kind: mapping
+    required: true
+    required_keys: [source_commit]
+    description: branch, pr_url, source_commit (H_g), candidate_commit (H_(g+1) or null)
+  expected_effect:
+    kind: str
+    required: true
+    prose_required_for: [accepted]
+  human_approval:
+    kind: mapping
+    required: true
+    required_keys: [approved_by, date]
+    description: who approved (or rejected) the mutation, and when
+  held_out_result:
+    kind: mapping
+    required: false
+    description: "{passed, total, carried} — written by make reveal, never by hand"
