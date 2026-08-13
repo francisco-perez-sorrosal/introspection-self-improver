@@ -160,6 +160,7 @@ target-agent/   the Introspection recipe under improvement
 benchmark/      tau_adapter/ (the seam) · scripts/ · tests/ · split_manifest.yaml · benchmark_lock.yaml
 contract/       protocol.md · constraints.md
 results/        experiment_<id>/generation_NNN/ ...
+dashboard/      read-only results viewer over results/ (make dashboard; never a pipeline participant)
 ```
 
 One experiment is one freeze: `experiment.id` in `benchmark_lock.yaml` names it, results derive

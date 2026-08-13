@@ -1,7 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy smoke single_task bench fidelity grade
+.PHONY: help bootstrap check policy smoke single_task bench fidelity grade dashboard
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -45,6 +45,7 @@ help:
 	@echo "make bench       the WHOLE locked task split, then grade it (long and costly)"
 	@echo "make fidelity    run one task in BOTH lanes and check the adapter invariants"
 	@echo "make grade       re-grade an existing run: make grade OUT=results/.../mock_smoke"
+	@echo "make dashboard   local read-only results viewer over results/ (dashboard/)"
 	@echo ""
 	@echo "TRANSPORT=local|platform   where the agent runs (default local)"
 	@echo "LAUNCHER=pi|introspection  how to start it locally (default pi)"
@@ -110,6 +111,11 @@ fidelity:
 	@$(MAKE) --no-print-directory single_task TASK=$(TASK) TRANSPORT=platform
 	@$(RUN) python fidelity/compare_lanes.py \
 		$(CURDIR)/$(RESULTS)/$(TASK) $(CURDIR)/$(RESULTS)/$(TASK)_platform
+
+# Read-only viewer over results/ — its own lane, never a pipeline participant. Stdlib only;
+# reads dashboard/config.json for the results pointer and port.
+dashboard:
+	@python3 dashboard/serve.py
 
 # The only sanctioned way to produce a number. Calls tau's own evaluate_trajectories; the wrapper
 # exists solely to grade against the retrieval config the run recorded, instead of letting the

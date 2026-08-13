@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Improver Results</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">τ² self-improver <span class="brand-sub">results</span></div>
+  <div class="filters" id="filters">
+    <label class="filter">experiment
+      <select id="experiment-select"></select>
+    </label>
+    <label class="filter">split
+      <select id="split-filter">
+        <option value="all">all</option>
+        <option value="discovery">discovery</option>
+        <option value="validation">validation</option>
+        <option value="checkpoint">checkpoint</option>
+        <option value="other">other</option>
+      </select>
+    </label>
+    <label class="filter">arm
+      <select id="arm-filter">
+        <option value="all">all</option>
+        <option value="baseline">baseline</option>
+        <option value="candidate">candidate</option>
+      </select>
+    </label>
+    <label class="filter">transport
+      <select id="transport-filter">
+        <option value="all">all</option>
+        <option value="local">local</option>
+        <option value="platform">platform</option>
+      </select>
+    </label>
+    <button id="refresh" class="ghost-btn" title="re-read the results tree">↻ refresh</button>
+    <span class="config-note" id="config-note"></span>
+  </div>
+</header>
+
+<main id="main">
+  <section id="banner-slot"></section>
+  <section id="freeze-strip" class="chip-strip"></section>
+  <section id="stat-row" class="stat-row"></section>
+
+  <section class="card" id="curve-card">
+    <div class="card-head">
+      <h2>Improvement across generations</h2>
+      <div class="card-tools">
+        <span id="curve-legend" class="legend"></span>
+        <button id="curve-table-toggle" class="ghost-btn">table</button>
+      </div>
+    </div>
+    <div id="curve-body"></div>
+    <p class="fineprint" id="curve-note"></p>
+  </section>
+
+  <section class="card" id="efficiency-card">
+    <div class="card-head"><h2>Efficiency, tracked not optimized</h2></div>
+    <div class="spark-row" id="spark-row"></div>
+  </section>
+
+  <section id="generation-ribbon-wrap">
+    <h2 class="section-title">Generations — one improvement cycle each</h2>
+    <div class="ribbon" id="generation-ribbon"></div>
+  </section>
+
+  <section class="card" id="heatmap-card">
+    <div class="card-head">
+      <h2>Task outcomes by generation</h2>
+      <div class="card-tools">
+        <label class="filter">sort
+          <select id="heat-sort">
+            <option value="id">task id</option>
+            <option value="volatility">volatility</option>
+            <option value="trend">trend</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div id="heatmap-body"></div>
+    <div class="heat-legend" id="heat-legend"></div>
+  </section>
+
+  <section class="card" id="detail-card">
+    <div class="card-head"><h2 id="detail-title">Generation detail</h2></div>
+    <div id="learning-record"></div>
+    <div id="rounds-body"></div>
+  </section>
+</main>
+
+<footer class="page-foot">
+  Rewards shown are τ's own recorded in-run evaluations read from <code>results.json</code>;
+  the reportable number remains <code>make grade</code> (tau2 evaluate-trajs). Rates follow
+  τ's metric convention — infrastructure errors are excluded from rates and counted
+  separately. Diagnostic-mode rounds are never reportable.
+</footer>
+
+<div id="tooltip" class="tooltip" hidden></div>
+<div id="modal-root"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

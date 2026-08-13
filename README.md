@@ -38,6 +38,7 @@ reportable** — see *Two run modes* below.
 | `benchmark/` | The objective and the seam to it. τ² pinned by commit, the adapter, the lock. | Humans only |
 | `contract/` | The permission envelope the orchestrator works inside. | Humans only |
 | `results/` | Per-experiment, per-generation record: trajectories, Pi sessions, graded outcome. | Append-only |
+| `dashboard/` | Read-only results viewer over `results/`: generation curves, task heatmap, episode transcripts (`make dashboard`). | Humans only |
 
 The dependency runs one way — `benchmark/` reaches `target-agent/` by path, never the reverse
 — so the Recipe can be split into its own repository with `git subtree split` when the agent is

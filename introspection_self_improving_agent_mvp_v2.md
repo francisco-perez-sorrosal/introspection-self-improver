@@ -867,6 +867,14 @@ Carried from v1 §17 with the estimator facts now pinned to τ's implementation:
 - **Statistical honesty:** paired per-task comparisons; `effect_resolvable`; directional
   results named as such; `infrastructure_error` episodes excluded from scores (τ's rule)
   but reported in the manifest; every number carries split + N + arm SHA + experiment id.
+- **The record is renderable.** `dashboard/` (its own swimlane; `make dashboard`) serves
+  the results tree read-only: experiment dropdown + freeze strip, generation curves with
+  intervals (pass¹ and pass^k, candidate arms as hollow marks), efficiency small
+  multiples, a task × generation heatmap with within-task instability marked, and
+  round/episode drill-down to full transcripts, with the learning-record ribbon lighting
+  up once W7 lands. It consumes only the committed record and regrades nothing — τ's
+  recorded rewards in, display aggregates out — so the §3.4 completeness flags and
+  diagnostic-mode muting surface in the UI instead of being averaged away.
 
 ------------------------------------------------------------------------
 
