@@ -1,0 +1,55 @@
+name: frozen surfaces
+
+# The enforcement boundary for everything the improvement loop must not change. The loop lands
+# harness changes as pull requests and cannot merge its own work, so a check that fails here is
+# a change that does not reach main.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  policy-region:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No tau2 checkout and no dependencies: the check compares the committed region against
+      # the hash recorded in benchmark_lock.yaml, which is exactly what a hand edit breaks.
+      - name: frozen policy region matches the lock
+        run: python3 benchmark/scripts/check_policy_region.py
+
+  immutable-paths:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # A GitHub installation token cannot be scoped to a sub-path, so an agent granted write
+      # access to this repository for its own recipe can also write the benchmark lane. The
+      # permission boundary therefore cannot be expressed by the grant; it is expressed here,
+      # as a reviewable signal on the pull request.
+      - name: flag changes to the objective and its configuration
+        if: github.event_name == 'pull_request'
+        run: |
+          base="origin/${{ github.base_ref }}"
+          git fetch --quiet origin "${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD -- \
+            benchmark/tau_adapter benchmark/benchmark_lock.yaml \
+            benchmark/split_manifest.yaml benchmark/scripts contract || true)
+          if [ -n "$changed" ]; then
+            echo "::warning::This pull request changes the objective or its configuration:"
+            printf '%s\n' "$changed" | sed 's/^/  /'
+            echo "::warning::Frozen surfaces require a human decision, not a harness change."
+          else
+            echo "No changes to the objective or its configuration."
+          fi

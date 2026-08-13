@@ -1,4 +1,13 @@
 #!/usr/bin/env sh
 set -eu
 
-npx -y -p @introspection-ai/cli introspection check
+# Prefer an installed CLI; fall back to npx so a fresh clone still validates.
+if command -v introspection >/dev/null 2>&1; then
+  introspection check
+else
+  npx -y -p @introspection-ai/cli introspection check
+fi
+
+# The frozen benchmark policy carried inside the Recipe's otherwise-mutable SYSTEM.md. Stdlib
+# only, so this costs milliseconds and needs neither the tau2 checkout nor its environment.
+python3 benchmark/scripts/check_policy_region.py
