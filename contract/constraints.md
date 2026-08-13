@@ -183,10 +183,18 @@ Found while implementing, and load-bearing:
   through `DEFAULT_RETRIEVAL_VARIANT` (`alltools`, OpenAI embeddings) rather than the run's own
   recorded `retrieval_config`, and offers no flag to override it — so the only sanctioned path to
   a reward requires an embeddings key even for a `reward_basis: ['DB']` task. Worth reporting
-  upstream; not worked around here, because working around it would mean computing a reward
-  somewhere other than the evaluator.
+  upstream. `benchmark/scripts/grade.py` — the only path `make grade` takes — closes the gap as
+  a fidelity fix rather than a workaround: it injects the run's recorded `retrieval_config` into
+  the evaluator's environment rebuild (refusing when it disagrees with the lock) and then calls
+  τ's own `evaluate_trajectories`. No reward is computed anywhere but the evaluator, which was
+  otherwise grading against a different tool surface than the run used.
 - The `openai_embeddings` retrieval config the document pins is unavailable on this machine
   (the OpenAI key returns `429 billing_not_active`), so bring-up used the offline `bm25`
-  fallback. This is a genuine deviation from the intended freeze and must be resolved before G0:
-  `bm25` changes both the tool set and the policy text, so results on it are not comparable with
-  published τ-Knowledge numbers.
+  fallback. **Resolved 2026-08-12 (PLAN.md M1): `bm25` is the deliberate freeze for this
+  experiment**, pinned knowingly rather than provisionally. The consequence is accepted, not
+  deferred: `bm25` changes both the tool set and the policy text, so no number produced under
+  this freeze is comparable with published τ-Knowledge results, and no comparability claim is
+  made anywhere in this experiment's record. Cross-generation comparison is unaffected — the
+  backend is constant by construction — and retrieval *usage* (query formulation, k, iteration,
+  stopping) remains mutable harness territory. Re-deciding this value means a new experiment,
+  never a new value under the old id.

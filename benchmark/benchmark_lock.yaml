@@ -11,11 +11,11 @@
 # experiment the frozen values below define, and every run writes under
 # results/experiment_<id>/<generation>/ — the runner refuses any other results/ path.
 # One experiment is one freeze: re-deciding a frozen value means a NEW id here, never a
-# new value under the old one. While frozen.status is PROVISIONAL the id stays `dummy`
-# (the bring-up bucket, no snapshot enforcement); the real id is assigned when the freeze
-# is re-decided before G0.
+# new value under the old one. `dummy` was the bring-up bucket while the lock was still
+# provisional (no snapshot enforcement; its runs are retired under results/experiment_dummy/);
+# this id was assigned when the freeze was re-decided (H2, PLAN.md M1, 2026-08-13).
 experiment:
-  id: dummy
+  id: bm25-sonnet46
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -29,12 +29,14 @@ benchmark:
   # Decides the agent's tool set *and* rewrites the policy text it is graded against, so it
   # is benchmark configuration, not harness. Improve how retrieval is *used* instead.
   #
-  # BRING-UP VALUE, NOT THE INTENDED FREEZE. The MVP pins `openai_embeddings` because it sits
-  # closest to the conditions under which published τ-Knowledge scores were obtained. That
-  # config needs a working OPENAI_API_KEY, and the key on this machine returns
-  # 429 billing_not_active, so the offline `bm25` fallback is used to bring the seam up.
-  # Switching back is a one-line edit here plus `make policy`; doing so before G0 is
-  # required for any number to be comparable with published results.
+  # DELIBERATE FREEZE (decided 2026-08-12, PLAN.md M1). `bm25` is pinned knowingly, not as a
+  # fallback: it is fully offline and needs no provider key at run or grade time. The accepted
+  # cost is comparability — `bm25` changes both the tool set and the policy text, so no number
+  # under this freeze is comparable with published τ-Knowledge results, and none is claimed;
+  # contract/constraints.md records the caveat. Cross-generation comparison is unaffected (the
+  # backend is constant by construction) and retrieval *usage* — query formulation, k,
+  # iteration, stopping — stays mutable harness territory.
+  # Re-deciding this value means a NEW experiment id, never a new value under this one.
   retrieval_config: bm25
 
   # `base` is a task *split*, not a task set: tau's --task-set-name defaults to the domain's
@@ -44,9 +46,11 @@ benchmark:
   task_split_name: base
 
 frozen:
-  # PROVISIONAL. These are placeholders that let the pipe move; they are not an
-  # experiment's freeze. Re-decide every value here before G0 and drop this marker.
-  status: PROVISIONAL
+  # FROZEN 2026-08-13 (H2, PLAN.md M1) for experiment bm25-sonnet46. Every value below is
+  # this experiment's freeze; changing any one means a NEW experiment id, never a new value
+  # under this one. The first run snapshots the parsed freeze into
+  # results/experiment_bm25-sonnet46/experiment.yaml, and every later run must match it.
+  status: FROZEN
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which
@@ -66,8 +70,9 @@ frozen:
   # the binding constraint, which is what we are trying to measure.
   #
   # Still provisional in one respect: 4.6 must clear §13.1's ≥20–25% floor on the discovery
-  # split, or the comparative method loses its successful controls. That is unmeasured — no
-  # split exists yet. If G0 lands below the floor, strengthen G0 before reconsidering this.
+  # split, or the comparative method loses its successful controls. That is unmeasured until
+  # G0 runs on the discovery split. If G0 lands below the floor, strengthen G0 before
+  # reconsidering this.
   agent_model: anthropic/claude-sonnet-4-6
   agent_thinking_level: low
 
@@ -106,7 +111,12 @@ frozen:
     temperature: 0.0
     timeout: 60
 
-  num_trials: 1
+  # 4 (H2, PLAN.md M1). Episode-level reward is a draw — ten runs of one task under one
+  # frozen configuration split 6/4 (results/experiment_dummy/) — so a single trial supports
+  # a gate, never a comparison. pass^k is reported up to k=4 alongside pass^1. The
+  # full-domain checkpoint runs at ×1 by the same decision: the recognizable 97-task number
+  # costs $25 instead of $100 and is labeled single-trial wherever it is reported.
+  num_trials: 4
   seed: 300
 
   # Execution budgets. Exactly how a later generation can "improve" by being allowed to do
@@ -120,8 +130,9 @@ frozen:
   # mode, so freezing it would freeze nothing.
   timeout_seconds: 600
 
-  # 1 for bring-up. The bridge binds an ephemeral port per episode and passes it through
-  # the environment, so raising this needs no redesign — but it must be re-frozen first.
+  # Serial for the MVP. The run binds ONE run-scoped bridge, and it is single-episode-safe
+  # (run.py); raising this needs bridge episode-multiplexing plus a re-freeze, and is
+  # deliberately out of MVP scope (v2 §3.3) — the schedule absorbs serial rounds instead.
   max_concurrency: 1
 
   # Whether tau ends an episode when an assistant message carries both text and tool calls.

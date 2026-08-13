@@ -8,7 +8,10 @@ The forward guide is `introspection_self_improving_agent_mvp_v2.md` — grounded
 system, it holds the remaining path and the orchestrator-integration design, and it is the
 specification. v1 (`introspection_self_improving_agent_mvp.md`) is superseded design history;
 the § references below still point into v1, and v2's Appendix A maps every v1 section to its
-disposition. This file is the always-loaded subset an agent must not get wrong.
+disposition. `PLAN.md` is the milestone tracker distilled from v2 §4 — four checkable
+stages (M1 freeze → M2 evidence spine + gates → M3 G0 → M4 first improvement generation);
+consult it to see where the path stands. This file is the always-loaded subset an agent
+must not get wrong.
 
 ## The four roles
 

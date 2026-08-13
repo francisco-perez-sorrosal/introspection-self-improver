@@ -12,8 +12,8 @@ eventually granted `contents: write` on it.
 |---|---|---|
 | `SYSTEM.md` `<instructions>` block | **mutable** | The harness prompt. This is where a generation's change usually lands. |
 | `SYSTEM.md` `<policy>` block | frozen | Verbatim `env.get_policy()` for the locked domain and retrieval config. Written by `make policy`; the pre-commit hook and CI reject any commit that alters it. |
-| `agents/agent.yaml` `ai.model`, `ai.thinking_level` | frozen | Comparison variables. Raising either would improve the score without improving the harness. Checked against `benchmark/benchmark_lock.yaml` before every run. |
-| `agents/agent.yaml` `tools`, `skills`, `subagents`, `session` | mutable | Genuine harness structure. |
+| `agents/agent.yaml` `model.name`, `model.thinking_level` | frozen | Comparison variables. Raising either would improve the score without improving the harness. Checked against `benchmark/benchmark_lock.yaml` before every run. (`model:` is the legacy spelling of `ai.model` — the vendored checker does not yet accept `ai:`; see the comment in `agents/agent.yaml`.) |
+| `agents/agent.yaml` `tools`, `skills`, `subagents` | mutable | Genuine harness structure. |
 | `package.json` `pi.skills`, `pi.extensions` | mutable | Adding a skill is a legitimate mutation, and an explicit `[]` makes it a visible diff. |
 | `package.json` `pi.mcp` | frozen | The τ tool surface is benchmark configuration (`--retrieval-config` decides it). |
 

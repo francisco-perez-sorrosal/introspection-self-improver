@@ -14,11 +14,12 @@ test split. See `contract/protocol.md` for what has to land before a number coun
 | `mock_smoke/` | `mock` | diagnostic | reward 1.0, DB match 1/1, normal stop (`user_stop`), 8 messages, 12 s, $0.0052 |
 | `task_001/` | `banking_knowledge` (`bm25`) | locked | **reward 0.0**, DB match 0/1, normal stop (`user_stop`), 20 messages, 43 s, $0.1607 |
 | `task_001_trials/trial_6…10/` | `banking_knowledge` (`bm25`) | locked | five trials of one task under one config: 1 × 1.0, 4 × 0.0 |
-| `task_001_platform/` | `banking_knowledge` (`bm25`) | locked, **platform lane** | reward 1.0, pass^1 1.000, DB match 1/1, normal stop, 24 messages, 9 tool calls, $0.2383 |
+| `task_001_platform/` | `banking_knowledge` (`bm25`) | locked, **platform lane** | **reward 0.0**, DB match 0/1, normal stop (`user_stop`), 24 messages, 8 tool calls, $0.2520 |
 | `task_001_sonnet5/` | `banking_knowledge` (`bm25`) | superseded config | reward 1.0, DB match 1/1, normal stop, 18 messages, $0.1283 |
 
-`mock_smoke/` and `task_001/` are whatever the most recent `make smoke` / `make single_task`
-produced — those targets overwrite, since a seam gate is not a record. Each carries a
+`mock_smoke/`, `task_001/` and `task_001_platform/` are whatever the most recent `make smoke` /
+`make single_task` (local or `TRANSPORT=platform`) produced — those targets overwrite, since a
+seam gate is not a record. Each carries a
 `run_metadata.json` naming the launcher, the exact launch argv, and the toolchain versions,
 because two launchers produce identically-shaped results and a directory has to be able to say
 which one made it.
@@ -38,11 +39,11 @@ evidence, and the evidence is what makes it interesting rather than the reward:
 
 | | value |
 |---|---|
-| conversation / task id | `019ff8fb-73f5-7464-ab27-d0f3f2770992` |
-| lineage | `recipe_git_commit_sha` = `656126029a8b…`, this repository's HEAD |
-| cost / usage | $0.2383 · 8 LLM calls · 9 tool uses · 35 spans |
+| conversation / task id | `019ff93b-e92d-77dc-8e81-38bba88d57d6` |
+| lineage | `recipe_git_commit_sha` = `e366b82867…`, the commit the run served |
+| cost / usage | $0.2520 · 11 LLM calls · 8 tool uses · 47 spans |
 | health | `has_errors: false`, `failed_tool_use_count: 0` |
-| completeness | `evidence_complete: true`, 44 items |
+| completeness | `evidence_complete: true`, 55 items |
 
 Read it back with `introspection conversations export <id> --format trajectory`, which returns the
 messages including the `<instructions>` and frozen `<policy>` the agent was actually given.
@@ -51,7 +52,7 @@ messages including the `<instructions>` and frozen `<policy>` the agent was actu
 reward is a draw regardless (see below). The divergences that bound any future comparison are
 listed in `contract/constraints.md`.
 
-### Two bugs this run found, both of which a green reward had hidden
+### Two bugs this lane's bring-up found, both of which a green reward had hidden
 
 Worth recording because both produced *correct-looking* results:
 
@@ -65,8 +66,10 @@ Worth recording because both produced *correct-looking* results:
 2. **A finished task is not a finished conversation.** The task stays `idle` on a warm sandbox
    until an inactivity timeout, so the conversation reads pending long after the reward exists, and
    a sweep would strand one warm sandbox per episode against the org concurrency limit. The
-   transport now deletes the task, which was verified to preserve the conversation: the task 404s
-   afterwards, the conversation still returns its spans, cost and usage.
+   transport now retitles the task (`τ²-bench <domain> <task>`) and archives it — never deletes
+   it. Archiving settles the task immediately (the sandbox is released) while the conversation
+   keeps its name, spans, cost and usage; the first design deleted the task, which preserved the
+   evidence but not the name.
 
 The second bug is the reason `evidence_complete` is recorded at all. "The episode finished" was an
 inference from the reward; now it is a field that the export itself supplies.
