@@ -20,6 +20,13 @@ Two modes, and the distinction is load-bearing:
               seam bring-up and the A.0a pipe-semantics gate on `mock`. Results are not
               comparable to anything and must not be reported as a score.
 
+Orthogonal to those, two protocol round types bind a run to the frozen partition
+(tau_adapter/rounds.py): `--batch NN` runs one improvement batch on the platform lane, and
+`--heldout` runs the held-out set on the local lane with rewards muted in this process —
+completeness only; grading lives in the vault via scripts/run_heldout.py, which is the
+entry point that owns the full redirect (`make heldout`). Selection comes from the
+manifest, never per invocation, and the wrong lane is refused rather than corrected.
+
 A round ends with three artifacts, not one: τ's `results.json`, the runner's
 `run_metadata.json` (the completion sentinel — written only after τ's runner returned), and
 `episode_manifest.jsonl`, one row per (task, trial) joining the episode to its platform
@@ -44,6 +51,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tau_adapter import lock as lockmod
 from tau_adapter import manifest as manifestmod
+from tau_adapter import rounds as roundsmod
+from tau_adapter import split as splitmod
 from tau_adapter.dev_lane import (
     DevAttachment,
     assert_no_connected_binding,
@@ -59,15 +68,13 @@ from tau_adapter.experiment import (
 )
 from tau_adapter.pi_agent import PiRecipeAgent
 from tau_adapter.policy_region import extract_policy, replace_policy
+from tau_adapter.rounds import TRANSPORT_LOCAL, TRANSPORT_PLATFORM, TRANSPORTS
 from tau_adapter.tool_bridge import ToolBridge
 from tau_adapter.transport_local import LAUNCHER_CLI, LAUNCHER_PI, LAUNCHERS, LocalPiTransport
 from tau_adapter.transport_platform import PlatformTransport, original_title_of
 
 AGENT_KEY = "pi_recipe"
 
-TRANSPORT_LOCAL = "local"
-TRANSPORT_PLATFORM = "platform"
-TRANSPORTS = (TRANSPORT_LOCAL, TRANSPORT_PLATFORM)
 DEFAULT_RUNTIME = "target-agent"
 
 # Gitignored, and inside the work tree on purpose — see _materialise_workspace.
@@ -243,6 +250,7 @@ def _retitle_episodes(
     generation: str | None,
     experiment_tag: str,
     original_titles: dict[str, str],
+    round_token: str = "",
 ) -> tuple[dict[str, str], int]:
     """Post-run label pass: name every platform task after the τ episode it served.
 
@@ -276,7 +284,7 @@ def _retitle_episodes(
                 original = ""
         label = (
             f"{experiment_tag} τ²-bench {domain} {sim.get('task_id')} "
-            f"trial {sim.get('trial')}{gen_short}"
+            f"trial {sim.get('trial')}{gen_short}{round_token}"
         ) + (f" - {original}" if original else "")
         try:
             _cli_json(["tasks", "update", ref, "--title", label], timeout=60)
@@ -304,7 +312,28 @@ def main() -> int:
         "--task-ids",
         nargs="+",
         default=None,
-        help="τ task ids to run. Omit to run the whole locked task split.",
+        help="τ task ids to run. Omit to run the whole locked task split. Ad-hoc runs only.",
+    )
+    round_group = parser.add_mutually_exclusive_group()
+    round_group.add_argument(
+        "--batch",
+        type=int,
+        metavar="N",
+        default=None,
+        help=(
+            "run improvement batch N from the frozen partition. Platform lane forced "
+            "(SIA_EVALUATION_PLAN.md D1): batch episodes are the evidence `operate` reads. "
+            "Resume-friendly — rerunning re-runs only what is missing."
+        ),
+    )
+    round_group.add_argument(
+        "--heldout",
+        action="store_true",
+        help=(
+            "run the held-out set from the frozen partition. Local lane forced (D1), output "
+            "must live out of tree, and this process prints completeness only — no rewards. "
+            "Prefer `make heldout`, whose wrapper owns the vault and the full redirect."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -332,12 +361,13 @@ def main() -> int:
     parser.add_argument(
         "--transport",
         choices=TRANSPORTS,
-        default=TRANSPORT_LOCAL,
+        default=None,
         help=(
-            "where the agent runs. 'local' (default) is a Pi subprocess on this machine and "
-            "produces no Introspection evidence. 'platform' runs each episode as a task in the "
-            "development environment, which yields conversations, traces and lineage, and starts "
-            "`introspection dev` itself to route the τ bridge back here."
+            "where the agent runs. 'local' (the ad-hoc default) is a Pi subprocess on this "
+            "machine and produces no Introspection evidence. 'platform' runs each episode as a "
+            "task in the development environment, which yields conversations, traces and "
+            "lineage, and starts `introspection dev` itself to route the τ bridge back here. "
+            "Protocol rounds choose their own lane and refuse the other."
         ),
     )
     parser.add_argument(
@@ -378,10 +408,29 @@ def main() -> int:
     lockmod.assert_recipe_matches_lock(lock)
     _assert_recipe_valid()
 
+    # Round-type resolution refuses every lying combination (wrong lane, hand-picked tasks,
+    # a drifted partition) before anything below spends time or money.
+    needs_partition = args.batch is not None or args.heldout
+    try:
+        spec = roundsmod.resolve_round(
+            batch=args.batch,
+            heldout=args.heldout,
+            transport=args.transport,
+            task_ids=args.task_ids,
+            domain=args.domain,
+            overwrite=args.overwrite,
+            lock=lock,
+            manifest=splitmod.load_manifest() if needs_partition else None,
+            rows=splitmod.load_task_rows(lock.domain) if needs_partition else None,
+        )
+    except roundsmod.RoundError as exc:
+        raise SystemExit(str(exc)) from exc
+
     domain = args.domain or lock.domain
     locked_mode = domain == lock.domain
+    muted = spec.kind == roundsmod.KIND_HELDOUT
 
-    task_ids: list[str] | None = args.task_ids
+    task_ids: list[str] | None = spec.task_ids
     num_trials = lock.num_trials
 
     from tau2.data_model.simulation import TextRunConfig
@@ -409,13 +458,13 @@ def main() -> int:
     # the base commit, so a dirty served surface makes every arm claim soft: the platform
     # lane refuses it outright unless --allow-dirty records it prominently.
     arm_sha, dirty_paths = repo_arm_state() if locked_mode else (None, [])
-    if args.transport == TRANSPORT_PLATFORM and dirty_paths and not args.allow_dirty:
+    if spec.transport == TRANSPORT_PLATFORM and dirty_paths and not args.allow_dirty:
         raise SystemExit(
             "the served recipe surface has uncommitted changes, so lineage would name a "
             "commit that is not what runs. Commit them, or pass --allow-dirty for a "
             "debugging run whose rows are marked arm_sha_ok=false:\n  " + "\n  ".join(dirty_paths)
         )
-    if args.transport == TRANSPORT_PLATFORM and locked_mode and not args.allow_dirty:
+    if spec.transport == TRANSPORT_PLATFORM and locked_mode and not args.allow_dirty:
         # The platform mints runtime versions from pushed main, and `recipe_git_commit_sha`
         # names that pin — while `introspection dev` serves the work-tree's bytes. Running
         # ahead of origin/main therefore runs the right code but records the wrong arm; the
@@ -431,6 +480,13 @@ def main() -> int:
             )
 
     out_dir = Path(args.out).resolve()
+    if muted and out_dir.is_relative_to(lockmod.REPO_ROOT):
+        raise SystemExit(
+            "held-out outputs live out of tree (SIA_EVALUATION_PLAN.md D9): results/, and "
+            "the work tree generally, are exactly where held-out artifacts must not exist. "
+            "scripts/run_heldout.py owns the vault layout and the console redirect — prefer "
+            "`make heldout`."
+        )
     # Before --overwrite can delete anything: a run aimed at the wrong experiment directory
     # must refuse here rather than clear another freeze's record first. Also verifies — or,
     # for a non-PROVISIONAL lock, creates — the experiment's freeze snapshot.
@@ -451,7 +507,7 @@ def main() -> int:
 
     dev: DevAttachment | None = None
     runtime_id: str | None = None
-    if args.transport == TRANSPORT_PLATFORM:
+    if spec.transport == TRANSPORT_PLATFORM:
         if not locked_mode:
             raise SystemExit(
                 "the platform transport serves the Recipe from the git work-tree, so it cannot "
@@ -479,7 +535,7 @@ def main() -> int:
     # from τ's own record once it exists. The experiment tag keeps platform evidence separable
     # even where two experiments share a recipe commit — e.g. a user-simulator-only change.
     episode_label = f"{_experiment_tag(lock)} τ²-bench {domain}" + (
-        f" {task_ids[0]}" if task_ids and len(task_ids) == 1 else ""
+        spec.label_token or (f" {task_ids[0]}" if task_ids and len(task_ids) == 1 else "")
     )
 
     # Every transport constructed, one per episode *attempt*. This is the queue-tolerant side
@@ -497,7 +553,7 @@ def main() -> int:
                 f"--agent-llm is {declared!r} but the lock declares {lock.agent_llm_declared!r}"
             )
         transport: Any
-        if args.transport == TRANSPORT_PLATFORM:
+        if spec.transport == TRANSPORT_PLATFORM:
             assert runtime_id is not None
             transport = PlatformTransport(
                 runtime_id=runtime_id,
@@ -571,6 +627,10 @@ def main() -> int:
     )
     if round_status:
         print(f"   round         {round_status}")
+    if spec.kind == roundsmod.KIND_BATCH:
+        print(f"   round type    {spec.split} — improvement batch, fully observable by design")
+    elif muted:
+        print("   round type    held_out — hidden evaluation; grading stays in the vault")
     print(f"   recipe        {recipe_dir}")
     if arm_sha:
         dirt = (
@@ -579,8 +639,8 @@ def main() -> int:
             else ""
         )
         print(f"   arm           {arm_sha[:12]}{dirt}")
-    print(f"   transport     {args.transport}")
-    if args.transport == TRANSPORT_PLATFORM:
+    print(f"   transport     {spec.transport}")
+    if spec.transport == TRANSPORT_PLATFORM:
         print(f"   runtime       {args.runtime} ({runtime_id}) in {args.environment}")
         print(f"   dev target    {dev.dev_target if dev else '(none)'}")
     else:
@@ -597,7 +657,14 @@ def main() -> int:
         task_ids=list(task_ids) if task_ids else None,
     )
 
-    selection = ", ".join(task_ids) if task_ids else f"whole split ({len(tasks)} tasks)"
+    if spec.kind == roundsmod.KIND_BATCH:
+        selection = f"{spec.split}: {', '.join(task_ids or [])}"
+    elif muted:
+        selection = f"held_out: {len(tasks)} task(s); outputs sealed in the vault"
+    elif task_ids:
+        selection = ", ".join(task_ids)
+    else:
+        selection = f"whole split ({len(tasks)} tasks)"
     print(f"   tasks         {selection} in {num_trials} trial(s)")
     if lock.provisional:
         print("   lock status   PROVISIONAL — not an experiment freeze")
@@ -633,7 +700,7 @@ def main() -> int:
     # accounting, the manifest, and the arm assertion. Everything below reads results.json
     # rather than in-memory state so that what it derives is exactly what a later reader sees.
     payload = json.loads(results_path.read_text(encoding="utf-8")) if results_path.exists() else {}
-    is_platform = args.transport == TRANSPORT_PLATFORM
+    is_platform = spec.transport == TRANSPORT_PLATFORM
 
     labels: dict[str, str] = {}
     retitle_failures = 0
@@ -647,7 +714,7 @@ def main() -> int:
             if getattr(t, "session_ref", None) and getattr(t, "original_title", None) is not None
         }
         labels, retitle_failures = _retitle_episodes(
-            payload, domain, generation, _experiment_tag(lock), original_titles
+            payload, domain, generation, _experiment_tag(lock), original_titles, spec.label_token
         )
         referenced = sorted(
             {
@@ -694,10 +761,11 @@ def main() -> int:
 
     context = manifestmod.RoundContext(
         experiment_id=lock.experiment_id,
-        transport=args.transport,
+        transport=spec.transport,
         generation=generation,
         arm_sha=arm_sha,
         arm_dirty=bool(dirty_paths),
+        split=spec.split,
         accounting=accounting,
         incidents_by_ref=incidents_by_ref,
         labels_by_ref=labels,
@@ -717,10 +785,10 @@ def main() -> int:
                 "experiment": lock.experiment_id,
                 "domain": domain,
                 "generation": generation,
-                "split": None,
+                "split": spec.split,
                 "num_trials": num_trials,
-                "transport": args.transport,
-                "launcher": args.launcher if args.transport == TRANSPORT_LOCAL else None,
+                "transport": spec.transport,
+                "launcher": args.launcher if spec.transport == TRANSPORT_LOCAL else None,
                 "launch_argv": launch_argv,
                 "resumed": round_status is not None and "resuming" in (round_status or ""),
                 "arm": {
@@ -770,7 +838,11 @@ def main() -> int:
         print(f"\n── NO simulations were produced in {elapsed:.0f}s; this run is not a record")
         return 1
 
-    ConsoleDisplay.display_agent_metrics(compute_metrics(results))
+    # A held-out round's summary states completeness and nothing else: no metrics table,
+    # no per-episode reward. Defense-in-depth — the wrapper redirects this whole process
+    # into the vault's console.log, but a direct --heldout invocation must not leak either.
+    if not muted:
+        ConsoleDisplay.display_agent_metrics(compute_metrics(results))
     print(f"\n── {len(results.simulations)} simulation(s) in {elapsed:.0f}s → {results_path}")
     for sim, episode in zip(results.simulations, episode_summaries, strict=True):
         verdict = (
@@ -778,9 +850,10 @@ def main() -> int:
             if episode["completed"]
             else "DID NOT COMPLETE — infrastructure or protocol, not a graded outcome"
         )
+        graded_part = "" if muted else f" reward={episode['reward']} "
         print(
             f"   {sim.task_id}: termination={sim.termination_reason} "
-            f"messages={len(sim.messages)} reward={episode['reward']}  [{verdict}]"
+            f"messages={len(sim.messages)}{graded_part} [{verdict}]"
         )
     print(f"\n   manifest      {manifest_path.name}: {len(manifest_rows)} episode row(s)")
     if incident_totals:
@@ -795,10 +868,16 @@ def main() -> int:
         print(
             f"   labels        {retitle_failures} retitle(s) failed; rows keep their fallback title"
         )
-    print(
-        "\n   Reward above is tau's own in-run evaluation. The reported number comes from\n"
-        f"   `tau2 evaluate-trajs {results_path}`."
-    )
+    if muted:
+        print(
+            "\n   Held-out round: nothing graded is printed here. Grading is persisted in\n"
+            "   the vault by scripts/run_heldout.py and read at reveal, never before."
+        )
+    else:
+        print(
+            "\n   Reward above is tau's own in-run evaluation. The reported number comes from\n"
+            f"   `tau2 evaluate-trajs {results_path}`."
+        )
     if sha_mismatches:
         print(
             "\n── ARM ASSERTION FAILED: these conversations carry a recipe_git_commit_sha that "
