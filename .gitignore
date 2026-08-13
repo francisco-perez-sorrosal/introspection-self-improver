@@ -1,7 +1,15 @@
-# Generated Pi runtime state
+# Generated Pi runtime state. mcp-catalogs/ holds one file per MCP endpoint, and the bridge
+# binds a fresh ephemeral port every episode, so it accumulates a file per run.
 .pi/bin/
+.pi/mcp-catalogs/
 .pi/mcp-session.json
 .pi/mcporter.json
+
+# Diagnostic-mode workspace. A throwaway copy of the Recipe with a non-locked domain's
+# policy substituted, built per run by benchmark/tau_adapter/run.py. It lives inside the work
+# tree, not /tmp, because `introspection local` validates the Recipe and that validation reads
+# gitignore — see _materialise_workspace.
+/.diagnostic-workspace/
 
 # Local capability bindings — endpoints and credentials never belong in the repo
 .pi/mcp.local.json

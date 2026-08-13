@@ -1,0 +1,23 @@
+# The three-way task split. A split is nothing more than three lists of tau task ids,
+# because tau selects tasks with --task-ids; resizing between experiments costs an edit,
+# not a redesign.
+#
+# STUB. Deliberately empty: this step runs single named tasks by id on the command line and
+# never touches a split. Populating it is part of standing up G0, and it must happen before
+# any number is reported as a result.
+#
+# When populated, the rules are:
+#   discovery  — fully inspectable. This is the only set the orchestrator learns from.
+#   validation — aggregate outcomes only. Exposing a validation failure in detail turns
+#                validation into more discovery data.
+#   test       — never inspected during optimisation. Predetermined checkpoints only.
+# Tasks in none of the three are unused during optimisation and remain available for the
+# full-domain checkpoint runs.
+
+version: 1
+domain: banking_knowledge
+task_set_name: base
+
+discovery: []
+validation: []
+test: []

@@ -7,3 +7,6 @@
 # `make bootstrap`; both values are supplied per episode as TAU_MCP_URL / TAU_MCP_TOKEN.
 # Recipe validation rejects committing this file.
 .pi/mcp.local.json
+
+# Cached MCP tool catalogues, written by Recipes at session start.
+.pi/mcp-catalogs/
