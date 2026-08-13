@@ -276,9 +276,11 @@ observation (designed lost-race recovery, no data loss, no grading impact). H0 r
 0/3 on batch_01's tasks — visible by design, not a record (PROVISIONAL). Two fixes
 landed from validation findings: fresh held-out rounds no longer record
 `resumed=true`, and the completeness report now carries reward-free incident totals.
-**Phase 4 pre-flight note:** clear the bring-up artifacts before the real freeze —
-vault `generation_smoke/` and `results/.../generation_000/batch_01/` — and rerun the
-partition proposal if the freeze re-decides it.
+**Phase 4 pre-flight note:** bring-up artifacts cleared 2026-08-13, ahead of the
+freeze (user-directed grounding pass) — vault `generation_smoke/`,
+`results/experiment_002_*/` (mock_smoke + batch_01), and `.diagnostic-workspace/`
+all removed; the tree carries only committed record. Rerun the partition proposal
+at Phase 4 if the freeze re-decides it.
 
 ### Phase 3 — Generation lifecycle: records, reset, reveal
 
