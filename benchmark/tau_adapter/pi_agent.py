@@ -85,7 +85,10 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
             # and holds it for the whole run, so a per-episode bridge could not be reached.
             # Safe at max_concurrency 1, where only one episode is ever in flight.
             # What must NOT be shared is rendezvous state — see reset_for_episode.
-            self._bridge.reset_for_episode()
+            # The transport's incident sink (when it keeps one) receives this episode's stall
+            # warnings, so a stalled rendezvous reaches the episode manifest.
+            sink = getattr(self._transport, "incidents", None)
+            self._bridge.reset_for_episode(on_stall=sink.count_stall if sink is not None else None)
             env = dict(self._base_env)
             env.update(self._bridge.env())
             self._transport.start(env)

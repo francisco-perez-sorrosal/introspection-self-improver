@@ -203,12 +203,32 @@ def summarise_sim(sim: dict) -> dict:
     }
 
 
+def read_manifest_rows(round_dir: Path) -> dict[tuple, dict]:
+    """episode_manifest.jsonl keyed by (task, trial) — the W3 evidence join, if the round
+    emitted one. Absent for pre-M2 rounds; the page renders those without the extra flags."""
+    path = round_dir / "episode_manifest.jsonl"
+    if not path.exists():
+        return {}
+    rows: dict[tuple, dict] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        rows[(str(row.get("tau_task_id")), row.get("trial"))] = row
+    return rows
+
+
 def summarise_round(round_dir: Path, results_root: Path) -> dict:
     results_path = round_dir / "results.json"
     metadata_path = round_dir / "run_metadata.json"
+    manifest_path = round_dir / "episode_manifest.jsonl"
     signature = (
         results_path.stat().st_mtime_ns,
         metadata_path.stat().st_mtime_ns if metadata_path.exists() else 0,
+        manifest_path.stat().st_mtime_ns if manifest_path.exists() else 0,
     )
     cache_key = str(round_dir)
     cached = _round_cache.get(cache_key)
@@ -225,6 +245,7 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
     sims = [summarise_sim(sim) for sim in results.get("simulations") or []]
 
     accounting = ((metadata or {}).get("platform") or {}).get("accounting") or {}
+    manifest_rows = read_manifest_rows(round_dir)
     for sim in sims:
         account = accounting.get(sim["platform_ref"] or "") or {}
         sim["recipe_sha"] = account.get("recipe_git_commit_sha")
@@ -237,6 +258,12 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         sim["tokens"] = (
             clean(usage.get("total_tokens")) if isinstance(usage, dict) else None
         )
+        row = manifest_rows.get((sim["task_id"], sim["trial"])) or {}
+        sim["label"] = row.get("label")
+        sim["arm_sha_ok"] = row.get("arm_sha_ok")
+        sim["stall_warnings"] = row.get("stall_warnings") or 0
+        incidents = row.get("incidents") or {}
+        sim["incident_count"] = sum(v for v in incidents.values() if isinstance(v, int))
 
     graded = [s for s in sims if s["graded"]]
     task_stats_map: dict[str, list[int]] = {}
@@ -258,15 +285,29 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
     for sim in sims:
         terminations[sim["termination"]] = terminations.get(sim["termination"], 0) + 1
 
+    incident_totals = ((metadata or {}).get("incidents") or {}).get("totals") or {}
+    arm = (metadata or {}).get("arm") or {}
+    platform_meta = (metadata or {}).get("platform") or {}
     name = round_dir.name
+    classified = classify_round(name)
     summary = {
         "path": str(round_dir.relative_to(results_root)),
         "name": name,
         "domain": (metadata or {}).get("domain")
         or ((info.get("environment_info") or {}).get("domain_name")),
-        **classify_round(name),
+        **classified,
+        # The runner's own record beats name-decoding once it exists (M2 rounds carry it).
+        "split": (metadata or {}).get("split") or classified["split"],
         "mode": (metadata or {}).get("mode")
         or ("locked" if info.get("retrieval_config") else None),
+        "incident_totals": incident_totals,
+        "incident_count": sum(v for v in incident_totals.values() if isinstance(v, int)),
+        "arm_sha": arm.get("sha"),
+        "arm_dirty": bool(arm.get("dirty_paths")),
+        "arm_mismatches": len(platform_meta.get("arm_sha_mismatches") or []),
+        "orphaned": len(platform_meta.get("orphaned_task_ids") or []),
+        "resumed": bool((metadata or {}).get("resumed")),
+        "has_manifest": bool(manifest_rows),
         "transport": (metadata or {}).get("transport")
         or ("platform" if name.endswith("_platform") else "local"),
         "experiment_field": (metadata or {}).get("experiment"),
@@ -323,7 +364,14 @@ def round_dirs(generation_dir: Path):
 
 
 def generation_extras(generation_dir: Path) -> dict:
-    extras: dict = {"learning_record": None, "decision": None}
+    extras: dict = {"learning_record": None, "decision": None, "gates": []}
+    gates_dir = generation_dir / "gates"
+    if gates_dir.is_dir():
+        for path in sorted(gates_dir.glob("*.json")):
+            try:
+                extras["gates"].append(json.loads(path.read_text(encoding="utf-8")))
+            except (OSError, json.JSONDecodeError):
+                continue
     for name in ("learning_record.yaml", "learning-record.yaml", "learning_record.yml"):
         path = generation_dir / name
         if path.exists():

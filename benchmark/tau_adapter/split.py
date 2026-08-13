@@ -193,6 +193,22 @@ def render_manifest(
     return "\n".join(lines)
 
 
+def fidelity_task_set(manifest: dict[str, Any], rows: list[TaskRow], size: int = 3) -> list[str]:
+    """The small task set the A.0b cross-lane gate runs (v2 §4 W4).
+
+    Deterministic and derived from the frozen manifest, never chosen ad hoc: drawn from the
+    discovery split (inspectable by definition, so a gate run leaks nothing), covering both
+    reward bases — the first ACTION task in manifest order plus the first DB tasks — because
+    an adapter defect that only bites golden-action grading would otherwise stay invisible
+    until a real round.
+    """
+    basis = {row.task_id: row.reward_basis for row in rows}
+    discovery = list(manifest.get("discovery") or [])
+    action = [t for t in discovery if basis.get(t) == ("ACTION",)][:1]
+    db = [t for t in discovery if basis.get(t) != ("ACTION",)]
+    return (action + db[: max(0, size - len(action))])[:size]
+
+
 def strata_report(rows: list[TaskRow], assignment: dict[str, list[str]]) -> str:
     """Human-readable stratification table for the freeze review."""
     by_id = {row.task_id: row for row in rows}

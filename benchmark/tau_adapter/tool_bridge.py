@@ -30,6 +30,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
+from collections.abc import Callable
+
 import mcp.types as mcp_types
 import uvicorn
 from loguru import logger
@@ -101,11 +103,15 @@ class _Mailbox:
     Keyed by name plus canonicalised arguments rather than by position, so a turn carrying
     several tool calls pairs correctly no matter what order the host executes them in.
     Repeated identical calls queue behind each other.
+
+    `on_stall` fires once per wait that crosses STALL_WARN_SECONDS, so a rendezvous
+    regression lands in the episode's incident counters instead of only in a log line.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, on_stall: Callable[[], None] | None = None) -> None:
         self._lock = threading.Lock()
         self._slots: dict[_Key, queue.SimpleQueue[tuple[str, bool]]] = {}
+        self._on_stall = on_stall
         self.posted: list[_Key] = []
         self.awaited: list[_Key] = []
 
@@ -128,6 +134,8 @@ class _Mailbox:
         # given up, then keep waiting to the ceiling in case the result is merely slow.
         with contextlib.suppress(queue.Empty):
             return slot.get(timeout=min(STALL_WARN_SECONDS, timeout))
+        if self._on_stall is not None:
+            self._on_stall()
         logger.warning(
             f"rendezvous stalled: no result for {key.tool_name} after "
             f"{STALL_WARN_SECONDS:.0f}s. The caller's MCP daemon has likely abandoned this call "
@@ -254,7 +262,7 @@ class ToolBridge:
         """
         self._mailbox.post(_Key.of(tool_name, arguments), content, is_error)
 
-    def reset_for_episode(self) -> None:
+    def reset_for_episode(self, on_stall: Callable[[], None] | None = None) -> None:
         """Drop every rendezvous slot. Called at episode start; the bridge itself lives on.
 
         The bridge outlives the episode — the development lane's `dev` attachment holds its URL
@@ -264,8 +272,11 @@ class ToolBridge:
         result instantly and shift every later pairing by one, silently. A τ infrastructure
         retry sets up exactly that sequence. Any handler still parked on the old mailbox times
         out on its own ceiling; nothing can legitimately cross an episode boundary.
+
+        `on_stall` attributes this episode's stall warnings to its caller's incident sink,
+        which is how a stalled rendezvous reaches the episode manifest.
         """
-        self._mailbox = _Mailbox()
+        self._mailbox = _Mailbox(on_stall=on_stall)
 
     # ------------------------------------------------------------------- handlers
 

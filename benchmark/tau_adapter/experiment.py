@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +29,14 @@ from tau_adapter.lock import BENCHMARK_DIR, REPO_ROOT, Lock
 RESULTS_ROOT = REPO_ROOT / "results"
 SPLIT_MANIFEST_PATH = BENCHMARK_DIR / "split_manifest.yaml"
 SNAPSHOT_NAME = "experiment.yaml"
+
+#: Written only after τ's runner returned, so it doubles as the round's completion sentinel:
+#: results.json without it is an interrupted run, which resumes rather than refuses.
+COMPLETION_SENTINEL = "run_metadata.json"
+
+#: The surface `introspection dev` serves: the Recipe tree plus the Runtime manifest that
+#: resolves it. Dirt anywhere else cannot change what an episode runs.
+SERVED_RECIPE_PATHS = ("target-agent", ".introspection")
 
 
 class ExperimentError(RuntimeError):
@@ -103,6 +113,72 @@ def enforce_snapshot(
         return "PROVISIONAL — no freeze snapshot written or enforced"
     _write_snapshot(snapshot_path, lock, fingerprint)
     return f"freeze snapshot created ({SNAPSHOT_NAME})"
+
+
+def prepare_round_dir(out_dir: Path, overwrite: bool) -> str | None:
+    """Decide what an existing round directory means, and make it safe to run into.
+
+    Three cases, told apart by the completion sentinel rather than guessed:
+
+      empty / absent      → fresh round; create it.
+      sentinel present    → a completed record. Refused without --overwrite, because a
+                            previous round is not scratch.
+      results, no sentinel → an interrupted run. Kept as-is: τ's own checkpoint resume
+                            (keyed (trial, task_id, seed), `auto_resume`) re-runs only what
+                            is missing, and replaces infrastructure-error placeholders.
+
+    --overwrite keeps its rm -rf semantics for intentional restarts only.
+    Returns a one-line status for the run banner, or None for a fresh directory.
+    """
+    if overwrite and out_dir.exists():
+        shutil.rmtree(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        return "previous contents overwritten"
+    if not out_dir.exists() or not any(out_dir.iterdir()):
+        out_dir.mkdir(parents=True, exist_ok=True)
+        return None
+    if (out_dir / COMPLETION_SENTINEL).exists():
+        raise ExperimentError(
+            f"{out_dir} already holds a completed run ({COMPLETION_SENTINEL} present). "
+            "Pass --overwrite to replace it, or point --out at a new directory — a "
+            "previous round's record is not scratch."
+        )
+    return "resuming interrupted run — τ re-runs only the missing (trial, task, seed) pairs"
+
+
+def generation_of(out_dir: Path) -> str | None:
+    """The generation directory component of a results path, if any."""
+    for part in Path(out_dir).parts:
+        if part.startswith("generation"):
+            return part
+    return None
+
+
+def repo_arm_state(repo_root: Path = REPO_ROOT) -> tuple[str, list[str]]:
+    """The arm this run would serve: HEAD's sha, plus any dirt on the served recipe surface.
+
+    `introspection dev` serves the git work-tree while `recipe_git_commit_sha` names the
+    base commit, so uncommitted recipe edits make every lineage claim soft (v2 §2.5). The
+    check is scoped to what is actually served — results/ filling up is not dirt.
+    """
+    head = subprocess.run(  # noqa: S603, S607 - operator's git, on the repo being run
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=True,
+    ).stdout.strip()
+    porcelain = subprocess.run(  # noqa: S603, S607
+        ["git", "status", "--porcelain", "--", *SERVED_RECIPE_PATHS],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=True,
+    ).stdout
+    dirty = [line.strip() for line in porcelain.splitlines() if line.strip()]
+    return head, dirty
 
 
 def _write_snapshot(path: Path, lock: Lock, fingerprint: str) -> None:

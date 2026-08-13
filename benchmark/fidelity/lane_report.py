@@ -16,6 +16,7 @@ reward column, and only one of them invalidates the experiment.
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -50,6 +51,7 @@ class EpisodeReport:
     lane: str
     # Adapter-owned
     termination: str
+    trial: int | None = None
     agent_tool_names: list[str] = field(default_factory=list)
     unmapped_tool_names: list[str] = field(default_factory=list)
     calls_without_results: list[str] = field(default_factory=list)
@@ -87,7 +89,12 @@ def _shape_and_counts(messages: list[dict[str, Any]]) -> tuple[str, int, int]:
 
 
 def build_report(results_path: Path, lane: str, locked_tools: set[str]) -> EpisodeReport:
-    """Summarise the first simulation in a τ results file."""
+    """Summarise the first simulation in a τ results file — the single-task instrument."""
+    return build_reports(results_path, lane, locked_tools)[0]
+
+
+def build_reports(results_path: Path, lane: str, locked_tools: set[str]) -> list[EpisodeReport]:
+    """Summarise every simulation in a τ results file — the gate-scale instrument."""
     payload = json.loads(Path(results_path).read_text(encoding="utf-8"))
     simulations = payload.get("simulations") or []
     if not simulations:
@@ -96,7 +103,10 @@ def build_report(results_path: Path, lane: str, locked_tools: set[str]) -> Episo
         raise SystemExit(
             f"{results_path} holds no simulations — an interrupted or empty run, not a record"
         )
-    sim = simulations[0]
+    return [_report_of(sim, lane, locked_tools) for sim in simulations]
+
+
+def _report_of(sim: dict[str, Any], lane: str, locked_tools: set[str]) -> EpisodeReport:
     messages = sim.get("messages") or []
     reward_info = sim.get("reward_info") or {}
 
@@ -122,6 +132,7 @@ def build_report(results_path: Path, lane: str, locked_tools: set[str]) -> Episo
     return EpisodeReport(
         task_id=str(sim.get("task_id")),
         lane=lane,
+        trial=sim.get("trial"),
         termination=str(sim.get("termination_reason")),
         agent_tool_names=sorted(agent_names),
         unmapped_tool_names=sorted(n for n in agent_names if n not in locked_tools),
@@ -189,6 +200,73 @@ def check_invariants(report: EpisodeReport) -> list[Finding]:
         ),
     ]
     return findings
+
+
+SUCCESS_EPSILON = 1e-6  # τ's own definition: success = reward within 1e-6 of 1.0
+INFRASTRUCTURE = "infrastructure_error"
+
+
+def normalise_termination(value: Any) -> str:
+    return str(value or "unknown").rsplit(".", 1)[-1].lower()
+
+
+def is_success(reward: Any) -> bool:
+    return (
+        isinstance(reward, (int, float))
+        and math.isfinite(reward)
+        and abs(reward - 1.0) <= SUCCESS_EPSILON
+    )
+
+
+@dataclass(frozen=True)
+class LaneAggregate:
+    """One lane's gate-scale summary. `graded` follows τ's convention — only
+    infrastructure_error episodes are excluded from the denominator."""
+
+    lane: str
+    episodes: int
+    graded: int
+    successes: int
+    pass1: float | None
+    interval: tuple[float, float] | None
+    mean_messages: float | None
+
+
+def wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
+    """95% Wilson score interval on a proportion. Behaves at the small n a gate runs at,
+    where the normal approximation collapses to zero width on 0/n and n/n outcomes."""
+    if n == 0:
+        return None
+    phat = successes / n
+    denominator = 1 + z * z / n
+    centre = phat + z * z / (2 * n)
+    margin = z * math.sqrt((phat * (1 - phat) + z * z / (4 * n)) / n)
+    return ((centre - margin) / denominator, (centre + margin) / denominator)
+
+
+def aggregate(reports: list[EpisodeReport]) -> LaneAggregate:
+    graded = [r for r in reports if normalise_termination(r.termination) != INFRASTRUCTURE]
+    successes = sum(1 for r in graded if is_success(r.reward))
+    n = len(graded)
+    return LaneAggregate(
+        lane=reports[0].lane if reports else "?",
+        episodes=len(reports),
+        graded=n,
+        successes=successes,
+        pass1=round(successes / n, 4) if n else None,
+        interval=wilson_interval(successes, n),
+        mean_messages=round(sum(r.messages for r in reports) / len(reports), 1)
+        if reports
+        else None,
+    )
+
+
+def within_noise(a: LaneAggregate, b: LaneAggregate) -> bool | None:
+    """Overlapping 95% intervals on pass¹ — the defined (and, at gate N, deliberately
+    coarse) meaning of "aggregate agreement within trial noise" (v2 §4 W4 A.0b)."""
+    if a.interval is None or b.interval is None:
+        return None
+    return a.interval[0] <= b.interval[1] and b.interval[0] <= a.interval[1]
 
 
 def locked_tool_names() -> set[str]:

@@ -104,43 +104,63 @@ Exit criteria:
 
 Build tasks (W3 + W5):
 
-- [ ] **Sweep-safe episode labels** — every platform task titled
-      `<domain> <task_id> trial<k> gen<NNN> [exp:<id>]` even on multi-task sweeps
-      (post-run retitle from the raw_data map `run.py` already recovers, or factory
-      threading if τ's construction order permits — v2 §4 W3.1).
-- [ ] **`episode_manifest.jsonl`** emitted beside `run_metadata.json`: one row per
-      (task, trial) with the v2 §4 W3.2 field set — the artifact `operate` receives and
-      the learning record cites.
-- [ ] **Clean-tree assertion** before any platform run, and **post-round arm assertion**:
-      every conversation's `recipe_git_commit_sha` equals the arm's intended SHA
-      (W3.3–W3.4).
-- [ ] **Queue-tolerant accounting** — N derived from task rows, never submissions;
-      failed-pre-agent and platform-cancelled rows in the manifest with their
-      termination class (W3.5).
-- [ ] **Resume + incident accounting** — an interrupted sweep re-runs only unfinished
-      (task, trial) pairs (adopt τ's `--save-to` checkpointing or per-task incremental
-      output — W5.1); stall warnings, 409s, and infrastructure retries land in the
-      manifest as counts (W5.2); episode-task idle-timeout tuned (W5.3).
-- [ ] **Round make targets** — `discovery` / `validation` / `checkpoint` (names
-      provisional) reading task ids from the split manifest, `GEN=`-scoped.
+- [x] **Sweep-safe episode labels** (2026-08-13) — post-run retitle pass in `run.py`:
+      every platform task renamed `τ²-bench <domain> <task_id> trial<k> gen<NNN>
+      [exp:<id>]` from τ's own record once it exists (the factory never learns its
+      simulation, so ground truth beats threading — v2 §4 W3.1).
+- [x] **`episode_manifest.jsonl`** (2026-08-13) — `tau_adapter/manifest.py`, pure
+      derivation from `results.json` + recorded accounting/incidents, emitted beside
+      `run_metadata.json` by every runner (seam and stock anchor alike).
+- [x] **Clean-tree assertion + post-round arm assertion** (2026-08-13) — platform runs
+      refuse a dirty served surface (`target-agent/`, `.introspection/`) unless
+      `--allow-dirty` marks every row `arm_sha_ok: false`; after any platform round every
+      conversation's `recipe_git_commit_sha` is asserted against the arm SHA, exit 1 on
+      mismatch (W3.3–W3.4).
+- [x] **Queue-tolerant accounting** (2026-08-13) — N from τ's simulation rows
+      (infrastructure placeholders included); every created platform task registered by
+      the transport, orphans (created-but-unreferenced: τ retried past them) counted in
+      `run_metadata.json` (W3.5).
+- [x] **Resume + incident accounting** (2026-08-13) — τ's own checkpoint/resume adopted
+      (`auto_resume`, keyed (trial, task, seed); the completion sentinel distinguishes
+      interrupted-resume from completed-refuse); stall/409/prompt/stream counters ride a
+      per-episode sink from bridge + transport into the manifest (W5.2); interrupted runs
+      archive their in-flight task at teardown instead of idling the sandbox (W5.3).
+- [x] **Round make targets** (2026-08-13) — `discovery` / `validation` / `checkpoint`
+      (platform-lane by default, `ARM=`-aware, resume-friendly), plus `gate_a0a`,
+      `fidelity_gate`, `anchor_stock`. `--split test` deliberately does not exist — the
+      runner offers no button for the held-out split; test tasks run only inside the
+      checkpoint.
 
 Gate runs (W4 — run under the M1 freeze; blocking gates re-run for any new experiment):
 
-- [ ] **A.0a — pipe semantics** (blocking): adapter suite + `make smoke` green; verdict
-      recorded under the experiment.
-- [ ] **A.0b — cross-lane consistency** (blocking): `make fidelity` extended to a small
-      task set × the frozen trial count; aggregate agreement within trial noise;
-      recorded under `results/experiment_<id>/generation_000/fidelity_*/`.
-- [ ] **A.0c — stock-agent anchor** (informational): τ's stock `LLMAgent` run natively
-      under the lock's exact configuration; numbers under `anchor_stock/`. Under bm25
-      this anchors the scaffold delta, not published comparability.
+- [x] **A.0a — pipe semantics** (blocking) — PASS 2026-08-13: 110-test adapter suite +
+      mock smoke (4/4 completed), verdict at `generation_000/gates/a0a.json`.
+- [ ] **A.0b — cross-lane consistency** (blocking): `make fidelity_gate` — task_004 +
+      task_001 + task_003 (ACTION + 2×DB from discovery) × 4 trials × both lanes.
+      **First run 2026-08-13: FAIL, recorded at `generation_000/gates/a0b.json`** — the
+      aggregate agreement held (pass¹ 0.083 local vs 0.25 platform, overlapping Wilson
+      intervals) but 3/12 platform episodes ended in `timeout` with 5–6 rendezvous stalls
+      each, versus 12/12 clean locally. Diagnosis: the pre-registered platform divergence
+      (`contract/constraints.md` §platform-lane 4a) observed for the first time —
+      narration-then-call inside one run hands τ's floor to the user simulator while the
+      sandbox is parked on the bridge; Pi's 120s tool timeout × ~5 retries eats the 600s
+      episode budget. Remedy (transport-level reassembly) in flight; gate re-runs after.
+- [ ] **A.0c — stock-agent anchor** (informational): `make anchor_stock` — staged,
+      fires on user go (≈ $15–25 / 1.5–2 h). Under bm25 it anchors the scaffold delta,
+      not published comparability.
 
 Exit criteria:
 
-- [ ] A deliberately interrupted multi-task platform sweep resumes without re-spending
-      completed episodes.
-- [ ] Its manifest joins every episode → named conversation + commit, with completeness
-      flags; the labels are visible in the dashboard (`make dashboard`).
+- [x] A deliberately interrupted sweep resumes without re-spending completed episodes
+      (2026-08-13: mock round interrupted at 2/4 trials — no completion sentinel — rerun
+      skipped every done (trial, task, seed) pair, ran only the remainder, closed with a
+      4-row manifest and `resumed: true`).
+- [x] The manifest joins every episode → named conversation + commit, with completeness
+      flags (2026-08-13: live 4-trial platform round — 4/4 rows joined with
+      `arm_sha_ok: true`, `evidence_complete: true`, per-episode cost; retitles 4/4
+      applied, labels on the platform task rows and in the local dashboard's episode
+      table; the round also caught a real τ retry — 5 tasks created / 4 referenced /
+      1 orphan — with its 409 + settle-timeout + stall counters in the record).
 - [ ] A.0a and A.0b PASS recorded; A.0c numbers recorded. Gate cost ≈ $30–50 actual.
 
 ## M3 — G0: graded baseline + first harvest (v2: W6)

@@ -155,10 +155,29 @@ function roundBadges(round) {
   const badges = [];
   if (round.mode && round.mode !== "locked") badges.push(badge("warn", "⚠", "diagnostic — not reportable"));
   if (!round.has_sentinel) badges.push(badge("critical", "⛔", "interrupted — no completion sentinel"));
+  if (round.arm_mismatches > 0) badges.push(badge("critical", "✗", `${round.arm_mismatches} arm sha mismatch`));
+  else if (round.arm_dirty) badges.push(badge("warn", "⚠", "dirty arm — lineage soft"));
   if (round.infra_errors > 0) badges.push(badge("serious", "✕", `${round.infra_errors} infra`));
   if (round.abnormal > 0) badges.push(badge("serious", "△", `${round.abnormal} abnormal end`));
   if (round.evidence_incomplete > 0) badges.push(badge("serious", "◐", `${round.evidence_incomplete} evidence incomplete`));
+  if (round.incident_count > 0) badges.push(badge("warn", "⚡", `${round.incident_count} incident(s)`));
+  if (round.orphaned > 0) badges.push(badge("muted", "≠", `${round.orphaned} orphaned task(s)`));
+  if (round.resumed) badges.push(badge("muted", "↻", "resumed"));
   return badges;
+}
+
+function gateStrip(gen) {
+  /* The generation's gate verdicts (gates/*.json): the story of whether this cycle's
+     numbers may be believed, told before the numbers themselves. */
+  const wrap = el("div", "chip-strip");
+  for (const gate of gen.gates || []) {
+    const ok = gate.passed === true;
+    const chip = badge(ok ? "good" : "critical", ok ? "✓" : "✗", `${gate.gate || "gate"} ${ok ? "PASS" : "FAIL"}`);
+    const lane = (gate.lanes || []).map((l) => `${l.lane} pass¹=${l.pass1}`).join(" vs ");
+    chip.title = [gate.generated, lane, gate.note].filter(Boolean).join(" · ");
+    wrap.appendChild(chip);
+  }
+  return wrap;
 }
 
 /* ---------------------------------------------------------------- sections */
@@ -620,7 +639,6 @@ function copyButton(text) {
 
 function renderLearningRecord(gen) {
   const holder = $("#learning-record");
-  holder.replaceChildren();
   const panel = el("div", "lr-panel");
   panel.appendChild(el("h3", null, "Learning record"));
   if (!gen.learning_record && !gen.decision) {
@@ -662,7 +680,7 @@ function renderLearningRecord(gen) {
 function episodeTable(round) {
   const table = el("table", "data");
   const head = el("tr");
-  for (const h of ["task", "trial", "reward", "termination", "msgs", "KB_search", "cost", "duration", "conversation", ""])
+  for (const h of ["task", "trial", "reward", "termination", "flags", "msgs", "KB_search", "cost", "duration", "conversation", ""])
     head.appendChild(el("th", null, h));
   table.appendChild(head);
   for (const sim of round.sims) {
@@ -671,7 +689,12 @@ function episodeTable(round) {
     const chip = el("span", `reward-chip ${sim.success ? "pass" : "fail"}`);
     chip.textContent = sim.success ? "✓ 1.0" : `✗ ${sim.reward ?? "—"}`;
     reward.appendChild(chip);
+    const flags = el("td");
+    if (sim.arm_sha_ok === false) flags.appendChild(badge("critical", "✗", "arm sha"));
+    if (sim.stall_warnings > 0) flags.appendChild(badge("warn", "⏱", `${sim.stall_warnings} stall(s)`));
+    if (sim.incident_count > 0) flags.appendChild(badge("warn", "⚡", String(sim.incident_count)));
     const conversation = el("td", "mono");
+    if (sim.label) conversation.title = sim.label;
     if (sim.platform_ref) {
       conversation.append(
         el("span", null, `${sim.platform_ref.slice(0, 8)}… `),
@@ -692,6 +715,7 @@ function episodeTable(round) {
       el("td", null, String(sim.trial ?? "—")),
       reward,
       el("td", null, sim.termination),
+      flags,
       el("td", null, String(sim.messages)),
       el("td", null, String(sim.kb_search)),
       el("td", null, usd(sim.platform_cost != null ? sim.platform_cost : ((sim.agent_cost || 0) + (sim.user_cost || 0)) || null)),
@@ -717,6 +741,9 @@ function renderDetail() {
     return;
   }
   title.textContent = `${gen.name} — rounds and episodes`;
+  const lrHolder = $("#learning-record");
+  lrHolder.replaceChildren();
+  if (gen.gates?.length) lrHolder.appendChild(gateStrip(gen));
   renderLearningRecord(gen);
 
   const rounds = roundsOf(gen);
@@ -755,7 +782,7 @@ function renderDetail() {
     if (state.openRounds.has(round.path)) {
       const holder = el("tr", "episodes-holder");
       const cell = el("td");
-      cell.colSpan = 10;
+      cell.colSpan = 11;
       cell.appendChild(episodeTable(round));
       holder.appendChild(cell);
       table.appendChild(holder);

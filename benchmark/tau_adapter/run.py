@@ -19,6 +19,12 @@ Two modes, and the distinction is load-bearing:
               materialised into a throwaway workspace with that policy substituted. Used for
               seam bring-up and, later, for the Phase A.0 fidelity gate on `mock`. Results
               are not comparable to anything and must not be reported as a score.
+
+A round ends with three artifacts, not one: τ's `results.json`, the runner's
+`run_metadata.json` (the completion sentinel — written only after τ's runner returned), and
+`episode_manifest.jsonl`, one row per (task, trial) joining the episode to its platform
+conversation, lineage, cost, completeness and incident counters. The manifest is what
+`operate` receives at the top of a generation (v2 §5.1).
 """
 
 from __future__ import annotations
@@ -35,15 +41,21 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from fidelity.lane_report import NORMAL_TERMINATIONS
 from tau_adapter import lock as lockmod
+from tau_adapter import manifest as manifestmod
+from tau_adapter import split as splitmod
 from tau_adapter.dev_lane import (
     DevAttachment,
     assert_no_connected_binding,
     resolve_runtime_id,
     warm_runtime,
 )
-from tau_adapter.experiment import enforce_snapshot
+from tau_adapter.experiment import (
+    enforce_snapshot,
+    generation_of,
+    prepare_round_dir,
+    repo_arm_state,
+)
 from tau_adapter.pi_agent import PiRecipeAgent
 from tau_adapter.policy_region import extract_policy, replace_policy
 from tau_adapter.tool_bridge import ToolBridge
@@ -56,6 +68,12 @@ TRANSPORT_LOCAL = "local"
 TRANSPORT_PLATFORM = "platform"
 TRANSPORTS = (TRANSPORT_LOCAL, TRANSPORT_PLATFORM)
 DEFAULT_RUNTIME = "target-agent"
+
+# The runnable splits. `test` is deliberately absent: the held-out enforcement decision
+# (split_manifest.yaml header) makes test-split inspection procedural-only, and the cheapest
+# way to keep the procedure honest is for the runner to have no button for it. Test tasks are
+# exercised only inside the full-domain checkpoint.
+RUNNABLE_SPLITS = ("discovery", "validation")
 
 # Gitignored, and inside the work tree on purpose — see _materialise_workspace.
 DIAGNOSTIC_WORKSPACE = lockmod.REPO_ROOT / ".diagnostic-workspace"
@@ -148,6 +166,37 @@ def _assert_recipe_valid() -> None:
         )
 
 
+def _cli_json(args: list[str], timeout: float) -> Any:
+    proc = subprocess.run(  # noqa: S603
+        ["introspection", *args, "-o", "json"],  # noqa: S607
+        cwd=lockmod.REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError((proc.stderr or proc.stdout).strip()[:300])
+    return json.loads(proc.stdout)
+
+
+def _account_of(item: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
+    """One conversation export → (id, accounting fields). Tolerant of single/batch shapes."""
+    conversation = item.get("conversation") or item
+    meta = item.get("meta") or {}
+    account = {
+        key: conversation.get(key) for key in ("cost", "usage", "metrics", "recipe_git_commit_sha")
+    }
+    # Recorded rather than assumed. "The episode finished" is otherwise an inference from the
+    # reward, and a reward can be produced while the conversation is still open — the export
+    # says so itself, and `complete: false` means this record is a snapshot of something that
+    # had not settled when it was read.
+    account["evidence_complete"] = meta.get("complete")
+    account["item_count"] = meta.get("item_count")
+    identity = conversation.get("id") or conversation.get("conversation_id")
+    return (str(identity) if identity else None), account
+
+
 def _platform_accounting(task_ids: list[str]) -> dict[str, Any]:
     """Read cost, usage and lineage back out of the platform for each episode.
 
@@ -155,72 +204,72 @@ def _platform_accounting(task_ids: list[str]) -> dict[str, Any]:
     usage — the numbers live on the conversation record instead. Fetching them here keeps a
     generation's record self-contained rather than only reproducible by hand, and picks up the
     lineage field the local lane has no equivalent for.
+
+    Pulled in batches of 20 — the CLI's own per-call ceiling — because at sweep scale one
+    ~5.5s CLI startup per episode would spend eleven minutes on a 120-episode round. Ids the
+    batch response does not name fall back to a per-id call rather than silently vanishing.
     """
     accounting: dict[str, Any] = {}
-    for task_id in task_ids:
+    remaining = list(task_ids)
+    for start in range(0, len(remaining), 20):
+        chunk = remaining[start : start + 20]
         try:
-            proc = subprocess.run(  # noqa: S603
-                ["introspection", "conversations", "get", task_id, "-o", "json"],  # noqa: S607
-                cwd=lockmod.REPO_ROOT,
-                capture_output=True,
-                text=True,
-                timeout=120,
-                check=False,
-            )
-            if proc.returncode != 0:
-                accounting[task_id] = {"error": (proc.stderr or proc.stdout).strip()[:200]}
+            payload = _cli_json(["conversations", "get", *chunk], timeout=180)
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError, RuntimeError):
+            continue  # the per-id fallback below covers the whole chunk
+        items = payload if isinstance(payload, list) else [payload]
+        for item in items:
+            if not isinstance(item, dict):
                 continue
-            export = json.loads(proc.stdout) or {}
-            conversation = export.get("conversation") or {}
-            meta = export.get("meta") or {}
-        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
-            accounting[task_id] = {"error": f"{type(exc).__name__}: {exc}"}
+            identity, account = _account_of(item)
+            if identity in chunk:
+                accounting[identity] = account
+    for task_id in task_ids:
+        if task_id in accounting:
             continue
-        accounting[task_id] = {
-            key: conversation.get(key)
-            for key in ("cost", "usage", "metrics", "recipe_git_commit_sha")
-        }
-        # Recorded rather than assumed. "The episode finished" is otherwise an inference from the
-        # reward, and a reward can be produced while the conversation is still open — the export
-        # says so itself, and `complete: false` means this record is a snapshot of something that
-        # had not settled when it was read.
-        accounting[task_id]["evidence_complete"] = meta.get("complete")
-        accounting[task_id]["item_count"] = meta.get("item_count")
+        try:
+            identity, account = _account_of(
+                _cli_json(["conversations", "get", task_id], timeout=120)
+            )
+            accounting[task_id] = account
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError, RuntimeError) as exc:
+            accounting[task_id] = {"error": f"{type(exc).__name__}: {exc}"[:200]}
     return accounting
 
 
-def _platform_task_ids(results: Any) -> list[str]:
-    """Every platform task id the run touched, read back off the trajectory.
+def _retitle_episodes(
+    payload: dict[str, Any],
+    domain: str,
+    generation: str | None,
+    experiment_id: str,
+) -> tuple[dict[str, str], int]:
+    """Post-run label pass: name every platform task after the τ episode it served.
 
-    `pi_session_ref` carries the host-side episode identity for whichever transport ran; on the
-    platform lane that is the task id, which is also the conversation id.
+    The agent factory never learns which simulation it serves, so a sweep's tasks are titled
+    with the domain alone at episode end. Ground truth arrives only when τ's runner returns —
+    each simulation's raw_data names its task — so the labels are applied here, from the
+    record, rather than guessed during the run (the retitle works on archived rows). One CLI
+    call per episode; failures are counted, never fatal, and never touch the score.
     """
-    refs = set()
-    for sim in results.simulations:
-        for message in sim.messages:
-            raw = getattr(message, "raw_data", None) or {}
-            ref = raw.get("pi_session_ref")
-            if ref:
-                refs.add(str(ref))
-    return sorted(refs)
-
-
-def _episode_summary(sim: Any) -> dict[str, Any]:
-    """Whether one episode ran to a graded end — stated, never inferred from the reward.
-
-    `completed` means τ itself ended the episode normally *and* graded it. That is the same
-    definition the fidelity checker asserts post-hoc, shared here so both lanes answer "did this
-    task finish successfully?" identically at run time. Any other termination is infrastructure
-    or protocol, and a reward attached to it must not be read as a measurement.
-    """
-    reward = getattr(getattr(sim, "reward_info", None), "reward", None)
-    termination = str(sim.termination_reason)
-    return {
-        "task_id": str(sim.task_id),
-        "termination": termination,
-        "reward": reward,
-        "completed": termination in NORMAL_TERMINATIONS and reward is not None,
-    }
+    gen_short = ""
+    if generation and generation.startswith("generation_"):
+        gen_short = f" gen{generation.removeprefix('generation_')}"
+    labels: dict[str, str] = {}
+    failed = 0
+    for sim in payload.get("simulations") or []:
+        ref = manifestmod.session_ref_of(sim)
+        if not ref:
+            continue
+        label = (
+            f"τ²-bench {domain} {sim.get('task_id')} trial{sim.get('trial')}"
+            f"{gen_short} [exp:{experiment_id}]"
+        )
+        try:
+            _cli_json(["tasks", "update", ref, "--title", label], timeout=60)
+            labels[ref] = label
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError, RuntimeError):
+            failed += 1
+    return labels, failed
 
 
 def _build_env_for_pi() -> dict[str, str]:
@@ -244,6 +293,27 @@ def main() -> int:
         help="τ task ids to run. Omit to run the whole locked task split.",
     )
     parser.add_argument(
+        "--split",
+        choices=RUNNABLE_SPLITS,
+        default=None,
+        help=(
+            "run a frozen split from benchmark/split_manifest.yaml (verified before any "
+            "episode is spent). `test` is deliberately not runnable here — the held-out "
+            "boundary is procedural, and the runner refuses to offer a button for it; test "
+            "tasks run only inside --checkpoint."
+        ),
+    )
+    parser.add_argument(
+        "--checkpoint",
+        action="store_true",
+        help=(
+            "the full-domain checkpoint: every task in the locked split at ONE trial — the "
+            "H2 decision trades the ×4 number's strength for a quarter of its cost, and the "
+            "result is labeled single-trial wherever it is reported. Its output includes "
+            "test-split tasks; per the enforcement decision, do not inspect those episodes."
+        ),
+    )
+    parser.add_argument(
         "--out",
         required=True,
         help="directory for τ's results.json and per-simulation logs",
@@ -251,7 +321,20 @@ def main() -> int:
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="replace an existing --out directory instead of refusing",
+        help=(
+            "replace an existing --out directory instead of refusing. Without it, a "
+            "directory holding results.json but no run_metadata.json is an interrupted run "
+            "and resumes: τ re-runs only the missing (trial, task, seed) pairs."
+        ),
+    )
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help=(
+            "run the platform lane despite uncommitted changes on the served recipe surface. "
+            "The dirt is recorded prominently and every manifest row's arm_sha_ok is false — "
+            "for debugging only, never for a round that will be cited."
+        ),
     )
     parser.add_argument(
         "--transport",
@@ -297,6 +380,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.split and args.task_ids:
+        raise SystemExit("--split and --task-ids are mutually exclusive")
+    if args.checkpoint and (args.split or args.task_ids):
+        raise SystemExit("--checkpoint runs the whole locked split; drop --split/--task-ids")
+
     lock = lockmod.load_lock()
     lockmod.assert_vendor_commit(lock)
     lockmod.assert_recipe_matches_lock(lock)
@@ -304,6 +392,28 @@ def main() -> int:
 
     domain = args.domain or lock.domain
     locked_mode = domain == lock.domain
+    if (args.split or args.checkpoint) and not locked_mode:
+        raise SystemExit("--split/--checkpoint are experiment rounds; they run the locked domain")
+
+    # Resolve what runs and at how many trials. A split round refuses to start on a manifest
+    # that fails verification — a broken split silently narrows every claim built on it.
+    split_name: str | None = None
+    task_ids: list[str] | None = args.task_ids
+    num_trials = lock.num_trials
+    if args.split:
+        split_name = args.split
+        manifest_doc = splitmod.load_manifest()
+        problems = splitmod.verify(manifest_doc, splitmod.load_task_rows(lock.domain), lock.domain)
+        if problems:
+            raise SystemExit(
+                "split manifest failed verification; no episode was spent:\n  "
+                + "\n  ".join(problems)
+            )
+        task_ids = list(manifest_doc[args.split])
+    elif args.checkpoint:
+        split_name = "checkpoint"
+        task_ids = None
+        num_trials = 1  # H2 decision: the recognizable 97-task number at ×1, labeled single-trial
 
     from tau2.data_model.simulation import TextRunConfig
     from tau2.metrics.agent_metrics import compute_metrics
@@ -326,19 +436,24 @@ def main() -> int:
         workspace_dir, recipe_dir = _materialise_workspace(live_policy)
         recipe_policy = extract_policy((recipe_dir / "SYSTEM.md").read_text(encoding="utf-8"))
 
+    # The arm this run serves. `introspection dev` serves the work-tree while lineage names
+    # the base commit, so a dirty served surface makes every arm claim soft (v2 §4 W3.3):
+    # the platform lane refuses it outright unless --allow-dirty records it prominently.
+    arm_sha, dirty_paths = repo_arm_state() if locked_mode else (None, [])
+    if args.transport == TRANSPORT_PLATFORM and dirty_paths and not args.allow_dirty:
+        raise SystemExit(
+            "the served recipe surface has uncommitted changes, so lineage would name a "
+            "commit that is not what runs. Commit them, or pass --allow-dirty for a "
+            "debugging run whose rows are marked arm_sha_ok=false:\n  " + "\n  ".join(dirty_paths)
+        )
+
     out_dir = Path(args.out).resolve()
     # Before --overwrite can delete anything: a run aimed at the wrong experiment directory
     # must refuse here rather than clear another freeze's record first. Also verifies — or,
     # for a non-PROVISIONAL lock, creates — the experiment's freeze snapshot.
     experiment_status = enforce_snapshot(lock, out_dir)
-    if out_dir.exists() and any(out_dir.iterdir()):
-        if not args.overwrite:
-            raise SystemExit(
-                f"{out_dir} already holds a run. Pass --overwrite to replace it, or point "
-                "--out at a new directory — a previous generation's record is not scratch."
-            )
-        shutil.rmtree(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    round_status = prepare_round_dir(out_dir, args.overwrite)
+    generation = generation_of(out_dir)
     results_path = out_dir / "results.json"
     session_dir = out_dir / "pi_sessions"
     base_env = _build_env_for_pi()
@@ -374,16 +489,25 @@ def main() -> int:
             dev_target=dev.dev_target,
         )
 
-    # What the platform task row — and therefore its conversation's summary line in the
-    # dashboard — reads as. A sweep cannot name the specific τ task per episode (the factory
-    # does not learn which simulation it serves), so it falls back to the domain alone. The
+    # What a platform task row reads as while its episode is still running. A sweep cannot
+    # name the specific τ task at creation time (the factory does not learn which simulation
+    # it serves), so this is the during-run fallback; the post-run retitle pass upgrades every
+    # row to `<domain> <task> trial<k> gen<NNN>` from τ's own record once it exists. The
     # experiment suffix keeps platform evidence separable even where two experiments share a
     # recipe commit — e.g. a user-simulator-only change.
     episode_label = (
         f"τ²-bench {domain}"
-        + (f" {args.task_ids[0]}" if args.task_ids and len(args.task_ids) == 1 else "")
+        + (f" {task_ids[0]}" if task_ids and len(task_ids) == 1 else "")
         + f" [exp:{lock.experiment_id}]"
     )
+
+    # Every transport constructed, one per episode *attempt*. This is the queue-tolerant side
+    # of the accounting: τ retries infrastructure errors and keeps only the final attempt, so
+    # the platform tasks a run created can exceed the episodes its results file names — the
+    # difference is the orphan count, and it must be visible (v2 §4 W3.5). The registry also
+    # lets the shutdown path archive whatever is still open, so an interrupted sweep does not
+    # leave a sandbox idling toward its timeout (W5.3); close() is idempotent.
+    episode_transports: list[Any] = []
 
     def create_agent(tools, domain_policy, **kwargs):
         declared = kwargs.get("llm")
@@ -413,6 +537,7 @@ def main() -> int:
                 workspace_dir=workspace_dir,
             )
             launch_argv[:] = transport.argv()
+        episode_transports.append(transport)
         return PiRecipeAgent(
             tools=tools,
             domain_policy=domain_policy,
@@ -435,14 +560,20 @@ def main() -> int:
         llm_args_user=lock.user_llm_args,
         task_set_name=lock.task_set_name if locked_mode else None,
         task_split_name=lock.task_split_name if locked_mode else None,
-        task_ids=args.task_ids,
-        num_trials=lock.num_trials,
+        task_ids=task_ids,
+        num_trials=num_trials,
         seed=lock.seed,
         max_steps=lock.max_steps,
         max_errors=lock.max_errors,
         timeout=lock.timeout_seconds,
         max_concurrency=lock.max_concurrency,
         enforce_communication_protocol=lock.enforce_communication_protocol,
+        # τ's own checkpointing, adopted rather than reimplemented (v2 §4 W5.1): results.json
+        # is written incrementally, and a rerun into the same directory resumes from it,
+        # re-running only missing (trial, task, seed) tuples and replacing infrastructure-
+        # error placeholders. auto_resume keeps that path non-interactive; prepare_round_dir
+        # decides above whether resuming is the right meaning for this directory.
+        auto_resume=True,
         # Left unset deliberately. `run_domain` turns save_to into a run *name* under
         # TAU2_DATA_DIR/simulations/, which would write results into the pinned vendor
         # checkout. Dropping to run_tasks lets the path stay in results/ where a generation's
@@ -457,7 +588,16 @@ def main() -> int:
         f"   experiment    {lock.experiment_id}"
         + (f" — {experiment_status}" if experiment_status else "")
     )
+    if round_status:
+        print(f"   round         {round_status}")
     print(f"   recipe        {recipe_dir}")
+    if arm_sha:
+        dirt = (
+            f" — DIRTY served surface ({len(dirty_paths)} path(s), --allow-dirty)"
+            if dirty_paths
+            else ""
+        )
+        print(f"   arm           {arm_sha[:12]}{dirt}")
     print(f"   transport     {args.transport}")
     if args.transport == TRANSPORT_PLATFORM:
         print(f"   runtime       {args.runtime} ({runtime_id}) in {args.environment}")
@@ -473,22 +613,28 @@ def main() -> int:
     tasks = get_tasks(
         task_set_name=config.task_set_name or domain,
         task_split_name=config.task_split_name,
-        task_ids=list(args.task_ids) if args.task_ids else None,
+        task_ids=list(task_ids) if task_ids else None,
     )
 
-    selection = ", ".join(args.task_ids) if args.task_ids else f"whole split ({len(tasks)} tasks)"
-    print(f"   tasks         {selection} in {lock.num_trials} trial(s)")
+    if split_name and split_name != "checkpoint":
+        selection = f"{split_name} split ({len(tasks)} tasks)"
+    elif args.checkpoint:
+        selection = f"full-domain checkpoint ({len(tasks)} tasks, ×1 trial by decision)"
+    elif task_ids:
+        selection = ", ".join(task_ids)
+    else:
+        selection = f"whole split ({len(tasks)} tasks)"
+    print(f"   tasks         {selection} in {num_trials} trial(s)")
     if lock.provisional:
         print("   lock status   PROVISIONAL — not an experiment freeze")
-    if not args.task_ids:
-        # A full sweep is the expensive path and max_concurrency is frozen at 1, so it runs
+    if len(tasks) * num_trials > 20:
+        # A sweep is the expensive path and max_concurrency is frozen at 1, so it runs
         # serially. Say what that costs before spending it rather than after.
-        episodes = len(tasks) * lock.num_trials
+        episodes = len(tasks) * num_trials
         print(
-            f"\n   full sweep: {episodes} episode(s) at max_concurrency="
-            f"{lock.max_concurrency}. Raising concurrency needs a lock change and more than "
-            "that: one run-scoped bridge serves every episode, which is only safe while a "
-            "single episode is in flight."
+            f"\n   sweep: {episodes} episode(s) at max_concurrency="
+            f"{lock.max_concurrency}, serial. An interruption is safe: rerunning the same "
+            "--out resumes and re-spends nothing."
         )
     print()
 
@@ -496,12 +642,90 @@ def main() -> int:
     try:
         results = run_tasks(config, tasks, save_path=results_path, save_dir=out_dir)
     finally:
-        # Both outlive every episode, so nothing else will release them.
+        # Reverse acquisition order, and everything best-effort. Closing the transports first
+        # archives any task an interrupted episode left open — otherwise its sandbox idles
+        # against the org concurrency limit until the platform's timeout backstop fires.
+        for transport in episode_transports:
+            try:
+                transport.close()
+            except Exception:  # noqa: BLE001 - shutdown must not mask the real failure
+                pass
         if dev is not None:
             dev.stop()
         bridge.stop()
     elapsed = time.monotonic() - started
-    episode_summaries = [_episode_summary(sim) for sim in results.simulations]
+    episode_summaries = [manifestmod.episode_summary(sim) for sim in results.simulations]
+
+    # Post-run evidence pass, all from the record τ just wrote: per-episode labels, batched
+    # accounting, the manifest, and the arm assertion. Everything below reads results.json
+    # rather than in-memory state so that what it derives is exactly what a later reader sees.
+    payload = json.loads(results_path.read_text(encoding="utf-8")) if results_path.exists() else {}
+    is_platform = args.transport == TRANSPORT_PLATFORM
+
+    labels: dict[str, str] = {}
+    retitle_failures = 0
+    accounting: dict[str, Any] = {}
+    if is_platform:
+        labels, retitle_failures = _retitle_episodes(
+            payload, domain, generation, lock.experiment_id
+        )
+        referenced = sorted(
+            {
+                ref
+                for sim in payload.get("simulations") or []
+                if (ref := manifestmod.session_ref_of(sim))
+            }
+        )
+        accounting = _platform_accounting(referenced)
+    else:
+        referenced = []
+
+    incidents_by_ref = {
+        t.session_ref: t.incidents.as_dict()
+        for t in episode_transports
+        if getattr(t, "session_ref", None)
+    }
+    unattributed_incidents = [
+        t.incidents.as_dict()
+        for t in episode_transports
+        if not getattr(t, "session_ref", None) and t.incidents.any()
+    ]
+    incident_totals: dict[str, int] = {}
+    for counters in (*incidents_by_ref.values(), *unattributed_incidents):
+        for key, value in counters.items():
+            incident_totals[key] = incident_totals.get(key, 0) + value
+
+    tasks_created = sorted(
+        {
+            t.session_ref
+            for t in episode_transports
+            if is_platform and getattr(t, "session_ref", None)
+        }
+    )
+    orphaned_tasks = sorted(set(tasks_created) - set(referenced))
+
+    # The arm assertion (v2 §4 W3.4): the platform's lineage, not the runner's bookkeeping,
+    # is what makes "which harness produced this score" a verified claim.
+    sha_mismatches = sorted(
+        ref
+        for ref, account in accounting.items()
+        if account.get("recipe_git_commit_sha") not in (None, arm_sha)
+    )
+
+    context = manifestmod.RoundContext(
+        experiment_id=lock.experiment_id,
+        transport=args.transport,
+        generation=generation,
+        arm_sha=arm_sha,
+        arm_dirty=bool(dirty_paths),
+        checkpoint=bool(args.checkpoint),
+        split=split_name,
+        accounting=accounting,
+        incidents_by_ref=incidents_by_ref,
+        labels_by_ref=labels,
+    )
+    manifest_rows = manifestmod.build_rows(payload, context)
+    manifest_path = manifestmod.write_manifest(out_dir, manifest_rows)
 
     # Beside τ's results, never inside them: τ owns its own schema. Two launchers produce
     # identically-shaped results, so without this a run directory cannot say which one made it
@@ -514,10 +738,24 @@ def main() -> int:
                 "mode": "locked" if locked_mode else "diagnostic",
                 "experiment": lock.experiment_id,
                 "domain": domain,
+                "generation": generation,
+                "split": split_name,
+                "checkpoint": bool(args.checkpoint),
+                "num_trials": num_trials,
                 "transport": args.transport,
                 "launcher": args.launcher if args.transport == TRANSPORT_LOCAL else None,
                 "launch_argv": launch_argv,
+                "resumed": round_status is not None and "resuming" in (round_status or ""),
+                "arm": {
+                    "sha": arm_sha,
+                    "dirty_paths": dirty_paths,
+                    "allow_dirty": bool(args.allow_dirty),
+                },
                 "episodes": episode_summaries,
+                "incidents": {
+                    "totals": incident_totals,
+                    "unattributed": unattributed_incidents,
+                },
                 "platform": (
                     {
                         "runtime": args.runtime,
@@ -526,10 +764,14 @@ def main() -> int:
                         "dev_target": dev.dev_target if dev else None,
                         # Task id doubles as the conversation id: the anchor that links a score
                         # back to the platform evidence that produced it.
-                        "task_ids": _platform_task_ids(results),
-                        "accounting": _platform_accounting(_platform_task_ids(results)),
+                        "task_ids": referenced,
+                        "tasks_created": tasks_created,
+                        "orphaned_task_ids": orphaned_tasks,
+                        "accounting": accounting,
+                        "retitles": {"applied": len(labels), "failed": retitle_failures},
+                        "arm_sha_mismatches": sha_mismatches,
                     }
-                    if args.transport == TRANSPORT_PLATFORM
+                    if is_platform
                     else None
                 ),
                 "recipe_dir": str(recipe_dir),
@@ -563,10 +805,31 @@ def main() -> int:
             f"   {sim.task_id}: termination={sim.termination_reason} "
             f"messages={len(sim.messages)} reward={episode['reward']}  [{verdict}]"
         )
+    print(f"\n   manifest      {manifest_path.name}: {len(manifest_rows)} episode row(s)")
+    if incident_totals:
+        noted = ", ".join(f"{k}={v}" for k, v in sorted(incident_totals.items()) if v)
+        print(f"   incidents     {noted or 'none'}")
+    if orphaned_tasks:
+        print(
+            f"   orphans       {len(orphaned_tasks)} platform task(s) created but absent from "
+            "results — τ retried past them; their sandboxes were archived"
+        )
+    if retitle_failures:
+        print(
+            f"   labels        {retitle_failures} retitle(s) failed; rows keep their fallback title"
+        )
     print(
         "\n   Reward above is tau's own in-run evaluation. The reported number comes from\n"
         f"   `tau2 evaluate-trajs {results_path}`."
     )
+    if sha_mismatches:
+        print(
+            "\n── ARM ASSERTION FAILED: these conversations carry a recipe_git_commit_sha that "
+            f"is not this run's arm ({arm_sha[:12] if arm_sha else '?'}):\n   "
+            + "\n   ".join(sha_mismatches)
+            + "\n   The round's artifacts are on disk but must not be cited as this arm's."
+        )
+        return 1
     return 0
 
 

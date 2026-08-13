@@ -42,6 +42,7 @@ from typing import Any
 
 from loguru import logger
 
+from tau_adapter.manifest import EpisodeIncidents
 from tau_adapter.transport import (
     AssistantTurn,
     PiToolCall,
@@ -215,6 +216,10 @@ class PlatformTransport:
         self._settled = threading.Event()
         self._settled.set()
         self._closed = False
+        # This episode's incident counters. τ retries an infrastructure error and keeps only
+        # the final attempt, so anything counted here would otherwise vanish from the record;
+        # the runner reads the sink into the episode manifest (v2 §4 W5.2).
+        self.incidents = EpisodeIncidents()
 
     # ------------------------------------------------------------------ lifecycle
 
@@ -285,6 +290,7 @@ class PlatformTransport:
 
     def send_user_text(self, text: str) -> None:
         if not self._settled.wait(timeout=SETTLE_GRACE_SECONDS):
+            self.incidents.settle_timeouts += 1
             logger.warning(
                 f"run {self._run_id} had not settled after {SETTLE_GRACE_SECONDS:.0f}s; "
                 "prompting anyway, which the platform may refuse as already-processing"
@@ -293,23 +299,27 @@ class PlatformTransport:
         self._stop_stream()
         if self._task_id is None:
             # The first turn cannot overlap: the stream needs a task id, which creation returns.
-            created = self._cli(
-                [
-                    "tasks",
-                    "create",
-                    "--runtime-id",
-                    self._runtime_id,
-                    "--environment",
-                    self._environment,
-                    "--agent",
-                    self._agent_name,
-                    "--idle-timeout",
-                    str(int(self._idle_timeout)),
-                    "--prompt",
-                    text,
-                ],
-                timeout=300,
-            )
+            try:
+                created = self._cli(
+                    [
+                        "tasks",
+                        "create",
+                        "--runtime-id",
+                        self._runtime_id,
+                        "--environment",
+                        self._environment,
+                        "--agent",
+                        self._agent_name,
+                        "--idle-timeout",
+                        str(int(self._idle_timeout)),
+                        "--prompt",
+                        text,
+                    ],
+                    timeout=300,
+                )
+            except Exception as exc:
+                self._count_prompt_failure(exc)
+                raise
             self._task_id = str(created["task"]["id"])
             self._set_run_id(self._run_id_of(created))
             logger.info(
@@ -332,9 +342,10 @@ class PlatformTransport:
                 started = self._cli(
                     ["tasks", "prompt", self._task_id, "--prompt", text], timeout=300
                 )
-            except Exception:
+            except Exception as exc:
                 # No run started, so nothing will ever settle: reap the orphaned stream and
                 # reopen the gate before surfacing the real failure.
+                self._count_prompt_failure(exc)
                 self._stop_stream()
                 self._settled.set()
                 raise
@@ -353,6 +364,15 @@ class PlatformTransport:
 
     def request_session_ref(self) -> None:
         """No-op: the task id is known at creation, unlike Pi's session id."""
+
+    def _count_prompt_failure(self, exc: Exception) -> None:
+        """Classify a failed create/prompt. A 409 is the turn-gate regression this lane once
+        shipped (v2 §3.4), so it gets its own counter and must stay zero."""
+        text = str(exc)
+        if "409" in text or "already processing" in text.lower():
+            self.incidents.prompt_409 += 1
+        else:
+            self.incidents.prompt_failures += 1
 
     # ------------------------------------------------------------------ internals
 
@@ -472,6 +492,7 @@ class PlatformTransport:
             # response, which shares the CLI's 300s ceiling.
             run_known = self._run_id_known.wait(timeout=SETTLE_GRACE_SECONDS)
             if run_known and self._run_id and self._is_current(session):
+                self.incidents.stream_reattaches += 1
                 logger.info(
                     f"stream attach raced run creation (dropped {session.dropped} stale "
                     f"event(s)); reattaching to run {self._run_id}"
@@ -487,6 +508,7 @@ class PlatformTransport:
         stderr = ""
         if session.proc is not None and session.proc.stderr is not None:
             stderr = session.proc.stderr.read() or ""
+        self.incidents.stream_failures += 1
         self._turns.put(
             TransportFailure(
                 reason=(
