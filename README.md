@@ -26,6 +26,16 @@ make bench       # the WHOLE locked split (97 tasks, serial) — long and costly
 make single_task TRANSPORT=platform   # same task, agent on an Introspection dev runtime
 ```
 
+The generation protocol's own round types and lifecycle
+(see *Generations and the vault* below):
+
+```bash
+make batch B=1 GEN=generation_001     # improvement batch: platform lane, fully observable
+make heldout GEN=generation_000       # held-out round: local lane, sealed into the vault
+make reset_h0                         # restore the recipe to the h0-baseline tag
+make reveal                           # end of experiment: unseal the vault into results/
+```
+
 `TRANSPORT` selects where the agent runs and defaults to `local`; see *Two transports* below.
 
 `make smoke` is the cheap seam gate and takes about 15 seconds. Its results are **not
@@ -47,6 +57,35 @@ eventually granted write access to it. That split matters: a GitHub installation
 scoped to a sub-path, so an agent granted `contents: write` here to edit its own Recipe can also
 write the benchmark lane. Until the split, the boundary is enforced by branch protection plus
 the `frozen surfaces` workflow, not by the grant.
+
+## Generations and the vault
+
+A generation is an approved merge commit on `main`. Two tags carry the whole identity
+scheme:
+
+- `h0-baseline` — the H0 anchor: `target-agent/` plus `.introspection/target-agent.yaml`,
+  byte-identical to the baseline freeze. `make reset_h0` restores it as a replace, not a
+  merge (files committed after the tag stage as deletions), regenerates the untracked
+  runtime state, runs `introspection check`, and leaves the restore staged for a human
+  commit. The machine-local `.introspection/local.json` is preserved, never restored.
+- `exp<seq>-g<NNN>` — H_NNN of experiment `<seq>` (e.g. `exp2-g001`), applied to the
+  approved merge commit of each accepted mutation. A rejected or identity transition gets
+  no tag: H stays where it was, recorded in that transition's improvement record.
+
+Held-out rounds write **nothing inside the repository**. Their episodes, sessions, graded
+results and console log live in the vault at `~/.sia_vault/experiment_<id>/generation_NNN/`
+(`SIA_VAULT_DIR` overrides), out of reach of every repo sweep and of the dashboard, and the
+terminal shows completeness only. `make reveal` — runnable once `exp<seq>-g<G>` exists —
+is the single door between the two worlds: it copies the vault into
+`results/experiment_<id>/held_out/`, computes the progression artifacts (per-generation
+counts, task x generation matrix, transitions, retention), writes `summary.md`, and fills
+each improvement record's `held_out_result`. Until then, nothing graded from a held-out
+round appears anywhere the orchestrator reads.
+
+Each transition's evidence chain — batch, signals, hypothesis, mutation, approval —
+lives in `results/experiment_<id>/improvement_records/` (schema:
+`contract/improvement_record.schema.yaml`; scaffold and check with
+`benchmark/scripts/improvement_record.py`).
 
 ## How the seam works
 

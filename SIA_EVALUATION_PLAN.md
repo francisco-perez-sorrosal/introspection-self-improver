@@ -284,19 +284,38 @@ at Phase 4 if the freeze re-decides it.
 
 ### Phase 3 — Generation lifecycle: records, reset, reveal
 
-- [ ] `contract/improvement_record.schema.yaml` + scaffolder; identity-generation
-      rule (D5) encoded in the record schema (`outcome: accepted | rejected |
-      identity`).
-- [ ] `make reset_h0` (D6) + round-trip test.
-- [ ] `scripts/reveal.py` + `make reveal`: matrices, transitions, retention, summary;
-      refusal before the final generation tag; tests over synthetic vault data
-      (fabricated results → known-correct matrix/gains/ever-solved).
-- [ ] Generation tagging convention documented (`exp<seq>-g<NNN>`).
+- [x] `contract/improvement_record.schema.yaml` (single source; `tau_adapter/records.py`
+      loads it to validate) + scaffolder/verifier CLI
+      (`scripts/improvement_record.py`); D5 encoded: `outcome: accepted | rejected |
+      identity`, accepted requires a distinct candidate commit, rejected/identity pin
+      H_(g+1)=H_g, every record cites ≥1 conversation id, `held_out_result` refused
+      until reveal (2026-08-13).
+- [x] `make reset_h0` (D6) + round-trip test — restore strengthened beyond D6's recipe:
+      the tree is removed first, so files *committed* after the tag stage as deletions
+      (the case checkout+clean both miss); `.introspection/local.json` preserved;
+      mechanics proven in a scratch repository (2026-08-13).
+- [x] `scripts/reveal.py` + `make reveal`: matrices, transitions, retention, summary
+      with a scale-aware noise band; records stamped surgically; refusals for missing
+      final tag, populated `held_out/`, broken evidence chain, unmeasured generation,
+      measurement-for-identity-generation, wrong task set, multi-trial data; tests over
+      synthetic vault data (2026-08-13).
+- [x] Generation tagging convention documented (`exp<seq>-g<NNN>`; README §Generations
+      and the vault) (2026-08-13).
 
 **Validate:** unit tests green; a synthetic three-generation dry run (fabricated
 vault + records, zero episodes) produces correct CSVs, transition tables, and
 `summary.md`; reset round-trip proves byte-identical restore + passing
 `introspection check`.
+✅ (2026-08-13) Suite 172 → 208, ruff + format clean, `make check` green. The synthetic
+dry run is the committed test battery: a fabricated G=3/T=5 experiment with H2 an
+identity generation reproduces the hand-computed progression (2/5→2/5→2/5→4/5), matrix,
+transitions (H0→H1: +1/−1 net 0; H2→H3: +2/−0 net +2), retention curve (ever-solved
+4/5 vs currently 4/5), and an endpoint of +40 pp stated against its ±22 pp band; records
+are stamped byte-preservingly. Live: the reset round-trip ran on a scratch branch of the
+real repo — mutated `SYSTEM.md` + an added file, `make reset_h0`, byte-identity to
+`h0-baseline` confirmed before and after committing the staged restore, `introspection
+check` green, `local.json` untouched; `make reveal` on main refuses with guardrail 19,
+deriving `exp2-g003` from the lock's protocol block. Zero benchmark spend.
 
 ### Phase 4 — Debug experiment (seq 2): the real-scenario test
 
