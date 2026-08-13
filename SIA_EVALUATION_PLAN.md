@@ -230,15 +230,27 @@ untouched.
 
 ### Phase 2 — Runner, firewall, and round targets
 
-- [ ] `run.py --batch` / `--heldout` with lane forcing (D1) + in-process reward
-      muting; `Makefile` `batch` / `heldout` targets; old round targets retired.
-- [ ] `scripts/run_heldout.py`: vault layout, full-redirect console log, persisted
-      grading, completeness-only status.
-- [ ] `grade.py` quiet + persist mode.
-- [ ] Manifest/label/`run_metadata.json` extensions (`batch_NN` / `held_out`).
-- [ ] Tests: mock-domain runs of both paths; **the held-out muting test** (captured
-      stdout has zero reward tokens); lane-forcing refusals; resume still keyed on
-      `(trial, task, seed)` for batch rounds.
+- [x] `run.py --batch` / `--heldout` with lane forcing (D1, resolved in
+      `tau_adapter/rounds.py` before any spend: wrong lane refused, task selection
+      from the frozen manifest only, partition re-verified, held-out `--overwrite`
+      refused — measured once) + in-process reward muting; `Makefile` `batch` /
+      `heldout` targets (old round targets were retired at Phase 0.5) (2026-08-13).
+- [x] `scripts/run_heldout.py` + `tau_adapter/heldout.py`: vault layout
+      (`~/.sia_vault`, `SIA_VAULT_DIR` override), full-redirect console log, three
+      idempotent stages (run → quiet grade → report), completeness-only status with
+      reward-free seam-incident totals (2026-08-13).
+- [x] `grade.py` quiet + persist mode — fd-level silence (rich resolves stdout late
+      but loguru pins stderr at import); `--quiet` requires `--output-dir`
+      (2026-08-13).
+- [x] Manifest/label/`run_metadata.json` extensions (`batch_NN` / `held_out`; platform
+      titles gain the `bNN` token) (2026-08-13).
+- [x] Tests: the held-out muting test (fake stages spray graded figures into the
+      console log; the wrapper's stdout must carry none — even the word); lane-forcing
+      refusals; resume lifecycle (incl. console.log not misread as prior results).
+      "Mock-domain runs of both paths" as written cannot exist — protocol rounds
+      refuse `--domain` by design — so coverage is: mock smoke for the seam, injected
+      fakes for the wrapper, and the live real-domain rounds below for both paths
+      end to end (2026-08-13).
 
 **Validate (live, ≈ $3):** `make smoke` both lanes; one 2-task batch-style round on
 the platform lane completing with **zero timeout/stall incidents** (this is the
@@ -247,6 +259,26 @@ fix validated in anger); one 2-task held-out round on the local lane whose termi
 output demonstrably contains no rewards and whose vault holds graded results.
 Note: CI's `frozen-surfaces.yml` will warn on all of this — expected, acknowledge in
 the PR.
+✅ (2026-08-13) Suite 147 → 172; ruff + format clean; `make check` green. "Both
+lanes" for smoke corrected: mock+platform is refused by design (locked-domain-only
+platform lane), so the platform half of the live gate is the batch round itself.
+Evidence: `make smoke` (local, mock) PASS, graded. `make heldout
+GEN=generation_smoke` — the full 5-task held-out set, local lane — 5/5 completed,
+graded artifact persisted in the vault, terminal output verbatim reward-free (the
+muting working in production); one task needed 3 τ attempts (seam counters all zero
+across every attempt → attributed to transient provider conditions, not
+agent/benchmark/platform). `make batch B=1 GEN=generation_000` — real batch_01, 3
+episodes, platform lane — 3/3 `USER_STOP`, `evidence_complete` and `arm_sha_ok` true
+on every row, retitles applied, no orphans, and the stall/timeout incident class all
+zero (stall_warnings, settle_timeouts, prompt_409, prompt_failures, stream_failures)
+→ **platform-health check PASS**; `stream_reattaches=15` recorded as a latency
+observation (designed lost-race recovery, no data loss, no grading impact). H0 read
+0/3 on batch_01's tasks — visible by design, not a record (PROVISIONAL). Two fixes
+landed from validation findings: fresh held-out rounds no longer record
+`resumed=true`, and the completeness report now carries reward-free incident totals.
+**Phase 4 pre-flight note:** clear the bring-up artifacts before the real freeze —
+vault `generation_smoke/` and `results/.../generation_000/batch_01/` — and rerun the
+partition proposal if the freeze re-decides it.
 
 ### Phase 3 — Generation lifecycle: records, reset, reveal
 
