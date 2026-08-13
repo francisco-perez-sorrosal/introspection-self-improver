@@ -22,14 +22,49 @@ Loop: run τ tasks → collect Introspection evidence → `operate` (discover si
 
 ## Current state — read before planning work
 
-- **Blocking:** the seam between τ and Introspection (§11.1) is **undecided**. τ executes the
-  agent's tool calls; a Pi agent executes its own. Nothing may assume a resolution. The
-  timeboxed spike in §11.1 runs *before* any other MVP work, and its outcome becomes the design.
-- `introspection check` reports **no recipe manifests**. Recipes live at `.introspection/<name>.yaml`.
-  `.introspection/local.json` pins runtime `everyday-muse` — scaffolding, not a built agent.
-- **Not a git repository yet**, despite `.githooks/pre-commit` and `.github/workflows/`.
-  Recipe-as-repository, PR review, and per-generation commit lineage all depend on fixing this.
-- `target-agent/`, `benchmark/`, `contract/`, and `results/` do not exist yet (§23 defines them).
+- **The §11.1 seam is decided and running.** An MCP tool bridge in `benchmark/tau_adapter/`
+  serves τ's tool surface to Pi and rendezvouses on the results, so τ keeps tool execution,
+  step counting, trajectory construction, and grading, and nothing is reconstructed. One
+  `banking_knowledge` task and one `mock` task complete end to end and are graded by
+  `tau2 evaluate-trajs`. `README.md` has the mechanism; `contract/constraints.md` has the
+  reasoning and the known divergences.
+- **The development lane is designed but not built.** Nothing local contacts the cloud, so the
+  local transport produces **no** conversations, traces, or observations. Evidence needs
+  `introspection dev --mcp tau=<local url>`, which bridges the shim to a cloud sandbox — no
+  public tunnel required — plus `tasks create/prompt/stream`. `transport.py` exists so this is a
+  second implementation, not a rewrite. Until it lands, `operate` has nothing to read.
+- **Locally the recipe is launched by `pi` directly, and that is a measured choice, not a
+  shortcut.** `introspection local -- --mode rpc` was verified to work and to be behaviourally
+  identical (`get_state` agrees on model, provider, base URL, thinking level), but costs +5.5s
+  per episode — ~9 min per 97-task sweep — for validation the repo already does at commit, in
+  CI, and once per run inside the runner. `LAUNCHER=introspection` switches back and stays
+  exercised, because it is how the development lane resolves the recipe. Two consequences worth
+  keeping: the CLI puts Pi two processes down, so teardown must kill the process *group*; and
+  its recipe validation reads gitignore, so a materialised recipe must live inside the work
+  tree, not `/tmp`.
+- **A single task's reward is not stable, so `num_trials: 1` cannot support a comparison.** Ten
+  runs of `banking_knowledge/task_001` under one frozen configuration returned 1.0 six times and
+  0.0 four times (16–44 messages, $0.10–$0.51). τ's `--seed` cannot fix this: it seeds τ's own
+  sampling, and Pi owns the agent's. Treat any single-trial per-task reward as a draw, raise
+  `num_trials` before G0, and report pass^k. Evidence: `results/generation_000/task_001_trials/`.
+- **In every inspectable run, reward tracked one retrieved document.** 1.0 iff `KB_search`
+  returned `doc_credit_cards_gold_rewards_card_005` (`Annual fee: $0.00`, `2.5% cash back`), which
+  is the task's answer; 0.0 whenever it did not. The failing agents reasoned correctly on worse
+  evidence, and searched *more* to get *less* (6–8 calls vs 5) — one even queried the card by name
+  and `bm25` returned savings-account tables instead. **Do not label this a harness defect yet:**
+  query formulation is harness-owned, but `retrieval_config` is on the provisional offline `bm25`
+  fallback, and that may be most of the effect. Settle the retrieval config before G0 or the first
+  generation will attribute a benchmark artefact to the harness. Diagnosis is `operate`'s job.
+- **No result here is a result yet.** `benchmark/benchmark_lock.yaml` is `PROVISIONAL`,
+  `benchmark/split_manifest.yaml` is an empty stub, and the adapter-fidelity gate has never
+  run. One lock value still needs a human decision before G0: the retrieval config is on the
+  offline `bm25` fallback because this machine's `OPENAI_API_KEY` returns
+  `429 billing_not_active`. The model pair is now deliberate and deliberately asymmetric, and
+  neither half is Sonnet 5 — the agent runs Sonnet 4.6 to keep the harness the binding
+  constraint rather than the model, and the user simulator runs Sonnet 4.5 because Sonnet 5
+  rejects τ's `temperature: 0.0`. See `contract/protocol.md` for the ordering.
+- Four items in the frozen-surface list below are wrong or incomplete as written; the
+  corrections are in `contract/constraints.md § Corrections to the MVP document`.
 
 ## Invariants
 
@@ -102,10 +137,14 @@ dashboard, browser automation, or direct API calls for an operator action the CL
 
 ```text
 target-agent/   the Introspection recipe under improvement
-benchmark/      tau_adapter/ (the seam) · fidelity/ · split_manifest.yaml · benchmark_lock.yaml
-contract/       protocol.md · constraints.md · learning_record.schema.yaml
+benchmark/      tau_adapter/ (the seam) · scripts/ · tests/ · split_manifest.yaml · benchmark_lock.yaml
+contract/       protocol.md · constraints.md
 results/        generation_000/ ...
 ```
+
+§23 also lists `benchmark/fidelity/` and `contract/learning_record.schema.yaml`. Neither exists
+yet: the fidelity gate has not been built and no learning record has been written, so creating
+either now would be an empty promise. They arrive with §15 Phase A.0 and G0 respectively.
 
 No `orchestrator/` directory. Claude Code is the orchestrator; a directory by that name would
 imply a second agent implementation exists.
@@ -117,8 +156,11 @@ generation, deliberately not duplicated here.
 
 - Introspection recipes: YAML manifest at `.introspection/<name>.yaml` + TypeScript.
   Python deps are possible via `pi.runtime` with a committed `uv.lock`.
-- τ²-bench is Python, pinned to an exact commit (§6.2). Package manager not yet chosen.
-- `introspection check` runs in `.githooks/pre-commit` and in CI (`recipe-validation.yml`).
+- τ²-bench is Python, pinned to an exact commit (§6.2), vendored gitignored under
+  `benchmark/vendor/`. **uv**, not pixi — τ² mandates it and `pi.runtime.python.lockfile`
+  expects `uv.lock`. Python is pinned to 3.12: τ² v1.0.1 reaches `audioop`, removed in 3.13.
+- `introspection check` runs in `.githooks/pre-commit`, in CI (`recipe-validation.yml`), and once
+  per run inside `benchmark/tau_adapter/run.py` before the first episode is spent.
 
 ## Standing guardrails for coding agents
 
