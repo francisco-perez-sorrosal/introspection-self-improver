@@ -354,3 +354,33 @@ def test_a_dead_stream_that_already_emitted_fails_loudly_instead_of_reattaching(
     assert isinstance(failure, TransportFailure)
     assert "without RUN_FINISHED" in failure.reason
     assert transport._settled.is_set()
+
+
+def test_close_retitles_and_archives_the_task_never_deletes(monkeypatch) -> None:
+    """The dashboard shows the task's title as the conversation's summary line.
+
+    Deleting the task keeps the conversation export intact but demotes the row to a bare
+    conversation id in the UI — observed on real episodes. Close must retitle and archive,
+    and it must be idempotent: a second close repeats nothing.
+    """
+    transport = PlatformTransport(
+        runtime_id="rt", repo_root=".", episode_label="τ²-bench banking_knowledge task_001"
+    )
+    transport._task_id = "task-1"
+    calls: list[list[str]] = []
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: calls.append(args) or {})
+    transport.close()
+    transport.close()
+    assert calls == [
+        ["tasks", "update", "task-1", "--title", "τ²-bench banking_knowledge task_001"],
+        ["tasks", "archive", "task-1", "-y"],
+    ]
+
+
+def test_close_without_a_label_still_archives(monkeypatch) -> None:
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    transport._task_id = "task-1"
+    calls: list[list[str]] = []
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: calls.append(args) or {})
+    transport.close()
+    assert calls == [["tasks", "archive", "task-1", "-y"]]

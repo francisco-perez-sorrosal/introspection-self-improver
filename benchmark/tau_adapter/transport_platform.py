@@ -187,6 +187,7 @@ class PlatformTransport:
         environment: str = "development",
         idle_timeout_seconds: int = 600,
         dev_target: str | None = None,
+        episode_label: str | None = None,
     ) -> None:
         self._runtime_id = runtime_id
         self._repo_root = Path(repo_root)
@@ -194,6 +195,9 @@ class PlatformTransport:
         self._environment = environment
         self._idle_timeout = idle_timeout_seconds
         self._dev_target = dev_target
+        # Becomes the task's title at episode end. The dashboard's conversation list shows the
+        # task's title as the conversation's summary line, so this is what a row reads as.
+        self._episode_label = episode_label
 
         self._task_id: str | None = None
         self._run_id: str | None = None
@@ -230,18 +234,24 @@ class PlatformTransport:
         del env
 
     def close(self) -> None:
-        """Stop streaming and tear the task down, keeping its conversation.
+        """Stop streaming, then retitle and archive the task — never delete it.
 
-        Left alone, a finished task sits `idle` holding a warm sandbox until its inactivity
-        timeout expires — the episode is graded but the conversation still reads as pending, and
-        on a 97-episode sweep the abandoned sandboxes stack up against the organization's
-        concurrency limit. `tasks cancel` does not help: it ends the active turn and leaves the
-        task warm by design.
+        The first design deleted the task here, and that was verified evidence-safe for the
+        *export*: the task 404s while its conversation still returns full spans, cost and
+        usage. What deletion does destroy is presentation — the dashboard's conversation list
+        shows the task's `title` as the conversation's summary line, so a deleted task demotes
+        its conversation to a bare id in the UI. The task row is cheap and joins the
+        conversation to a readable name; keep it.
 
-        `tasks delete` is the right verb, and it is safe for evidence: verified by deleting a
-        completed task and re-reading its conversation afterwards — the task 404s, while the
-        conversation still returns its full spans, cost and usage. The task is the runtime
-        resource; the conversation is the durable record.
+        Archiving hides the finished row from the default `tasks list` (a 97-episode sweep
+        would otherwise bury it), and it also settles the task: an archived episode came back
+        `status: cancelled` with `completed_at` stamped at archive time rather than after the
+        idle timeout, so the sandbox is released immediately and nothing trails against the
+        organization's concurrency limit. The inactivity timeout remains as the backstop for
+        an episode that crashes before reaching this method.
+
+        Both calls are best effort and independent: a failure here must not mask the episode's
+        outcome, and a task that cannot be archived still completes on its own.
         """
         if self._closed:
             return
@@ -249,12 +259,18 @@ class PlatformTransport:
         self._stop_stream()
         if self._task_id is None:
             return
+        if self._episode_label:
+            try:
+                self._cli(
+                    ["tasks", "update", self._task_id, "--title", self._episode_label],
+                    timeout=60,
+                )
+            except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+                logger.debug(f"could not retitle task {self._task_id}: {exc}")
         try:
-            self._cli(["tasks", "delete", self._task_id, "-y"], timeout=120)
+            self._cli(["tasks", "archive", self._task_id, "-y"], timeout=120)
         except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
-            # Best effort: a task that cannot be torn down still expires on its own, and a
-            # failure here must not mask the episode's outcome.
-            logger.debug(f"could not delete task {self._task_id}: {exc}")
+            logger.debug(f"could not archive task {self._task_id}: {exc}")
 
     @property
     def session_ref(self) -> str | None:

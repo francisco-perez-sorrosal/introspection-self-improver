@@ -147,13 +147,18 @@ gives up well before the bridge's own 300 s ceiling, and without the warning tha
 With the gate and the overlapped attach in place a graded episode runs clean: every tool call
 paired, no 409s, no stalls, and no daemon-abandoned calls.
 
-**The task is torn down at episode end; the conversation is not.** A finished task otherwise sits
-`idle` holding a warm sandbox until its inactivity timeout, so the conversation reads as pending
-long after the reward exists — and across a 97-episode sweep those abandoned sandboxes accumulate
-against the organization's concurrency limit. `tasks cancel` does not help (it ends the turn and
-leaves the task warm by design), so the transport calls `tasks delete`. That is safe for evidence,
-verified rather than assumed: after deletion the task returns 404 while its conversation still
-returns full spans, cost and usage.
+**The task is retitled and archived at episode end — not deleted.** The first design deleted it,
+and that was verified evidence-safe for the *export*: the task 404s while its conversation still
+returns full spans, cost and usage. What deletion destroys is presentation — the dashboard shows
+the task's `title` as the conversation's summary line, so a deleted task demotes its conversation
+to a bare id in the UI. The record survived; its name did not. The transport therefore sets the τ
+episode label (`τ²-bench <domain> <task>`) as the task title and archives the row, which keeps
+the summary and hides the finished task from the default list. Archiving also settles the task:
+the archived row came back `status: cancelled` with `completed_at` stamped at archive time, ~74s
+after creation rather than after the 600s idle timeout, so the sandbox is released immediately —
+the inactivity timeout remains only as the backstop for episodes that never reach `close()`.
+Conversations whose task was deleted before this change keep serving through the CLI but remain
+bare-id rows in the UI: a deleted task's row cannot be recreated afterwards.
 
 "The episode finished" is likewise recorded rather than inferred, in both lanes. Each run's
 `run_metadata.json` carries an `episodes` list with every simulation's termination, reward, and a

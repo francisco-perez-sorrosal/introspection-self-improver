@@ -369,6 +369,13 @@ def main() -> int:
             dev_target=dev.dev_target,
         )
 
+    # What the platform task row — and therefore its conversation's summary line in the
+    # dashboard — reads as. A sweep cannot name the specific τ task per episode (the factory
+    # does not learn which simulation it serves), so it falls back to the domain alone.
+    episode_label = f"τ²-bench {domain}" + (
+        f" {args.task_ids[0]}" if args.task_ids and len(args.task_ids) == 1 else ""
+    )
+
     def create_agent(tools, domain_policy, **kwargs):
         declared = kwargs.get("llm")
         if declared is not None and declared != lock.agent_llm_declared:
@@ -386,6 +393,7 @@ def main() -> int:
                 # 60s per-attempt ceiling plus retries), or the sandbox is torn down mid-episode.
                 idle_timeout_seconds=int(lock.timeout_seconds),
                 dev_target=dev.dev_target if dev else None,
+                episode_label=episode_label,
             )
             launch_argv[:] = ["introspection", "tasks", "create", "--runtime-id", runtime_id]
         else:
