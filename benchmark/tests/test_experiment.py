@@ -45,10 +45,8 @@ def _lock(experiment_name: str = "exp-a", status: str = "FROZEN", **frozen_overr
 
 def _split_manifest(tmp_path, content: dict | None = None):
     path = tmp_path / "split_manifest.yaml"
-    path.write_text(
-        yaml.safe_dump(content or {"discovery": [], "validation": [], "test": []}),
-        encoding="utf-8",
-    )
+    default = {"version": 2, "batches": {"batch_01": ["task_001"]}, "held_out": ["task_002"]}
+    path.write_text(yaml.safe_dump(content or default), encoding="utf-8")
     return path
 
 
@@ -105,13 +103,24 @@ def test_freeze_drift_refuses_the_run(tmp_path) -> None:
         enforce_snapshot(_lock(num_trials=1), out, results_root=results, split_manifest_path=split)
 
 
+def test_fingerprint_drifts_on_partition_change(tmp_path) -> None:
+    # Moving one task between a batch and the held-out set is a different experiment,
+    # even though every list keeps its size.
+    split = _split_manifest(tmp_path)
+    original = freeze_fingerprint(_lock(), split_manifest_path=split)
+    swapped = {"version": 2, "batches": {"batch_01": ["task_002"]}, "held_out": ["task_001"]}
+    _split_manifest(tmp_path, swapped)
+    assert freeze_fingerprint(_lock(), split_manifest_path=split) != original
+
+
 def test_a_split_manifest_change_is_freeze_drift(tmp_path) -> None:
-    # The split is part of the freeze: re-cutting discovery/validation/test under an
+    # The partition is part of the freeze: re-cutting batches or held_out under an
     # experiment that already holds results would invalidate every held-out claim.
     results, split = tmp_path / "results", _split_manifest(tmp_path)
     out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
-    _split_manifest(tmp_path, {"discovery": ["task_001"], "validation": [], "test": []})
+    grown = {"version": 2, "batches": {"batch_01": ["task_001", "task_003"]}, "held_out": []}
+    _split_manifest(tmp_path, grown)
     with pytest.raises(ExperimentError, match="split-manifest"):
         enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
 
