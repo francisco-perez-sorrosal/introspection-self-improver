@@ -86,8 +86,9 @@ because τ has nowhere to put them (stock agents lose them too), and Pi provenan
 ## Known adapter divergences from a stock τ run
 
 Recorded rather than hidden. Each is constant across generations, so none can bias a
-cross-generation comparison; they bound comparability with published τ numbers, which is what the
-adapter-fidelity gate will eventually measure.
+cross-generation comparison. Comparability with published τ numbers was dropped with the bm25
+freeze and is no longer a goal; what remains bounded is cross-lane comparability, measured on
+demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
 
 1. **Tool names the model sees are mangled.** Recipes rewrites them to
    `mcp_<server>_<tool>_<sha256[:10]>`. The trajectory carries τ's canonical names — the reverse
@@ -105,7 +106,9 @@ adapter-fidelity gate will eventually measure.
      split, on the view that merging would invent a message shape — and recorded the latent
      consequence here rather than fixing it: narration taken alone hands τ's floor to the user
      simulator while the sandbox sits parked on the bridge. The A.0b gate then observed exactly
-     that (first run 2026-08-13, `gates/a0b.json`): 3 of 12 platform episodes hit τ's 600 s
+     that (first run 2026-08-13; the verdict now lives in git history —
+     `git show 984c598^:results/experiment_bm25-sonnet46/generation_000/gates/a0b.json`):
+     3 of 12 platform episodes hit τ's 600 s
      ceiling, each with 5–6 rendezvous stalls — the sandbox's MCP daemon abandoning parked
      calls at ~15 s ("MCP daemon: Timeout; remote outcome is unknown"), Pi's tool executor
      erroring at 120 s, the agent retrying against phantom failures while the trajectory
@@ -136,14 +139,20 @@ adapter-fidelity gate will eventually measure.
      per-request budget per turn. The stream attach now overlaps the prompt (run-id filtering
      plus a single reattach make the early attach safe), and a clean episode answers every call
      in ~250–350 ms with zero span errors. `STALL_WARN_SECONDS` stays, so any recurrence names
-     itself. Until the fidelity gate covers this lane, a platform score is still not a substitute
-     for a local one.
+     itself. A platform score is never a substitute for a local one — under the evaluation
+     protocol the lanes serve different roles by design: platform episodes supply improvement
+     evidence, local episodes supply the held-out measurement (`SIA_EVALUATION_PLAN.md` D1).
 
 5. **The agent is not reproducible from τ's `--seed`.** The seed reaches τ's own sampling; Pi owns
-   the agent's, and τ's `llm_args_agent` never reach it. This is not a divergence the fidelity gate
-   can close, and it is not constant across episodes — it is the reason per-task reward has to be
-   treated as a draw and `num_trials` raised before any comparison. Six runs of one task under one
-   frozen configuration returned reward 1.0 five times and 0.0 once.
+   the agent's, and τ's `llm_args_agent` never reach it. This is not a divergence the fidelity
+   instrument can close, and it is not constant across episodes — it is the reason a single
+   episode's reward is a draw (measured: six runs of one task returned 1.0 five times and 0.0
+   once; ten runs returned 1.0 six times and 0.0 four times). The remedy changed with the
+   evaluation protocol (2026-08-13): repeated trials are no longer the instrument. Generations
+   are compared on a fixed held-out set at one trial per task, pooling variance across tasks
+   instead of within one — binomial noise ≈ ±7 pp at T=47, stated wherever the curve renders;
+   `pass^k` is retired for generations; an optional endpoint reliability study (H_0 and H_G ×
+   4 trials, after reveal) is the named upgrade path (`SIA_EVALUATION_PLAN.md` D2).
 
 ## Why `pi` launches the recipe locally rather than `introspection local`
 

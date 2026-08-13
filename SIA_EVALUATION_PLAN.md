@@ -70,11 +70,11 @@ the rest are recorded here as the working defaults.
 | # | Decision | Value | Rationale / consequence |
 |---|---|---|---|
 | D1 | Lane ↔ information-regime mapping | **Improvement batches: platform lane. Held-out: local lane only.** Runner refuses the other combination for each round type. | Batches must produce Introspection evidence (the point of the experiment); held-out must produce none (structural firewall — no trace mixing). Local-lane artifacts (vault) remain procedurally protected — stated in every writeup, per the existing `split_manifest.yaml` held-out doctrine. **Ratified 2026-08-13** (user: run held-out locally so traces don't mix). |
-| D2 | Trial doctrine | `num_trials: 1` for batches and held-out. Noise band ±7 pp (T=47) stated wherever a curve is shown; no `pass^k` language for generations. Optional post-reveal endpoint study (H0, H_G × 4 trials) as an addendum with its own config snapshot. | Reverses the lock:118–123 / `CLAUDE.md` doctrine — power now comes from 47-task pooling, not repeated trials. **ratify** |
+| D2 | Trial doctrine | `num_trials: 1` for batches and held-out. Noise band ±7 pp (T=47) stated wherever a curve is shown; no `pass^k` language for generations. Optional post-reveal endpoint study (H0, H_G × 4 trials) as an addendum with its own config snapshot. | Reverses the lock:118–123 / `CLAUDE.md` doctrine — power now comes from 47-task pooling, not repeated trials. **Ratified 2026-08-13.** |
 | D3 | Experiment identity | Protocol change ⇒ new freeze: **seq 2 = debug** (G=3, B=3, T=5), **seq 3 = full** (G=5, B=10, T=47). `experiment_001_bm25-sonnet46` closes as the bring-up freeze (12 ad-hoc episodes, archived as-is). | Forced mechanically anyway: the freeze fingerprint hashes lock + split manifest jointly (`experiment.py:74–83`); any partition change refuses every run under 001. |
-| D4 | Gates | **A.0a stays blocking** per experiment (adapter suite + mock smoke — cheap, guards the seam). **A.0b demoted** from blocking gate to diagnostic instrument (`make fidelity` on demand); the Phase 2 platform-health check replaces its blocking role. **A.0c (`anchor_stock`) retired** — stock-agent comparability is explicitly no longer a goal. **ratify** |
+| D4 | Gates | **A.0a stays blocking** per experiment (adapter suite + mock smoke — cheap, guards the seam). **A.0b demoted** from blocking gate to diagnostic instrument (`make fidelity` on demand); the Phase 2 platform-health check replaces its blocking role. **A.0c (`anchor_stock`) retired** — stock-agent comparability is explicitly no longer a goal. **Ratified 2026-08-13.** |
 | D5 | Generation semantics | `generation_NNN` dir ≡ H_n. A generation is defined by an approved, merged PR commit on `main`, tagged `exp<seq>-g<NNN>`. **Rejected mutation ⇒ identity generation**: H_(g+1) = H_g recorded in the improvement record, held-out eval skipped, R_g carried forward, next batch consumed as normal. | One batch per generation slot regardless of accept/reject (protocol §13's fresh-evidence rule); no paired baseline/candidate arms anymore. |
-| D6 | H0 reset mechanism | Tag the current recipe as **`h0-baseline`** (byte-identical `target-agent/` + `.introspection/target-agent.yaml` since the M1 freeze `0976493`). `make reset_h0` = restore from tag as **replace, not merge** (`git checkout <tag> -- …` + `git clean -fdx target-agent`), then `make bootstrap` (regenerates `.pi/mcp.local.json`), then `introspection check`, then instruct to commit — platform rounds refuse a dirty recipe tree. `.introspection/local.json` (machine-local runtime binding, CLI-written) is preserved, never restored. | Every new experiment starts from the same H0. **ratify** (tag creation) |
+| D6 | H0 reset mechanism | Tag the current recipe as **`h0-baseline`** (byte-identical `target-agent/` + `.introspection/target-agent.yaml` since the M1 freeze `0976493`). `make reset_h0` = restore from tag as **replace, not merge** (`git checkout <tag> -- …` + `git clean -fdx target-agent`), then `make bootstrap` (regenerates `.pi/mcp.local.json`), then `introspection check`, then instruct to commit — platform rounds refuse a dirty recipe tree. `.introspection/local.json` (machine-local runtime binding, CLI-written) is preserved, never restored. | Every new experiment starts from the same H0. **Ratified 2026-08-13** — tag `h0-baseline` created at `2e8058b`. |
 | D7 | Concurrency | `max_concurrency: 1` stays (bridge is run-scoped, single-episode-safe; raising it needs bridge episode-multiplexing + a re-freeze). Revisit only if Phase 5 wall-clock is unacceptable. | Held-out eval ≈ 2.5–4 h serial; acceptable for now. |
 | D8 | H0 viability signal | The old §13.1 discovery floor is replaced by the **B1 read**: batch results are visible by design, so if H0 lands 0/B or B/B on B1, halt and reconsider H0 before spending further generations. Not a hard floor at B=10 (2/10 is within noise of 20%). | The firewall makes a held-out floor check impossible until reveal; B1 is the legitimate window. |
 | D9 | Vault & reveal | Held-out outputs (episodes, sessions, graded results, console log) live out of tree at `~/.sia_vault/experiment_<id>/generation_NNN/`. `make reveal` — runnable only when the final generation is tagged — copies the vault into `results/experiment_<id>/held_out/`, computes the matrices, and writes `summary.md`. Until then the orchestrator does not read the vault (procedural, stated in every writeup). | Out-of-tree keeps held-out data away from glob/grep sweeps and the dashboard walk; the dashboard renders held-out views only from revealed artifacts. |
@@ -143,26 +143,25 @@ checks ≈ $3).
 ### Phase 0 — Ratify & align the record (docs + decisions only)
 
 - [x] D1 ratified — held-out on the local lane, no trace mixing (2026-08-13).
-- [ ] Ratify D2, D4, D6 (the remaining **ratify**-marked rows); record any overrides
-      here.
-- [ ] Commit `self_improving_agent_evaluation_protocol.md` as the spec; stamp
-      `PLAN.md` with its superseded banner.
-- [ ] Tag `h0-baseline` at the current recipe state (recipe is byte-identical
-      `0976493`..HEAD — verified 2026-08-13).
-- [ ] `CLAUDE.md` truth pass: the 8 stale claims found 2026-08-13 (lock "PROVISIONAL",
-      "empty stub" manifest, retrieval-config "needs a decision", "one task end to
-      end", "one clean episode per lane", frozen-list wording, recipe "TypeScript"
-      claim, dangling `experiment_dummy` citation) plus the invariants rewrite per
-      D1/D2 (held-out-until-reveal replaces test-split language; single-trial
-      doctrine; pointer to this file replaces PLAN.md).
-- [ ] `README.md` stale blocks (`:235–244`) and `contract/protocol.md`'s false
-      "no per-episode manifest exists" row fixed; `constraints.md` gets the D2
-      re-argument and a git-history pointer for the deleted `gates/a0b.json` path.
-- [ ] Close experiment 001: one-paragraph `results/experiment_001_bm25-sonnet46/README.md`
-      ("bring-up freeze, superseded by the generation protocol; 12 ad-hoc episodes").
+- [x] D2, D4, D6 ratified as recommended, no overrides (2026-08-13).
+- [x] Commit `self_improving_agent_evaluation_protocol.md` as the spec; stamp
+      `PLAN.md` with its superseded banner (2026-08-13, `2e8058b`).
+- [x] Tag `h0-baseline` at the current recipe state — annotated tag at `2e8058b`,
+      recipe byte-identical to the M1 freeze `0976493` (2026-08-13).
+- [x] `CLAUDE.md` truth pass: the 8 stale claims fixed, plus the invariants rewrite
+      per D1/D2 (held-out-until-reveal replaces test-split language; single-trial
+      doctrine; corrected frozen list inline — the "four items are wrong" hedge
+      dropped; spec/tracker pointers replace the v2/PLAN.md forward-guide framing)
+      (2026-08-13).
+- [x] `README.md` stale blocks rewritten (frozen-for-001 truth, D2 doctrine, label
+      prefix, A.0a naming); `contract/protocol.md` re-grounded (evidence join landed;
+      phase table points at plan phases); `constraints.md` D2 re-argument + D4
+      demotion + git-history pointer for the deleted `gates/a0b.json` (2026-08-13).
+- [x] Close experiment 001: `results/experiment_001_bm25-sonnet46/README.md` records
+      the closure, contents, and gate verdicts with recovery commands (2026-08-13).
 
-**Validate:** docs read true against the code; `make check` green; 109-test suite
-untouched and green.
+**Validate:** docs read true against the code; `make check` green; full benchmark
+suite green — 118 passed, untouched (2026-08-13). ✅
 
 ### Phase 1 — Partition & configuration machinery (no live runs)
 

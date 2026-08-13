@@ -4,14 +4,16 @@ Demonstrate a **genuinely self-improving agent harness** built on Introspection'
 operational and improvement primitives, with τ²-bench `banking_knowledge` supplying an
 **immutable external objective**.
 
-The forward guide is `introspection_self_improving_agent_mvp_v2.md` — grounded in the built
-system, it holds the remaining path and the orchestrator-integration design, and it is the
-specification. v1 (`introspection_self_improving_agent_mvp.md`) is superseded design history;
-the § references below still point into v1, and v2's Appendix A maps every v1 section to its
-disposition. `PLAN.md` is the milestone tracker distilled from v2 §4 — four checkable
-stages (M1 freeze → M2 evidence spine + gates → M3 G0 → M4 first improvement generation);
-consult it to see where the path stands. This file is the always-loaded subset an agent
-must not get wrong.
+The evaluation specification is `self_improving_agent_evaluation_protocol.md` — G disjoint
+improvement batches drive generations H_0 → H_G, every generation is measured once against the
+same fixed held-out set whose results stay hidden until the experiment closes, and the endpoint
+question is R_T(H_G) > R_T(H_0). `SIA_EVALUATION_PLAN.md` is the forward tracker (decisions
+D1–D9, five incrementally validated phases); consult it to see where the path stands. The MVP
+guides (`introspection_self_improving_agent_mvp_v2.md`, v1) and `PLAN.md` are superseded design
+history — v2 still explains the built seam machinery, but its evaluation design (pass^k,
+discovery/validation/test splits, checkpoints) is obsolete. Bare § references below point into
+v1; "protocol §N" means the evaluation protocol. This file is the always-loaded subset an
+agent must not get wrong.
 
 ## The four roles
 
@@ -22,21 +24,25 @@ must not get wrong.
 | Evidence substrate | Introspection | Conversations, traces, observations, patterns, metrics, judgements, runtime↔commit lineage. |
 | Improvement orchestrator | **Claude Code + the Introspection plugin** | There is no orchestrator agent in this repo, and there must never be one. |
 
-Loop: run τ tasks → collect Introspection evidence → `operate` (discover signal) →
-`improve` (hypothesis + one minimal mutation) → validate against τ → accept/reject → repeat.
+Loop: run an improvement batch → collect Introspection evidence → `operate` (discover signal)
+→ `improve` (hypothesis + one minimal mutation, landed as a PR) → human approval → next
+generation → hidden held-out evaluation → repeat with a fresh batch. Reveal at experiment
+close.
 
 ## Current state — read before planning work
 
 - **The §11.1 seam is decided and running.** An MCP tool bridge in `benchmark/tau_adapter/`
   serves τ's tool surface to Pi and rendezvouses on the results, so τ keeps tool execution,
-  step counting, trajectory construction, and grading, and nothing is reconstructed. One
-  `banking_knowledge` task and one `mock` task complete end to end and are graded by
-  `tau2 evaluate-trajs`. `README.md` has the mechanism; `contract/constraints.md` has the
+  step counting, trajectory construction, and grading, and nothing is reconstructed. Twelve
+  platform-lane episodes across three `banking_knowledge` tasks (and the `mock` smoke) have
+  completed end to end and been graded by `tau2 evaluate-trajs`; the A.0a pipe-semantics gate
+  PASSed 2026-08-13. `README.md` has the mechanism; `contract/constraints.md` has the
   reasoning and the known divergences.
 - **The development lane is built and graded.** `make single_task TRANSPORT=platform` runs the
-  episode as a task on the `target-agent` Runtime: reward 1.0, 8 τ tool calls through the bridge,
-  and a conversation carrying cost, usage, span metrics and `recipe_git_commit_sha`. The runner
-  starts `introspection dev` itself, so `operate` now has evidence to read. Read
+  episode as a task on the `target-agent` Runtime, and every platform episode leaves a
+  conversation carrying cost, usage, span metrics and `recipe_git_commit_sha`, joined to its τ
+  episode by `episode_manifest.jsonl`. The runner starts `introspection dev` itself, so
+  `operate` has evidence to read. Read
   `benchmark/tau_adapter/dev_lane.py` before touching it — three of its constraints were found by
   experiment and are invisible in the docs (`--mcp` carries no credentials; a *connected* `tau`
   binding overrides `--mcp` and breaks every episode; an empty task races its own sandbox).
@@ -47,10 +53,13 @@ Loop: run τ tasks → collect Introspection evidence → `operate` (discover si
   `RUN_FINISHED`; the bridge warns after 25s (`STALL_WARN_SECONDS`) because the sandbox's MCP
   daemon abandons a call long before the bridge's 300s ceiling, and that gap is otherwise silent.
   A green reward that hides a broken rendezvous is the failure this repo exists to prevent.
-- **Cross-lane comparison is still unproven.** One clean graded episode per lane is not the §15
-  A.0 fidelity gate. The known divergences are listed in `contract/constraints.md`; the one that
-  could actually bias a score — an unpaired rendezvous — is now loud rather than silent, but not
-  yet ruled out.
+- **Cross-lane consistency is a diagnostic, not a gate (plan D4).** The A.0b run (12 episodes
+  per lane, 2026-08-13) agreed on the aggregate within Wilson noise but FAILed on 3/12 platform
+  timeouts from rendezvous stalls; the remedy — reassembling a run's narration with its tool
+  call — landed (`7aee297`) and has not been re-exercised at scale. Under the evaluation
+  protocol the progression metric never crosses lanes (held-out runs locally, D1), so lane
+  fidelity guards evidence quality only: `make fidelity` is the on-demand instrument, and the
+  plan's Phase 2 platform-health check is the acceptance for batch rounds.
 - **The lanes are not equally capable.** The platform lane is locked-domain only: `dev` serves the
   Recipe from the git work-tree, and diagnostic mode materialises a modified Recipe elsewhere, so
   `make smoke` and the fidelity gate stay local. The runner refuses the combination rather than
@@ -64,11 +73,14 @@ Loop: run τ tasks → collect Introspection evidence → `operate` (discover si
   keeping: the CLI puts Pi two processes down, so teardown must kill the process *group*; and
   its recipe validation reads gitignore, so a materialised recipe must live inside the work
   tree, not `/tmp`.
-- **A single task's reward is not stable, so `num_trials: 1` cannot support a comparison.** Ten
-  runs of `banking_knowledge/task_001` under one frozen configuration returned 1.0 six times and
-  0.0 four times (16–44 messages, $0.10–$0.51). τ's `--seed` cannot fix this: it seeds τ's own
-  sampling, and Pi owns the agent's. Treat any single-trial per-task reward as a draw, raise
-  `num_trials` before G0, and report pass^k. Evidence:
+- **A single episode's reward is a draw — the protocol pools across tasks instead of repeating
+  trials.** Ten runs of `banking_knowledge/task_001` under one frozen configuration returned
+  1.0 six times and 0.0 four times (16–44 messages, $0.10–$0.51); τ's `--seed` cannot fix this
+  — it seeds τ's own sampling, and Pi owns the agent's. Under the evaluation protocol every
+  task runs once and the metric is held-out tasks passed / T (plan D2): variance pools across
+  the held-out set, generation deltas inside ~±7 pp (T=47) are noise, `pass^k` is never used
+  for generations, and the optional endpoint reliability study (H_0 and H_G × 4 trials,
+  post-reveal) is the named upgrade path. Evidence:
   `results/experiment_dummy/generation_000/task_001_trials/` — removed from the working tree
   with the 2026-08-13 fresh start; recover it from git history at that path.
 - **In every inspectable run, reward tracked one retrieved document.** 1.0 iff `KB_search`
@@ -76,19 +88,16 @@ Loop: run τ tasks → collect Introspection evidence → `operate` (discover si
   is the task's answer; 0.0 whenever it did not. The failing agents reasoned correctly on worse
   evidence, and searched *more* to get *less* (6–8 calls vs 5) — one even queried the card by name
   and `bm25` returned savings-account tables instead. **Do not label this a harness defect yet:**
-  query formulation is harness-owned, but `retrieval_config` is on the provisional offline `bm25`
-  fallback, and that may be most of the effect. Settle the retrieval config before G0 or the first
-  generation will attribute a benchmark artefact to the harness. Diagnosis is `operate`'s job.
-- **No result here is a result yet.** `benchmark/benchmark_lock.yaml` is `PROVISIONAL`,
-  `benchmark/split_manifest.yaml` is an empty stub, and the adapter-fidelity gate has never
-  run. One lock value still needs a human decision before G0: the retrieval config is on the
-  offline `bm25` fallback because this machine's `OPENAI_API_KEY` returns
-  `429 billing_not_active`. The model pair is now deliberate and deliberately asymmetric, and
-  neither half is Sonnet 5 — the agent runs Sonnet 4.6 to keep the harness the binding
-  constraint rather than the model, and the user simulator runs Sonnet 4.5 because Sonnet 5
-  rejects τ's `temperature: 0.0`. See `contract/protocol.md` for the ordering.
-- Four items in the frozen-surface list below are wrong or incomplete as written; the
-  corrections are in `contract/constraints.md § Corrections to the MVP document`.
+  query formulation is harness-owned, but much of the effect may be the `bm25` backend — now the
+  deliberate freeze, so retrieval-*usage* findings (query formulation, k, iteration, stopping)
+  are attributable harness territory. Diagnosis is `operate`'s job.
+- **No result here is a result yet.** Experiment 001 (`bm25-sonnet46`) is `FROZEN` and closed
+  as the bring-up freeze — 12 ad-hoc platform episodes, no split round, no reportable number
+  (`results/experiment_001_bm25-sonnet46/README.md`). The evaluation protocol re-freezes per
+  experiment: seq 2 at debug scale, then the full run (plan Phases 4–5). The model pair is
+  deliberate and deliberately asymmetric, and neither half is Sonnet 5 — the agent runs
+  Sonnet 4.6 to keep the harness the binding constraint rather than the model, and the user
+  simulator runs Sonnet 4.5 because Sonnet 5 rejects τ's `temperature: 0.0`.
 
 ## Invariants
 
@@ -101,18 +110,24 @@ elsewhere; `benchmark/benchmark_lock.yaml` holds the frozen *values*, this holds
 - Modify the τ evaluator, task definitions, gold state, or reward aggregation.
 - Recompute reward anywhere except `tau2 evaluate-trajs`.
 - Change the benchmark semantic adapter's semantics. It sits between agent and an untouched
-  evaluator, so a defect here changes grades invisibly (§15 Phase A.0 gates this).
-- Read or optimize against the **test split**. Discovery is inspectable; validation returns
-  aggregate outcomes only; test is used at predetermined checkpoints alone.
+  evaluator, so a defect here changes grades invisibly (the blocking A.0a gate guards this).
+- Read held-out tasks, trajectories, per-task rewards, or aggregate scores before the
+  experiment's reveal — the firewall applies to every generation, H_0 included. Improvement
+  batches are fully observable by design; held-out evaluation runs on the local lane with
+  outputs out of tree (plan D1/D9), revealed only after the final generation is frozen.
 - Hardcode benchmark answers, or redefine the objective in terms of diagnostics.
 - Pre-label failures with a human-authored taxonomy. Open-code the evidence first.
 - Fabricate a signal. Every claim cites the executions behind it.
 
 **Frozen for the duration of an experiment** (values in `benchmark/benchmark_lock.yaml`)
 
-`--domain` · `--task-set-name` · `--retrieval-config` · `--agent-llm` + args ·
-`--user-llm` + args · `--num-trials` · `--seed` · `--max-steps` · `--max-errors` ·
-`--max-steps-seconds` · `--max-concurrency` · tau2-bench commit SHA · the split manifest.
+`--domain` · task set + task split (two values, not one) · `--retrieval-config` · agent model
++ thinking level (`--agent-llm` is declared-and-unused; Pi owns the model) · `--user-llm` +
+args (including `timeout`) · `num_trials` · `--seed` · `--max-steps` · `--max-errors` ·
+`timeout_seconds` (τ's `TextRunConfig.timeout`; `--max-steps-seconds` is inert in text mode) ·
+`--max-concurrency` · `enforce_communication_protocol` · tau2-bench commit SHA · the partition
+manifest (improvement batches + held-out set) · the experiment's `protocol:` configuration
+(generations, batch size, held-out size).
 
 Three of these are the ones that actually get missed:
 - `--retrieval-config` rewrites the tool set **and** the policy text the agent is graded
@@ -130,8 +145,8 @@ Route by what the work ends in; the plugin's own `BOUNDARIES.md` is binding.
 
 - `operate` — inspect evidence, measure prevalence, diagnose. Ends in an answer.
 - `improve` — land a harness change through the repository. Ends in a PR.
-- `deploy` — only when a candidate must be activated to run. Not every generation needs it
-  (§23.3; the spike decides).
+- `deploy` — not used in current scope: generations are served from the git work-tree by
+  `introspection dev`. Revisit only if a staging runtime becomes necessary.
 - `create` / `migrate` — building the initial recipe.
 
 **Do not reimplement the plugin's methodology.** Baselines, controls, falsification, earliest
@@ -144,26 +159,31 @@ dashboard, browser automation, or direct API calls for an operator action the CL
 
 ## Experimental discipline
 
-- **Prove the adapter before producing any result.** Stock τ `LLMAgent`, adapter path vs. native,
-  same seed and task IDs, scores must agree (§15 Phase A.0). Blocking, not a formality.
-- One coherent mutation per candidate. Multi-change generations are uninterpretable.
-- Run the unchanged baseline under identical configuration before claiming improvement.
-  Pair baseline and candidate on identical task IDs, interleaved in one batch.
-- **Label every score with its split and its N.** Never present the full-domain number as a
-  held-out result. Report pass^k alongside pass¹.
-- When an effect is smaller than the split can resolve, record it as **directional** and say so.
+- **Prove the adapter before producing any result.** A.0a — the adapter test suite plus the
+  mock-domain smoke — is blocking per experiment. Cross-lane consistency (A.0b) is an
+  on-demand diagnostic and the stock-agent anchor (A.0c) is retired (plan D4): the
+  progression metric never crosses lanes.
+- One coherent mutation per generation. Multi-change generations are uninterpretable.
+- Every generation is measured once against the same fixed held-out set. A rejected or failed
+  mutation yields an identity generation — H_(g+1) = H_g, result carried forward, recorded —
+  and there are no paired baseline/candidate arms.
+- **Label every number with its set (batch B_g or held-out) and its N**; report the count
+  with the percentage. Never describe generations with `pass^k`; state the ±7 pp noise band
+  (T=47) wherever the progression curve renders.
+- When an effect is smaller than the held-out set can resolve, record it as **directional**
+  and say so.
 - Rejected hypotheses and failed mutations are first-class results — record them.
-- Every generation leaves an evidence → signal → hypothesis → mutation → result record under
-  `results/experiment_<id>/generation_NNN/` (§16, §24), with stable Introspection identifiers linking each
-  conclusion back to real evidence.
+- Every transition leaves an evidence → signal → hypothesis → mutation → result record under
+  `results/experiment_<id>/improvement_records/` (protocol §24), with stable Introspection
+  identifiers linking each conclusion back to real evidence.
 
 ## Layout (§23)
 
 ```text
-target-agent/   the Introspection recipe under improvement
+target-agent/   the Introspection recipe under improvement (H_0 anchor: git tag h0-baseline)
 benchmark/      tau_adapter/ (the seam) · scripts/ · tests/ · split_manifest.yaml · benchmark_lock.yaml
 contract/       protocol.md · constraints.md
-results/        experiment_<id>/generation_NNN/ ...
+results/        experiment_<id>/ → generation_NNN/ · improvement_records/ · held_out/ (at reveal)
 dashboard/      read-only results viewer over results/ (make dashboard; never a pipeline participant)
 ```
 
@@ -181,22 +201,25 @@ and `transport_platform.py` (the two hosts), `dev_lane.py` (the `introspection d
 its platform preconditions), `pi_agent.py` (τ's agent interface), `experiment.py` (the
 experiment level of `results/` and its freeze snapshot), `lock.py`, `run.py`.
 
-§23 also lists `benchmark/fidelity/` and `contract/learning_record.schema.yaml`. The first now
-exists as the cross-lane instrument (`make fidelity`, `benchmark/fidelity/compare_lanes.py`);
-the stock-agent adapter gate it was named for cannot run as v1 specified and is re-specified in
-v2 §4 W4, which has not run. The learning-record schema still does not exist and arrives with
-the first improvement generation (v2 §4 W7), so creating it now would be an empty promise.
+§23 also lists `benchmark/fidelity/` and `contract/learning_record.schema.yaml`. The first
+exists as the on-demand cross-lane instrument (`make fidelity`,
+`benchmark/fidelity/compare_lanes.py`); the blocking gate it once fed is demoted (plan D4).
+The second becomes `contract/improvement_record.schema.yaml`, landing at plan Phase 3 with the
+generation lifecycle — creating it earlier would be an empty promise.
 
 No `orchestrator/` directory. Claude Code is the orchestrator; a directory by that name would
 imply a second agent implementation exists.
 
-`contract/protocol.md` holds the per-generation procedure (§15) — loaded when running a
-generation, deliberately not duplicated here.
+`contract/protocol.md` will hold the per-generation procedure, written at plan Phase 4 from
+the debug generation that actually ran — deliberately not before, and deliberately not
+duplicated here.
 
 ## Stack
 
-- Introspection recipes: YAML manifest at `.introspection/<name>.yaml` + TypeScript.
-  Python deps are possible via `pi.runtime` with a committed `uv.lock`.
+- Introspection recipes: YAML runtime manifest at `.introspection/<name>.yaml` + a recipe
+  package. `target-agent/` is deliberately bare — `agents/agent.yaml`, `SYSTEM.md`,
+  `package.json`, no TypeScript or Python source; TS extensions and Python deps (via
+  `pi.runtime` + a committed `uv.lock`) are available growth surfaces for later generations.
 - τ²-bench is Python, pinned to an exact commit (§6.2), vendored gitignored under
   `benchmark/vendor/`. **uv**, not pixi — τ² mandates it and `pi.runtime.python.lockfile`
   expects `uv.lock`. Python is pinned to 3.12: τ² v1.0.1 reaches `audioop`, removed in 3.13.

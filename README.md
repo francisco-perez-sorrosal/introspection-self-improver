@@ -5,7 +5,8 @@ built so that a self-improvement loop can be added on top without moving anythin
 
 There is no improvement loop yet. What exists is the floor it needs: an immutable objective, a
 minimal harness, and a frozen/mutable boundary that is enforced mechanically rather than by
-convention.
+convention. The evaluation design the loop will be measured under is
+`self_improving_agent_evaluation_protocol.md`; `SIA_EVALUATION_PLAN.md` tracks the path to it.
 
 ```
 τ²-bench  ──tasks──▶  target-agent (Introspection Recipe)  ──tool calls──▶  τ² environment
@@ -79,7 +80,7 @@ even though the protocol disallows it.
 
 Diagnostic mode exists because the committed Recipe carries the locked domain's policy in its
 system prompt, so running a different domain needs a different prompt. It is used for seam
-bring-up and, later, for the adapter-fidelity gate on `mock`.
+bring-up and for the A.0a pipe-semantics gate on `mock`.
 
 ## Two transports
 
@@ -154,9 +155,9 @@ returns full spans, cost and usage. What deletion destroys is presentation — t
 the task's `title` as the conversation's summary line, so a deleted task demotes its conversation
 to a bare id in the UI. The record survived; its name did not. The transport therefore sets the τ
 episode label (`τ²-bench <domain> <task>`) as the task title and archives the row, which keeps
-the summary and hides the finished task from the default list. The label ends in `[exp:<id>]`
-— the lock's experiment id — so platform evidence stays separable across experiments even when
-two share a recipe commit. Archiving also settles the task:
+the summary and hides the finished task from the default list. The label carries the lock's
+experiment id as its `[exp_<seq>:<name>]` prefix, so platform evidence stays separable across
+experiments even when two share a recipe commit. Archiving also settles the task:
 the archived row came back `status: cancelled` with `completed_at` stamped at archive time, ~74s
 after creation rather than after the 600s idle timeout, so the sandbox is released immediately —
 the inactivity timeout remains only as the backstop for episodes that never reach `close()`.
@@ -232,16 +233,23 @@ comment edit never trips the check while a re-decided frozen value refuses the r
 (`PROVISIONAL` runs landed there, unenforced and unreportable); it was removed from the
 working tree on 2026-08-13 and lives in git history.
 
-**The lock is currently `PROVISIONAL`** — most values let the pipe move and are not an
-experiment's freeze. Two values need a decision before G0:
+**The lock is `FROZEN` for experiment 001** (`bm25-sonnet46`), which closed 2026-08-13 as the
+bring-up freeze without a graded round — see `results/experiment_001_bm25-sonnet46/README.md`.
+The generation-based protocol re-freezes per experiment from seq 2 onward
+(`SIA_EVALUATION_PLAN.md` Phase 4). Two values were decided the hard way and the decisions
+carry forward:
 
-- `retrieval_config` is on the offline `bm25` fallback rather than the intended
-  `openai_embeddings`, because this machine has no working OpenAI key. This is no longer a
-  comparability footnote: on `bm25`, whether one task passes turns on whether `KB_search` returns
-  a single document, and one trial queried that document's card by name and did not get it.
-- `num_trials: 1` is enough for a gate and not enough for a comparison. Ten runs of one task
-  under one frozen configuration returned reward 1.0 six times and 0.0 four times — τ's `--seed`
-  seeds τ's sampling, not Pi's, so the agent is not reproducible episode to episode.
+- `retrieval_config: bm25` is the deliberate freeze, pinned knowingly over the unavailable
+  `openai_embeddings` (this machine has no working OpenAI key). It is not a comparability
+  footnote: on `bm25`, whether one task passes can turn on whether `KB_search` returns a single
+  document — one trial queried that document's card by name and did not get it — so no number
+  under this freeze is comparable with published τ-Knowledge results, and none claims to be.
+- Per-episode reward is a draw: ten runs of one task under one frozen configuration returned
+  1.0 six times and 0.0 four times — τ's `--seed` seeds τ's sampling, not Pi's, so the agent is
+  not reproducible episode to episode. Experiment 001 froze `num_trials: 4` against this; the
+  evaluation protocol instead freezes one trial per task and pools variance across the 47-task
+  held-out set, treating generation deltas inside the ±7 pp binomial band as noise
+  (`SIA_EVALUATION_PLAN.md` D2).
 
 The model pair, by contrast, is now chosen rather than defaulted, and neither half is Sonnet 5.
 
