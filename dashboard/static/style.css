@@ -14,10 +14,11 @@
   --serious: #ec835a;
   --critical: #d03b3b;
   --good-text: #006300;
-  --s-discovery: #2a78d6;
-  --s-validation: #eb6834;
-  --s-checkpoint: #1baf7a;
-  --s-other: #4a3aa7;
+  /* categorical palette — assigned to split groups by index (app.js splitColor) */
+  --cat-0: #2a78d6;
+  --cat-1: #eb6834;
+  --cat-2: #1baf7a;
+  --cat-3: #4a3aa7;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -31,10 +32,10 @@
     --axis: #383835;
     --border: rgba(255, 255, 255, 0.10);
     --good-text: #0ca30c;
-    --s-discovery: #3987e5;
-    --s-validation: #d95926;
-    --s-checkpoint: #199e70;
-    --s-other: #9085e9;
+    --cat-0: #3987e5;
+    --cat-1: #d95926;
+    --cat-2: #199e70;
+    --cat-3: #9085e9;
   }
 }
 
@@ -271,7 +272,7 @@ tr.episodes-holder > td { padding: 0 0 14px 22px; border-bottom: 1px solid var(-
   border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
   font-size: 12.5px; white-space: pre-wrap; overflow-wrap: break-word; background: var(--plane);
 }
-.msg.role-assistant .m-bubble { border-left: 3px solid var(--s-discovery); background: var(--surface-1); }
+.msg.role-assistant .m-bubble { border-left: 3px solid var(--cat-0); background: var(--surface-1); }
 .msg.role-user { margin-left: auto; }
 .msg.role-user .m-bubble { border-right: 3px solid var(--axis); }
 .msg.role-tool .m-bubble, .msg.role-system .m-bubble { color: var(--ink-2); }

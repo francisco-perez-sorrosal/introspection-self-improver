@@ -26,11 +26,9 @@ import secrets
 import socket
 import sys
 import threading
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
-
-from collections.abc import Callable
 
 import mcp.types as mcp_types
 import uvicorn

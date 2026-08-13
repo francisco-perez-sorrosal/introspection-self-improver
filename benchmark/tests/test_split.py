@@ -14,7 +14,6 @@ from tau_adapter.split import (
     TaskRow,
     _dominant_category,
     _label_sequence,
-    fidelity_task_set,
     propose,
     render_manifest,
     verify,
@@ -88,7 +87,7 @@ def test_verify_flags_domain_mismatch_empty_and_unknown():
     manifest = _manifest(propose(rows))
     manifest["domain"] = "mock"
     manifest["validation"] = []
-    manifest["test"] = manifest["test"][:-1] + ["task_nonexistent"]
+    manifest["test"] = [*manifest["test"][:-1], "task_nonexistent"]
     problems = "\n".join(verify(manifest, rows, "banking_knowledge"))
     assert "domain" in problems
     assert "validation is empty" in problems
@@ -98,7 +97,7 @@ def test_verify_flags_domain_mismatch_empty_and_unknown():
 def test_verify_flags_overlap_and_size():
     rows = _rows()
     manifest = _manifest(propose(rows))
-    manifest["validation"] = manifest["validation"][:-1] + [manifest["discovery"][0]]
+    manifest["validation"] = [*manifest["validation"][:-1], manifest["discovery"][0]]
     problems = "\n".join(verify(manifest, rows, "banking_knowledge"))
     assert "overlap" in problems
 
@@ -133,24 +132,6 @@ def test_verify_flags_action_concentration():
         concentrated[name] = ids
     problems = "\n".join(verify(_manifest(concentrated), rows, "banking_knowledge"))
     assert "ACTION" in problems
-
-
-def test_fidelity_task_set_is_deterministic_and_covers_both_bases():
-    rows = _rows()
-    manifest = _manifest(propose(rows))
-    chosen = fidelity_task_set(manifest, rows)
-    assert chosen == fidelity_task_set(manifest, rows)
-    assert len(chosen) == 3
-    basis = {row.task_id: row.reward_basis for row in rows}
-    assert sum(1 for t in chosen if basis[t] == ("ACTION",)) == 1
-    assert all(t in manifest["discovery"] for t in chosen)
-
-
-def test_fidelity_task_set_degrades_without_action_tasks():
-    rows = _rows(n_action=0)
-    manifest = {"domain": "banking_knowledge", **propose(rows)}
-    chosen = fidelity_task_set(manifest, rows)
-    assert len(chosen) == 3  # all DB — still a valid gate set, just single-basis
 
 
 def test_render_manifest_round_trips_through_yaml():

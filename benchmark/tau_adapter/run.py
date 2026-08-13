@@ -17,19 +17,20 @@ Two modes, and the distinction is load-bearing:
   diagnostic  --domain is anything else. The committed Recipe carries the locked domain's
               policy, so a different domain needs a different system prompt; the Recipe is
               materialised into a throwaway workspace with that policy substituted. Used for
-              seam bring-up and, later, for the Phase A.0 fidelity gate on `mock`. Results
-              are not comparable to anything and must not be reported as a score.
+              seam bring-up and the A.0a pipe-semantics gate on `mock`. Results are not
+              comparable to anything and must not be reported as a score.
 
 A round ends with three artifacts, not one: τ's `results.json`, the runner's
 `run_metadata.json` (the completion sentinel — written only after τ's runner returned), and
 `episode_manifest.jsonl`, one row per (task, trial) joining the episode to its platform
 conversation, lineage, cost, completeness and incident counters. The manifest is what
-`operate` receives at the top of a generation (v2 §5.1).
+`operate` receives at the top of a generation.
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import shutil
@@ -43,7 +44,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tau_adapter import lock as lockmod
 from tau_adapter import manifest as manifestmod
-from tau_adapter import split as splitmod
 from tau_adapter.dev_lane import (
     DevAttachment,
     assert_no_connected_binding,
@@ -69,12 +69,6 @@ TRANSPORT_LOCAL = "local"
 TRANSPORT_PLATFORM = "platform"
 TRANSPORTS = (TRANSPORT_LOCAL, TRANSPORT_PLATFORM)
 DEFAULT_RUNTIME = "target-agent"
-
-# The runnable splits. `test` is deliberately absent: the held-out enforcement decision
-# (split_manifest.yaml header) makes test-split inspection procedural-only, and the cheapest
-# way to keep the procedure honest is for the runner to have no button for it. Test tasks are
-# exercised only inside the full-domain checkpoint.
-RUNNABLE_SPLITS = ("discovery", "validation")
 
 # Gitignored, and inside the work tree on purpose — see _materialise_workspace.
 DIAGNOSTIC_WORKSPACE = lockmod.REPO_ROOT / ".diagnostic-workspace"
@@ -313,27 +307,6 @@ def main() -> int:
         help="τ task ids to run. Omit to run the whole locked task split.",
     )
     parser.add_argument(
-        "--split",
-        choices=RUNNABLE_SPLITS,
-        default=None,
-        help=(
-            "run a frozen split from benchmark/split_manifest.yaml (verified before any "
-            "episode is spent). `test` is deliberately not runnable here — the held-out "
-            "boundary is procedural, and the runner refuses to offer a button for it; test "
-            "tasks run only inside --checkpoint."
-        ),
-    )
-    parser.add_argument(
-        "--checkpoint",
-        action="store_true",
-        help=(
-            "the full-domain checkpoint: every task in the locked split at ONE trial — the "
-            "H2 decision trades the ×4 number's strength for a quarter of its cost, and the "
-            "result is labeled single-trial wherever it is reported. Its output includes "
-            "test-split tasks; per the enforcement decision, do not inspect those episodes."
-        ),
-    )
-    parser.add_argument(
         "--out",
         required=True,
         help="directory for τ's results.json and per-simulation logs",
@@ -400,11 +373,6 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if args.split and args.task_ids:
-        raise SystemExit("--split and --task-ids are mutually exclusive")
-    if args.checkpoint and (args.split or args.task_ids):
-        raise SystemExit("--checkpoint runs the whole locked split; drop --split/--task-ids")
-
     lock = lockmod.load_lock()
     lockmod.assert_vendor_commit(lock)
     lockmod.assert_recipe_matches_lock(lock)
@@ -412,28 +380,9 @@ def main() -> int:
 
     domain = args.domain or lock.domain
     locked_mode = domain == lock.domain
-    if (args.split or args.checkpoint) and not locked_mode:
-        raise SystemExit("--split/--checkpoint are experiment rounds; they run the locked domain")
 
-    # Resolve what runs and at how many trials. A split round refuses to start on a manifest
-    # that fails verification — a broken split silently narrows every claim built on it.
-    split_name: str | None = None
     task_ids: list[str] | None = args.task_ids
     num_trials = lock.num_trials
-    if args.split:
-        split_name = args.split
-        manifest_doc = splitmod.load_manifest()
-        problems = splitmod.verify(manifest_doc, splitmod.load_task_rows(lock.domain), lock.domain)
-        if problems:
-            raise SystemExit(
-                "split manifest failed verification; no episode was spent:\n  "
-                + "\n  ".join(problems)
-            )
-        task_ids = list(manifest_doc[args.split])
-    elif args.checkpoint:
-        split_name = "checkpoint"
-        task_ids = None
-        num_trials = 1  # H2 decision: the recognizable 97-task number at ×1, labeled single-trial
 
     from tau2.data_model.simulation import TextRunConfig
     from tau2.metrics.agent_metrics import compute_metrics
@@ -457,8 +406,8 @@ def main() -> int:
         recipe_policy = extract_policy((recipe_dir / "SYSTEM.md").read_text(encoding="utf-8"))
 
     # The arm this run serves. `introspection dev` serves the work-tree while lineage names
-    # the base commit, so a dirty served surface makes every arm claim soft (v2 §4 W3.3):
-    # the platform lane refuses it outright unless --allow-dirty records it prominently.
+    # the base commit, so a dirty served surface makes every arm claim soft: the platform
+    # lane refuses it outright unless --allow-dirty records it prominently.
     arm_sha, dirty_paths = repo_arm_state() if locked_mode else (None, [])
     if args.transport == TRANSPORT_PLATFORM and dirty_paths and not args.allow_dirty:
         raise SystemExit(
@@ -536,9 +485,9 @@ def main() -> int:
     # Every transport constructed, one per episode *attempt*. This is the queue-tolerant side
     # of the accounting: τ retries infrastructure errors and keeps only the final attempt, so
     # the platform tasks a run created can exceed the episodes its results file names — the
-    # difference is the orphan count, and it must be visible (v2 §4 W3.5). The registry also
-    # lets the shutdown path archive whatever is still open, so an interrupted sweep does not
-    # leave a sandbox idling toward its timeout (W5.3); close() is idempotent.
+    # difference is the orphan count, and it must be visible. The registry also lets the
+    # shutdown path archive whatever is still open, so an interrupted sweep does not leave a
+    # sandbox idling toward its timeout; close() is idempotent.
     episode_transports: list[Any] = []
 
     def create_agent(tools, domain_policy, **kwargs):
@@ -600,7 +549,7 @@ def main() -> int:
         timeout=lock.timeout_seconds,
         max_concurrency=lock.max_concurrency,
         enforce_communication_protocol=lock.enforce_communication_protocol,
-        # τ's own checkpointing, adopted rather than reimplemented (v2 §4 W5.1): results.json
+        # τ's own checkpointing, adopted rather than reimplemented: results.json
         # is written incrementally, and a rerun into the same directory resumes from it,
         # re-running only missing (trial, task, seed) tuples and replacing infrastructure-
         # error placeholders. auto_resume keeps that path non-interactive; prepare_round_dir
@@ -648,14 +597,7 @@ def main() -> int:
         task_ids=list(task_ids) if task_ids else None,
     )
 
-    if split_name and split_name != "checkpoint":
-        selection = f"{split_name} split ({len(tasks)} tasks)"
-    elif args.checkpoint:
-        selection = f"full-domain checkpoint ({len(tasks)} tasks, ×1 trial by decision)"
-    elif task_ids:
-        selection = ", ".join(task_ids)
-    else:
-        selection = f"whole split ({len(tasks)} tasks)"
+    selection = ", ".join(task_ids) if task_ids else f"whole split ({len(tasks)} tasks)"
     print(f"   tasks         {selection} in {num_trials} trial(s)")
     if lock.provisional:
         print("   lock status   PROVISIONAL — not an experiment freeze")
@@ -678,10 +620,9 @@ def main() -> int:
         # archives any task an interrupted episode left open — otherwise its sandbox idles
         # against the org concurrency limit until the platform's timeout backstop fires.
         for transport in episode_transports:
-            try:
+            # Shutdown must not mask the real failure.
+            with contextlib.suppress(Exception):
                 transport.close()
-            except Exception:  # noqa: BLE001 - shutdown must not mask the real failure
-                pass
         if dev is not None:
             dev.stop()
         bridge.stop()
@@ -743,8 +684,8 @@ def main() -> int:
     )
     orphaned_tasks = sorted(set(tasks_created) - set(referenced))
 
-    # The arm assertion (v2 §4 W3.4): the platform's lineage, not the runner's bookkeeping,
-    # is what makes "which harness produced this score" a verified claim.
+    # The arm assertion: the platform's lineage, not the runner's bookkeeping, is what makes
+    # "which harness produced this score" a verified claim.
     sha_mismatches = sorted(
         ref
         for ref, account in accounting.items()
@@ -757,8 +698,6 @@ def main() -> int:
         generation=generation,
         arm_sha=arm_sha,
         arm_dirty=bool(dirty_paths),
-        checkpoint=bool(args.checkpoint),
-        split=split_name,
         accounting=accounting,
         incidents_by_ref=incidents_by_ref,
         labels_by_ref=labels,
@@ -778,8 +717,7 @@ def main() -> int:
                 "experiment": lock.experiment_id,
                 "domain": domain,
                 "generation": generation,
-                "split": split_name,
-                "checkpoint": bool(args.checkpoint),
+                "split": None,
                 "num_trials": num_trials,
                 "transport": args.transport,
                 "launcher": args.launcher if args.transport == TRANSPORT_LOCAL else None,

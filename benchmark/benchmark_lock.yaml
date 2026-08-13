@@ -15,8 +15,7 @@
 # one; `name` is a configuration nickname and may repeat across experiments — the sequence
 # is the identity. `dummy` was the bring-up bucket while the lock was still provisional (no
 # snapshot enforcement; its runs, removed from the working tree 2026-08-13, are in git
-# history); this experiment was assigned when the freeze was re-decided (H2, PLAN.md M1,
-# 2026-08-13).
+# history); this experiment was assigned when the freeze was decided, 2026-08-13.
 experiment:
   seq: 1
   name: bm25-sonnet46
@@ -33,7 +32,7 @@ benchmark:
   # Decides the agent's tool set *and* rewrites the policy text it is graded against, so it
   # is benchmark configuration, not harness. Improve how retrieval is *used* instead.
   #
-  # DELIBERATE FREEZE (decided 2026-08-12, PLAN.md M1). `bm25` is pinned knowingly, not as a
+  # DELIBERATE FREEZE (decided 2026-08-12). `bm25` is pinned knowingly, not as a
   # fallback: it is fully offline and needs no provider key at run or grade time. The accepted
   # cost is comparability — `bm25` changes both the tool set and the policy text, so no number
   # under this freeze is comparable with published τ-Knowledge results, and none is claimed;
@@ -44,13 +43,14 @@ benchmark:
   retrieval_config: bm25
 
   # `base` is a task *split*, not a task set: tau's --task-set-name defaults to the domain's
-  # own set, and --task-split-name defaults to "base". The MVP document's frozen-flag list
-  # conflates the two.
+  # own set, and --task-split-name defaults to "base". Two values, not one — conflating them
+  # was an early mistake, corrected in contract/constraints.md.
   task_set_name: banking_knowledge
   task_split_name: base
 
 frozen:
-  # FROZEN 2026-08-13 (H2, PLAN.md M1) for experiment 001_bm25-sonnet46. Every value below
+  # FROZEN 2026-08-13 for experiment 001_bm25-sonnet46 (closed — see
+  # results/experiment_001_bm25-sonnet46/README.md). Every value below
   # is this experiment's freeze; changing any one means a NEW experiment (bump seq), never
   # a new value under this one. The first run snapshots the parsed freeze into
   # results/experiment_001_bm25-sonnet46/experiment.yaml, and every later run must match it.
@@ -64,7 +64,7 @@ frozen:
   # (~13%: $2/$10 per MTok against $3/$15, offset by its newer tokenizer's ~30% token inflation)
   # and stronger on agentic work. The reason is experimental sensitivity, not cost.
   #
-  # §21 lists what the improvement orchestrator is expected to discover from evidence:
+  # The improvement orchestrator is expected to discover from evidence things like:
   # retrieval discipline, query reformulation, policy extraction, prerequisite checking,
   # plan-before-write, post-action verification. Sonnet 5 performs much of that natively —
   # adaptive thinking is on by default and it is explicitly trained for agentic
@@ -73,10 +73,10 @@ frozen:
   # experiment exists to detect. A model that does not already do them leaves the harness as
   # the binding constraint, which is what we are trying to measure.
   #
-  # Still provisional in one respect: 4.6 must clear §13.1's ≥20–25% floor on the discovery
-  # split, or the comparative method loses its successful controls. That is unmeasured until
-  # G0 runs on the discovery split. If G0 lands below the floor, strengthen G0 before
-  # reconsidering this.
+  # Still provisional in one respect: H0 must show basic competence or the comparative
+  # method loses its successful controls. Under the generation protocol the viability read
+  # is the first improvement batch, which is visible by design (SIA_EVALUATION_PLAN.md D8);
+  # if H0 lands at 0/B, strengthen H0 before reconsidering this.
   agent_model: anthropic/claude-sonnet-4-6
   agent_thinking_level: low
 
@@ -115,12 +115,12 @@ frozen:
     temperature: 0.0
     timeout: 60
 
-  # 4 (H2, PLAN.md M1). Episode-level reward is a draw — ten runs of one task under one
-  # frozen configuration split 6/4 (formerly results/experiment_dummy/, now git history) —
-  # so a single trial supports
-  # a gate, never a comparison. pass^k is reported up to k=4 alongside pass^1. The
-  # full-domain checkpoint runs at ×1 by the same decision: the recognizable 97-task number
-  # costs $25 instead of $100 and is labeled single-trial wherever it is reported.
+  # 4 was experiment 001's freeze. Episode-level reward is a draw — ten runs of one task
+  # under one frozen configuration split 6/4 (formerly results/experiment_dummy/, now git
+  # history). The generation protocol freezes 1 from the next experiment onward
+  # (SIA_EVALUATION_PLAN.md D2): variance pools across the held-out set instead of within
+  # one task, deltas inside the binomial noise band are noise, and pass^k is never used
+  # for generations.
   num_trials: 4
   seed: 300
 
@@ -130,19 +130,19 @@ frozen:
   max_errors: 10
 
   # Per-simulation wallclock ceiling, tau's TextRunConfig.timeout. Note this is *not*
-  # --max-steps-seconds, which the MVP document lists as frozen: that flag only configures
-  # audio-native runs, where it is divided by the tick duration. It has no effect in text
-  # mode, so freezing it would freeze nothing.
+  # --max-steps-seconds: that flag only configures audio-native runs, where it is divided
+  # by the tick duration. It has no effect in text mode, so freezing it would freeze
+  # nothing (contract/constraints.md records the correction).
   timeout_seconds: 600
 
-  # Serial for the MVP. The run binds ONE run-scoped bridge, and it is single-episode-safe
-  # (run.py); raising this needs bridge episode-multiplexing plus a re-freeze, and is
-  # deliberately out of MVP scope (v2 §3.3) — the schedule absorbs serial rounds instead.
+  # Serial for now. The run binds ONE run-scoped bridge, and it is single-episode-safe
+  # (run.py); raising this needs bridge episode-multiplexing plus a re-freeze
+  # (SIA_EVALUATION_PLAN.md D7) — the schedule absorbs serial rounds instead.
   max_concurrency: 1
 
   # Whether tau ends an episode when an assistant message carries both text and tool calls.
-  # Not in the MVP document's frozen list, and it belongs there: it decides whether a protocol
-  # violation is graded at all, so flipping it moves scores with no harness change.
+  # On the frozen list because it decides whether a protocol violation is graded at all, so
+  # flipping it moves scores with no harness change.
   #
   # Left at tau's own default of false, which is the setting stock runs use and therefore the
   # comparable one. The adapter still forwards such messages unaltered, so the narration is

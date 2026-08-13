@@ -9,11 +9,11 @@ improvement batches drive generations H_0 → H_G, every generation is measured 
 same fixed held-out set whose results stay hidden until the experiment closes, and the endpoint
 question is R_T(H_G) > R_T(H_0). `SIA_EVALUATION_PLAN.md` is the forward tracker (decisions
 D1–D9, five incrementally validated phases); consult it to see where the path stands. The MVP
-guides (`introspection_self_improving_agent_mvp_v2.md`, v1) and `PLAN.md` are superseded design
-history — v2 still explains the built seam machinery, but its evaluation design (pass^k,
-discovery/validation/test splits, checkpoints) is obsolete. Bare § references below point into
-v1; "protocol §N" means the evaluation protocol. This file is the always-loaded subset an
-agent must not get wrong.
+design guides and the old milestone tracker were removed 2026-08-13 (git history keeps them);
+their evaluation design — pass^k, discovery/validation/test splits, checkpoints — is obsolete,
+and what survives of them is the built machinery itself, documented by `README.md` and
+`contract/`. "protocol §N" below means the evaluation protocol. This file is the always-loaded
+subset an agent must not get wrong.
 
 ## The four roles
 
@@ -31,7 +31,7 @@ close.
 
 ## Current state — read before planning work
 
-- **The §11.1 seam is decided and running.** An MCP tool bridge in `benchmark/tau_adapter/`
+- **The seam is decided and running.** An MCP tool bridge in `benchmark/tau_adapter/`
   serves τ's tool surface to Pi and rendezvouses on the results, so τ keeps tool execution,
   step counting, trajectory construction, and grading, and nothing is reconstructed. Twelve
   platform-lane episodes across three `banking_knowledge` tasks (and the `mock` smoke) have
@@ -177,7 +177,7 @@ dashboard, browser automation, or direct API calls for an operator action the CL
   `results/experiment_<id>/improvement_records/` (protocol §24), with stable Introspection
   identifiers linking each conclusion back to real evidence.
 
-## Layout (§23)
+## Layout
 
 ```text
 target-agent/   the Introspection recipe under improvement (H_0 anchor: git tag h0-baseline)
@@ -201,11 +201,11 @@ and `transport_platform.py` (the two hosts), `dev_lane.py` (the `introspection d
 its platform preconditions), `pi_agent.py` (τ's agent interface), `experiment.py` (the
 experiment level of `results/` and its freeze snapshot), `lock.py`, `run.py`.
 
-§23 also lists `benchmark/fidelity/` and `contract/learning_record.schema.yaml`. The first
-exists as the on-demand cross-lane instrument (`make fidelity`,
-`benchmark/fidelity/compare_lanes.py`); the blocking gate it once fed is demoted (plan D4).
-The second becomes `contract/improvement_record.schema.yaml`, landing at plan Phase 3 with the
-generation lifecycle — creating it earlier would be an empty promise.
+`benchmark/fidelity/` is the on-demand adapter-invariant diagnostic (`make fidelity`,
+`benchmark/fidelity/compare_lanes.py`) — per-episode invariants and factual counts only, no
+cross-lane statistical judgment; the blocking gate it once fed is retired (plan D4).
+`contract/improvement_record.schema.yaml` lands at plan Phase 3 with the generation
+lifecycle — creating it earlier would be an empty promise.
 
 No `orchestrator/` directory. Claude Code is the orchestrator; a directory by that name would
 imply a second agent implementation exists.
@@ -220,7 +220,7 @@ duplicated here.
   package. `target-agent/` is deliberately bare — `agents/agent.yaml`, `SYSTEM.md`,
   `package.json`, no TypeScript or Python source; TS extensions and Python deps (via
   `pi.runtime` + a committed `uv.lock`) are available growth surfaces for later generations.
-- τ²-bench is Python, pinned to an exact commit (§6.2), vendored gitignored under
+- τ²-bench is Python, pinned to an exact commit, vendored gitignored under
   `benchmark/vendor/`. **uv**, not pixi — τ² mandates it and `pi.runtime.python.lockfile`
   expects `uv.lock`. Python is pinned to 3.12: τ² v1.0.1 reaches `audioop`, removed in 3.13.
 - `introspection check` runs in `.githooks/pre-commit`, in CI (`recipe-validation.yml`), and once
@@ -229,9 +229,9 @@ duplicated here.
 ## Standing guardrails for coding agents
 
 - **Check current Introspection docs and plugin skill sources before assuming any API, CLI
-  syntax, recipe layout, or permission behavior.** The MVP document is dated 2026-08-12 and
-  defers to upstream wherever they differ.
+  syntax, recipe layout, or permission behavior.** Repo documentation defers to upstream
+  wherever they differ.
 - Recipe write access is a code-execution capability. Agent-authored changes land as PRs under
   branch protection; the agent does not merge its own work.
 - Keep the first implementation simple enough that the origin of a performance change stays
-  interpretable. Baseline G0 is deliberately unsophisticated (§13).
+  interpretable. H0 is deliberately unsophisticated, anchored by the `h0-baseline` tag.

@@ -259,7 +259,7 @@ class PlatformTransport:
         self._closed = False
         # This episode's incident counters. τ retries an infrastructure error and keeps only
         # the final attempt, so anything counted here would otherwise vanish from the record;
-        # the runner reads the sink into the episode manifest (v2 §4 W5.2).
+        # the runner reads the sink into the episode manifest.
         self.incidents = EpisodeIncidents()
 
     # ------------------------------------------------------------------ lifecycle
@@ -420,7 +420,7 @@ class PlatformTransport:
 
     def _count_prompt_failure(self, exc: Exception) -> None:
         """Classify a failed create/prompt. A 409 is the turn-gate regression this lane once
-        shipped (v2 §3.4), so it gets its own counter and must stay zero."""
+        shipped, so it gets its own counter and must stay zero."""
         text = str(exc)
         if "409" in text or "already processing" in text.lower():
             self.incidents.prompt_409 += 1

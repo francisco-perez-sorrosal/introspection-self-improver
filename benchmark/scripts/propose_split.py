@@ -44,23 +44,10 @@ def main() -> int:
         default="",
         help="extra header line recorded at --write (e.g. the held-out enforcement strength)",
     )
-    parser.add_argument(
-        "--fidelity-set",
-        action="store_true",
-        help="print the deterministic A.0b gate task set derived from the frozen manifest",
-    )
     args = parser.parse_args()
 
     lock = lockmod.load_lock()
     rows = splitmod.load_task_rows(lock.domain)
-
-    if args.fidelity_set:
-        ids = splitmod.fidelity_task_set(splitmod.load_manifest(), rows)
-        if not ids:
-            print("split manifest is not populated; freeze it first", file=sys.stderr)
-            return 1
-        print(" ".join(ids))
-        return 0
 
     if args.verify:
         problems = splitmod.verify(splitmod.load_manifest(), rows, lock.domain)

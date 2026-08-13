@@ -14,12 +14,9 @@
       <select id="experiment-select"></select>
     </label>
     <label class="filter">split
+      <!-- options populated from the loaded experiment's recorded split values -->
       <select id="split-filter">
         <option value="all">all</option>
-        <option value="discovery">discovery</option>
-        <option value="validation">validation</option>
-        <option value="checkpoint">checkpoint</option>
-        <option value="other">other</option>
       </select>
     </label>
     <label class="filter">arm
@@ -75,7 +72,6 @@
         <label class="filter">sort
           <select id="heat-sort">
             <option value="id">task id</option>
-            <option value="volatility">volatility</option>
             <option value="trend">trend</option>
           </select>
         </label>

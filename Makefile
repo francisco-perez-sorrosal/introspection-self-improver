@@ -1,8 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy smoke single_task bench discovery validation checkpoint \
-	fidelity fidelity_gate gate_a0a anchor_stock grade dashboard
+.PHONY: help bootstrap check policy smoke single_task bench fidelity gate_a0a grade dashboard
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -28,15 +27,6 @@ TRANSPORT ?= local
 # Deferred (`=`, not `:=`) so the round targets' target-specific TRANSPORT reaches it.
 SUFFIX = $(if $(filter platform,$(TRANSPORT)),_platform,)
 
-# Which harness arm a round belongs to. G0 has only a baseline; G1+ candidate rounds pass
-# ARM=candidate so the two arms' records never collide (v2 §2.7's <purpose>_<arm> naming).
-ARM ?= baseline
-
-# The A.0b gate's task set — deterministic, derived from the frozen split manifest
-# (first ACTION task + first DB tasks of the discovery list). Lazy: only evaluated when a
-# fidelity_gate run actually needs it.
-FID_TASKS ?= $(shell cd $(BENCH) && uv run python scripts/propose_split.py --fidelity-set 2>/dev/null)
-
 # How the recipe is started locally. `pi` spawns it directly. `introspection` routes through
 # `introspection local`, which resolves the recipe through the Runtime manifest and validates it
 # per episode, at about +5.5s each. Either way the recipe is validated once per run. Ignored by
@@ -55,20 +45,14 @@ help:
 	@echo "make smoke       one mock-domain task through the seam (diagnostic, not reportable)"
 	@echo "make single_task one locked-domain task, then grade it: make single_task TASK=task_001"
 	@echo "make bench       the WHOLE locked task split, then grade it (long and costly)"
-	@echo "make discovery   the frozen discovery split as an experiment round (platform lane)"
-	@echo "make validation  the frozen validation split as an experiment round (platform lane)"
-	@echo "make checkpoint  the full-domain checkpoint at x1 trial (H2 decision; platform lane)"
 	@echo "make fidelity    run one task in BOTH lanes and check the adapter invariants"
 	@echo "make gate_a0a    A.0a gate: adapter suite + mock smoke, verdict under gates/"
-	@echo "make fidelity_gate  A.0b gate: the gate task set x frozen trials in BOTH lanes"
-	@echo "make anchor_stock   A.0c anchor: tau's stock agent natively on the discovery split"
 	@echo "make grade       re-grade an existing run: make grade OUT=results/.../mock_smoke"
 	@echo "make dashboard   local read-only results viewer over results/ (dashboard/)"
 	@echo ""
-	@echo "TRANSPORT=local|platform   where the agent runs (default local; rounds default platform)"
+	@echo "TRANSPORT=local|platform   where the agent runs (default local)"
 	@echo "LAUNCHER=pi|introspection  how to start it locally (default pi)"
 	@echo "GEN=generation_NNN         generation directory under results/$(EXPDIR)/"
-	@echo "ARM=baseline|candidate     which harness arm a round belongs to (default baseline)"
 	@echo ""
 	@echo "The experiment comes from benchmark_lock.yaml (experiment.seq + experiment.name):"
 	@echo "results land under results/$(EXPDIR)/$(GEN)/ and the runner refuses any other"
@@ -123,33 +107,9 @@ bench:
 		--out ../$(RESULTS)/bench_full$(SUFFIX) --overwrite
 	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/bench_full$(SUFFIX)
 
-# Experiment rounds. They default to the platform lane — the only lane that leaves platform
-# evidence, and where every G0+ round runs — while an explicit TRANSPORT=local on the command
-# line still wins for debugging. No --overwrite: an interrupted round resumes, re-spending
-# nothing, and a completed round refuses rather than being silently replaced.
-discovery validation checkpoint: TRANSPORT = platform
-
-discovery:
-	@$(RUN) python tau_adapter/run.py --split discovery --transport $(TRANSPORT) --launcher $(LAUNCHER) \
-		--out ../$(RESULTS)/discovery_$(ARM)$(SUFFIX)
-	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/discovery_$(ARM)$(SUFFIX)
-
-validation:
-	@$(RUN) python tau_adapter/run.py --split validation --transport $(TRANSPORT) --launcher $(LAUNCHER) \
-		--out ../$(RESULTS)/validation_$(ARM)$(SUFFIX)
-	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/validation_$(ARM)$(SUFFIX)
-
-# The full-domain checkpoint (97 tasks, x1 trial by the H2 decision — the recognizable
-# number at a quarter of the cost, labeled single-trial). Its output includes test-split
-# tasks; per the held-out enforcement decision, those episodes are not to be inspected.
-checkpoint:
-	@$(RUN) python tau_adapter/run.py --checkpoint --transport $(TRANSPORT) --launcher $(LAUNCHER) \
-		--out ../$(RESULTS)/checkpoint_full_domain$(SUFFIX)
-	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/checkpoint_full_domain$(SUFFIX)
-
 # Runs the same task in both lanes and compares them. Adapter-owned properties are asserted; the
 # reward is not, because a per-task reward here is a draw and comparing two of them proves nothing.
-# This is the §15 Phase A.0 instrument aimed at the two transports.
+# On-demand cross-lane diagnostic (SIA_EVALUATION_PLAN.md D4) — not a gate.
 fidelity:
 	@$(MAKE) --no-print-directory single_task TASK=$(TASK) TRANSPORT=local
 	@$(MAKE) --no-print-directory single_task TASK=$(TASK) TRANSPORT=platform
@@ -160,28 +120,6 @@ fidelity:
 # $(RESULTS)/gates/ so the gate's pass is citable, not just a green terminal.
 gate_a0a:
 	@$(RUN) python scripts/gate_a0a.py --gen-dir $(CURDIR)/$(RESULTS)
-
-# A.0b gate (blocking): the deterministic gate task set x the frozen trial count, both
-# lanes, adapter invariants per episode plus aggregate agreement within trial noise.
-# Interruptions resume; a completed lane refuses (delete the round dirs to re-run).
-fidelity_gate:
-	@test -n "$(FID_TASKS)" || (echo "cannot derive the A.0b task set — is the split manifest frozen?" && exit 1)
-	@$(RUN) python tau_adapter/run.py --task-ids $(FID_TASKS) --transport local --launcher $(LAUNCHER) \
-		--out ../$(RESULTS)/fidelity_gate
-	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/fidelity_gate
-	@$(RUN) python tau_adapter/run.py --task-ids $(FID_TASKS) --transport platform \
-		--out ../$(RESULTS)/fidelity_gate_platform
-	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/fidelity_gate_platform
-	@$(RUN) python fidelity/compare_lanes.py \
-		$(CURDIR)/$(RESULTS)/fidelity_gate $(CURDIR)/$(RESULTS)/fidelity_gate_platform \
-		--gate --verdict-out $(CURDIR)/$(RESULTS)/gates/a0b.json
-
-# A.0c anchor (informational): tau's stock LLMAgent natively under the lock's exact
-# configuration — the scaffold delta, and the only configuration where tau's seed reaches
-# the agent. Under the bm25 freeze it anchors nothing about published comparability.
-anchor_stock:
-	@$(RUN) python scripts/run_stock_anchor.py --out ../$(RESULTS)/anchor_stock
-	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/anchor_stock
 
 # Read-only viewer over results/ — its own lane, never a pipeline participant. Stdlib only;
 # reads dashboard/config.json for the results pointer and port.

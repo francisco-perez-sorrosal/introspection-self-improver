@@ -33,8 +33,10 @@ from tau_adapter.lock import BENCHMARK_DIR
 
 SPLIT_MANIFEST_PATH = BENCHMARK_DIR / "split_manifest.yaml"
 
-#: Split sizes (v2 §4 W2). The remainder is unused during optimisation and remains available
-#: to the full-domain checkpoints. Changing these mid-experiment invalidates it.
+#: Split sizes. The remainder is unused during optimisation. Changing these mid-experiment
+#: invalidates it. This module still implements experiment 001's three-way scheme; the
+#: generation protocol's G-batches + held-out partition replaces it (SIA_EVALUATION_PLAN.md
+#: Phase 1).
 SPLIT_SIZES = {"discovery": 30, "validation": 15, "test": 20}
 
 #: Shuffle seed for within-stratum tie-breaking in a proposal. Unrelated to the runner's
@@ -87,10 +89,10 @@ def propose(
     sizes = dict(SPLIT_SIZES if sizes is None else sizes)
     if sum(sizes.values()) > len(rows):
         raise ValueError(f"split sizes {sizes} exceed the {len(rows)} available tasks")
-    rng = random.Random(seed)
+    rng = random.Random(seed)  # noqa: S311 - deterministic stratification shuffle, not crypto
     ordered = sorted(rows, key=lambda r: (r.reward_basis, r.category, r.doc_count, rng.random()))
     assignment: dict[str, list[str]] = {name: [] for name in sizes}
-    for row, label in zip(ordered, _label_sequence(len(ordered), sizes)):
+    for row, label in zip(ordered, _label_sequence(len(ordered), sizes), strict=True):
         if label != _UNUSED:
             assignment[label].append(row.task_id)
     return {name: sorted(ids) for name, ids in assignment.items()}
@@ -191,22 +193,6 @@ def render_manifest(
         lines.extend(f"  - {task_id}" for task_id in assignment[name])
         lines.append("")
     return "\n".join(lines)
-
-
-def fidelity_task_set(manifest: dict[str, Any], rows: list[TaskRow], size: int = 3) -> list[str]:
-    """The small task set the A.0b cross-lane gate runs (v2 §4 W4).
-
-    Deterministic and derived from the frozen manifest, never chosen ad hoc: drawn from the
-    discovery split (inspectable by definition, so a gate run leaks nothing), covering both
-    reward bases — the first ACTION task in manifest order plus the first DB tasks — because
-    an adapter defect that only bites golden-action grading would otherwise stay invisible
-    until a real round.
-    """
-    basis = {row.task_id: row.reward_basis for row in rows}
-    discovery = list(manifest.get("discovery") or [])
-    action = [t for t in discovery if basis.get(t) == ("ACTION",)][:1]
-    db = [t for t in discovery if basis.get(t) != ("ACTION",)]
-    return (action + db[: max(0, size - len(action))])[:size]
 
 
 def strata_report(rows: list[TaskRow], assignment: dict[str, list[str]]) -> str:

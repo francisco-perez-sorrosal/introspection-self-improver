@@ -27,17 +27,18 @@ pre-sequence ones (`experiment_dummy`) by their bare id.
 - **Freeze strip + status** — the experiment's `experiment.yaml` snapshot (domain,
   retrieval config, models, trials × seed, τ² commit), or a PROVISIONAL bring-up banner
   when no snapshot exists.
-- **Generation curve** — pass¹ per split with ≈95% intervals over per-task rates, pass^k
-  dashed, candidate arms as hollow marks; click a generation to inspect it. A table view
-  twin is one toggle away. Rounds that don't follow the `<split>_<arm>` convention fall
-  back to per-round bars.
+- **Generation curve** — pass¹ per split with ≈95% intervals over per-task rates,
+  candidate arms as hollow marks; click a generation to inspect it. A table view twin is
+  one toggle away. Splits are grouped dynamically from each round's recorded
+  `run_metadata.json` value (no taxonomy is hard-coded; unlabeled rounds form an ad-hoc
+  bucket); when no round carries a split, the curve falls back to per-round bars.
 - **Efficiency small multiples** — cost, messages, `KB_search` calls, duration per
   episode across generations (tracked, not optimized).
 - **Generation ribbon** — one card per improvement cycle: pass¹, Δ vs previous, the
   learning record's candidate/decision when present, episode counts, cost, recipe SHAs.
 - **Task × generation heatmap** — per-task trial pass fractions on a sequential ramp,
   within-task instability (0 < c < n) dotted, not-run cells distinct from zero; sortable
-  by id, volatility, or trend.
+  by id or trend.
 - **Round and episode detail** — completeness flags (diagnostic, interrupted, infra
   errors, abnormal terminations, incomplete evidence), per-episode rewards and costs,
   conversation ids with copy buttons, and full **transcripts** (messages, tool calls,

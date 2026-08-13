@@ -220,28 +220,17 @@ def is_success(reward: Any) -> bool:
 
 @dataclass(frozen=True)
 class LaneAggregate:
-    """One lane's gate-scale summary. `graded` follows τ's convention — only
-    infrastructure_error episodes are excluded from the denominator."""
+    """One lane's episode counts, stated as facts. `graded` follows τ's convention — only
+    infrastructure_error episodes are excluded from the denominator. No statistical judgment
+    lives here: the evaluation protocol compares generations on the held-out set, never
+    lanes against each other."""
 
     lane: str
     episodes: int
     graded: int
     successes: int
     pass1: float | None
-    interval: tuple[float, float] | None
     mean_messages: float | None
-
-
-def wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
-    """95% Wilson score interval on a proportion. Behaves at the small n a gate runs at,
-    where the normal approximation collapses to zero width on 0/n and n/n outcomes."""
-    if n == 0:
-        return None
-    phat = successes / n
-    denominator = 1 + z * z / n
-    centre = phat + z * z / (2 * n)
-    margin = z * math.sqrt((phat * (1 - phat) + z * z / (4 * n)) / n)
-    return ((centre - margin) / denominator, (centre + margin) / denominator)
 
 
 def aggregate(reports: list[EpisodeReport]) -> LaneAggregate:
@@ -254,19 +243,10 @@ def aggregate(reports: list[EpisodeReport]) -> LaneAggregate:
         graded=n,
         successes=successes,
         pass1=round(successes / n, 4) if n else None,
-        interval=wilson_interval(successes, n),
         mean_messages=round(sum(r.messages for r in reports) / len(reports), 1)
         if reports
         else None,
     )
-
-
-def within_noise(a: LaneAggregate, b: LaneAggregate) -> bool | None:
-    """Overlapping 95% intervals on pass¹ — the defined (and, at gate N, deliberately
-    coarse) meaning of "aggregate agreement within trial noise" (v2 §4 W4 A.0b)."""
-    if a.interval is None or b.interval is None:
-        return None
-    return a.interval[0] <= b.interval[1] and b.interval[0] <= a.interval[1]
 
 
 def locked_tool_names() -> set[str]:

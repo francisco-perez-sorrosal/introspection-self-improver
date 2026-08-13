@@ -19,7 +19,6 @@ import math
 import re
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from math import comb
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -128,32 +127,27 @@ def task_description(task: dict) -> str:
 def classify_round(name: str) -> dict:
     """Decode the `<purpose>[_<arm>][_platform]` round-name convention.
 
-    Legacy bring-up names (task_001, mock_smoke, trial_7) fall through with the
-    whole name as purpose and no split — the page renders them, it just cannot put
-    them on the generation curve.
+    Splits are never decoded from names: run_metadata.json's recorded `split` is
+    the only source, and rounds without one land in the ad-hoc (null) bucket.
     """
     base = name
-    platform_suffix = base.endswith("_platform")
-    if platform_suffix:
+    if base.endswith("_platform"):
         base = base[: -len("_platform")]
     arm = None
     for candidate in ("baseline", "candidate"):
         if base.endswith("_" + candidate):
             arm = candidate
             base = base[: -(len(candidate) + 1)]
-    split = base if base in ("discovery", "validation") else None
-    if base.startswith("checkpoint"):
-        split = "checkpoint"
-    return {"purpose": base, "arm": arm, "split": split}
+    return {"purpose": base, "arm": arm}
 
 
 # ---------------------------------------------------------------- aggregation
 
 
-def pass_hat_k(task_stats: list[tuple[int, int]], k: int) -> float | None:
-    """τ's pass^k estimator: mean over tasks of C(c,k)/C(n,k)."""
-    values = [comb(c, k) / comb(n, k) for c, n in task_stats if n >= k]
-    return sum(values) / len(values) if values else None
+def pass1(task_stats: list[tuple[int, int]]) -> float | None:
+    """pass¹: mean over tasks of the per-task pass proportion c/n."""
+    proportions = [c / n for c, n in task_stats if n > 0]
+    return round(sum(proportions) / len(proportions), 4) if proportions else None
 
 
 def pass1_interval(task_stats: list[tuple[int, int]]) -> list | None:
@@ -273,10 +267,6 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         entry[0] += 1 if sim["success"] else 0
         entry[1] += 1
     task_stats = [(c, n) for c, n in task_stats_map.values()]
-    min_trials = min((n for _, n in task_stats), default=0)
-    pass_curve = {
-        str(k): round(pass_hat_k(task_stats, k), 4) for k in range(1, min_trials + 1)
-    }
 
     def _avg(values):
         values = [v for v in values if isinstance(v, (int, float)) and math.isfinite(v)]
@@ -297,8 +287,8 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         "domain": (metadata or {}).get("domain")
         or ((info.get("environment_info") or {}).get("domain_name")),
         **classified,
-        # The runner's own record beats name-decoding once it exists (M2 rounds carry it).
-        "split": (metadata or {}).get("split") or classified["split"],
+        # The runner's run_metadata.json record is the only split source (absent → null).
+        "split": (metadata or {}).get("split"),
         "mode": (metadata or {}).get("mode")
         or ("locked" if info.get("retrieval_config") else None),
         "incident_totals": incident_totals,
@@ -323,10 +313,8 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         "evidence_incomplete": sum(
             1 for s in sims if s.get("evidence_complete") is False
         ),
-        "pass1": pass_curve.get("1"),
+        "pass1": pass1(task_stats),
         "pass1_interval": pass1_interval(task_stats),
-        "pass_curve": pass_curve,
-        "trials_per_task": min_trials,
         "avg_cost": _avg(
             [
                 s["platform_cost"]

@@ -1,7 +1,7 @@
 """The episode manifest: one machine-readable row per (task, trial).
 
-This is the artifact `operate` receives at the top of a generation and the learning record
-cites (v2 §5.1, §5.6). Before it existed, the (τ task, trial) → conversation join lived
+This is the artifact `operate` receives at the top of a generation and the improvement
+record cites. Before it existed, the (τ task, trial) → conversation join lived
 scattered across `results.json` raw_data and `run_metadata.json` accounting, and reading it
 required code. A manifest row states the join once, with the completeness and incident flags
 beside it, so a diagnosis can start from ground truth instead of reconstruction.
@@ -10,7 +10,7 @@ Derivation is pure: rows are computed from τ's results payload plus what the ru
 around it. Nothing here is a second opinion — reward comes from τ's file, lineage from the
 conversation export, incidents from counters the transports and bridge kept while the episode
 ran. τ excludes `infrastructure_error` simulations from its own metrics; the manifest counts
-them anyway, because they consume budget and can hide transport defects (v2 §3.2).
+them anyway, because they consume budget and can hide transport defects.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ class EpisodeIncidents:
     Kept by the transport (and, via a callback, the bridge) while the episode runs, because
     none of these survive into τ's record: τ retries an infrastructure error and stores only
     the final attempt, and a stalled rendezvous can still end in a graded 1.0. A regression
-    in any of these must surface in the round report, not in a debugging session (v2 §4 W5.2).
+    in any of these must surface in the round report, not in a debugging session.
     """
 
     stall_warnings: int = 0
@@ -66,7 +66,6 @@ class RoundContext:
     generation: str | None = None
     arm_sha: str | None = None
     arm_dirty: bool = False
-    checkpoint: bool = False
     split: str | None = None
     # Keyed by pi_session_ref (platform: the task id, which is also the conversation id).
     accounting: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -122,7 +121,7 @@ def build_rows(results_payload: dict[str, Any], context: RoundContext) -> list[d
 
     Queue-tolerant by construction: N is the number of simulation rows τ recorded — including
     `infrastructure_error` placeholders, which carry no session ref and join to nothing —
-    never the number of submissions (v2 §4 W3.5).
+    never the number of submissions.
     """
     rows: list[dict[str, Any]] = []
     for sim in results_payload.get("simulations") or []:
@@ -146,7 +145,6 @@ def build_rows(results_payload: dict[str, Any], context: RoundContext) -> list[d
                 "experiment": context.experiment_id,
                 "generation": context.generation,
                 "split": context.split,
-                "checkpoint": context.checkpoint,
                 "transport": context.transport,
                 "label": context.labels_by_ref.get(ref or ""),
                 # On the platform lane the task id doubles as the conversation id; locally

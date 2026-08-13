@@ -53,11 +53,11 @@ T
 
 The principal question is therefore:
 
-\[ R_T(H_G) \> R_T(H_0) ? \]
+`R_T(H_G) > R_T(H_0)` ?
 
 and, more generally, what does the progression
 
-\[ R_T(H_0), R_T(H_1), ..., R_T(H_G) \]
+`R_T(H_0), R_T(H_1), ..., R_T(H_G)`
 
 look like?
 
@@ -79,9 +79,7 @@ requests repeated trials.
 
 The primary metric is simply:
 
-\[ `\text{HeldOutSuccess}`{=tex}(H_g) =
-`\frac{\text{held-out tasks passed by } H_g}`{=tex}
-{`\text{number of held-out tasks}`{=tex}} \]
+`HeldOutSuccess(H_g) = (held-out tasks passed by H_g) / (number of held-out tasks)`
 
 Always report both the count and percentage.
 
@@ -150,17 +148,17 @@ experiment:
 
 The required number of benchmark tasks is:
 
-\[ N = (G `\times `{=tex}B) + T \]
+`N = (G × B) + T`
 
 where:
 
--   \(G\) = number of improvement generations;
--   \(B\) = improvement tasks per generation;
--   \(T\) = held-out tasks.
+-   `G` = number of improvement generations;
+-   `B` = improvement tasks per generation;
+-   `T` = held-out tasks.
 
 For the default:
 
-\[ (5 `\times 10`{=tex}) + 47 = 97 \]
+`(5 × 10) + 47 = 97`
 
 For a debugging experiment:
 
@@ -174,7 +172,7 @@ experiment:
 
 which requires:
 
-\[ (3 `\times 3`{=tex}) + 5 = 14 \]
+`(3 × 3) + 5 = 14`
 
 tasks.
 
@@ -419,7 +417,7 @@ A valid experimental trajectory might be:
 
 The important endpoint hypothesis is:
 
-\[ R_T(H_G) \> R_T(H_0) \]
+`R_T(H_G) > R_T(H_0)`
 
 Failed improvements and regressions are legitimate experimental results.
 
@@ -621,7 +619,7 @@ Only the approved target-agent harness should evolve.
 
 For every generation calculate:
 
-\[ S_g = `\frac{\text{held-out tasks passed by } H_g}`{=tex} {T} \]
+`S_g = (held-out tasks passed by H_g) / T`
 
 Report:
 
@@ -899,13 +897,13 @@ self-improvement through Introspection.
 
 Do not require:
 
-\[ R_0 \< R_1 \< R_2 \< ... \< R_G \]
+`R_0 < R_1 < R_2 < ... < R_G`
 
 Self-improvement can contain unsuccessful hypotheses and regressions.
 
 The primary endpoint is:
 
-\[ R_T(H_G) \> R_T(H_0) \]
+`R_T(H_G) > R_T(H_0)`
 
 A stronger result shows a broadly upward trajectory.
 
@@ -979,8 +977,7 @@ experiment:
 
 The implementation must validate:
 
-\[ (G `\times `{=tex}B) + T
-`\leq `{=tex}N\_{`\text{available tasks}`{=tex}} \]
+`(G × B) + T ≤ N_{available tasks}`
 
 and must guarantee disjoint task assignment.
 
@@ -1039,11 +1036,8 @@ Those can be studied separately.
 
 The purpose of this experiment is narrower and cleaner:
 
-\[ `\text{fresh experience}`{=tex} `\rightarrow`{=tex}
-`\text{Introspection evidence}`{=tex} `\rightarrow`{=tex}
-`\text{Claude diagnosis}`{=tex} `\rightarrow`{=tex}
-`\text{approved harness change}`{=tex} `\rightarrow`{=tex}
-`\text{hidden generalization measurement}`{=tex} \]
+fresh experience → Introspection evidence → Claude diagnosis →
+approved harness change → hidden generalization measurement
 
 repeated across configurable generations.
 

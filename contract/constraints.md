@@ -51,7 +51,7 @@ options were:
 
 - **a region of `SYSTEM.md`** (chosen): in the commit, so runtime↔commit lineage is exact; never
   compacted, because a system prompt is not part of the conversation; identical placement to
-  stock τ, which is what keeps the score comparable to published numbers.
+  stock τ, which keeps the graded surface faithful to the benchmark's own design.
 - materialising a temp Recipe per run: works locally and nowhere else. `introspection dev` serves
   the git work-tree and a deployed runtime serves an immutable commit, so neither leaves an
   injection point — and it severs lineage.
@@ -177,22 +177,23 @@ So `pi` is the default and `LAUNCHER=introspection` stays exercised rather than 
 Each run records which launcher produced it in `run_metadata.json`, because both produce
 identically-shaped results and a score has to carry its configuration.
 
-## Corrections to the MVP document
+## Hard-won configuration corrections
 
-Found while implementing, and load-bearing:
+Found while implementing, each one load-bearing — a plausible-looking configuration that
+would have silently frozen the wrong thing:
 
-- `--max-steps-seconds` is listed as a frozen comparison variable, but it only configures
+- `--max-steps-seconds` looks like the per-episode wallclock bound, but it only configures
   audio-native runs, where it is divided by the tick duration. In text mode it has no effect. The
   real per-episode wallclock bound is `TextRunConfig.timeout`, which the lock freezes instead.
 - `--task-set-name base` conflates two flags. `base` is a task *split*; the task set defaults to
   the domain's own. The lock records both separately.
-- `enforce_communication_protocol` is missing from the frozen list and belongs on it: it decides
-  whether a mixed message ends an episode at all, so flipping it moves scores with no harness
-  change. Left at τ's default of `false`, which is what stock runs use.
+- `enforce_communication_protocol` belongs on the frozen list: it decides whether a mixed
+  message ends an episode at all, so flipping it moves scores with no harness change. Left at
+  τ's default of `false`, which is what stock runs use.
 - τ sets litellm's `num_retries` but never a request `timeout`, so a stalled provider response
-  has no bound — one user-simulator call blocked for 601 s in the first banking run. The lock now
-  freezes `frozen.user_llm_args.timeout`, which the document's frozen list has no slot for even
-  though it changes wall-clock per generation by an order of magnitude.
+  has no bound — one user-simulator call blocked for 601 s in the first banking run. The lock
+  freezes `frozen.user_llm_args.timeout`, because it changes wall-clock per generation by an
+  order of magnitude.
 - `tau2 evaluate-trajs` cannot grade `banking_knowledge` offline. It rebuilds the environment
   through `DEFAULT_RETRIEVAL_VARIANT` (`alltools`, OpenAI embeddings) rather than the run's own
   recorded `retrieval_config`, and offers no flag to override it — so the only sanctioned path to
@@ -202,23 +203,22 @@ Found while implementing, and load-bearing:
   the evaluator's environment rebuild (refusing when it disagrees with the lock) and then calls
   τ's own `evaluate_trajectories`. No reward is computed anywhere but the evaluator, which was
   otherwise grading against a different tool surface than the run used.
-- The `openai_embeddings` retrieval config the document pins is unavailable on this machine
+- The `openai_embeddings` retrieval config originally intended is unavailable on this machine
   (the OpenAI key returns `429 billing_not_active`), so bring-up used the offline `bm25`
-  fallback. **Resolved 2026-08-12 (PLAN.md M1): `bm25` is the deliberate freeze for this
-  experiment**, pinned knowingly rather than provisionally. The consequence is accepted, not
+  fallback. **Resolved 2026-08-12: `bm25` is the deliberate freeze**, pinned knowingly rather
+  than provisionally. The consequence is accepted, not
   deferred: `bm25` changes both the tool set and the policy text, so no number produced under
   this freeze is comparable with published τ-Knowledge results, and no comparability claim is
   made anywhere in this experiment's record. Cross-generation comparison is unaffected — the
   backend is constant by construction — and retrieval *usage* (query formulation, k, iteration,
   stopping) remains mutable harness territory. Re-deciding this value means a new experiment,
   never a new value under the old id.
-- The document names experiments by a single `experiment.id` in the lock. Since 2026-08-13 the
-  id is *derived*: `experiment.seq` (zero-padded to three digits) + `experiment.name`, giving
-  `001_bm25-sonnet46` and the results directory `results/experiment_001_bm25-sonnet46/`. The
-  sequence exists because a descriptive name can legitimately repeat — a second freeze of the
-  same bm25 + Sonnet 4.6 configuration is `002_bm25-sonnet46`, a different experiment — so the
-  name alone cannot be the identity. Re-deciding a freeze bumps `seq`; everything the document
-  says about "a new id" reads as "a new seq". The pre-rename directory
+- An experiment's id is *derived*, never chosen: `experiment.seq` (zero-padded to three
+  digits) + `experiment.name`, giving `001_bm25-sonnet46` and the results directory
+  `results/experiment_001_bm25-sonnet46/`. The sequence exists because a descriptive name can
+  legitimately repeat — a second freeze of the same bm25 + Sonnet 4.6 configuration is
+  `002_bm25-sonnet46`, a different experiment — so the name alone cannot be the identity.
+  Re-deciding a freeze bumps `seq`. The pre-rename directory
   `results/experiment_bm25-sonnet46/` was migrated to `results/experiment_001_bm25-sonnet46/`
   (snapshot id and fingerprint refreshed, recorded `experiment` fields rewritten); platform
   task titles from before the rename keep their old `[exp:bm25-sonnet46]` suffix — they are

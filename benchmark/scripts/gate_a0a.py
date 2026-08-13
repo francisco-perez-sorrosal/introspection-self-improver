@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record the A.0a pipe-semantics verdict (v2 §4 W4).
+"""Record the A.0a pipe-semantics verdict — the blocking per-experiment adapter gate.
 
 A.0a claims the bridge and transports preserve tool calls, arguments, results and message
 boundaries exactly. The evidence is the adapter test suite — the name transform pinned
@@ -7,7 +7,7 @@ byte-for-byte against the platform's JS implementation, the AG-UI contract pinne
 captured live event shapes, the mailbox and reset semantics — plus the mock end-to-end
 smoke. This script runs both and writes the verdict under the generation's gates/ directory,
 because a gate that only ever passed in a terminal is a gate nobody can cite. Blocking:
-a failure stops the experiment (v2 §4 W4).
+a failure stops the experiment.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -25,7 +25,7 @@ from tau_adapter.lock import BENCHMARK_DIR, REPO_ROOT
 
 
 def _repo_head() -> str:
-    return subprocess.run(  # noqa: S603, S607
+    return subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=REPO_ROOT,
         capture_output=True,
@@ -46,7 +46,7 @@ def main() -> int:
     gen_dir = Path(args.gen_dir).resolve()
 
     print("── A.0a: adapter suite")
-    suite = subprocess.run(  # noqa: S603
+    suite = subprocess.run(
         [sys.executable, "-m", "pytest", "tests", "-q"],
         cwd=BENCHMARK_DIR,
         capture_output=True,
@@ -57,7 +57,7 @@ def main() -> int:
     print(f"   {suite_summary[0]}")
 
     print("── A.0a: mock end-to-end smoke (local lane)")
-    smoke = subprocess.run(  # noqa: S603, S607
+    smoke = subprocess.run(
         ["make", "--no-print-directory", "smoke", "TRANSPORT=local", f"GEN={gen_dir.name}"],
         cwd=REPO_ROOT,
         check=False,
@@ -73,7 +73,7 @@ def main() -> int:
     verdict = {
         "gate": "A.0a",
         "passed": passed,
-        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "adapter_sha": _repo_head(),
         "suite": {"returncode": suite.returncode, "summary": suite_summary[0]},
         "smoke": {
@@ -92,7 +92,7 @@ def main() -> int:
         f"- mock smoke: rc={smoke.returncode}, "
         f"{'all episodes completed' if smoke_completed else 'DID NOT COMPLETE'}\n\n"
         "A.0a claims the bridge and transports preserve tool calls, arguments, results and\n"
-        "message boundaries exactly. Blocking: a failure stops the experiment (v2 §4 W4).\n",
+        "message boundaries exactly. Blocking: a failure stops the experiment.\n",
         encoding="utf-8",
     )
     print(f"\n── A.0a {'PASS' if passed else 'FAIL'} → {gates_dir / 'a0a.json'}")

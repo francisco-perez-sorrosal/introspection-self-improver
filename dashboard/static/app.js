@@ -12,7 +12,7 @@ const state = {
   openRounds: new Set(),
 };
 
-const SPLIT_ORDER = ["discovery", "validation", "checkpoint"];
+const CAT_COLOR_COUNT = 4; // --cat-0 … --cat-3 in style.css, cycled by split index
 const SEQ_RAMP = [
   "#cde2fb", "#b7d3f6", "#9ec5f4", "#86b6ef", "#6da7ec", "#5598e7", "#3987e5",
   "#2a78d6", "#256abf", "#1c5cab", "#184f95", "#104281", "#0d366b",
@@ -31,7 +31,8 @@ function el(tag, className, text) {
 
 const isDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
 const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-const seriesColor = (split) => cssVar(`--s-${split}`) || cssVar("--s-other");
+const splitLabel = (split) => split ?? "ad-hoc";
+const splitColor = (index) => cssVar(`--cat-${index % CAT_COLOR_COUNT}`);
 
 function rampColor(fraction) {
   const ramp = isDark() ? [...SEQ_RAMP].reverse() : SEQ_RAMP;
@@ -46,17 +47,11 @@ const secs = (v) => (v == null ? "—" : v >= 90 ? `${(v / 60).toFixed(1)}m` : `
 const short = (sha) => (sha ? String(sha).slice(0, 7) : "—");
 const genShort = (name) => name.replace(/^generation_/, "g");
 
-function comb(n, k) {
-  if (k < 0 || k > n) return 0;
-  k = Math.min(k, n - k);
-  let result = 1;
-  for (let i = 1; i <= k; i++) result = (result * (n - k + i)) / i;
-  return result;
-}
-
-function passHatK(taskStats, k) {
-  const values = taskStats.filter(([, n]) => n >= k).map(([c, n]) => comb(c, k) / comb(n, k));
-  return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+function pass1(taskStats) {
+  const proportions = taskStats.filter(([, n]) => n > 0).map(([c, n]) => c / n);
+  return proportions.length
+    ? proportions.reduce((a, b) => a + b, 0) / proportions.length
+    : null;
 }
 
 function pass1Interval(taskStats) {
@@ -71,10 +66,19 @@ function pass1Interval(taskStats) {
 
 /* ------------------------------------------------------------ data shaping */
 
+function splitValues(exp) {
+  /* Distinct recorded split values, deterministically ordered: alphabetical, the
+     ad-hoc (null) bucket last. No taxonomy is hard-coded — the data decides. */
+  const values = new Set();
+  for (const gen of exp?.generations || []) for (const round of gen.rounds) values.add(round.split ?? null);
+  const named = [...values].filter((v) => v != null).sort();
+  return values.has(null) ? [...named, null] : named;
+}
+
 function matchesFilters(round) {
   const f = state.filters;
   if (f.split !== "all") {
-    if (f.split === "other" ? round.split != null : round.split !== f.split) return false;
+    if (f.split === "ad-hoc" ? round.split != null : round.split !== f.split) return false;
   }
   if (f.arm !== "all" && round.arm !== f.arm) return false;
   if (f.transport !== "all" && round.transport !== f.transport) return false;
@@ -121,14 +125,11 @@ function mergeRounds(rounds) {
     }
   }
   const stats = Object.values(tasks).map(({ c, n }) => [c, n]);
-  const minTrials = stats.length ? Math.min(...stats.map(([, n]) => n)) : 0;
   return {
     tasks,
     taskStats: stats,
-    pass1: passHatK(stats, 1),
+    pass1: pass1(stats),
     interval: pass1Interval(stats),
-    kMax: minTrials,
-    passK: minTrials >= 2 ? passHatK(stats, minTrials) : null,
     avgCost: agg.costCount ? agg.cost / agg.costCount : null,
     totalCost: agg.costCount ? agg.cost : null,
     avgMessages: agg.simCount ? agg.messages / agg.simCount : null,
@@ -236,7 +237,8 @@ function renderFreeze() {
 }
 
 function primarySplit(exp) {
-  for (const split of SPLIT_ORDER) {
+  for (const split of splitValues(exp)) {
+    if (split == null) continue;
     if (exp.generations.some((g) => roundsOf(g).some((r) => r.split === split))) return split;
   }
   return null;
@@ -273,14 +275,6 @@ function renderStats() {
   delta.appendChild(value);
   row.appendChild(delta);
 
-  const passK = el("div", "stat");
-  passK.append(
-    el("div", "s-label", latest?.kMax >= 2 ? `pass^${latest.kMax} (latest)` : "pass^k"),
-    el("div", "s-value", latest?.kMax >= 2 ? pct(latest.passK) : "n/a"),
-    el("div", "s-sub", latest?.kMax >= 2 ? "reliability, not luck" : "needs num_trials ≥ 2")
-  );
-  row.appendChild(passK);
-
   const episodes = el("div", "stat");
   episodes.append(
     el("div", "s-label", "episodes (filtered)"),
@@ -311,11 +305,10 @@ function renderStats() {
 function curveSeries(exp) {
   const gens = exp.generations;
   const series = [];
-  for (const split of SPLIT_ORDER) {
-    if (state.filters.split !== "all") {
-      if (state.filters.split === "other" || state.filters.split !== split) continue;
-    }
-    const color = seriesColor(split);
+  splitValues(exp).forEach((split, index) => {
+    if (split == null) return; // ad-hoc rounds have no cross-generation identity
+    if (state.filters.split !== "all" && state.filters.split !== split) return;
+    const color = splitColor(index);
     const line = gens.map((g) => {
       const agg = mergeRounds(splitSeriesRounds(g, split, ["baseline", null]));
       if (agg.pass1 == null) return null;
@@ -323,16 +316,6 @@ function curveSeries(exp) {
     });
     if (line.some(Boolean)) {
       series.push({ key: split, label: `${split} pass¹`, color, points: line });
-      const kMax = Math.max(
-        ...gens.map((g) => mergeRounds(splitSeriesRounds(g, split, ["baseline", null])).kMax || 0)
-      );
-      if (kMax >= 2) {
-        const kLine = gens.map((g) => {
-          const agg = mergeRounds(splitSeriesRounds(g, split, ["baseline", null]));
-          return agg.passK == null ? null : { v: agg.passK };
-        });
-        series.push({ key: `${split}-k`, label: `${split} pass^k`, color, dash: true, points: kLine });
-      }
     }
     const candidate = gens.map((g) => {
       const agg = mergeRounds(splitSeriesRounds(g, split, ["candidate"]));
@@ -341,7 +324,7 @@ function curveSeries(exp) {
     if (candidate.some(Boolean)) {
       series.push({ key: `${split}-cand`, label: `${split} candidate`, color, hollow: true, noLine: true, points: candidate });
     }
-  }
+  });
   return series;
 }
 
@@ -362,11 +345,11 @@ function renderLegend(series) {
 function renderCurveTable(container, exp) {
   const table = el("table", "data");
   const head = el("tr");
-  for (const h of ["generation", "split", "arm", "pass¹", "≈95% CI", "pass^k", "k", "tasks", "episodes", "avg cost"])
+  for (const h of ["generation", "split", "arm", "pass¹", "≈95% CI", "tasks", "episodes", "avg cost"])
     head.appendChild(el("th", null, h));
   table.appendChild(head);
   for (const gen of exp.generations) {
-    for (const split of [...SPLIT_ORDER, null]) {
+    for (const split of splitValues(exp)) {
       for (const arms of [["baseline", null], ["candidate"]]) {
         const rounds = split === null
           ? roundsOf(gen).filter((r) => r.split == null && arms.includes(r.arm))
@@ -377,12 +360,10 @@ function renderCurveTable(container, exp) {
         const tr = el("tr");
         tr.append(
           el("td", "mono", gen.name),
-          el("td", null, split ?? "other"),
+          el("td", null, splitLabel(split)),
           el("td", null, arms.includes("candidate") ? "candidate" : "baseline"),
           el("td", null, pct(agg.pass1)),
           el("td", null, agg.interval ? `${pct(agg.interval[0])}–${pct(agg.interval[1])}` : "—"),
-          el("td", null, agg.kMax >= 2 ? pct(agg.passK) : "—"),
-          el("td", null, agg.kMax >= 2 ? String(agg.kMax) : "—"),
           el("td", null, String(agg.taskStats.length)),
           el("td", null, String(agg.graded)),
           el("td", null, usd(agg.avgCost))
@@ -396,7 +377,7 @@ function renderCurveTable(container, exp) {
 
 function renderRoundBars(container, exp) {
   const list = el("div", "bar-list");
-  const color = seriesColor("discovery");
+  const color = splitColor(0);
   for (const gen of exp.generations) {
     for (const round of roundsOf(gen)) {
       if (round.pass1 == null) continue;
@@ -442,8 +423,8 @@ function renderCurve() {
     renderLegend([]);
     renderRoundBars(body, exp);
     note.textContent =
-      "No split-convention rounds (discovery/validation) yet — showing per-round pass¹ instead. " +
-      "The generation curve appears once rounds follow <split>_<arm> naming.";
+      "No split-labeled rounds yet — showing per-round pass¹ instead. " +
+      "The generation curve appears once run_metadata.json records a split.";
     return;
   }
   renderLegend(series);
@@ -473,7 +454,7 @@ function renderEfficiency() {
     ["avg KB_search calls", perGen.map((a) => a.avgKb), (v) => (v == null ? "—" : v.toFixed(1))],
     ["avg duration", perGen.map((a) => a.avgDuration), secs],
   ];
-  const color = seriesColor("discovery");
+  const color = splitColor(0);
   for (const [label, values, fmt] of specs) {
     const spark = el("div", "spark");
     const last = [...values].reverse().find((v) => v != null);
@@ -539,13 +520,11 @@ function heatmapData(exp) {
   const rows = tasks.map((task) => {
     const cells = perGen.map((t) => t[task] || null);
     const fracs = cells.filter(Boolean).map(({ c, n }) => c / n);
-    const volatility = fracs.reduce((a, p) => a + p * (1 - p), 0);
     const trend = fracs.length >= 2 ? fracs[fracs.length - 1] - fracs[0] : 0;
-    return { task, cells, volatility, trend };
+    return { task, cells, trend };
   });
   const sorters = {
     id: (a, b) => a.task.localeCompare(b.task),
-    volatility: (a, b) => b.volatility - a.volatility || a.task.localeCompare(b.task),
     trend: (a, b) => b.trend - a.trend || a.task.localeCompare(b.task),
   };
   rows.sort(sorters[state.heatSort] || sorters.id);
@@ -646,7 +625,7 @@ function renderLearningRecord(gen) {
       el(
         "div",
         "lr-empty",
-        "No learning record for this generation yet — it arrives with the first improvement cycle (v2 §5.6)."
+        "No improvement record for this generation yet — it arrives with the first improvement cycle."
       )
     );
   } else {
@@ -753,22 +732,21 @@ function renderDetail() {
   }
   const table = el("table", "data");
   const head = el("tr");
-  for (const h of ["round", "flags", "transport", "arm", "episodes", "pass¹", "pass^k", "avg cost", "wall", "recipe sha"])
+  for (const h of ["round", "flags", "transport", "split", "arm", "episodes", "pass¹", "avg cost", "wall", "recipe sha"])
     head.appendChild(el("th", null, h));
   table.appendChild(head);
   for (const round of rounds) {
     const tr = el("tr", `round-row${round.mode !== "locked" ? " diagnostic" : ""}`);
     const flags = el("td");
     for (const b of roundBadges(round)) flags.appendChild(b);
-    const kEntries = Object.entries(round.pass_curve || {}).filter(([k]) => Number(k) >= 2);
     tr.append(
       el("td", "mono", round.name),
       flags,
       el("td", null, round.transport || "—"),
+      el("td", null, splitLabel(round.split)),
       el("td", null, round.arm || "—"),
       el("td", null, `${round.graded}/${round.episodes}`),
       el("td", null, pct(round.pass1)),
-      el("td", null, kEntries.length ? `${pct(kEntries.at(-1)[1])} (k=${kEntries.at(-1)[0]})` : "—"),
       el("td", null, usd(round.avg_cost)),
       el("td", null, secs(round.elapsed_seconds)),
       el("td", "mono", round.shas?.map(short).join(", ") || "—")
@@ -782,7 +760,7 @@ function renderDetail() {
     if (state.openRounds.has(round.path)) {
       const holder = el("tr", "episodes-holder");
       const cell = el("td");
-      cell.colSpan = 11;
+      cell.colSpan = 10;
       cell.appendChild(episodeTable(round));
       holder.appendChild(cell);
       table.appendChild(holder);
@@ -886,6 +864,20 @@ function selectGeneration(name) {
   $("#detail-card").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
+function renderSplitFilter() {
+  /* Options come from the loaded experiment's data, never a hard-coded taxonomy. */
+  const select = $("#split-filter");
+  const values = ["all", ...splitValues(state.current).map(splitLabel)];
+  if (!values.includes(state.filters.split)) state.filters.split = "all";
+  select.replaceChildren();
+  for (const value of values) {
+    const option = el("option", null, value);
+    option.value = value;
+    select.appendChild(option);
+  }
+  select.value = state.filters.split;
+}
+
 function renderAll() {
   renderBanner();
   renderFreeze();
@@ -905,6 +897,7 @@ async function loadExperiment(dirname) {
     state.current = await response.json();
     state.selectedGen = state.current.generations?.at(-1)?.name || null;
     state.openRounds = new Set();
+    renderSplitFilter();
     renderAll();
   } finally {
     main.style.opacity = "1";

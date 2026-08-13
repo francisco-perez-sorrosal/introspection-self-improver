@@ -20,7 +20,7 @@ import hashlib
 import json
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -153,19 +153,19 @@ def pushed_main_sha(repo_root: Path = REPO_ROOT) -> str | None:
     The platform mints immutable runtime versions from pushed main (`recipe_ref: main`), so
     on the dev lane this is the commit `recipe_git_commit_sha` will name — while the dev
     overlay serves the work-tree's bytes. A HEAD ahead of origin/main therefore runs the
-    right code but records the wrong arm: the lineage softness v2 §2.5 documents, caught
-    here at pre-flight instead of after the money is spent.
+    right code but records the wrong arm — lineage softness, caught here at pre-flight
+    instead of after the money is spent.
     """
     try:
-        subprocess.run(  # noqa: S603, S607 - best effort; a failed fetch just means stale info
-            ["git", "fetch", "--quiet", "origin", "main"],
+        subprocess.run(
+            ["git", "fetch", "--quiet", "origin", "main"],  # noqa: S607 - operator's git
             cwd=repo_root,
             capture_output=True,
             timeout=30,
             check=False,
         )
-        proc = subprocess.run(  # noqa: S603, S607
-            ["git", "rev-parse", "origin/main"],
+        proc = subprocess.run(
+            ["git", "rev-parse", "origin/main"],  # noqa: S607 - operator's git
             cwd=repo_root,
             capture_output=True,
             text=True,
@@ -190,19 +190,19 @@ def repo_arm_state(repo_root: Path = REPO_ROOT) -> tuple[str, list[str]]:
     """The arm this run would serve: HEAD's sha, plus any dirt on the served recipe surface.
 
     `introspection dev` serves the git work-tree while `recipe_git_commit_sha` names the
-    base commit, so uncommitted recipe edits make every lineage claim soft (v2 §2.5). The
-    check is scoped to what is actually served — results/ filling up is not dirt.
+    base commit, so uncommitted recipe edits make every lineage claim soft. The check is
+    scoped to what is actually served — results/ filling up is not dirt.
     """
-    head = subprocess.run(  # noqa: S603, S607 - operator's git, on the repo being run
-        ["git", "rev-parse", "HEAD"],
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],  # noqa: S607 - operator's git, on the repo being run
         cwd=repo_root,
         capture_output=True,
         text=True,
         timeout=30,
         check=True,
     ).stdout.strip()
-    porcelain = subprocess.run(  # noqa: S603, S607
-        ["git", "status", "--porcelain", "--", *SERVED_RECIPE_PATHS],
+    porcelain = subprocess.run(  # noqa: S603
+        ["git", "status", "--porcelain", "--", *SERVED_RECIPE_PATHS],  # noqa: S607
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -223,7 +223,7 @@ def _write_snapshot(path: Path, lock: Lock, fingerprint: str) -> None:
     body = yaml.safe_dump(
         {
             "id": lock.experiment_id,
-            "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "created": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "fingerprint": fingerprint,
             "summary": {
                 "domain": lock.domain,

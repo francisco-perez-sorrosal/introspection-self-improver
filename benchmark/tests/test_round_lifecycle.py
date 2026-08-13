@@ -55,7 +55,14 @@ def test_generation_of_reads_the_path_component(tmp_path):
 
 
 def _git(repo, *args):
-    subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True, timeout=30)
+    subprocess.run(  # noqa: S603
+        ["git", *args],  # noqa: S607
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
 
 
 def test_repo_arm_state_reports_head_and_served_surface_dirt_only(tmp_path):

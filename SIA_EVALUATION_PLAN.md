@@ -1,7 +1,7 @@
 # SIA_EVALUATION_PLAN — Implementing the Generation-Based Evaluation Protocol
 
-**Status:** living tracker. Supersedes `PLAN.md` (2026-08-13), which is retained as
-history and must not be followed. Where this file and the code disagree, the code wins
+**Status:** living tracker. Supersedes `PLAN.md` (2026-08-13; removed from the tree at
+Phase 0.5 — git history keeps it). Where this file and the code disagree, the code wins
 and this file gets fixed.\
 **Specification:** `self_improving_agent_evaluation_protocol.md` — the evaluation
 protocol this plan implements. The v2 MVP guide's M3/M4 milestones and the pass^k /
@@ -100,7 +100,7 @@ the rest are recorded here as the working defaults.
 
 ## 4. Repo delta
 
-### Remove (retire; git history keeps everything)
+### Remove (retire; git history keeps everything) — executed at Phase 0.5, ahead of schedule
 
 - `checkpoint` target + `--checkpoint` path (`Makefile:145–148`, `run.py:326–335,436`) — replaced by `heldout`.
 - `discovery` / `validation` targets (`Makefile:132–140`) — replaced by `batch`.
@@ -162,6 +162,45 @@ checks ≈ $3).
 
 **Validate:** docs read true against the code; `make check` green; full benchmark
 suite green — 118 passed, untouched (2026-08-13). ✅
+
+### Phase 0.5 — Spring cleaning (user-directed 2026-08-13, pulls the Remove list forward)
+
+Scope change ratified by the user: purge superseded machinery, concepts, and documents
+now rather than phase-by-phase, so Phases 1+ build on a codebase that speaks only the
+current design.
+
+- [x] Retired machinery removed: `checkpoint`/`discovery`/`validation` targets and their
+      runner paths (`--split`, `--checkpoint`, `RUNNABLE_SPLITS`), ARM/paired-arm naming,
+      `anchor_stock` + `run_stock_anchor.py`, `fidelity_gate` + `--gate`/`--verdict-out`
+      + `fidelity_task_set`, the manifest/`run_metadata` `checkpoint` field (2026-08-13).
+- [x] Fidelity narrowed further than D4 (user-directed): the cross-lane *statistical*
+      layer (Wilson intervals, `within_noise`, aggregate-agreement judgment) removed;
+      `benchmark/fidelity/` survives as the per-episode adapter-invariant diagnostic
+      plus factual counts — the seam guard, not a comparability instrument (2026-08-13).
+- [x] Dashboard trimmed: pass^k plumbing removed (pass¹ + interval stay), split grouping
+      made data-driven (no hardcoded taxonomy), verified live against the archived
+      experiment-001 data (2026-08-13).
+- [x] Superseded documents deleted: `PLAN.md`, both MVP guides; every dangling `v1 §`/
+      `v2 §`/`PLAN.md` citation in code comments, the lock, `CLAUDE.md`, and
+      `contract/constraints.md` rewritten as self-contained statements; constraints'
+      corrections section reframed standalone; the protocol spec's pandoc artifacts
+      cleaned (16 sites, wording untouched) (2026-08-13).
+- [x] Lint debt cleared: 32 pre-existing ruff violations → 0 (misplaced noqas, import
+      order, `datetime.UTC`, `contextlib.suppress`, `zip(strict=True)`, script exec
+      bits); formatter clean (2026-08-13).
+- [x] Contract reviewed at user request: both files necessary — `constraints.md` is the
+      enforced permission envelope, `protocol.md` the procedure's durable home (written
+      at Phase 4); both now clean of superseded references (2026-08-13).
+
+Deliberately untouched: lock *values* and the split manifest (frozen for closed
+experiment 001 — the freeze fingerprint was asserted byte-identical after comment edits);
+`split.py`/`propose_split.py` partition semantics (Phase 1's rewrite surface, marked as
+such in the module docstring); runner batch/held-out modes (Phase 2); seam internals
+(bridge/transports — proven, no churn).
+
+**Validate:** full suite green post-trim; `make check` green; ruff + format clean;
+freeze fingerprint unchanged; dashboard serves archived data with zero pass^k residue;
+stale-term grep sweep clean. ✅ (2026-08-13)
 
 ### Phase 1 — Partition & configuration machinery (no live runs)
 
