@@ -1,6 +1,7 @@
 {
   "mode": "diagnostic",
   "domain": "mock",
+  "transport": "local",
   "launcher": "pi",
   "launch_argv": [
     "pi",
@@ -13,10 +14,19 @@
     "--session-dir",
     "/Users/fperez/dev/introspection-self-improver/results/generation_000/mock_smoke/pi_sessions"
   ],
+  "episodes": [
+    {
+      "task_id": "create_task_1",
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true
+    }
+  ],
+  "platform": null,
   "recipe_dir": "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
   "toolchain": {
     "introspection": "introspection 0.26.0",
     "pi": "0.84.1"
   },
-  "elapsed_seconds": 12.3
+  "elapsed_seconds": 11.4
 }

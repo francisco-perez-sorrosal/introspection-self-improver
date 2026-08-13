@@ -14,6 +14,7 @@ test split. See `contract/protocol.md` for what has to land before a number coun
 | `mock_smoke/` | `mock` | diagnostic | reward 1.0, DB match 1/1, normal stop (`user_stop`), 8 messages, 12 s, $0.0052 |
 | `task_001/` | `banking_knowledge` (`bm25`) | locked | **reward 0.0**, DB match 0/1, normal stop (`user_stop`), 20 messages, 43 s, $0.1607 |
 | `task_001_trials/trial_6…10/` | `banking_knowledge` (`bm25`) | locked | five trials of one task under one config: 1 × 1.0, 4 × 0.0 |
+| `task_001_platform/` | `banking_knowledge` (`bm25`) | locked, **platform lane** | reward 1.0, pass^1 1.000, DB match 1/1, normal stop, 24 messages, 9 tool calls, $0.2383 |
 | `task_001_sonnet5/` | `banking_knowledge` (`bm25`) | superseded config | reward 1.0, DB match 1/1, normal stop, 18 messages, $0.1283 |
 
 `mock_smoke/` and `task_001/` are whatever the most recent `make smoke` / `make single_task`
@@ -27,6 +28,48 @@ selecting on the outcome, which is the one thing this repository cannot afford t
 The failure is also the more informative artefact — see below.
 
 Graded by τ's own `evaluate_trajectories`, through `make grade`.
+
+## The first episode graded on the Introspection platform
+
+`task_001_platform/` is the same locked task with the agent running in a cloud sandbox instead of
+a local subprocess, reached back to the τ environment on this machine through
+`introspection dev --mcp`. It is the first result in this repository that leaves platform
+evidence, and the evidence is what makes it interesting rather than the reward:
+
+| | value |
+|---|---|
+| conversation / task id | `019ff8fb-73f5-7464-ab27-d0f3f2770992` |
+| lineage | `recipe_git_commit_sha` = `656126029a8b…`, this repository's HEAD |
+| cost / usage | $0.2383 · 8 LLM calls · 9 tool uses · 35 spans |
+| health | `has_errors: false`, `failed_tool_use_count: 0` |
+| completeness | `evidence_complete: true`, 44 items |
+
+Read it back with `introspection conversations export <id> --format trajectory`, which returns the
+messages including the `<instructions>` and frozen `<policy>` the agent was actually given.
+
+**This is not a comparison with the local lane.** One episode per lane cannot be, and per-task
+reward is a draw regardless (see below). The divergences that bound any future comparison are
+listed in `contract/constraints.md`.
+
+### Two bugs this run found, both of which a green reward had hidden
+
+Worth recording because both produced *correct-looking* results:
+
+1. **A turn is not over when τ thinks it is.** τ hands the floor to its user simulator as soon as
+   it holds an assistant message, but the platform run was often still streaming. Prompting then
+   returns `409 Task is already processing`; τ books that as an infrastructure error and retries
+   the whole episode. It presented as an episode "stuck on turn 2" — a `tools/call` parked 30s, the
+   sandbox's MCP daemon gave up, the agent carried on, **and τ still graded the episode 1.0** on
+   the answers that had already landed. Fixed by gating the next prompt on `RUN_FINISHED`, the
+   platform's equivalent of Pi's `agent_settled`. Retries went from 1–3 per run to 0.
+2. **A finished task is not a finished conversation.** The task stays `idle` on a warm sandbox
+   until an inactivity timeout, so the conversation reads pending long after the reward exists, and
+   a sweep would strand one warm sandbox per episode against the org concurrency limit. The
+   transport now deletes the task, which was verified to preserve the conversation: the task 404s
+   afterwards, the conversation still returns its spans, cost and usage.
+
+The second bug is the reason `evidence_complete` is recorded at all. "The episode finished" was an
+inference from the reward; now it is a field that the export itself supplies.
 
 ## One task, one frozen configuration, ten different answers
 

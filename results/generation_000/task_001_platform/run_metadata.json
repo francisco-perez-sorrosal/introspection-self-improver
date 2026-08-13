@@ -1,0 +1,61 @@
+{
+  "mode": "locked",
+  "domain": "banking_knowledge",
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "019ff8b1-34cc-70c2-a66c-d3c311c29c36"
+  ],
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true
+    }
+  ],
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "019ff8b1-34cc-70c2-a66c-d3c311c29c36",
+    "environment": "development",
+    "dev_target": "fperez",
+    "task_ids": [
+      "019ff921-a22d-77a7-a36a-5115475d0f08"
+    ],
+    "accounting": {
+      "019ff921-a22d-77a7-a36a-5115475d0f08": {
+        "cost": {
+          "usd": 0.35760630000000004
+        },
+        "usage": {
+          "input_tokens": 530285,
+          "output_tokens": 2273,
+          "total_tokens": 532558
+        },
+        "metrics": {
+          "duration_ms": 64461.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 11,
+          "span_count": 49,
+          "tool_use_count": 12,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "656126029a8bd91c88de6355094f13ce927fad1a",
+        "evidence_complete": true,
+        "item_count": 61
+      }
+    }
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.26.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 82.5
+}

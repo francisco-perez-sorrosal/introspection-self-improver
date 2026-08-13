@@ -1,6 +1,7 @@
 {
   "mode": "locked",
   "domain": "banking_knowledge",
+  "transport": "local",
   "launcher": "pi",
   "launch_argv": [
     "pi",
@@ -13,10 +14,11 @@
     "--session-dir",
     "/Users/fperez/dev/introspection-self-improver/results/generation_000/task_001/pi_sessions"
   ],
+  "platform": null,
   "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
   "toolchain": {
     "introspection": "introspection 0.26.0",
     "pi": "0.84.1"
   },
-  "elapsed_seconds": 42.6
+  "elapsed_seconds": 49.1
 }
