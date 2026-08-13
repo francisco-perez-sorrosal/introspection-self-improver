@@ -97,7 +97,44 @@ adapter-fidelity gate will eventually measure.
    starts empty. A stock agent's message list contains it.
 3. **The agent's model is set by the Recipe, not `--agent-llm`.** τ requires the flag, so the
    lock records it as declared-and-unused and keeps it equal to the real value.
-4. **The agent is not reproducible from τ's `--seed`.** The seed reaches τ's own sampling; Pi owns
+4. **Platform-lane divergences** (`TRANSPORT=platform` only, so they bound cross-lane comparison
+   rather than cross-generation comparison):
+   - **Narration and tool calls arrive as separate messages.** Pi emits one message that can carry
+     both — the protocol violation the adapter forwards unaltered — while the platform streams them
+     as distinct AG-UI event groups. So this lane produces two compliant messages where the local
+     lane produces one non-compliant one, and `enforce_communication_protocol` has nothing to act
+     on. The adapter does not merge them: inventing a message shape the host never produced is the
+     one thing it must not do. One latent consequence is recorded rather than fixed, because
+     fixing it means revisiting that stance: if narration precedes a tool call *inside one run*,
+     τ takes the text branch and hands the floor to its user simulator while the call turn is
+     still queued and the sandbox is parked on the bridge — the sandbox abandons the call at its
+     ~30 s budget, and the queued stale turn then desynchronises every later exchange in the
+     episode. Not yet observed in a graded run (the locked recipe is told not to mix narration
+     with calls); if a platform episode presents as a mid-turn wedge with this shape, attribute
+     it to the split, not to the rendezvous. The candidate remedy — reassembling text and calls
+     that Pi emitted as one message, using τ's tool-result boundary — reconstructs Pi's real
+     message shape rather than inventing one, but it changes the graded surface and is a human
+     decision, not an adapter patch.
+   - **Reasoning is streamed and dropped.** `REASONING_*` events are discarded for the same reason
+     the local lane drops Pi's `thinking` blocks: τ's `AssistantMessage` has nowhere to put them.
+   - **Per-message cost and usage are absent**, because AG-UI events carry none. τ's own cost
+     metric comes out `nan`; the real numbers live on the conversation record and are copied into
+     `run_metadata.json`'s `platform.accounting`.
+   - **The system prompt differs by one line.** Pi appends `Current working directory: /workspace`
+     after `</policy>` in the sandbox, against the recipe path locally. Outside the frozen region,
+     so the hash gate is unaffected.
+   - **The intermittent rendezvous failure is diagnosed and fixed.** A `tools/call` could park
+     15–30 s and be abandoned by the sandbox's MCP daemon, while the episode still graded 1.0 on
+     the answers that had already succeeded. The cause was never the rendezvous: each
+     `introspection` CLI invocation pays ~5.5 s of startup, and the transport paid the prompt's
+     and the stream's serially before τ could see a call — burning a third of the daemon's ~30 s
+     per-request budget per turn. The stream attach now overlaps the prompt (run-id filtering
+     plus a single reattach make the early attach safe), and a clean episode answers every call
+     in ~250–350 ms with zero span errors. `STALL_WARN_SECONDS` stays, so any recurrence names
+     itself. Until the fidelity gate covers this lane, a platform score is still not a substitute
+     for a local one.
+
+5. **The agent is not reproducible from τ's `--seed`.** The seed reaches τ's own sampling; Pi owns
    the agent's, and τ's `llm_args_agent` never reach it. This is not a divergence the fidelity gate
    can close, and it is not constant across episodes — it is the reason per-task reward has to be
    treated as a draw and `num_trials` raised before any comparison. Six runs of one task under one

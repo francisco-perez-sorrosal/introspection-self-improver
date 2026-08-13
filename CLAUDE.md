@@ -28,11 +28,28 @@ Loop: run τ tasks → collect Introspection evidence → `operate` (discover si
   `banking_knowledge` task and one `mock` task complete end to end and are graded by
   `tau2 evaluate-trajs`. `README.md` has the mechanism; `contract/constraints.md` has the
   reasoning and the known divergences.
-- **The development lane is designed but not built.** Nothing local contacts the cloud, so the
-  local transport produces **no** conversations, traces, or observations. Evidence needs
-  `introspection dev --mcp tau=<local url>`, which bridges the shim to a cloud sandbox — no
-  public tunnel required — plus `tasks create/prompt/stream`. `transport.py` exists so this is a
-  second implementation, not a rewrite. Until it lands, `operate` has nothing to read.
+- **The development lane is built and graded.** `make single_task TRANSPORT=platform` runs the
+  episode as a task on the `target-agent` Runtime: reward 1.0, 8 τ tool calls through the bridge,
+  and a conversation carrying cost, usage, span metrics and `recipe_git_commit_sha`. The runner
+  starts `introspection dev` itself, so `operate` now has evidence to read. Read
+  `benchmark/tau_adapter/dev_lane.py` before touching it — three of its constraints were found by
+  experiment and are invisible in the docs (`--mcp` carries no credentials; a *connected* `tau`
+  binding overrides `--mcp` and breaks every episode; an empty task races its own sandbox).
+- **A turn ends when the platform run ends, not when τ has a message.** Prompting a task whose run
+  is still streaming returns `409 Task is already processing`, which τ books as an infrastructure
+  error and retries the episode over — it presented as "stuck on turn 2", and τ still graded one
+  such episode **1.0** on the answers that had already landed. `PlatformTransport` gates on
+  `RUN_FINISHED`; the bridge warns after 25s (`STALL_WARN_SECONDS`) because the sandbox's MCP
+  daemon abandons a call long before the bridge's 300s ceiling, and that gap is otherwise silent.
+  A green reward that hides a broken rendezvous is the failure this repo exists to prevent.
+- **Cross-lane comparison is still unproven.** One clean graded episode per lane is not the §15
+  A.0 fidelity gate. The known divergences are listed in `contract/constraints.md`; the one that
+  could actually bias a score — an unpaired rendezvous — is now loud rather than silent, but not
+  yet ruled out.
+- **The lanes are not equally capable.** The platform lane is locked-domain only: `dev` serves the
+  Recipe from the git work-tree, and diagnostic mode materialises a modified Recipe elsewhere, so
+  `make smoke` and the fidelity gate stay local. The runner refuses the combination rather than
+  running something misleading.
 - **Locally the recipe is launched by `pi` directly, and that is a measured choice, not a
   shortcut.** `introspection local -- --mode rpc` was verified to work and to be behaviourally
   identical (`get_state` agrees on model, provider, base URL, thinking level), but costs +5.5s
@@ -141,6 +158,11 @@ benchmark/      tau_adapter/ (the seam) · scripts/ · tests/ · split_manifest.
 contract/       protocol.md · constraints.md
 results/        generation_000/ ...
 ```
+
+Inside `benchmark/tau_adapter/`, the seam is split by what each piece owns: `tool_bridge.py` (the
+MCP server and the rendezvous), `transport.py` (the host-agnostic protocol), `transport_local.py`
+and `transport_platform.py` (the two hosts), `dev_lane.py` (the `introspection dev` attachment and
+its platform preconditions), `pi_agent.py` (τ's agent interface), `lock.py`, `run.py`.
 
 §23 also lists `benchmark/fidelity/` and `contract/learning_record.schema.yaml`. Neither exists
 yet: the fidelity gate has not been built and no learning record has been written, so creating

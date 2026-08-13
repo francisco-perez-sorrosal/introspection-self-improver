@@ -21,7 +21,11 @@ make check       # recipe validity + every frozen surface
 make smoke       # one mock-domain task end to end, then grade it
 make single_task # one locked-domain task, then grade it  (TASK=task_001 by default)
 make bench       # the WHOLE locked split (97 tasks, serial) — long and costly
+
+make single_task TRANSPORT=platform   # same task, agent on an Introspection dev runtime
 ```
+
+`TRANSPORT` selects where the agent runs and defaults to `local`; see *Two transports* below.
 
 `make smoke` is the cheap seam gate and takes about 15 seconds. Its results are **not
 reportable** — see *Two run modes* below.
@@ -80,18 +84,91 @@ bring-up and, later, for the adapter-fidelity gate on `mock`.
 
 The rendezvous is driven by the bridge, not by the transport, so the same seam runs either way.
 
-| | local (Pi RPC) | development lane |
+| | `TRANSPORT=local` (default) | `TRANSPORT=platform` |
 |---|---|---|
-| Agent host | subprocess on this machine | cloud sandbox on a dev runtime |
+| Agent host | Pi subprocess on this machine | cloud sandbox on a dev runtime |
 | τ environment | in-process, loopback bridge | in-process, bridged by `introspection dev --mcp` |
-| Introspection evidence | **none** | task, conversation, traces, tool calls |
-| Prerequisites | none | login, GitHub repo, App grant, one runtime |
+| Introspection evidence | **none** | conversation, traces, spans, cost, commit lineage |
+| Episode cost / wall clock | ~$0.17, ~45 s | ~$0.26, ~75 s (+~20 s one-off `dev` attach) |
+| Prerequisites | none | login, pushed repo, App grant, Runtime, dev API-key agent |
 
-Only the local transport is implemented. Nothing local contacts the cloud, so no task and
-therefore no conversation exists — Pi's session file under
-`results/<gen>/<run>/pi_sessions/` is the only record. The development lane needs no public
-tunnel: `introspection dev` routes a declared MCP server to a local process with
-`--mcp NAME=URL`, so the τ environment can stay on this machine.
+Both are implemented. `local` contacts nothing, so no task and therefore no conversation exists
+— Pi's session file under `results/<gen>/<run>/pi_sessions/` is the only record. `platform` makes
+every episode a real task, so the exchange is readable afterwards:
+
+```bash
+make single_task TRANSPORT=platform          # writes results/<gen>/<task>_platform/
+introspection conversations export <task-id> --format trajectory
+```
+
+The task id is also the conversation id, and `run_metadata.json` records it alongside the cost,
+usage, span metrics and `recipe_git_commit_sha` that the platform holds. No public tunnel is
+needed: `introspection dev` routes the Recipe's declared `tau` server to a local URL with
+`--mcp NAME=URL`, so the τ environment never leaves this machine.
+
+**The rendezvous is unchanged between the lanes**, because it is driven by the MCP bridge rather
+than the transport. One detail differs and is worth knowing: on the platform the AG-UI event
+reaches τ *before* the sandbox's MCP request crosses the tunnel, so the result is posted before
+the handler asks for it. The mailbox is keyed by name and arguments rather than by arrival order,
+which is why that works.
+
+Five things about the development lane were established by experiment, not from documentation.
+Each is enforced in code, because each one fails in a way that points nowhere near its cause:
+
+- `--mcp tau=<url>` conveys the transport and **no credentials**. That is why the bridge puts its
+  token in the URL path instead of an `Authorization` header — one mechanism for both lanes.
+- A **connected** `tau` MCP binding *overrides* `--mcp` with the binding's own URL. Binding URLs
+  must be `https` or `host.docker.internal`, neither of which reaches this machine from a cloud
+  sandbox, so a connected binding turns every episode into a 5-second catalog-discovery timeout.
+  The runner refuses to start while one is connected, and prints the disconnect command.
+- A task created empty and prompted afterwards races its own sandbox, so the task is created
+  *with* τ's first user turn as `--prompt`.
+- **A turn is not over when τ thinks it is.** τ hands the floor to its user simulator as soon as
+  it holds an assistant message, but a platform *run* may still be streaming, and prompting then is
+  refused with `409 Task is already processing` — which τ records as an infrastructure error and
+  retries the whole episode. The transport gates the next prompt on `RUN_FINISHED`, exactly as the
+  local one gates on Pi's `agent_settled`.
+- **CLI startup must stay off the tool-call critical path.** Every `introspection` invocation
+  pays ~5.5 s of process startup, the stream subprocess is the only path by which τ learns a tool
+  call exists, and the sandbox's MCP daemon gives that parked call only ~30 s. Paying the prompt's
+  startup and then the stream's serially ate a third of the budget before τ could see anything —
+  observed as `tools/call` spans of 15–30 s and daemon-abandoned calls. The stream for a turn is
+  now spawned *before* its `tasks prompt`, so the two startups overlap; the envelope's own
+  `run_id` filters out a replay of the previous run, and a fully lost attach race is recovered by
+  one reattach under the explicit run id. A clean episode answers every call in ~250–350 ms.
+
+The turn-gate lesson was found the hard way. It presented as an episode "stuck on turn 2": a
+`tools/call` parked for 30 s, the sandbox's MCP daemon abandoned it, the agent carried on, and τ
+still graded the episode **1.0** on the answers that had already succeeded. A green reward
+concealing a broken rendezvous is precisely the unmeasurable-harness failure this repository
+exists to avoid, so the bridge now also warns after 25 s (`STALL_WARN_SECONDS`) — the sandbox
+gives up well before the bridge's own 300 s ceiling, and without the warning that gap is silent.
+
+With the gate and the overlapped attach in place a graded episode runs clean: every tool call
+paired, no 409s, no stalls, and no daemon-abandoned calls.
+
+**The task is torn down at episode end; the conversation is not.** A finished task otherwise sits
+`idle` holding a warm sandbox until its inactivity timeout, so the conversation reads as pending
+long after the reward exists — and across a 97-episode sweep those abandoned sandboxes accumulate
+against the organization's concurrency limit. `tasks cancel` does not help (it ends the turn and
+leaves the task warm by design), so the transport calls `tasks delete`. That is safe for evidence,
+verified rather than assumed: after deletion the task returns 404 while its conversation still
+returns full spans, cost and usage.
+
+"The episode finished" is likewise recorded rather than inferred, in both lanes. Each run's
+`run_metadata.json` carries an `episodes` list with every simulation's termination, reward, and a
+`completed` verdict — true only when τ itself ended the episode normally *and* graded it, the
+same definition the fidelity checker asserts post-hoc. The runner prints the verdict per episode
+and exits non-zero when a run produced no simulation at all. `run_metadata.json` is written only
+after τ's runner returns, so its presence is the run's completion sentinel: a directory holding
+`results.json` without it is an interrupted run, not a record. On the platform lane the file
+additionally stores the export's own `meta.complete` as
+`platform.accounting.<task>.evidence_complete` — `false` means the record is a snapshot of
+something that had not settled when it was read.
+
+One rough edge remains, and it is the platform's rather than ours: the first task after `dev`
+attaches can come back `Task sandbox is not ready`. τ's own infrastructure retry absorbs it, at
+the cost of one episode. The adapter deliberately does not retry on its own — it is a pipe.
 
 ### Two launchers for the local transport
 
