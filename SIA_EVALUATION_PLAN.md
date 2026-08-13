@@ -204,16 +204,29 @@ stale-term grep sweep clean. ✅ (2026-08-13)
 
 ### Phase 1 — Partition & configuration machinery (no live runs)
 
-- [ ] `protocol:` block in the lock + `lock.py` accessors + validation.
-- [ ] `split.py` dynamic partitions (propose/verify/render for G batches + held-out);
-      ACTION-spread rule re-expressed; `propose_split.py` CLI updated.
-- [ ] Tests: partition proposal determinism, disjointness, budget check, ACTION
+- [x] `protocol:` block in the lock + `lock.py` accessors + validation — unknown keys
+      refused, `held_out_trials_per_task` refused by name (the knob is
+      `frozen.num_trials`) (2026-08-13).
+- [x] `split.py` dynamic partitions (propose/verify/render for G batches + held-out);
+      ACTION-spread rule re-expressed as scale-aware proportional floors (⌊n·T/N⌋ for
+      held-out, ⌊n·G·B/N⌋ jointly for batches); `propose_split.py` CLI updated with
+      `--manifest` + per-size overrides for pre-freeze sizing (2026-08-13).
+- [x] Tests: partition proposal determinism, disjointness, budget check, ACTION
       spread, manifest round-trip, lock protocol-block validation, fingerprint drift
-      on partition change.
+      on partition change (2026-08-13).
 
 **Validate:** unit tests green; against real task data, `propose_split.py --write`
 produces a verifiable G=5/B=10/T=47 manifest **and** a G=3/B=3/T=5 manifest
 (debug-sized), both passing `--verify`; the old 30/15/20 manifest is refused loudly.
+✅ (2026-08-13) Suite 114 → 147, all green; `make check` green; ruff + format clean.
+Real-data checks: the full-scale proposal lands 1 ACTION task in every batch and 4 in
+held-out (its exact ⌊9·47/97⌋ share) with 0 tasks unused; the committed debug manifest
+passes `--verify`; the legacy manifest exits 1 naming the retired scheme. Intake
+decision (user-ratified): experiment 002 opened PROVISIONAL in this phase — `seq: 2`,
+debug `protocol:` values, `num_trials: 1` (D2), version-2 debug manifest committed —
+so Phases 2–3 run in a real experiment context; Phase 4 finalizes the values and flips
+the lock to FROZEN. The 001 archive, snapshot fingerprint, and git-history record are
+untouched.
 
 ### Phase 2 — Runner, firewall, and round targets
 
