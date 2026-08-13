@@ -1,7 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy smoke single_task bench fidelity gate_a0a grade dashboard
+.PHONY: help bootstrap check policy smoke single_task bench batch heldout fidelity gate_a0a grade dashboard
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -45,6 +45,8 @@ help:
 	@echo "make smoke       one mock-domain task through the seam (diagnostic, not reportable)"
 	@echo "make single_task one locked-domain task, then grade it: make single_task TASK=task_001"
 	@echo "make bench       the WHOLE locked task split, then grade it (long and costly)"
+	@echo "make batch       improvement batch round, platform lane: make batch B=1 GEN=generation_001"
+	@echo "make heldout     hidden held-out round into the vault: make heldout GEN=generation_000"
 	@echo "make fidelity    run one task in BOTH lanes and check the adapter invariants"
 	@echo "make gate_a0a    A.0a gate: adapter suite + mock smoke, verdict under gates/"
 	@echo "make grade       re-grade an existing run: make grade OUT=results/.../mock_smoke"
@@ -106,6 +108,27 @@ bench:
 	@$(RUN) python tau_adapter/run.py --transport $(TRANSPORT) --launcher $(LAUNCHER) \
 		--out ../$(RESULTS)/bench_full$(SUFFIX) --overwrite
 	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/bench_full$(SUFFIX)
+
+# One improvement batch from the frozen partition (SIA_EVALUATION_PLAN.md D1): the platform
+# lane is the round's meaning, not a preference — a command-line TRANSPORT=local reaches
+# run.py and is refused there with the reason. Resume-friendly: no --overwrite, ever, so a
+# rerun re-runs only the missing (trial, task, seed) pairs. Graded immediately, because
+# batch evidence is fully observable by design — it is what `operate` diagnoses from.
+B ?= 1
+BATCH_DIR = batch_$(shell printf '%02d' $(B))
+batch: TRANSPORT = platform
+batch:
+	@$(RUN) python tau_adapter/run.py --batch $(B) --transport $(TRANSPORT) \
+		--out ../$(RESULTS)/$(BATCH_DIR)
+	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/$(BATCH_DIR)
+
+# The hidden held-out evaluation (D1/D9): local lane only, outputs sealed out of tree in
+# the vault (~/.sia_vault), terminal shows completeness alone. GEN names the generation
+# being measured. The lane guard here catches an exported TRANSPORT before any process
+# starts; scripts/run_heldout.py owns everything else.
+heldout:
+	@test "$(TRANSPORT)" = "local" || (echo "✗ held-out runs on the local lane only (SIA_EVALUATION_PLAN.md D1): platform evidence for held-out tasks must never exist" && exit 1)
+	@$(RUN) python scripts/run_heldout.py --generation $(GEN)
 
 # Runs the same task in both lanes and compares them. Adapter-owned properties are asserted; the
 # reward is not, because a per-task reward here is a draw and comparing two of them proves nothing.
