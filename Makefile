@@ -1,7 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy smoke single_task bench batch heldout fidelity gate_a0a grade dashboard
+.PHONY: help bootstrap check policy smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a grade dashboard
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -47,6 +47,8 @@ help:
 	@echo "make bench       the WHOLE locked task split, then grade it (long and costly)"
 	@echo "make batch       improvement batch round, platform lane: make batch B=1 GEN=generation_001"
 	@echo "make heldout     hidden held-out round into the vault: make heldout GEN=generation_000"
+	@echo "make reset_h0    restore the recipe to the h0-baseline tag (replace, not merge)"
+	@echo "make reveal      end-of-experiment: unseal the vault into results/ (final tag required)"
 	@echo "make fidelity    run one task in BOTH lanes and check the adapter invariants"
 	@echo "make gate_a0a    A.0a gate: adapter suite + mock smoke, verdict under gates/"
 	@echo "make grade       re-grade an existing run: make grade OUT=results/.../mock_smoke"
@@ -129,6 +131,18 @@ batch:
 heldout:
 	@test "$(TRANSPORT)" = "local" || (echo "✗ held-out runs on the local lane only (SIA_EVALUATION_PLAN.md D1): platform evidence for held-out tasks must never exist" && exit 1)
 	@$(RUN) python scripts/run_heldout.py --generation $(GEN)
+
+# Restore the recipe to the H0 baseline (D6): replace, not merge; byte-identity asserted;
+# the machine-local .introspection/local.json preserved. Leaves the restore staged for the
+# operator to review and commit — the commit is the experiment's record of starting at H0.
+reset_h0:
+	@python3 $(BENCH)/scripts/reset_h0.py
+
+# End-of-experiment reveal (D9): runnable only once the final generation tag exists. Copies
+# the vault into results/experiment_<id>/held_out/, computes the progression artifacts, and
+# fills every improvement record's held_out_result. The one sanctioned read of the vault.
+reveal:
+	@$(RUN) python scripts/reveal.py
 
 # Runs the same task in both lanes and compares them. Adapter-owned properties are asserted; the
 # reward is not, because a per-task reward here is a draw and comparing two of them proves nothing.
