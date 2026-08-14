@@ -1,0 +1,15 @@
+# Written by the runner on this experiment's first non-PROVISIONAL run. It pins
+# the freeze every result in this directory was produced under; a later run whose
+# parsed lock or split manifest differs is refused. The summary is for humans —
+# the fingerprint is what is compared.
+id: 002_bm25-sonnet46
+created: '2026-08-14T06:08:24Z'
+fingerprint: sha256:1eaa0ec4a07bef5968da6806cf18f5c88fcee5006c14ff8c8672996d40ad061c
+summary:
+  domain: banking_knowledge
+  retrieval_config: bm25
+  agent_model: anthropic/claude-sonnet-4-6
+  user_llm: anthropic/claude-sonnet-4-5
+  num_trials: 1
+  seed: 300
+  benchmark_commit: fc0055dc4e0a316c3f83133267fbd6faaa770992
