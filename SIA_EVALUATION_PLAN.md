@@ -573,9 +573,15 @@ Same isolation rules as the full experiment (protocol §29.17). Runs on the Phas
       from `results/` the same day, user-directed, so the debug experiment starts into
       an empty tree — this entry is the durable record of the PASS, per the Phase 3.5
       precedent) (2026-08-13).
-- [ ] Freeze: `experiment.seq: 1` (numbering reset) with D10 `protocol:` values (G=3, B=4, T=8) and
+- [x] Freeze: `experiment.seq: 1` (numbering reset) with D10 `protocol:` values (G=3, B=4, T=8) and
       the re-proposed partition already in place; flip PROVISIONAL → FROZEN;
-      `reset_h0`; commit; **A.0a gate PASS** recorded.
+      `reset_h0`; commit; **A.0a gate PASS** recorded. Executed 2026-08-13: partition
+      re-verified, `reset_h0` staged nothing (recipe already byte-identical to
+      `h0-baseline`), lock flipped at `af0c4a8`, A.0a PASS (254-test suite + graded mock
+      smoke, reward 1.0) recorded at
+      `results/experiment_001_bm25-sonnet46/generation_000/gates/a0a.json`; the first
+      non-PROVISIONAL run wrote the freeze snapshot (`experiment.yaml` + lock/manifest
+      value-copies) beside it. (2026-08-13)
 - [ ] H0 held-out (hidden, vault) → B1 batch → `operate` diagnosis (harvest 1
       immediately; harvest 2 after the ~40-min observation window, fallback stated)
       → `improve` PR → human review/merge → tag `exp1-g001` → H1 held-out (hidden)
