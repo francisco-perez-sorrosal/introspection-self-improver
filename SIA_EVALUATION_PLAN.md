@@ -75,7 +75,7 @@ the rest are recorded here as the working defaults.
 | D4 | Gates | **A.0a stays blocking** per experiment (adapter suite + mock smoke — cheap, guards the seam). **A.0b demoted** from blocking gate to diagnostic instrument (`make fidelity` on demand); the Phase 2 platform-health check replaces its blocking role. **A.0c (`anchor_stock`) retired** — stock-agent comparability is explicitly no longer a goal. **Ratified 2026-08-13.** |
 | D5 | Generation semantics | `generation_NNN` dir ≡ H_n. A generation is defined by an approved, merged PR commit on `main`, tagged `exp<seq>-g<NNN>`. **Rejected mutation ⇒ identity generation**: H_(g+1) = H_g recorded in the improvement record, held-out eval skipped, R_g carried forward, next batch consumed as normal. | One batch per generation slot regardless of accept/reject (protocol §13's fresh-evidence rule); no paired baseline/candidate arms anymore. |
 | D6 | H0 reset mechanism | Tag the current recipe as **`h0-baseline`** (byte-identical `target-agent/` + `.introspection/target-agent.yaml` since the M1 freeze `0976493`). `make reset_h0` = restore from tag as **replace, not merge** (`git checkout <tag> -- …` + `git clean -fdx target-agent`), then `make bootstrap` (regenerates `.pi/mcp.local.json`), then `introspection check`, then instruct to commit — platform rounds refuse a dirty recipe tree. `.introspection/local.json` (machine-local runtime binding, CLI-written) is preserved, never restored. | Every new experiment starts from the same H0. **Ratified 2026-08-13** — tag `h0-baseline` created at `2e8058b`. |
-| D7 | Concurrency | `max_concurrency: 1` stays (bridge is run-scoped, single-episode-safe; raising it needs bridge episode-multiplexing + a re-freeze). Revisit only if Phase 5 wall-clock is unacceptable. | Held-out eval ≈ 2.5–4 h serial; acceptable for now. |
+| D7 | Concurrency | `max_concurrency: 1` stays (bridge is run-scoped, single-episode-safe; raising it needs bridge episode-multiplexing + a re-freeze). Revisit only if Phase 5 wall-clock is unacceptable. **Re-decided 2026-08-13 (user): the episode-multiplexing machinery is built BEFORE Phase 4 (Phase 3.5)** so the debug experiment runs the new bridge at its degenerate concurrency 1 under a fresh A.0a PASS — one code path, no seam swap between debug and full. The frozen VALUE stays 1 for seq 2; seq 3 decides the number. Lane analysis: held-out (local lane) is ~85% of episode wall-clock and the simple half — it parallelizes; platform batches stay serial unless the docs pass proves a native affordance. | Held-out eval ≈ 2.5–4 h serial at T=47; the machinery targets a 3–5× cut for seq 3, bounded by API concurrency, not code. |
 | D8 | H0 viability signal | The old §13.1 discovery floor is replaced by the **B1 read**: batch results are visible by design, so if H0 lands 0/B or B/B on B1, halt and reconsider H0 before spending further generations. Not a hard floor at B=10 (2/10 is within noise of 20%). | The firewall makes a held-out floor check impossible until reveal; B1 is the legitimate window. |
 | D9 | Vault & reveal | Held-out outputs (episodes, sessions, graded results, console log) live out of tree at `~/.sia_vault/experiment_<id>/generation_NNN/`. `make reveal` — runnable only when the final generation is tagged — copies the vault into `results/experiment_<id>/held_out/`, computes the matrices, and writes `summary.md`. Until then the orchestrator does not read the vault (procedural, stated in every writeup). | Out-of-tree keeps held-out data away from glob/grep sweeps and the dashboard walk; the dashboard renders held-out views only from revealed artifacts. |
 
@@ -317,11 +317,45 @@ real repo — mutated `SYSTEM.md` + an added file, `make reset_h0`, byte-identit
 check` green, `local.json` untouched; `make reveal` on main refuses with guardrail 19,
 deriving `exp2-g003` from the lock's protocol block. Zero benchmark spend.
 
+### Phase 3.5 — Episode concurrency machinery (pre-Phase-4; no frozen-value change)
+
+User-directed 2026-08-13 (D7 re-decision): build task/conversation concurrency —
+one episode per worker — **before the debug experiment**, so seq 2 runs the new
+bridge at its degenerate setting (one code path, re-proven by A.0a) and seq 3 can
+freeze a real number. Engraved ethos: pragmatic (smallest mechanism that provably
+prevents cross-episode result crossing), performant (measure serial vs concurrent,
+report the numbers), efficient (minimal spend, minimal seam churn). Runs in its own
+session; the frozen `max_concurrency` VALUE is untouched throughout.
+
+- [ ] Intake design note: the episode-identity mechanism (per-episode URL channels
+      vs MCP-session-keyed channels over the single run URL), grounded in
+      `tool_bridge.py`/`pi_agent.py`/`run.py` and in current Introspection docs
+      (`dev --mcp` semantics, per-task config/env, sandbox concurrency limits, MCP
+      SDK session identity); user confirms before any build.
+- [ ] Bridge episode channels (common substrate) — the result-crossing minitest
+      lands first; the degenerate single-channel case behaves exactly as today.
+- [ ] `run.py` thread-safety under τ's worker pool (`episode_transports`,
+      `launch_argv`, `original_titles`, incident aggregation).
+- [ ] Local lane end-to-end: per-episode channel URL via env; live minitest = a
+      mock-domain round at concurrency 2–3 with fidelity per-episode invariants,
+      zero rendezvous incidents, and the measured speedup vs the same round serial.
+- [ ] Platform lane, investigation-first: a native affordance implemented cleanly,
+      or pinned at 1 with a loud, documentation-cited runner refusal.
+- [ ] Truth-pass on every "single-episode"/"run-scoped"/`max_concurrency` claim
+      (code comments, README §How the seam works, `contract/constraints.md`, the
+      lock's comment block — value untouched).
+
+**Validate:** full suite green (baseline 208); ruff + format clean; `make check`
+green; `make gate_a0a` PASS recorded (the seam changed — the blocking gate re-proves
+it); the concurrency mock round clean with the speedup stated; a serial mock round
+regression-free; any locked-domain live spend gated on explicit user go/no-go
+(target ≤ $2).
+
 ### Phase 4 — Debug experiment (seq 2): the real-scenario test
 
 The capstone: everything runs for real, small (G=3, B=3, T=5; 20 held-out + 9 batch
 episodes ≈ $10–15, ~4–6 h compute). Same isolation rules as the full experiment
-(protocol §29.17).
+(protocol §29.17). Runs on the Phase 3.5 bridge at its frozen concurrency of 1.
 
 - [ ] Freeze: `experiment.seq: 2`, debug `protocol:` values, `num_trials: 1`,
       partition proposed + frozen; `reset_h0`; commit; **A.0a gate PASS** recorded.
