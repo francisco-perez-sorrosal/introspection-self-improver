@@ -94,8 +94,8 @@ class LocalPiTransport:
         self._stderr_tail: list[str] = []
         self._session_ref: str | None = None
         self._closed = False
-        # This episode's incident counters — bridge stalls are attributed here via
-        # reset_for_episode; the runner reads them into the episode manifest.
+        # This episode's incident counters — bridge stalls are attributed here by the
+        # episode channel opened at episode start; the runner reads them into the manifest.
         self.incidents = EpisodeIncidents()
 
     # ------------------------------------------------------------------ lifecycle

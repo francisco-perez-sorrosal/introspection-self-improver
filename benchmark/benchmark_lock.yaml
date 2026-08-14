@@ -168,9 +168,11 @@ frozen:
   # nothing (contract/constraints.md records the correction).
   timeout_seconds: 600
 
-  # Serial for now. The run binds ONE run-scoped bridge, and it is single-episode-safe
-  # (run.py); raising this needs bridge episode-multiplexing plus a re-freeze
-  # (SIA_EVALUATION_PLAN.md D7) — the schedule absorbs serial rounds instead.
+  # The run binds ONE run-scoped bridge; episodes rendezvous on per-episode URL channels
+  # within it (tool_bridge.py, Phase 3.5), so raising this value is a freeze decision, not
+  # a machinery change (SIA_EVALUATION_PLAN.md D7). The platform lane stays pinned at 1
+  # regardless — contract/constraints.md § Platform-lane concurrency. Locked runs always
+  # read this value; the runner's --max-concurrency override is diagnostic-mode-only.
   max_concurrency: 1
 
   # Whether tau ends an episode when an assistant message carries both text and tool calls.

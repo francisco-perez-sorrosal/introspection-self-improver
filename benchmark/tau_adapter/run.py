@@ -539,10 +539,12 @@ def main() -> int:
     session_dir = out_dir / "pi_sessions"
     base_env = _build_env_for_pi()
 
-    # Run-scoped, not per-episode. The development lane hands one URL to `introspection dev`
-    # before the first episode and holds it for the whole run, so the bridge has to outlive an
-    # episode. Built from the probe environment's tools because the schemas are what it
-    # advertises, and the tool surface is asserted identical to the lock.
+    # Run-scoped: the development lane hands one URL to `introspection dev` before the first
+    # episode and holds it for the whole run, so the bridge has to outlive an episode.
+    # Episodes rendezvous on per-episode channels within it — each agent opens its own at
+    # episode start (fresh URL locally; the pinned run URL, sequentially, on the platform).
+    # Built from the probe environment's tools because the schemas are what it advertises,
+    # and the tool surface is asserted identical to the lock.
     bridge = ToolBridge(tau_tools=probe_env.get_tools(), port=args.bridge_port)
     bridge.start()
 

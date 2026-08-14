@@ -102,6 +102,15 @@ them with a rendezvous, and neither side gives up authority:
 bridge never touches the environment, so it cannot become a second implementation of the
 benchmark's semantics. Nothing about the trajectory is reconstructed.
 
+One bridge serves the whole run, and every episode rendezvouses on its own **channel** — a
+per-episode mailbox at a per-episode `/mcp/<token>` URL — so episode identity is the URL
+itself and results cannot cross between episodes, even at `max_concurrency` above 1 with
+identical tool calls in flight. The local lane hands each episode's Pi subprocess its channel
+URL through the environment; the development lane, whose `dev` attachment holds a single URL
+for the whole run, reuses one pinned channel sequentially and is pinned at one episode in
+flight (`contract/constraints.md` § Platform-lane concurrency). One episode at a time is the
+degenerate case of the same mechanism, not a separate code path.
+
 **The adapter is a pipe, not a participant.** It translates message shapes and tool names and
 does nothing else — no repair, no retry, no reformatting. Anywhere the adapter helps the agent
 is somewhere the harness stops being measurable, and an unmeasurable harness cannot be improved.
@@ -150,8 +159,8 @@ needed: `introspection dev` routes the Recipe's declared `tau` server to a local
 **The rendezvous is unchanged between the lanes**, because it is driven by the MCP bridge rather
 than the transport. One detail differs and is worth knowing: on the platform the AG-UI event
 reaches τ *before* the sandbox's MCP request crosses the tunnel, so the result is posted before
-the handler asks for it. The mailbox is keyed by name and arguments rather than by arrival order,
-which is why that works.
+the handler asks for it. Each episode's channel mailbox is keyed by name and arguments rather
+than by arrival order, which is why that works.
 
 Five things about the development lane were established by experiment, not from documentation.
 Each is enforced in code, because each one fails in a way that points nowhere near its cause:
