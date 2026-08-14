@@ -103,9 +103,12 @@ close.
   `task_034` deterministically crashes τ's text-mode user simulator on the opening turn
   (empty completion at the frozen `temperature: 0.0`), a frozen-surface defect no
   harness mutation can reach — see `results/experiment_001_bm25-sonnet46/README.md`,
-  whose vault stays sealed forever. Seq 2 is the debug experiment's second attempt,
-  its pool screened pre-partition for that crash class; the full run takes seq 3.
-  Freeze fingerprints disambiguate the reused id mechanically. The model pair is
+  whose vault stays sealed forever. Seq 2 — the debug experiment's second attempt, its
+  pool screened pre-partition for that crash class — ran to completion and REVEALED
+  2026-08-14: three accepted generations, held-out curve 3/8 → 3/8 → 2/8 → 2/8,
+  endpoint inside the ±18 pp band — the loop is demonstrated, no capability claim is
+  made, and the full run takes seq 3. Freeze fingerprints disambiguate the reused id
+  mechanically. The model pair is
   deliberate and deliberately asymmetric, and neither half is Sonnet 5 — the agent runs
   Sonnet 4.6 to keep the harness the binding constraint rather than the model, and the user
   simulator runs Sonnet 4.5 because Sonnet 5 rejects τ's `temperature: 0.0`.

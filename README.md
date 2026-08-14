@@ -9,9 +9,12 @@ What lives here is everything the loop runs against: an immutable objective, a m
 harness under improvement, a frozen/mutable boundary enforced mechanically rather than by
 convention, and the generation lifecycle — improvement batches, a sealed held-out vault,
 improvement records, an end-of-experiment reveal. The evaluation design is
-`self_improving_agent_evaluation_protocol.md`; `SIA_EVALUATION_PLAN.md` tracks the path to
-the first experiment. No experiment has run to completion yet: no number in this repository
-is a result.
+`self_improving_agent_evaluation_protocol.md`; `SIA_EVALUATION_PLAN.md` tracks the path.
+The debug-scale experiment has run to completion and is revealed —
+`results/experiment_002_bm25-sonnet46/` holds the record (summary, guardrail walk,
+improvement records, per-generation evidence). Its endpoint sits inside the noise band,
+so it demonstrates the loop, not a capability claim: the full-scale run (T=47) carries
+claims.
 
 ```
 τ²-bench  ──tasks──▶  target-agent (Introspection Recipe)  ──tool calls──▶  τ² environment
@@ -84,7 +87,7 @@ the whole identity scheme:
   merge (files committed after the tag stage as deletions), regenerates the untracked
   runtime state, runs `introspection check`, and leaves the restore staged for a human
   commit. The machine-local `.introspection/local.json` is preserved, never restored.
-- `exp<seq>-g<NNN>` — H_NNN of experiment `<seq>` (e.g. `exp1-g001`), applied to the
+- `exp<seq>-g<NNN>` — H_NNN of experiment `<seq>` (e.g. `exp2-g001`), applied to the
   approved merge commit of each accepted mutation. A rejected or identity transition
   still gets its tag — placed on the same commit the previous generation's tag points
   at, since H_NNN *is* that harness — with the why recorded in the transition's
@@ -97,7 +100,12 @@ results and console log live in the vault at `~/.sia_vault/experiment_<id>/gener
 (`SIA_VAULT_DIR` overrides), out of reach of every repo sweep and of the dashboard, and the
 terminal shows completeness only. A held-out round measures exactly one generation and
 proves it before any spend: it refuses a dirty recipe surface and requires the tree
-byte-identical to the measured generation's tag (`h0-baseline` for H0).
+byte-identical to the measured generation's tag (`h0-baseline` for H0). An incomplete
+round (a transient provider failure, an environment defect) resumes with the same
+command: τ re-runs only the missing episodes and replaces infrastructure placeholders;
+completed episodes are never re-spent, and the completeness report names the failure
+class — reward-free — so the operator can tell transient from deterministic without
+unsealing anything.
 `make reveal` — runnable once `exp<seq>-g<G>` exists —
 is the single door between the two worlds: it copies the vault into
 `results/experiment_<id>/held_out/`, computes the progression artifacts (per-generation
@@ -113,7 +121,7 @@ lives in `results/experiment_<id>/improvement_records/` (schema:
 ## Driving an experiment from Claude Code
 
 The improvement loop has no program of its own: Claude Code is the orchestrator, and an
-experiment is one conversation in which the human speaks at four gates. Everything
+experiment is one conversation in which the human speaks at five gates. Everything
 between the gates is Claude Code working the CLI — the make targets above, the
 Introspection plugin's `operate` and `improve` skills, git. A debug-scale run
 (G=3 generations, 4-task batches, 8 held-out tasks) goes like this; every number below
@@ -149,20 +157,42 @@ is invented for illustration:
 
 The loop repeats for generations 2 and 3. A rejected PR is an identity generation — H
 stays where it was, no held-out measurement happens, the record says so — and the next
-batch is consumed as normal. Had batch 1 come back 0/4 or 4/4, the viability read
-(`SIA_EVALUATION_PLAN.md` D8) would have halted the experiment before more was spent.
+batch is consumed as normal. A 0/4 or 4/4 batch fires the viability read
+(`SIA_EVALUATION_PLAN.md` D8) — a decision gate, not an automatic stop: in the first
+real run B1 did read 0/4, the diagnosis showed three specific mutable-surface failure
+modes rather than a broken H0, and the human ratified proceeding.
 
 > **You:** Reveal.
 >
 > **Claude Code:** `make reveal` — the vault unseals into
 > `results/experiment_001_bm25-sonnet46/held_out/`: R_T(H0) = 2/8 → R_T(H3) = 5/8,
-> stated against the ±17 pp noise band, with the task×generation matrix, transitions,
+> stated against the ±18 pp noise band, with the task×generation matrix, transitions,
 > retention, and `summary.md`.
 
-The four gates: ratify the freeze, merge or reject each `improve` PR (the merge is what
-defines a generation — the agent never merges its own work), the budget go at each
-generation boundary, order the reveal. What is not illustrative in the sketch above: no
-held-out task id, trajectory, or score appears in the conversation before the reveal.
+The sketch's numbers are invented; the first real run's record — including a voided
+first freeze — is `results/experiment_001_bm25-sonnet46/README.md` and
+`results/experiment_002_bm25-sonnet46/`.
+
+The gates where the human speaks: ratify the freeze; decide each diagnosis (the batch
+read is visible by design, so Claude Code presents the failure modes with prevalence
+and conversation ids and the human picks the mutation's target — or an identity
+generation, or a halt); merge or reject each `improve` PR (the merge is what defines a
+generation — the agent never merges its own work); the budget go at each generation
+boundary; order the reveal. What is not illustrative in the sketch above: no held-out
+task id, trajectory, or score appears in the conversation before the reveal — exercised
+for real, including while diagnosing a held-out infrastructure failure, which the
+completeness report attributes by failure class without unsealing anything.
+
+**When the environment itself breaks.** The first real run hit this immediately and the
+loop absorbed it. An H0 round came back 7/8 with `infrastructure_error:ValueError=1` on
+its INCOMPLETE line; "run it again" resumed only the missing episode. When the failure
+proved deterministic — a τ-side user-simulator defect no harness mutation can reach
+([tau2-bench#470](https://github.com/sierra-research/tau2-bench/issues/470)) — the
+remedy was never to patch τ, which is frozen: the freeze was voided with a closure
+README, the task pool screened for the crash class, and a new experiment frozen under
+the next `seq` with the poisoned task excluded, documented in the split manifest.
+Benchmark defects travel upstream as issues and PRs (tracked in
+`.ai-state/UPSTREAM_ISSUES.md`), never as local patches.
 
 ### Showcasing the run in the dashboard
 
@@ -175,13 +205,19 @@ rendering the run as the improvement story it is — worth keeping open while dr
   messages, tool calls, arguments — for walking an audience through a diagnosis, and the
   efficiency small multiples (cost, messages, `KB_search` calls per episode across
   generations) show how behaviour is shifting before any held-out score can. The
-  held-out card only states that the measurement is sealed in the vault.
+  held-out card only states that the measurement is sealed in the vault. Diagnostic
+  rounds (the A.0a mock smoke and its `create_task_1`) stay visible in round lists with
+  their "not reportable" badge but are excluded from every statistic.
 - **After `make reveal`** — the held-out progression card is the headline, and the main
   question — did H_G beat H0? — is read there: the tasks-solved/T curve from H0 to H_G
   with the noise band as whiskers (improvement is an endpoint gap that clears the band,
   not a wiggle inside it), identity generations as hollow marks, the ever-solved
   retention line, and the task × generation matrix showing which tasks each transition
-  gained, kept, or regressed.
+  gained, kept, or regressed. Beneath it, a collapsed **process signals** panel opens
+  the sub-reward story — partial credit (DB match, gold-action match, write match) and
+  behavioral signatures (retrieval intensity, discoverable-tool usage, transfers) per
+  generation, with a per-task gold-action heatmap — for what moved even when pass/fail
+  did not.
 
 The dashboard never reads the vault and regrades nothing: held-out data renders only
 from the artifacts `make reveal` writes under `results/…/held_out/`. The full view list
@@ -195,15 +231,19 @@ them onto the machinery above. The ones worth knowing:
 | Say | What happens |
 |---|---|
 | "Create a new experiment" | Bumps `experiment.seq` in the lock (a new freeze identity), restores the recipe to `h0-baseline`, re-proposes the partition if the sizes changed; stays `PROVISIONAL` until you freeze |
-| "Freeze it" / "start the debug experiment" | Verifies the partition against the lock, flips the lock to `FROZEN`, commits, records the A.0a gate PASS |
+| "Freeze it" / "start the debug experiment" | Verifies the partition against the lock, flips the lock to `FROZEN`, commits, records the A.0a gate PASS — and then drives the whole loop, pausing at the gates |
 | "Measure the baseline" | `make heldout GEN=generation_000` — completeness only, results sealed in the vault |
-| "Run the next batch" | `make batch B=g GEN=generation_<g-1>`, graded into `graded/`; batch 1 carries the viability read (plan D8) |
-| "Diagnose it" | The `operate` skill over the batch's conversations — prevalence, cited conversation ids, second harvest after the observation window |
+| "Run it again" (after an INCOMPLETE round) | The same command resumes: τ re-runs only the missing episodes and replaces infrastructure placeholders; completed episodes are never re-spent |
+| "Run the next batch" | `make batch B=g GEN=generation_<g-1>`, graded into `graded/`; batch 1 carries the viability read (plan D8). The platform lane refuses an unpushed HEAD — lineage pins to pushed `main` |
+| "Diagnose it" | The `operate` skill over the batch's conversations — prevalence, cited conversation ids, second harvest after the observation window (at debug batch sizes the async observations often lag it, and the full-transcript read is the stated fallback, not a degradation) |
 | "Propose the fix" | The `improve` skill — one mutation, branch `gen-NNN/<slug>`, PR citing the evidence |
 | "Merged" | Pull, tag `exp<seq>-g<NNN>`, push, write and validate the improvement record, then measure the new generation |
 | "Rejected" | Identity generation: tag on the unchanged commit, record says why, no held-out measurement |
 | "Measure H2" | `make heldout GEN=generation_002` — refuses unless the tree is byte-identical to `exp<seq>-g002` |
 | "Reveal" | `make reveal` — requires the final generation tag; the one sanctioned read of the vault |
+| "What moved under the curve?" | The reveal's `process_metrics_*.csv` (post-reveal analysis; `scripts/reveal.py --derive-only` backfills) — rendered as the dashboard's collapsed process panel |
+| "This task can never pass — void the experiment" | Closure README with the evidence, vault sealed forever, pool screened for the failure class, new freeze under the next `seq` with exclusions documented in the manifest |
+| "File it upstream" | Issue (and fix PR when the mechanism is clear) on the offending dependency, drafted for review before anything posts; tracked in `.ai-state/UPSTREAM_ISSUES.md` |
 | "Reset the agent" | `make reset_h0` alone — replace-not-merge restore, staged for a human commit |
 | "Open the dashboard" | `make dashboard` — the viewer above |
 
@@ -409,13 +449,15 @@ comment edit never trips the check while a re-decided frozen value refuses the r
 (`PROVISIONAL` runs landed there, unenforced and unreportable); it was removed from the
 working tree on 2026-08-13 and lives in git history.
 
-**The experiment numbering was reset on 2026-08-13**: the bring-up freeze that originally
-held the id `001_bm25-sonnet46` closed the same day without a graded round and lives in git
-history (closure README at `results/experiment_001_bm25-sonnet46/README.md` there). The lock
-is now `PROVISIONAL` at seq 1 — the generation protocol's debug experiment
-(`SIA_EVALUATION_PLAN.md` Phase 4, D10 sizes) — and each experiment onward is its own
-freeze; the reused id is disambiguated by freeze fingerprints. Two values were decided the hard way and the decisions
-carry forward:
+**The experiment numbering was reset on 2026-08-13**, and the sequence has since been
+exercised: the pre-reset bring-up freeze that originally held the id `001_bm25-sonnet46`
+closed without a graded round and lives only in git history. In the working tree,
+`results/experiment_001_bm25-sonnet46/README.md` is a different record — seq 1 froze the
+debug experiment and was **voided at H0** the same day on a τ-side user-simulator defect
+no harness mutation can reach (tau2-bench#470). Seq 2 re-froze with the poisoned task
+excluded, ran the debug experiment to completion, and is revealed; the full-scale run
+takes seq 3. Reused ids are disambiguated by freeze fingerprints. Two values were
+decided the hard way and the decisions carry forward:
 
 - `retrieval_config: bm25` is the deliberate freeze, pinned knowingly over the unavailable
   `openai_embeddings` (this machine has no working OpenAI key). It is not a comparability

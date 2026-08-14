@@ -35,6 +35,15 @@ without the sequence prefix falls back to its bare id.
   diagnostic as a dashed line, progression and transition tables, and the binary
   task × generation matrix with gain/regression change dots. Until the reveal, the
   card states that the measurement is sealed in the vault.
+- **Process signals panel** (collapsed by default, inside the held-out card once
+  revealed) — the sub-reward story from `process_metrics_by_generation.csv` and
+  `process_metrics_by_task.csv`: small multiples per metric on pinned scales
+  (percentages on 0–100, counts zero-based), grouped into outcome decomposition
+  (DB match, gold-action match, write match, partial action reward) and behavioral
+  signatures (`KB_search` intensity, discoverable-tool ops, transfers, messages,
+  cost), neutral direction chips (no good/bad coloring — direction is not goodness),
+  and a nested per-task gold-action heatmap with a pass ring and flip dots.
+  Descriptive statistics only: no noise band exists for them.
 - **Observable-rounds curve** — pass¹ per split for batch and diagnostic rounds (fully
   observable by design), with ≈95% intervals over per-task rates; click a generation to
   inspect it. A table view twin is one toggle away. Splits are grouped dynamically from
@@ -61,7 +70,9 @@ without the sequence prefix falls back to its bare id.
 Rewards shown are τ's own recorded in-run evaluations read from `results.json` — the
 reportable number remains `make grade` (tau2 evaluate-trajs); nothing is regraded here.
 Rates follow τ's metric convention (infrastructure errors excluded and counted
-separately); diagnostic-mode rounds are visibly muted and labeled not reportable; runs
+separately); diagnostic rounds (mock smokes and other non-locked runs, flagged from
+`run_metadata.json`'s mode and domain, never by task name) stay visible in round lists
+with their "not reportable" badge but are excluded from every statistic; runs
 without `run_metadata.json` are flagged as interrupted rather than averaged in.
 Held-out data appears only after `make reveal` and only from the revealed artifacts
 under `results/` — the dashboard never reads the vault (SIA_EVALUATION_PLAN.md D9).
