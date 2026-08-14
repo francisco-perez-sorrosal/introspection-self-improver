@@ -14,6 +14,7 @@ aggregates from τ's own recorded rewards. The reportable number remains
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import re
@@ -122,23 +123,6 @@ def task_description(task: dict) -> str:
     if isinstance(description, dict):
         description = description.get("purpose") or next(iter(description.values()), "")
     return str(description or "")[:240]
-
-
-def classify_round(name: str) -> dict:
-    """Decode the `<purpose>[_<arm>][_platform]` round-name convention.
-
-    Splits are never decoded from names: run_metadata.json's recorded `split` is
-    the only source, and rounds without one land in the ad-hoc (null) bucket.
-    """
-    base = name
-    if base.endswith("_platform"):
-        base = base[: -len("_platform")]
-    arm = None
-    for candidate in ("baseline", "candidate"):
-        if base.endswith("_" + candidate):
-            arm = candidate
-            base = base[: -(len(candidate) + 1)]
-    return {"purpose": base, "arm": arm}
 
 
 # ---------------------------------------------------------------- aggregation
@@ -280,13 +264,11 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
     arm = (metadata or {}).get("arm") or {}
     platform_meta = (metadata or {}).get("platform") or {}
     name = round_dir.name
-    classified = classify_round(name)
     summary = {
         "path": str(round_dir.relative_to(results_root)),
         "name": name,
         "domain": (metadata or {}).get("domain")
         or ((info.get("environment_info") or {}).get("domain_name")),
-        **classified,
         # The runner's run_metadata.json record is the only split source (absent → null).
         "split": (metadata or {}).get("split"),
         "mode": (metadata or {}).get("mode")
@@ -355,7 +337,7 @@ def round_dirs(generation_dir: Path):
 
 
 def generation_extras(generation_dir: Path) -> dict:
-    extras: dict = {"learning_record": None, "decision": None, "gates": []}
+    extras: dict = {"gates": []}
     gates_dir = generation_dir / "gates"
     if gates_dir.is_dir():
         for path in sorted(gates_dir.glob("*.json")):
@@ -363,16 +345,110 @@ def generation_extras(generation_dir: Path) -> dict:
                 extras["gates"].append(json.loads(path.read_text(encoding="utf-8")))
             except (OSError, json.JSONDecodeError):
                 continue
-    for name in ("learning_record.yaml", "learning-record.yaml", "learning_record.yml"):
-        path = generation_dir / name
-        if path.exists():
-            text = path.read_text(encoding="utf-8")
-            extras["learning_record"] = {"raw": text, "fields": parse_flat_yaml(text)}
-            break
-    decision_path = generation_dir / "decision.md"
-    if decision_path.exists():
-        extras["decision"] = decision_path.read_text(encoding="utf-8")
     return extras
+
+
+IMPROVEMENT_RECORD_RE = re.compile(r"^gen_(\d+)_to_(\d+)\.yaml$")
+
+
+def read_improvement_records(experiment_dir: Path) -> list[dict]:
+    """The per-transition evidence chain: improvement_records/gen_<g>_to_<g+1>.yaml.
+
+    Raw text plus best-effort flat fields — the schema's authority stays with
+    tau_adapter/records.py; this only shows what was written.
+    """
+    records = []
+    records_dir = experiment_dir / "improvement_records"
+    if not records_dir.is_dir():
+        return records
+    for path in sorted(records_dir.glob("gen_*_to_*.yaml")):
+        match = IMPROVEMENT_RECORD_RE.match(path.name)
+        if not match:
+            continue
+        text = path.read_text(encoding="utf-8")
+        fields = parse_flat_yaml(text)
+        records.append(
+            {
+                "name": path.name,
+                "from_generation": int(match.group(1)),
+                "to_generation": int(match.group(2)),
+                "outcome": fields.get("outcome"),
+                "fields": fields,
+                "raw": text,
+            }
+        )
+    return records
+
+
+def read_held_out(experiment_dir: Path) -> dict | None:
+    """The revealed progression artifacts: held_out/ CSVs plus summary.md.
+
+    These files exist only after `make reveal`; until then this returns None and the
+    page shows the sealed notice. The vault is never read from here — the dashboard
+    renders held-out views exclusively from revealed artifacts (plan D9).
+    """
+    held_dir = experiment_dir / "held_out"
+    by_gen_path = held_dir / "results_by_generation.csv"
+    matrix_path = held_dir / "task_generation_matrix.csv"
+    if not by_gen_path.exists() or not matrix_path.exists():
+        return None
+    with by_gen_path.open(encoding="utf-8", newline="") as handle:
+        generations = [
+            {
+                "generation": row["generation"],
+                "passed": int(row["passed"]),
+                "total": int(row["total"]),
+                "percent": float(row["percent"]),
+                "carried": row["basis"] == "carried",
+            }
+            for row in csv.DictReader(handle)
+        ]
+    with matrix_path.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.reader(handle))
+    transitions = _read_csv_rows(
+        held_dir / "transitions.csv",
+        lambda row: {
+            "transition": row["transition"],
+            "gains": int(row["gains"]),
+            "retained": int(row["retained"]),
+            "regressions": int(row["regressions"]),
+            "unresolved": int(row["unresolved"]),
+            "net": int(row["net"]),
+            "identity": row["identity"] == "true",
+        },
+    )
+    retention = _read_csv_rows(
+        held_dir / "retention.csv",
+        lambda row: {
+            "generation": row["generation"],
+            "currently": int(row["currently_solved"]),
+            "ever": int(row["ever_solved"]),
+        },
+    )
+    total = generations[0]["total"] if generations else 0
+    summary_path = experiment_dir / "summary.md"
+    return {
+        "generations": generations,
+        "matrix_generations": rows[0][1:] if rows else [],
+        "matrix": [
+            {"task_id": row[0], "results": [int(v) for v in row[1:]]}
+            for row in rows[1:]
+        ],
+        "transitions": transitions,
+        "retention": retention,
+        # Mirror of tau_adapter.reveal.noise_band_pp: one binomial SE at p=0.5, in pp (D2).
+        "noise_band_pp": round(100 * 0.5 / math.sqrt(total)) if total else None,
+        "summary": summary_path.read_text(encoding="utf-8")
+        if summary_path.exists()
+        else None,
+    }
+
+
+def _read_csv_rows(path: Path, shape) -> list[dict]:
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8", newline="") as handle:
+        return [shape(row) for row in csv.DictReader(handle)]
 
 
 # The runner derives experiment directories as experiment_<seq>_<name> (seq zero-padded to
@@ -433,6 +509,8 @@ def experiment_payload(results_root: Path, dirname: str) -> dict:
             "snapshot": snapshot,
             "readme": readme,
             "generations": generations,
+            "held_out": read_held_out(experiment_dir),
+            "improvement_records": read_improvement_records(experiment_dir),
             "tasks": tasks,
             "task_descriptions": {t: descriptions.get(t, "") for t in tasks},
         }

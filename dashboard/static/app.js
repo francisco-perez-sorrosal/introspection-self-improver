@@ -5,7 +5,7 @@ import { lineChart, sparkline, tooltip } from "./charts.js";
 const state = {
   experiments: [],
   current: null,
-  filters: { split: "all", arm: "all", transport: "all" },
+  filters: { split: "all", transport: "all" },
   selectedGen: null,
   heatSort: "id",
   curveAsTable: false,
@@ -80,7 +80,6 @@ function matchesFilters(round) {
   if (f.split !== "all") {
     if (f.split === "ad-hoc" ? round.split != null : round.split !== f.split) return false;
   }
-  if (f.arm !== "all" && round.arm !== f.arm) return false;
   if (f.transport !== "all" && round.transport !== f.transport) return false;
   return true;
 }
@@ -140,8 +139,8 @@ function mergeRounds(rounds) {
   };
 }
 
-function splitSeriesRounds(gen, split, arms) {
-  return roundsOf(gen).filter((r) => r.split === split && arms.includes(r.arm));
+function splitRounds(gen, split) {
+  return roundsOf(gen).filter((r) => (r.split ?? null) === split);
 }
 
 /* ---------------------------------------------------------------- badges */
@@ -252,7 +251,7 @@ function renderStats() {
 
   const split = primarySplit(exp);
   const perGen = exp.generations.map((g) =>
-    mergeRounds(split ? splitSeriesRounds(g, split, ["baseline", null]) : roundsOf(g))
+    mergeRounds(split ? splitRounds(g, split) : roundsOf(g))
   );
   const withData = perGen.filter((a) => a.pass1 != null);
   const latest = [...perGen].reverse().find((a) => a.pass1 != null);
@@ -308,28 +307,19 @@ function curveSeries(exp) {
   splitValues(exp).forEach((split, index) => {
     if (split == null) return; // ad-hoc rounds have no cross-generation identity
     if (state.filters.split !== "all" && state.filters.split !== split) return;
-    const color = splitColor(index);
     const line = gens.map((g) => {
-      const agg = mergeRounds(splitSeriesRounds(g, split, ["baseline", null]));
+      const agg = mergeRounds(splitRounds(g, split));
       if (agg.pass1 == null) return null;
       return { v: agg.pass1, lo: agg.interval?.[0], hi: agg.interval?.[1] };
     });
     if (line.some(Boolean)) {
-      series.push({ key: split, label: `${split} pass¹`, color, points: line });
-    }
-    const candidate = gens.map((g) => {
-      const agg = mergeRounds(splitSeriesRounds(g, split, ["candidate"]));
-      return agg.pass1 == null ? null : { v: agg.pass1, lo: agg.interval?.[0], hi: agg.interval?.[1] };
-    });
-    if (candidate.some(Boolean)) {
-      series.push({ key: `${split}-cand`, label: `${split} candidate`, color, hollow: true, noLine: true, points: candidate });
+      series.push({ key: split, label: `${split} pass¹`, color: splitColor(index), points: line });
     }
   });
   return series;
 }
 
-function renderLegend(series) {
-  const legend = $("#curve-legend");
+function renderLegend(legend, series) {
   legend.replaceChildren();
   if (series.length < 2) return; // one series: the title names it
   for (const s of series) {
@@ -345,31 +335,26 @@ function renderLegend(series) {
 function renderCurveTable(container, exp) {
   const table = el("table", "data");
   const head = el("tr");
-  for (const h of ["generation", "split", "arm", "pass¹", "≈95% CI", "tasks", "episodes", "avg cost"])
+  for (const h of ["generation", "split", "pass¹", "≈95% CI", "tasks", "episodes", "avg cost"])
     head.appendChild(el("th", null, h));
   table.appendChild(head);
   for (const gen of exp.generations) {
     for (const split of splitValues(exp)) {
-      for (const arms of [["baseline", null], ["candidate"]]) {
-        const rounds = split === null
-          ? roundsOf(gen).filter((r) => r.split == null && arms.includes(r.arm))
-          : splitSeriesRounds(gen, split, arms);
-        if (!rounds.length) continue;
-        const agg = mergeRounds(rounds);
-        if (agg.pass1 == null) continue;
-        const tr = el("tr");
-        tr.append(
-          el("td", "mono", gen.name),
-          el("td", null, splitLabel(split)),
-          el("td", null, arms.includes("candidate") ? "candidate" : "baseline"),
-          el("td", null, pct(agg.pass1)),
-          el("td", null, agg.interval ? `${pct(agg.interval[0])}–${pct(agg.interval[1])}` : "—"),
-          el("td", null, String(agg.taskStats.length)),
-          el("td", null, String(agg.graded)),
-          el("td", null, usd(agg.avgCost))
-        );
-        table.appendChild(tr);
-      }
+      const rounds = splitRounds(gen, split);
+      if (!rounds.length) continue;
+      const agg = mergeRounds(rounds);
+      if (agg.pass1 == null) continue;
+      const tr = el("tr");
+      tr.append(
+        el("td", "mono", gen.name),
+        el("td", null, splitLabel(split)),
+        el("td", null, pct(agg.pass1)),
+        el("td", null, agg.interval ? `${pct(agg.interval[0])}–${pct(agg.interval[1])}` : "—"),
+        el("td", null, String(agg.taskStats.length)),
+        el("td", null, String(agg.graded)),
+        el("td", null, usd(agg.avgCost))
+      );
+      table.appendChild(tr);
     }
   }
   container.replaceChildren(table);
@@ -420,14 +405,14 @@ function renderCurve() {
   }
   const series = curveSeries(exp);
   if (!series.length) {
-    renderLegend([]);
+    renderLegend($("#curve-legend"), []);
     renderRoundBars(body, exp);
     note.textContent =
       "No split-labeled rounds yet — showing per-round pass¹ instead. " +
       "The generation curve appears once run_metadata.json records a split.";
     return;
   }
-  renderLegend(series);
+  renderLegend($("#curve-legend"), series);
   const gens = exp.generations.map((g) => g.name);
   const selected = gens.indexOf(state.selectedGen);
   lineChart(body, {
@@ -438,8 +423,204 @@ function renderCurve() {
     yFmt: (v) => `${Math.round(v * 100)}%`,
   });
   note.textContent =
-    "Whiskers are ≈95% intervals over per-task pass rates. Hollow markers are candidate arms. " +
+    "Batch and diagnostic rounds only — fully observable by design; the held-out metric " +
+    "lives in its own card. Whiskers are ≈95% intervals over per-task pass rates. " +
     "Click a generation to inspect it.";
+}
+
+/* ------------------------------------------------- held-out progression
+   Rendered exclusively from revealed artifacts under results/<experiment>/held_out/
+   (the CSVs `make reveal` writes) — never from the vault, and never recomputed here.
+   Until the reveal, the card states that the measurement is sealed. */
+
+function heldOutEndpoint(held) {
+  const first = held.generations[0];
+  const last = held.generations.at(-1);
+  const total = first.total;
+  const delta = last.passed - first.passed;
+  const deltaPp = (100 * delta) / total;
+  const sign = (v) => (v >= 0 ? "+" : "");
+  const band = held.noise_band_pp;
+  const verdict =
+    band == null ? "" :
+    Math.abs(deltaPp) > band
+      ? ` — outside the ±${band} pp noise band`
+      : ` — inside the ±${band} pp noise band; directional only`;
+  return (
+    `Endpoint: ${last.generation} ${last.passed}/${total} vs ${first.generation} ` +
+    `${first.passed}/${total} → ${sign(delta)}${delta} task(s) (${sign(deltaPp)}${deltaPp.toFixed(1)} pp)${verdict}`
+  );
+}
+
+function heldOutProgressionTable(held) {
+  const table = el("table", "data");
+  const head = el("tr");
+  for (const h of ["generation", "solved", "%", "basis"]) head.appendChild(el("th", null, h));
+  table.appendChild(head);
+  for (const g of held.generations) {
+    const tr = el("tr");
+    tr.append(
+      el("td", "mono", g.generation),
+      el("td", null, `${g.passed}/${g.total}`),
+      el("td", null, `${g.percent.toFixed(1)}%`),
+      el("td", null, g.carried ? "carried (identity)" : "measured")
+    );
+    table.appendChild(tr);
+  }
+  return table;
+}
+
+function heldOutTransitionsTable(held) {
+  const table = el("table", "data");
+  const head = el("tr");
+  for (const h of ["transition", "gains", "retained", "regressions", "unresolved", "net", "note"])
+    head.appendChild(el("th", null, h));
+  table.appendChild(head);
+  for (const row of held.transitions || []) {
+    const tr = el("tr");
+    tr.append(
+      el("td", "mono", row.transition),
+      el("td", null, String(row.gains)),
+      el("td", null, String(row.retained)),
+      el("td", null, String(row.regressions)),
+      el("td", null, String(row.unresolved)),
+      el("td", null, `${row.net >= 0 ? "+" : ""}${row.net}`),
+      el("td", null, row.identity ? "identity" : "")
+    );
+    table.appendChild(tr);
+  }
+  return table;
+}
+
+function renderHeldOutMatrix(holder, held) {
+  const gens = held.matrix_generations;
+  const grid = el("div", "heat-grid");
+  grid.style.gridTemplateColumns = `minmax(120px, 220px) repeat(${gens.length}, minmax(24px, 1fr))`;
+  grid.appendChild(el("div", "heat-corner"));
+  for (const g of gens) grid.appendChild(el("div", "heat-col-label", g));
+  for (const row of held.matrix) {
+    const label = el("div", "heat-row-label", row.task_id);
+    label.title = state.current.task_descriptions?.[row.task_id] || row.task_id;
+    grid.appendChild(label);
+    row.results.forEach((v, i) => {
+      const cell = el("div", "heat-cell");
+      cell.style.background = rampColor(v ? 1 : 0);
+      const changed = i > 0 && row.results[i - 1] !== v;
+      if (changed) cell.appendChild(el("span", "change-dot"));
+      cell.tabIndex = 0;
+      const showTip = (evt) => {
+        const point = evt.clientX != null ? evt : { clientX: cell.getBoundingClientRect().x, clientY: cell.getBoundingClientRect().y };
+        tooltip.show(point.clientX, point.clientY, `${row.task_id} · ${gens[i]}`, [
+          { color: rampColor(v ? 1 : 0), value: v ? "solved" : "not solved", label: "single-trial result" },
+          ...(changed
+            ? [{ value: v ? "gain" : "regression", label: "vs previous generation" }]
+            : []),
+        ]);
+      };
+      cell.addEventListener("pointermove", showTip);
+      cell.addEventListener("focus", showTip);
+      cell.addEventListener("pointerleave", tooltip.hide);
+      cell.addEventListener("blur", tooltip.hide);
+      grid.appendChild(cell);
+    });
+  }
+  holder.appendChild(grid);
+
+  const legend = el("div", "heat-legend");
+  for (const [frac, text] of [[1, "solved"], [0, "not solved"]]) {
+    const item = el("span", "heat-scale");
+    const swatch = el("span", "heat-swatch");
+    swatch.style.background = rampColor(frac);
+    item.append(swatch, el("span", null, text));
+    legend.appendChild(item);
+  }
+  const change = el("span", "heat-scale");
+  const dotWrap = el("span", "heat-swatch");
+  dotWrap.style.background = rampColor(1);
+  dotWrap.style.position = "relative";
+  dotWrap.appendChild(el("span", "change-dot"));
+  change.append(dotWrap, el("span", null, "· changed vs previous generation"));
+  legend.appendChild(change);
+  holder.appendChild(legend);
+}
+
+function renderHeldOut() {
+  const body = $("#heldout-body");
+  const note = $("#heldout-note");
+  const legend = $("#heldout-legend");
+  body.replaceChildren();
+  legend.replaceChildren();
+  note.textContent = "";
+  const exp = state.current;
+  if (!exp) return;
+  const held = exp.held_out;
+  if (!held || !held.generations.length) {
+    body.appendChild(
+      el(
+        "div",
+        "empty-note",
+        "Sealed until `make reveal`. Held-out rounds run on the local lane into the " +
+          "out-of-tree vault; this page renders held-out views only from the revealed " +
+          "artifacts under results/ (SIA_EVALUATION_PLAN.md D1/D9)."
+      )
+    );
+    return;
+  }
+  const total = held.generations[0].total;
+  const band = held.noise_band_pp != null ? held.noise_band_pp / 100 : null;
+  const point = (g) => {
+    const v = g.passed / g.total;
+    return {
+      v,
+      lo: band != null ? Math.max(0, v - band) : null,
+      hi: band != null ? Math.min(1, v + band) : null,
+      hollow: g.carried,
+    };
+  };
+  const series = [
+    {
+      key: "held-current",
+      label: "currently solved",
+      color: splitColor(0),
+      points: held.generations.map(point),
+    },
+  ];
+  if (held.retention?.length) {
+    series.push({
+      key: "held-ever",
+      label: "ever solved",
+      color: splitColor(2),
+      dash: true,
+      points: held.retention.map((row) => ({ v: row.ever / total })),
+    });
+  }
+  renderLegend(legend, series);
+  const chart = el("div");
+  lineChart(chart, {
+    xLabels: held.matrix_generations,
+    series,
+    yFmt: (v) => `${Math.round(v * 100)}%`,
+  });
+  body.appendChild(chart);
+  body.appendChild(el("p", "heldout-endpoint", heldOutEndpoint(held)));
+
+  const tables = el("div", "heldout-tables");
+  tables.appendChild(heldOutProgressionTable(held));
+  if (held.transitions?.length) tables.appendChild(heldOutTransitionsTable(held));
+  body.appendChild(tables);
+  renderHeldOutMatrix(body, held);
+  if (held.summary) {
+    const details = el("details", "raw");
+    details.appendChild(el("summary", null, "summary.md — the reveal's own report"));
+    details.appendChild(el("pre", null, held.summary));
+    body.appendChild(details);
+  }
+  note.textContent =
+    `Held-out tasks solved / T on the one frozen set (T=${total}), measured once per ` +
+    `generation, single trial per task. Whiskers: ±${held.noise_band_pp} pp noise band ` +
+    "(one binomial SE at p=0.5) — deltas inside it are noise. Hollow markers are identity " +
+    "generations (result carried forward, never re-measured). The dashed line is the " +
+    "capability-retention diagnostic (ever solved by any generation so far).";
 }
 
 function renderEfficiency() {
@@ -468,12 +649,25 @@ function renderEfficiency() {
 
 /* ------------------------------------------------------------- generations */
 
-function decisionBadge(fields) {
-  const decision = (fields?.decision || "").toLowerCase();
-  if (decision.startsWith("accept")) return badge("good", "✓", "accepted");
-  if (decision.startsWith("reject")) return badge("critical", "✗", "rejected");
-  if (decision.startsWith("direction")) return badge("warn", "→", "directional");
-  return badge("muted", "—", "no decision yet");
+function generationIndex(name) {
+  const match = name.match(/(\d+)$/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+function recordFor(exp, genName) {
+  /* The improvement record whose batch this generation ran: gen_<g>_to_<g+1>.yaml. */
+  const index = generationIndex(genName);
+  if (index == null) return null;
+  return (exp.improvement_records || []).find((r) => r.from_generation === index) || null;
+}
+
+function outcomeBadge(record) {
+  const outcome = (record?.outcome || "").toLowerCase();
+  if (outcome === "accepted") return badge("good", "✓", "accepted");
+  if (outcome === "rejected") return badge("critical", "✗", "rejected");
+  if (outcome === "identity") return badge("muted", "＝", "identity");
+  if (record) return badge("warn", "…", "record in flight");
+  return badge("muted", "—", "no record yet");
 }
 
 function renderRibbon() {
@@ -484,9 +678,10 @@ function renderRibbon() {
   let previous = null;
   exp.generations.forEach((gen) => {
     const agg = mergeRounds(roundsOf(gen));
+    const record = recordFor(exp, gen.name);
     const card = el("div", `gen-card${gen.name === state.selectedGen ? " selected" : ""}`);
     const head = el("div", "g-name");
-    head.append(el("span", null, gen.name), decisionBadge(gen.learning_record?.fields));
+    head.append(el("span", null, gen.name), outcomeBadge(record));
     card.appendChild(head);
     card.appendChild(el("div", "g-pass", pct(agg.pass1)));
     if (previous != null && agg.pass1 != null) {
@@ -495,9 +690,9 @@ function renderRibbon() {
       delta.textContent = `${diff > 0 ? "▲" : diff < 0 ? "▼" : "＝"} ${pct(Math.abs(diff))} vs prev`;
       card.appendChild(delta);
     }
-    const fields = gen.learning_record?.fields || {};
+    const fields = record?.fields || {};
     card.appendChild(
-      el("div", "g-mut", fields.candidate || fields.hypothesis || "no learning record yet")
+      el("div", "g-mut", fields.hypothesis || fields.proposed_change || "no improvement record yet")
     );
     card.appendChild(
       el(
@@ -616,42 +811,38 @@ function copyButton(text) {
   return button;
 }
 
-function renderLearningRecord(gen) {
+function renderImprovementRecord(gen) {
   const holder = $("#learning-record");
+  const record = recordFor(state.current, gen.name);
   const panel = el("div", "lr-panel");
-  panel.appendChild(el("h3", null, "Learning record"));
-  if (!gen.learning_record && !gen.decision) {
+  panel.appendChild(el("h3", null, "Improvement record — this generation's transition"));
+  if (!record) {
     panel.appendChild(
       el(
         "div",
         "lr-empty",
-        "No improvement record for this generation yet — it arrives with the first improvement cycle."
+        "No improvement record for this transition yet — one is written per generation " +
+          "as it happens (improvement_records/gen_<g>_to_<g+1>.yaml, protocol §24)."
       )
     );
   } else {
-    if (gen.learning_record) {
-      const chips = el("div", "chip-strip");
-      const fields = gen.learning_record.fields || {};
-      for (const key of ["candidate", "decision", "experiment"]) {
-        if (fields[key]) {
-          const chip = el("span", "chip");
-          chip.append(el("span", null, key), el("b", null, String(fields[key])));
-          chips.appendChild(chip);
-        }
+    const chips = el("div", "chip-strip");
+    chips.appendChild(outcomeBadge(record));
+    const fields = record.fields || {};
+    for (const key of ["owning_layer", "experiment"]) {
+      if (fields[key]) {
+        const chip = el("span", "chip");
+        chip.append(el("span", null, key.replace("_", " ")), el("b", null, String(fields[key])));
+        chips.appendChild(chip);
       }
-      panel.appendChild(chips);
-      const details = el("details");
-      details.appendChild(el("summary", null, "learning_record.yaml"));
-      const pre = el("pre", null, gen.learning_record.raw);
-      details.appendChild(pre);
-      panel.appendChild(details);
     }
-    if (gen.decision) {
-      const details = el("details");
-      details.appendChild(el("summary", null, "decision.md"));
-      details.appendChild(el("pre", null, gen.decision));
-      panel.appendChild(details);
-    }
+    panel.appendChild(chips);
+    if (fields.hypothesis) panel.appendChild(el("p", "fineprint", `hypothesis: ${fields.hypothesis}`));
+    if (fields.proposed_change) panel.appendChild(el("p", "fineprint", `change: ${fields.proposed_change}`));
+    const details = el("details");
+    details.appendChild(el("summary", null, record.name));
+    details.appendChild(el("pre", null, record.raw));
+    panel.appendChild(details);
   }
   holder.appendChild(panel);
 }
@@ -723,7 +914,7 @@ function renderDetail() {
   const lrHolder = $("#learning-record");
   lrHolder.replaceChildren();
   if (gen.gates?.length) lrHolder.appendChild(gateStrip(gen));
-  renderLearningRecord(gen);
+  renderImprovementRecord(gen);
 
   const rounds = roundsOf(gen);
   if (!rounds.length) {
@@ -732,7 +923,7 @@ function renderDetail() {
   }
   const table = el("table", "data");
   const head = el("tr");
-  for (const h of ["round", "flags", "transport", "split", "arm", "episodes", "pass¹", "avg cost", "wall", "recipe sha"])
+  for (const h of ["round", "flags", "transport", "split", "episodes", "pass¹", "avg cost", "wall", "recipe sha"])
     head.appendChild(el("th", null, h));
   table.appendChild(head);
   for (const round of rounds) {
@@ -744,7 +935,6 @@ function renderDetail() {
       flags,
       el("td", null, round.transport || "—"),
       el("td", null, splitLabel(round.split)),
-      el("td", null, round.arm || "—"),
       el("td", null, `${round.graded}/${round.episodes}`),
       el("td", null, pct(round.pass1)),
       el("td", null, usd(round.avg_cost)),
@@ -760,7 +950,7 @@ function renderDetail() {
     if (state.openRounds.has(round.path)) {
       const holder = el("tr", "episodes-holder");
       const cell = el("td");
-      cell.colSpan = 10;
+      cell.colSpan = 9;
       cell.appendChild(episodeTable(round));
       holder.appendChild(cell);
       table.appendChild(holder);
@@ -882,6 +1072,7 @@ function renderAll() {
   renderBanner();
   renderFreeze();
   renderStats();
+  renderHeldOut();
   renderCurve();
   renderEfficiency();
   renderRibbon();
@@ -938,10 +1129,6 @@ async function init() {
   select.addEventListener("change", () => loadExperiment(select.value));
   $("#split-filter").addEventListener("change", (evt) => {
     state.filters.split = evt.target.value;
-    renderAll();
-  });
-  $("#arm-filter").addEventListener("change", (evt) => {
-    state.filters.arm = evt.target.value;
     renderAll();
   });
   $("#transport-filter").addEventListener("change", (evt) => {

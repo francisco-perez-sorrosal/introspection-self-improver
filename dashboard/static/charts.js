@@ -156,7 +156,7 @@ export function lineChart(container, opts) {
   for (const s of series) {
     s.points.forEach((p, i) => {
       if (!p || p.v == null) return;
-      const marker = s.hollow
+      const marker = s.hollow || p.hollow
         ? svgEl("circle", { cx: x(i), cy: y(p.v), r: 4.5, fill: surface, stroke: s.color, "stroke-width": 2.5 })
         : svgEl("circle", { cx: x(i), cy: y(p.v), r: 5, fill: s.color, stroke: surface, "stroke-width": 2 });
       svg.appendChild(marker);

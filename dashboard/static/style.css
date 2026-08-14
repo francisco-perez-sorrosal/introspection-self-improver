@@ -127,7 +127,7 @@ h2 { font-size: 15px; font-weight: 600; margin: 0; }
 .lg-dot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid; background: var(--surface-1); }
 
 /* ---------- charts ---------- */
-#curve-body svg { display: block; width: 100%; height: auto; }
+#curve-body svg, #heldout-body svg { display: block; width: 100%; height: auto; }
 .axis-text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .end-label { fill: var(--ink); font-size: 11px; font-weight: 600; }
 .gridline { stroke: var(--grid); stroke-width: 1; }
@@ -197,6 +197,10 @@ h2 { font-size: 15px; font-weight: 600; margin: 0; }
   position: absolute; inset: 0; margin: auto; width: 4px; height: 4px; border-radius: 50%;
   background: var(--ink); opacity: 0.55;
 }
+.heat-cell .change-dot {
+  position: absolute; inset: 0; margin: auto; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--surface-1); box-shadow: 0 0 0 1.5px var(--ink); opacity: 0.9;
+}
 .heat-legend { display: flex; align-items: center; gap: 14px; margin-top: 12px; font-size: 11.5px; color: var(--ink-2); flex-wrap: wrap; }
 .heat-scale { display: inline-flex; align-items: center; gap: 4px; }
 .heat-swatch { width: 16px; height: 12px; border-radius: 3px; }
@@ -228,7 +232,20 @@ tr.episodes-holder > td { padding: 0 0 14px 22px; border-bottom: 1px solid var(-
 }
 .copy-btn:hover { color: var(--ink); }
 
-/* learning record */
+/* ---------- held-out progression ---------- */
+.heldout-endpoint { font-size: 13px; font-weight: 600; margin: 10px 0 0; }
+.heldout-tables {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 0 24px; align-items: start; margin-bottom: 14px;
+}
+details.raw { margin-top: 12px; }
+details.raw summary { cursor: pointer; font-size: 12px; color: var(--ink-2); }
+details.raw pre {
+  margin: 6px 0 0; padding: 10px; background: var(--plane); border-radius: 6px;
+  font-size: 11.5px; overflow: auto; max-height: 320px;
+}
+
+/* improvement record */
 .lr-panel { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
 .lr-panel h3 { margin: 0 0 6px; font-size: 13px; }
 .lr-panel pre {
