@@ -1,7 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a grade dashboard
+.PHONY: help bootstrap check policy propose_split smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a grade dashboard
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -42,6 +42,7 @@ help:
 	@echo "make bootstrap   reproduce the benchmark lane from benchmark/benchmark_lock.yaml"
 	@echo "make check       validate the recipe and every frozen surface"
 	@echo "make policy      write tau's domain policy into the recipe's frozen <policy> region"
+	@echo "make propose_split  propose the experiment's task partition from the lock (WRITE=1 freezes it)"
 	@echo "make smoke       one mock-domain task through the seam (diagnostic, not reportable)"
 	@echo "make single_task one locked-domain task, then grade it: make single_task TASK=task_001"
 	@echo "make bench       the WHOLE locked task split, then grade it (long and costly)"
@@ -81,6 +82,22 @@ check:
 # understanding why it failed.
 policy:
 	@$(RUN) python scripts/gen_policy_region.py
+
+# Propose — and with WRITE=1 freeze — the current experiment's task partition, sizes from
+# the lock's protocol block. The default EXCLUDE list belongs to the POWERED experiment
+# (seq 3, plan D11, sized by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md):
+# task_034 (τ user-sim crash, seq-2 screening) plus all 20 seq-2 tasks — 8 revealed
+# held-out, 12 diagnosed batch — the fresh-pool discipline, so nothing the g1-g3
+# mutations were tuned on, and nothing the reveal exposed, reappears anywhere in seq 3.
+# Review the printed proposal, then freeze it with `make propose_split WRITE=1`; check a
+# frozen manifest any time with `scripts/propose_split.py --verify`. A later experiment
+# re-decides EXCLUDE through its own decision row and a seq bump, never by editing a
+# frozen manifest.
+EXCLUDE ?= task_003,task_008,task_017,task_027,task_034,task_035,task_036,task_041,task_045,task_048,task_051,task_058,task_061,task_067,task_071,task_081,task_087,task_089,task_091,task_099,task_101
+NOTE ?= seq 3 powered (plan D11): fresh pool - task_034 (user-sim crash, seq-2 screening) plus all 20 seq-2 tasks (8 revealed held-out + 12 diagnosed batch) excluded, so nothing the g1-g3 mutations were tuned on, and nothing the reveal exposed, reappears anywhere in this experiment
+propose_split:
+	@$(RUN) python scripts/propose_split.py --exclude "$(EXCLUDE)" \
+		$(if $(WRITE),--write --force --note "$(NOTE)",)
 
 # Diagnostic: the mock domain is not the locked domain, so the recipe is materialised with
 # mock's policy and the result is not comparable to anything. This is the cheap seam gate.

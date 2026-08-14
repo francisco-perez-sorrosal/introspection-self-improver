@@ -341,3 +341,97 @@ def test_partial_reward_is_not_a_pass(tmp_path):
     payload = _graded_payload({"task_101": 0.5, "task_102": 1.0})
     (graded / heldout.GRADED_RESULTS).write_text(json.dumps(payload), encoding="utf-8")
     assert reveal.load_measured(tmp_path) == {"task_101": False, "task_102": True}
+
+
+# ------------------------------------------------ the pre-registered trend test (D11)
+
+
+def _fixture_results() -> list[reveal.GenerationResult]:
+    """The experiment fixture's curve as GenerationResults, H2 carrying H1's draws."""
+    return [
+        reveal.GenerationResult(0, {t: bool(v) for t, v in MEASURED[0].items()}, False),
+        reveal.GenerationResult(1, {t: bool(v) for t, v in MEASURED[1].items()}, False),
+        reveal.GenerationResult(2, {t: bool(v) for t, v in MEASURED[1].items()}, True),
+        reveal.GenerationResult(3, {t: bool(v) for t, v in MEASURED[3].items()}, False),
+    ]
+
+
+def test_trend_statistic_matches_hand_computation():
+    # Measured generations 0, 1, 3: centered coefficients (-4/3, -1/3, 5/3).
+    # S = 4/3 (task_102) + 5/3 (task_103) + 1/3 (task_104) = 10/3; Var = 3 * 14/9 = 14/3;
+    # z = (10/3)/sqrt(14/3) = 1.5430, one-sided p = 0.0614.
+    trend = reveal.trend_test(_fixture_results())
+    assert trend["statistic"] == pytest.approx(10 / 3)
+    assert trend["z"] == pytest.approx(1.5430, abs=1e-4)
+    assert trend["p_value"] == pytest.approx(0.0614, abs=1e-4)
+    assert not trend["significant"]
+
+
+def test_trend_excludes_identity_generations():
+    trend = reveal.trend_test(_fixture_results())
+    assert trend["measured_generations"] == ["H0", "H1", "H3"]
+    assert trend["excluded_identity"] == ["H2"]
+
+
+def test_trend_single_flip_over_two_generations():
+    # One task 0 -> 1 across two measured generations: z = 1 exactly, p = Phi(-1).
+    results = [
+        reveal.GenerationResult(0, {"task_a": False}, False),
+        reveal.GenerationResult(1, {"task_a": True}, False),
+    ]
+    trend = reveal.trend_test(results)
+    assert trend["z"] == pytest.approx(1.0)
+    assert trend["p_value"] == pytest.approx(0.15866, abs=1e-4)
+    assert not trend["significant"]
+
+
+def test_trend_is_one_sided_so_decline_yields_high_p():
+    results = [
+        reveal.GenerationResult(0, {"task_a": True}, False),
+        reveal.GenerationResult(1, {"task_a": False}, False),
+    ]
+    trend = reveal.trend_test(results)
+    assert trend["z"] == pytest.approx(-1.0)
+    assert trend["p_value"] == pytest.approx(0.84134, abs=1e-4)
+    assert not trend["significant"]
+
+
+def test_trend_without_discordance_reports_no_evidence():
+    constant = {"task_a": True, "task_b": False}
+    results = [
+        reveal.GenerationResult(generation, dict(constant), False) for generation in range(4)
+    ]
+    trend = reveal.trend_test(results)
+    assert trend["statistic"] == 0.0
+    assert trend["p_value"] == 1.0
+    assert not trend["significant"]
+
+
+def test_trend_with_a_single_measured_generation_is_no_evidence():
+    results = [
+        reveal.GenerationResult(0, {"task_a": True}, False),
+        reveal.GenerationResult(1, {"task_a": True}, True),
+    ]
+    trend = reveal.trend_test(results)
+    assert trend["p_value"] == 1.0
+    assert not trend["significant"]
+
+
+def test_summary_states_the_preregistered_trend_verdict(experiment):
+    experiment_dir = _reveal(experiment)
+    summary = (experiment_dir / reveal.SUMMARY_NAME).read_text(encoding="utf-8")
+    assert "Pre-registered primary (D11)" in summary
+    assert "z = 1.54, p = 0.061 — not significant at alpha = 0.05" in summary
+    assert "Identity generations (H2) carry their predecessor's draws" in summary
+
+
+def test_reveal_writes_the_trend_verdict_json(experiment):
+    experiment_dir = _reveal(experiment)
+    verdict = json.loads(
+        (experiment_dir / "held_out" / reveal.TREND_TEST_JSON).read_text(encoding="utf-8")
+    )
+    assert verdict["alpha"] == 0.05
+    assert verdict["measured_generations"] == ["H0", "H1", "H3"]
+    assert verdict["excluded_identity"] == ["H2"]
+    assert verdict["significant"] is False
+    assert verdict["p_value"] == pytest.approx(0.0614, abs=1e-4)

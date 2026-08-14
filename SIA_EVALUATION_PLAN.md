@@ -63,7 +63,7 @@ scan — the harvest cadence must respect this; the metrics-over-spans fallback 
 
 ------------------------------------------------------------------------
 
-## 2. Decisions (D1–D10)
+## 2. Decisions (D1–D11)
 
 User override always wins. Items marked **ratify** need explicit sign-off at Phase 0;
 the rest are recorded here as the working defaults.
@@ -80,6 +80,7 @@ the rest are recorded here as the working defaults.
 | D8 | H0 viability signal | The old §13.1 discovery floor is replaced by the **B1 read**: batch results are visible by design, so if H0 lands 0/B or B/B on B1, halt and reconsider H0 before spending further generations. Not a hard floor at B=10 (2/10 is within noise of 20%). | The firewall makes a held-out floor check impossible until reveal; B1 is the legitimate window. |
 | D9 | Vault & reveal | Held-out outputs (episodes, sessions, graded results, console log) live out of tree at `~/.sia_vault/experiment_<id>/generation_NNN/`. `make reveal` — runnable only when the final generation is tagged — copies the vault into `results/experiment_<id>/held_out/`, computes the matrices, and writes `summary.md`. Until then the orchestrator does not read the vault (procedural, stated in every writeup). | Out-of-tree keeps held-out data away from glob/grep sweeps and the dashboard walk; the dashboard renders held-out views only from revealed artifacts. |
 | D10 | Debug-experiment sizing | **Decided 2026-08-13 (user-delegated adjudication, criterion: probability of SHOWING a real generation-after-generation improvement): G=3, B=4, T=8** — superseding D3's G=3/B=3/T=5 debug values; executed mechanically at the Phase 4 freeze (re-propose the partition, set the lock's protocol block and concurrency default). The deciding mechanism is held-out REPRESENTATION: a mutation fixes one failure mode, and the curve can only move if the fixed mode has a witness in T — for a mode afflicting ~10 of the 97 pool tasks, P(≥1 witness) ≈ 43% at T=5 vs ≈ 60% at T=8, so at T=5 most single-mechanism fixes are more likely than not INVISIBLE to the curve regardless of being real. Second: headroom — at H0 ≈ 40% pass, T=5 expects 2/5 passed leaving 3 tasks of room and a live floor/ceiling risk; T=8 expects ~3/8 with ~5 of room. Third: churn dilution — a mid-p task flips between identity-harness measurements with near-coin-flip probability (measured: 6/10 vs 4/10 on one frozen config), so per-transition churn is ~1–2 tasks at either size and only task COUNT separates stable per-task flips (signal) from flip-flops (noise); the 8×4 matrix carries that separation, the 5×4 cannot. The anchor fact: the held-out set is ONE fixed list of T tasks, measured identically at every generation H_0..H_G (frozen in `split_manifest.yaml`, inside the freeze fingerprint; `reveal.py` refuses a measurement on any other task set) — that fixedness is the entire comparability of the curve and matrix. The batches are the opposite by design: G disjoint sets, one consumed per generation, never reused (protocol §13 fresh-evidence rule). Why T=8 over T=5: one task = 12.5 pp instead of 20 pp, binomial band ≈ ±17 pp instead of ±22 pp — a 2-task gain reads as directional at T=8 and drowns at T=5 — and the task×generation matrix grows to 8 rows × 4 measurements, showing per-task flips (gains/regressions/retention) even where the aggregate stays inside the band. Why B=4: prevalence quotes in quarters (2/4 beats 1/3), a slightly stronger D8 viability read, one extra evidence episode per generation. Operational concurrency (deliberately NOT part of this decision — the lock default stays 10 and rounds self-cap at their episode count): held-out rounds run 8-wide on the local lane, which has no sandbox constraint; batch rounds take `--max-concurrency 2` from the `make batch` target to match the org's observed ~2-sandbox quota, because queued tasks behind a long episode churn through τ retries and a diagnosis round must not carry that noise. Honest caveat, stated wherever the debug curve renders: even T=8 resolves only ≥2-task effects; the debug experiment demonstrates the loop and a directional curve — the T=47 full run carries the claim. Cost delta ≈ +$3–6 (32 local + 12 platform episodes vs 20+9); (G×B)+T = 20 ≤ 97. | Debug compute at N=4 ≈ 1–2 h (vs 4–6 h serial); the matrix/curve becomes worth looking at, which is the user's stated goal for the debug run. |
+| D11 | Powered-experiment sizing (seq 3) | **G=5, B=8, T=28 — the POWERED tier between debug and full. Decided 2026-08-14 (user-ratified) from a Monte Carlo power analysis calibrated on seq-2 actuals: `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md` (analysis of record), `benchmark/scripts/power_sim.py` (instrument).** Seq 3 = powered (`003_powered-bm25-sonnet46`, lock cut PROVISIONAL 2026-08-14); the full G=5/B=10/T=47 run defers to seq 4, contingent on the powered outcome. Pre-registered before any seq-3 run: primary significance = one-sided trend test over H0…H5 at α=0.05 computed at reveal; the protocol endpoint reported with its interval and the ±9 pp band (T=28); process metrics are directional secondaries with no significance claims; fixed n, no interim looks (the vault firewall is the mechanism). Partition discipline: fresh pool — task_034 + all 20 seq-2 tasks excluded everywhere (68 of 76 eligible; `make propose_split`, header-documented), so nothing g1–g3 was tuned on and nothing the reveal exposed reappears. H0 restarts at `h0-baseline` (D6): seq-2 mutations are evidence, not inheritance. D2 single-trial held — at fixed budget, more distinct tasks beats repeated trials; the reliability addendum becomes conditional (post-reveal, only if the endpoint lands positive-but-inside-band). | Powered for a working loop (~+4–5 pp/gen, endpoint ≈ +20–26 pp): 97% direction, 94% ≥2-task visual, 82% trend-significance at α=.05. A moderate loop (+2 pp/gen) reads directional ~79%; a seq-2-like loop (≈0) is indistinguishable from null at ANY affordable T — including T=47, which adds only ~10 pp trend power for ~$80 (measured $0.62/$0.70 per local/platform episode ⇒ full ≈ $210–230, not the planned $75–90). T=28 gives a ~10-task failure mode 97%/85% odds of ≥1/≥2 held-out witnesses (vs 60%/19% at T=8) and tightens the band ±17 → ±9 pp; the eyeball bar scales to ≥4–5 tasks (null yields ≥2 tasks 29% of the time at T=28 — the debug-era "+2 reads directional" does not carry). G is the strongest lever (G=4→5 lifts trend power 0.67→0.82 at T=28; compounds mutations AND adds a curve point). B=8 is the cheapest lever on mutation quality: prevalence in eighths, and a 25%-mode shows ≥2 in-batch witnesses 63% vs 26% of the time. |
 
 ------------------------------------------------------------------------
 
@@ -639,12 +640,52 @@ any orchestrator-visible output before reveal (audit the session record + vault
 `console.log` placement); loop mechanics needed zero manual patching mid-run — else
 fix and re-run Phase 4 under the next seq before scaling up.
 
-### Phase 5 — Full experiment + reporting
+### Phase 5 — Powered experiment (seq 3, D11 sizes)
 
-- [ ] Freeze seq 2 (or next): G=5, B=10, T=47; `reset_h0`; A.0a PASS; partition
-      frozen.
+The tier between debug and full: G=5, B=8, T=28 — sized from seq-2 actuals so a
+working loop has a real chance to SHOW on the curve, at ~63% of full-experiment cost.
+Analysis of record: `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`;
+instrument: `benchmark/scripts/power_sim.py`.
+
+- [x] Sizing analysis from seq-2 actuals; G=5/B=8/T=28 ratified as D11; the honest MDE
+      stated (powered for ~+4–5 pp/gen; +2 pp/gen reads directional-only; a seq-2-like
+      loop is indistinguishable from null at any affordable T) (2026-08-14).
+- [x] Lock re-cut PROVISIONAL at seq 3 (`003_powered-bm25-sonnet46`): protocol block
+      5/8/28, every other frozen value carried unchanged from seq 2; partition proposed
+      and frozen over the 76-task fresh pool (`make propose_split WRITE=1` — task_034 +
+      all 20 seq-2 tasks excluded, header-documented), `--verify` green (2026-08-14).
+- [x] Reveal computes the pre-registered primary (D11): one-sided trend test over
+      H0…H5 at α=0.05 (`tau_adapter/reveal.py` — permutation-variance normal
+      approximation; identity generations carry their predecessor's draws and are
+      excluded from the statistic), rendered in `summary.md` beside the endpoint +
+      band and written machine-readable to `held_out/trend_test.json`; 9 unit tests
+      against hand-computed values, suite green at 271 (2026-08-14).
+- [ ] Start gate: `make reset_h0` (H0 = `h0-baseline`, restore committed); lock flipped
+      PROVISIONAL → FROZEN; A.0a PASS recorded beside the freeze snapshot; partition
+      `--verify` re-run.
+- [ ] Run: 6 held-out rounds × 28 (local, sealed) interleaved with 5 batches × 8
+      (platform) ≈ $132 at measured rates, $150–165 with instruction-growth headroom;
+      budget go/no-go with the user at each generation boundary.
+- [ ] Reveal; `summary.md` with the trend verdict + endpoint per protocol §25; per-task
+      matrix; process-metrics secondaries reported as directional only.
+- [ ] Conditional (decide post-reveal, D11): endpoint reliability addendum on H0/H5
+      only if the endpoint lands positive-but-inside-band (~$70–100 at +2 trials ×
+      2 arms × 28 tasks).
+
+**Validate:** the §25 success bundle plus the pre-registered trend verdict, every
+number labelled with its set and N; no held-out exposure before reveal; the
+eyeball bar stated as ≥4–5 tasks wherever the curve renders (the debug-era
+"+2 tasks reads directional" does not carry to T=28).
+
+### Phase 6 — Full experiment + reporting (deferred; contingent on Phase 5's outcome)
+
+- [ ] Freeze seq 4 (or next): G=5, B=10, T=47; `reset_h0`; A.0a PASS; partition
+      frozen. Note the fresh-pool discipline cannot fully hold at this size
+      (47 + 50 > 76 unused tasks) — the freeze decision must state which reuse it
+      accepts.
 - [ ] Run the six held-out evaluations and five generations (~282 local + 50 platform
-      episodes ≈ $75–90 compute, ~20–28 h spread over ~a week of sessions; budget
+      episodes ≈ $210–230 at measured seq-2 rates — supersedes the pre-run $75–90
+      estimate — ~20–28 h spread over ~a week of sessions; budget
       go/no-go with the user at each generation boundary).
 - [x] Dashboard progression view over revealed artifacts (held-out curve with noise
       band, task×generation heatmap, transition table) — landed early at the Phase 4
@@ -667,14 +708,19 @@ statement — all present and internally consistent.
 | Item | Episodes | Cost | Wall-clock (serial) | Wall-clock (concurrent) |
 |---|---|---|---|---|
 | Phase 2 live checks | ~6 (mock + 2+2 real) | ≈ $3 | < 1 h | — (ran serial) |
-| Debug experiment (seq 1, D10 sizes) | 32 local + 12 platform | ≈ $11–18 | ~5–8 h | **≈ 1–1.5 h** compute + review time |
-| Full experiment | 282 local + 50 platform | ≈ $75–90 | ~20–28 h, ~1 week elapsed | **≈ 5–7 h** compute (held-out 6×~42 min + batches 5×~20 min), ~2–3 days elapsed |
-| Endpoint reliability addendum (optional) | 376 local | ≈ $40–75 | ~25 h | ≈ 6–8 h |
+| Debug experiment (seq 2, D10 sizes) — **recorded** | 32 local + 12 platform | **≈ $29 on manifests** ($19.92 local, agent + user-sim; $9.05 platform conversation billing — the τ-side user-sim on the platform lane is not manifest-captured) + ~$3 screens/probes | — | **≈ 3.5 h** incl. review latency (recorded) |
+| Powered experiment (seq 3, D11 sizes) | 168 local + 40 platform | ≈ **$132** at measured rates; plan **$150–165** with instruction-growth headroom (~8%/gen observed in seq 2) | ~10–14 h | ≈ 4–6 h compute (held-out 6 × ~15–20 min at 10-wide + batches 5 × ~25 min at 2-wide), ~2–3 days elapsed with review gates |
+| Full experiment (seq 4, deferred) | 282 local + 50 platform | ≈ $210–230 at measured rates (supersedes the pre-run $75–90) | ~20–28 h, ~1 week elapsed | **≈ 5–7 h** compute, ~2–3 days elapsed |
+| Endpoint reliability addendum (conditional, D11) | 112 local (+2 trials × H0/H5 × 28) | ≈ $70 (scales with trial count) | ~5 h | ≈ 1–2 h |
 
-Basis: measured $0.10–0.51/local episode (median ≈ $0.20) and ≈ $0.34–1.0/platform
-episode (long episodes dominate cost — a 112-message episode billed ~$1). Concurrent columns
+Basis (pre-run estimates replaced by seq-2 recorded actuals, 2026-08-14, per the
+Conventions): **$0.62 mean / $0.53 median per local episode** (n=32, agent + user-sim,
+held-out manifests) and **$0.70 mean / $0.50 median per platform episode** (n=13
+manifest rows, conversation billing; long episodes dominate). This is ~2.3× the
+original $0.20-median basis — the correction, not the estimate, prices future
+experiments. Concurrent columns
 assume the lock default of 10 with rounds self-capped at their episode count: local
-held-out rounds run T-wide (2.80× already measured at N=3 on the mock round);
+held-out rounds run T-wide up to that default (2.80× already measured at N=3 on the mock round);
 platform batch rounds run at `--max-concurrency 2` (the `make batch` default) to
 match the org's observed ~2-sandbox quota, with queueing tolerated by the runner
 rather than converted into retries. Concurrency changes wall-clock only — cost is
@@ -689,7 +735,7 @@ per-episode and unchanged.
 | Held-out leak via habit (grep/glob/dashboard sweep) | Out-of-tree vault; muted wrapper is the only button; dashboard never walks the vault; leak-check is an explicit Phase 4 validation item. |
 | Observation/pattern harvest not eligible in cadence | 30-min eligibility + 10-min scan confirmed from platform docs — schedule harvest 2 accordingly; metrics-over-spans fallback with evidence tier stated. |
 | H0 secretly broken (or saturated) under the firewall | D8: the B1 read is visible by design; halt on 0/B or B/B. |
-| Batch of 10 too thin for a confident diagnosis | Prevalence stated as n/B; prior batches' evidence remains queryable (protocol §13); a directional hypothesis is a legitimate, recorded outcome. |
+| Batch of 8–10 too thin for a confident diagnosis | Prevalence stated as n/B; prior batches' evidence remains queryable (protocol §13); a directional hypothesis is a legitimate, recorded outcome. D11 sized B=8 so a 25%-prevalence mode shows ≥2 in-batch witnesses 63% of the time (vs 26% at the debug B=4). |
 | Rejected mutations stall progress | D5 identity generations keep the experiment moving and are first-class results (protocol §25). |
 
 ## 8. Conventions

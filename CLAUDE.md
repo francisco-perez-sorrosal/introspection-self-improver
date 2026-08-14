@@ -80,10 +80,10 @@ close.
   1.0 six times and 0.0 four times (16–44 messages, $0.10–$0.51); τ's `--seed` cannot fix this
   — it seeds τ's own sampling, and Pi owns the agent's. Under the evaluation protocol every
   task runs once and the metric is held-out tasks passed / T (plan D2): variance pools across
-  the held-out set, generation deltas inside the binomial noise band (~±7 pp at T=47; ~±17 pp
-  at the debug T=8) are noise, `pass^k` is never used
-  for generations, and the optional endpoint reliability study (H_0 and H_G × 4 trials,
-  post-reveal) is the named upgrade path. Evidence:
+  the held-out set, generation deltas inside the binomial noise band (~±17 pp at the debug
+  T=8; ~±9 pp at the powered T=28; ~±7 pp at T=47) are noise, `pass^k` is never used
+  for generations, and the endpoint reliability study (H_0 and H_G × extra trials,
+  post-reveal, conditional per D11) is the named upgrade path. Evidence:
   `results/experiment_dummy/generation_000/task_001_trials/` — removed from the working tree
   with the 2026-08-13 fresh start; recover it from git history at that path.
 - **In every inspectable run, reward tracked one retrieved document.** 1.0 iff `KB_search`
@@ -107,7 +107,14 @@ close.
   pool screened pre-partition for that crash class — ran to completion and REVEALED
   2026-08-14: three accepted generations, held-out curve 3/8 → 3/8 → 2/8 → 2/8,
   endpoint inside the ±18 pp band — the loop is demonstrated, no capability claim is
-  made, and the full run takes seq 3. Freeze fingerprints disambiguate the reused id
+  made. Seq 3 is the **powered** experiment — the tier between debug and full, cut
+  PROVISIONAL 2026-08-14 as `003_powered-bm25-sonnet46`: G=5, B=8, T=28 per plan D11,
+  sized from seq-2 actuals by `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`
+  (powered for a ~+4–5 pp/generation loop; anything smaller reads directional at any
+  affordable T), on a fresh 76-task pool (nothing seq 2 tuned on or revealed), with a
+  pre-registered one-sided trend test over H0…H5 at α=0.05 as the primary instrument.
+  The full T=47 run defers to seq 4: at measured costs (~$210–230) it buys ~10 pp of
+  trend power for ~$80 more. Freeze fingerprints disambiguate the reused id
   mechanically. The model pair is
   deliberate and deliberately asymmetric, and neither half is Sonnet 5 — the agent runs
   Sonnet 4.6 to keep the harness the binding constraint rather than the model, and the user
@@ -190,8 +197,10 @@ dashboard, browser automation, or direct API calls for an operator action the CL
   and there are no paired baseline/candidate arms.
 - **Label every number with its set (batch B_g or held-out) and its N**; report the count
   with the percentage. Never describe generations with `pass^k`; state the scale-aware
-  binomial noise band (±7 pp at T=47; ±17 pp at T=8) wherever the progression curve
-  renders.
+  binomial noise band (±17 pp at T=8; ±9 pp at the powered T=28; ±7 pp at T=47)
+  wherever the progression curve renders — and the visual bar scales with it: at T=28
+  a ≥2-task endpoint gain arises under the null 29% of the time, so "reads
+  directional" starts at ≥4–5 tasks (D11).
 - When an effect is smaller than the held-out set can resolve, record it as **directional**
   and say so.
 - Rejected hypotheses and failed mutations are first-class results — record them.

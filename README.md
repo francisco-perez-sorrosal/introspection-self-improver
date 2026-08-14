@@ -13,8 +13,12 @@ improvement records, an end-of-experiment reveal. The evaluation design is
 The debug-scale experiment has run to completion and is revealed —
 `results/experiment_002_bm25-sonnet46/` holds the record (summary, guardrail walk,
 improvement records, per-generation evidence). Its endpoint sits inside the noise band,
-so it demonstrates the loop, not a capability claim: the full-scale run (T=47) carries
-claims.
+so it demonstrates the loop, not a capability claim. Next is the **powered**
+experiment — seq 3, G=5 generations / 8-task batches / 28 held-out tasks, the tier
+between debug and full, sized from the debug run's own data
+(`results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`, plan D11) so a working
+loop has a real chance to show on the curve at ~63% of full-experiment cost; the
+full-scale run (T=47) is deferred until the powered outcome argues for it.
 
 ```
 τ²-bench  ──tasks──▶  target-agent (Introspection Recipe)  ──tool calls──▶  τ² environment
@@ -48,6 +52,7 @@ The generation protocol's own round types and lifecycle
 (see *Generations and the vault* below):
 
 ```bash
+make propose_split                    # freeze prep: propose the partition from the lock (WRITE=1 freezes)
 make batch B=1 GEN=generation_000     # improvement batch: platform lane, fully observable
 make heldout GEN=generation_000       # held-out round: local lane, sealed into the vault
 make reset_h0                         # restore the recipe to the h0-baseline tag
@@ -458,8 +463,11 @@ closed without a graded round and lives only in git history. In the working tree
 `results/experiment_001_bm25-sonnet46/README.md` is a different record — seq 1 froze the
 debug experiment and was **voided at H0** the same day on a τ-side user-simulator defect
 no harness mutation can reach (tau2-bench#470). Seq 2 re-froze with the poisoned task
-excluded, ran the debug experiment to completion, and is revealed; the full-scale run
-takes seq 3. Reused ids are disambiguated by freeze fingerprints. Two values were
+excluded, ran the debug experiment to completion, and is revealed; seq 3 is the
+powered run (`003_powered-bm25-sonnet46`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
+over a fresh 76-task pool — no task the seq-2 loop was tuned on, or whose result the
+reveal exposed, appears anywhere in it; the full-scale run defers to seq 4. Reused
+ids are disambiguated by freeze fingerprints. Two values were
 decided the hard way and the decisions carry forward:
 
 - `retrieval_config: bm25` is the deliberate freeze, pinned knowingly over the unavailable
@@ -472,8 +480,9 @@ decided the hard way and the decisions carry forward:
   not reproducible episode to episode. The retired bring-up freeze (the pre-reset
   `001_bm25-sonnet46`, in git history) froze `num_trials: 4` against this; the
   evaluation protocol instead freezes one trial per task and pools variance across the
-  held-out set, treating generation deltas inside the binomial noise band (±7 pp at T=47;
-  ±17 pp at the debug T=8) as noise (`SIA_EVALUATION_PLAN.md` D2).
+  held-out set, treating generation deltas inside the binomial noise band (±17 pp at the
+  debug T=8; ±9 pp at the powered T=28; ±7 pp at T=47) as noise (`SIA_EVALUATION_PLAN.md`
+  D2, bands per D11).
 
 The model pair, by contrast, is now chosen rather than defaulted, and neither half is Sonnet 5.
 

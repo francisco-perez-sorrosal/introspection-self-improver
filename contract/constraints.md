@@ -150,10 +150,12 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
    once; ten runs returned 1.0 six times and 0.0 four times). The remedy changed with the
    evaluation protocol (2026-08-13): repeated trials are no longer the instrument. Generations
    are compared on a fixed held-out set at one trial per task, pooling variance across tasks
-   instead of within one — binomial noise ≈ ±7 pp at T=47 (≈ ±17 pp at the debug T=8),
+   instead of within one — binomial noise ≈ ±17 pp at the debug T=8, ≈ ±9 pp at the
+   powered T=28, ≈ ±7 pp at T=47,
    stated wherever the curve renders;
-   `pass^k` is retired for generations; an optional endpoint reliability study (H_0 and H_G ×
-   4 trials, after reveal) is the named upgrade path (`SIA_EVALUATION_PLAN.md` D2).
+   `pass^k` is retired for generations; the endpoint reliability study (H_0 and H_G ×
+   extra trials, after reveal) is the named upgrade path, conditional since D11
+   (`SIA_EVALUATION_PLAN.md` D2, D11).
 
 ## Platform-lane concurrency
 

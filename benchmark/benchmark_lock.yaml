@@ -21,13 +21,16 @@
 # that path in history) and the 002 bring-up runs. Seq 1 froze the debug experiment
 # (D10 sizes) and was VOIDED the same day at H0: task_034 deterministically crashes τ's
 # text-mode user simulator under real agents, a frozen-surface defect — see
-# results/experiment_001_bm25-sonnet46/README.md. Seq 2 is the debug experiment's second
-# attempt (task_034 excluded from the partition pool); the full experiment takes seq 3.
-# Reused ids are unambiguous mechanically: each freeze is identified by its own results/
-# snapshot fingerprint.
+# results/experiment_001_bm25-sonnet46/README.md. Seq 2 ran the debug experiment to
+# completion and is REVEALED (results/experiment_002_bm25-sonnet46/). Seq 3 is the
+# POWERED experiment — the tier between debug and full, sized from seq-2 actuals by
+# results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md (plan D11): G=5/B=8/T=28 on
+# a fresh 76-task pool; the full T=47 run is deferred to seq 4. Reused ids are
+# unambiguous mechanically: each freeze is identified by its own results/ snapshot
+# fingerprint.
 experiment:
-  seq: 2
-  name: bm25-sonnet46
+  seq: 3
+  name: powered-bm25-sonnet46
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -60,18 +63,24 @@ benchmark:
 # The generation protocol's experiment configuration (SIA_EVALUATION_PLAN.md §3;
 # self_improving_agent_evaluation_protocol.md §26). Frozen with everything else in this
 # file: the partition manifest is proposed from these sizes and verified against them,
-# and (G*B)+T must fit the domain's 97 tasks. Debug scale per D10 (2026-08-13, sized so
-# a real improvement can SHOW on the fixed held-out curve: T=8 gives a fixed failure
-# mode ~60% odds of a held-out witness vs ~43% at T=5, halves the per-task quantum to
-# 12.5 pp, and dilutes identity-harness churn across 8 matrix rows) — the debug seq proves the
-# loop end to end (seq 1) before the full G=5/B=10/T=47 experiment freezes under seq 2.
+# and (G*B)+T must fit the eligible pool — 97 domain tasks minus the manifest's
+# header-documented exclusions (seq 3: 68 of 76). Powered scale per D11 (2026-08-14,
+# sized from seq-2 actuals by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md:
+# powered for a ~+4-5 pp/generation loop — ~97% direction, ~82% trend-significance at
+# α=.05 — where the debug T=8 could resolve nothing smaller than ~45 pp. T=28 gives a
+# ~10-task failure mode 97%/85% odds of ≥1/≥2 held-out witnesses vs 60%/19% at T=8 and
+# tightens the noise band ±17 → ±9 pp; B=8 turns batch prevalence quotes from quarters
+# into eighths — the cheapest lever on mutation quality; G=5 is the strongest power
+# lever, compounding mutations AND adding curve points to the pre-registered trend
+# test). The full G=5/B=10/T=47 experiment is deferred to seq 4: at measured per-episode
+# costs it adds ~10 pp of trend power for ~$80.
 protocol:
-  generations: 3
-  improvement_tasks_per_generation: 4
-  held_out_tasks: 8
+  generations: 5
+  improvement_tasks_per_generation: 8
+  held_out_tasks: 28
 
   # Re-running the just-consumed batch after a mutation would be intervention
-  # verification, never generalization (protocol §15). Off for the debug experiment —
+  # verification, never generalization (protocol §15). Off, as in the debug experiment —
   # the loop stays maximally simple and every batch is spent exactly once.
   allow_within_batch_verification: false
 
@@ -90,13 +99,16 @@ protocol:
   require_human_approval: true
 
 frozen:
-  # FROZEN at plan Phase 4 (2026-08-13): the debug experiment (seq 2, after seq 1's
-  # void) runs under these values. The first run writes the freeze snapshot into the
-  # results directory, and every later run must match it — drift refuses the run.
-  # Changing a value now means a NEW experiment (bump seq), never a new value under
-  # this one. The bring-up history (Phases 1-3.5c, PROVISIONAL) and the seq-1 void are
-  # recorded in SIA_EVALUATION_PLAN.md.
-  status: FROZEN
+  # PROVISIONAL while seq 3 (the powered experiment) is prepared: the values are cut and
+  # the partition is proposed, but no freeze snapshot is written or enforced until the
+  # experiment's start gate flips this to FROZEN — after `make reset_h0` (H0 back to the
+  # `h0-baseline` tag; seq-2 mutations are evidence, not inheritance) and the A.0a gate
+  # (SIA_EVALUATION_PLAN.md Phase 5). Every value below this status line is carried
+  # unchanged from the seq-2 freeze; the protocol block above is the re-decision (D11).
+  # Once FROZEN: the first run writes the freeze snapshot into the results directory,
+  # every later run must match it, and changing a value means a NEW experiment (bump
+  # seq), never a new value under this one.
+  status: PROVISIONAL
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which
@@ -159,7 +171,8 @@ frozen:
 
   # 1 per SIA_EVALUATION_PLAN.md D2: every task runs once, and statistical power comes
   # from pooling across the held-out set rather than repeating one task — deltas inside
-  # the binomial noise band (±7 pp at T=47; ±17 pp at the debug T=8) are noise, and
+  # the binomial noise band (±17 pp at the debug T=8; ±9 pp at the powered T=28;
+  # ±7 pp at T=47) are noise, and
   # pass^k is never used for generations. 4 was the retired bring-up freeze's doctrine
   # (the pre-reset 001_bm25-sonnet46, in git history), motivated by episode-level reward
   # being a draw (ten runs of one task split 6/4 — in git history); D2 reverses it. This

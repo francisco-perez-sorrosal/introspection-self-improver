@@ -16,9 +16,13 @@ file and the code disagree, the code wins and this file gets fixed.
    crashes), probe suspects directly with τ's stock agent (`tau2 run … --agent
    llm_agent`), pre-partition. Seq 2 exists because seq 1 died at H0 on exactly such a
    defect (task_034; upstream tau2-bench#470).
-2. **Partition**: `propose_split.py --write --exclude <crashers> --note <why>`;
-   `--verify` must pass. Exclusions are documented in the manifest header, evidence
-   committed beside it (`benchmark/data/user_sim_screen.json`).
+2. **Partition**: `make propose_split` (wraps `propose_split.py`; review the printed
+   proposal, then freeze with `WRITE=1`); `--verify` must pass. Exclusions are
+   documented in the manifest header, evidence committed beside it
+   (`benchmark/data/user_sim_screen.json`). Exclusions carry the crashers AND the
+   experiment's decision-row pool discipline: seq 3 (plan D11) additionally excludes
+   all 20 seq-2 tasks, so nothing a prior loop was tuned on — and nothing a prior
+   reveal exposed — reappears anywhere in the new partition.
 3. **Freeze**: set `experiment.seq`, protocol block (G/B/T), flip `frozen.status` to
    FROZEN; `make reset_h0` (byte-identity to `h0-baseline`); commit; `make gate_a0a`
    (blocking) and commit the PASS record — the first run writes the freeze snapshot
@@ -94,8 +98,14 @@ file and the code disagree, the code wins and this file gets fixed.
 
 The loop ran end to end with zero mid-run mechanics patching: freeze → 4 hidden
 measurements → 3 batches → 3 diagnoses → 3 user-gated PRs → 3 tags → reveal, seam
-incident-free throughout. Wall-clock ≈ 3.5 h including review latency; spend ≈ $11
-(32 local + 12 platform episodes + screens/probes). The endpoint at T=8 was
+incident-free throughout. Wall-clock ≈ 3.5 h including review latency; spend ≈ $32
+(manifest sums: $19.92 local — agent + user-sim — and $9.05 platform conversation
+billing, the τ-side user-sim on that lane being manifest-invisible, plus ~$3
+screens/probes; an earlier "≈ $11" note here undercounted by omitting the local
+lane's manifests). The endpoint at T=8 was
 directional-negative (−1 task, inside ±18 pp): the debug scale demonstrates the
-loop, not the claim — T=47 carries the claim (plan D10 caveat, restated wherever the
-curve renders).
+loop, not the claim. The claim path was re-staged from this run's own data (plan
+D11, `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`): seq 3 runs the
+POWERED scale — G=5, B=8, T=28, powered for a ~+4–5 pp/generation loop, with a
+pre-registered one-sided trend test over H0…H5 at α=0.05 as the primary
+instrument — and the full T=47 run defers to seq 4.

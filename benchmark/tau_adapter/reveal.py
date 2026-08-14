@@ -4,7 +4,8 @@ Runnable only once the final generation tag exists (protocol guardrail 19), it c
 vault's held-out rounds into results/experiment_<id>/held_out/, computes the progression
 artifacts — held-out count per generation, the task x generation matrix, per-transition
 gains/retained/regressions/unresolved, the currently-solved vs ever-solved retention
-diagnostic — writes summary.md with the D2 noise band, and fills every improvement
+diagnostic, the pre-registered trend test (D11) — writes summary.md with the D2 noise
+band and the trend verdict, and fills every improvement
 record's held_out_result. Identity generations (D5) carry their predecessor's result
 forward and are labeled as carried, never re-measured; a vault measurement existing for
 one is a protocol violation and refuses the reveal.
@@ -43,7 +44,13 @@ RESULTS_BY_GENERATION_CSV = "results_by_generation.csv"
 TASK_GENERATION_MATRIX_CSV = "task_generation_matrix.csv"
 TRANSITIONS_CSV = "transitions.csv"
 RETENTION_CSV = "retention.csv"
+TREND_TEST_JSON = "trend_test.json"
 SUMMARY_NAME = "summary.md"
+
+#: Pre-registered before any seq-3 round (SIA_EVALUATION_PLAN.md D11): the one primary
+#: significance test, fixed n, no interim looks. Changing it after data exists voids the
+#: pre-registration — that is a new experiment, never a new alpha under the old one.
+TREND_ALPHA = 0.05
 
 
 class RevealError(RuntimeError):
@@ -72,6 +79,69 @@ def generation_dirname(generation: int) -> str:
 def noise_band_pp(held_out_tasks: int) -> int:
     """One binomial standard error at p=0.5, in percentage points (≈7 at T=47, per D2)."""
     return round(100 * 0.5 / math.sqrt(held_out_tasks))
+
+
+def trend_test(results: list[GenerationResult]) -> dict[str, Any]:
+    """One-sided trend over the measured generations — the pre-registered primary (D11).
+
+    S = Σ_t Σ_j c_j x_tj with c_j the centered generation index over MEASURED columns
+    only: an identity generation carries its predecessor's draws forward, so including
+    it would count one measurement more than once. The null holds each task's own
+    outcomes fixed and treats their order as exchangeable (task difficulty stays; a
+    harness that never changed has no direction), giving the exact per-task permutation
+    variance (sum c^2) * sum_j (x_tj - xbar_t)^2 / (m - 1); the tail is normal-approximated.
+    One-sided because the pre-registered question is improvement: large positive S.
+    """
+    measured = [result for result in results if not result.carried]
+    verdict: dict[str, Any] = {
+        "test": "one-sided trend, permutation-variance normal approximation",
+        "alpha": TREND_ALPHA,
+        "measured_generations": [result.label for result in measured],
+        "excluded_identity": [result.label for result in results if result.carried],
+    }
+    columns = len(measured)
+    if columns < 2:
+        return {**verdict, "statistic": 0.0, "z": 0.0, "p_value": 1.0, "significant": False}
+    center = sum(result.generation for result in measured) / columns
+    coefficients = [result.generation - center for result in measured]
+    coefficient_ss = sum(c * c for c in coefficients)
+    statistic = 0.0
+    variance = 0.0
+    for task in measured[0].passed:
+        outcomes = [float(result.passed[task]) for result in measured]
+        mean = sum(outcomes) / columns
+        statistic += sum(c * x for c, x in zip(coefficients, outcomes, strict=True))
+        variance += coefficient_ss * sum((x - mean) ** 2 for x in outcomes) / (columns - 1)
+    if variance == 0:
+        return {**verdict, "statistic": statistic, "z": 0.0, "p_value": 1.0, "significant": False}
+    z = statistic / math.sqrt(variance)
+    p_value = 0.5 * math.erfc(z / math.sqrt(2))
+    return {
+        **verdict,
+        "statistic": statistic,
+        "z": z,
+        "p_value": p_value,
+        "significant": p_value < TREND_ALPHA,
+    }
+
+
+def trend_sentence(trend: dict[str, Any]) -> str:
+    """The summary.md rendering of the trend verdict."""
+    if trend["p_value"] >= 1.0:
+        body = "no discordance across the measured generations — no trend evidence (p = 1)"
+    else:
+        outcome = "significant" if trend["significant"] else "not significant"
+        body = (
+            f"one-sided trend over the measured generations "
+            f"({', '.join(trend['measured_generations'])}): z = {trend['z']:.2f}, "
+            f"p = {trend['p_value']:.3f} — {outcome} at alpha = {trend['alpha']}"
+        )
+    if trend["excluded_identity"]:
+        body += (
+            f". Identity generations ({', '.join(trend['excluded_identity'])}) carry "
+            "their predecessor's draws and are excluded from the statistic"
+        )
+    return body
 
 
 # ---------------------------------------------------------------- assembling results
@@ -329,7 +399,15 @@ def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) ->
         f"| {'carried (identity)' if r.carried else 'measured'} |"
         for r in results
     ]
-    lines += ["", f"**Endpoint:** {verdict}", "", "## Transitions", ""]
+    lines += [
+        "",
+        f"**Endpoint:** {verdict}",
+        "",
+        f"**Pre-registered primary (D11):** {trend_sentence(trend_test(results))}.",
+        "",
+        "## Transitions",
+        "",
+    ]
     lines += [
         "| transition | gains | retained | regressions | unresolved | net | note |",
         "|---|---|---|---|---|---|---|",
@@ -357,7 +435,8 @@ def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) ->
         "",
         f"- `{HELD_OUT_DIRNAME}/{RESULTS_BY_GENERATION_CSV}`, "
         f"`{HELD_OUT_DIRNAME}/{TASK_GENERATION_MATRIX_CSV}`, "
-        f"`{HELD_OUT_DIRNAME}/{TRANSITIONS_CSV}`, `{HELD_OUT_DIRNAME}/{RETENTION_CSV}` — "
+        f"`{HELD_OUT_DIRNAME}/{TRANSITIONS_CSV}`, `{HELD_OUT_DIRNAME}/{RETENTION_CSV}`, "
+        f"`{HELD_OUT_DIRNAME}/{TREND_TEST_JSON}` — "
         "computed at this reveal.",
         f"- `{HELD_OUT_DIRNAME}/generation_NNN/` — the vault rounds, copied verbatim.",
         "- `improvement_records/` — the evidence chain, `held_out_result` filled at this "
@@ -427,6 +506,9 @@ def reveal(
     )
     (held_out_dir / TRANSITIONS_CSV).write_text(transitions_csv(results), encoding="utf-8")
     (held_out_dir / RETENTION_CSV).write_text(retention_csv(results, total), encoding="utf-8")
+    (held_out_dir / TREND_TEST_JSON).write_text(
+        json.dumps(trend_test(results), indent=2) + "\n", encoding="utf-8"
+    )
     process_metrics.write_process_metrics(held_out_dir)
     revealed_on = datetime.now(UTC).strftime("%Y-%m-%d")
     (experiment_dir / SUMMARY_NAME).write_text(
