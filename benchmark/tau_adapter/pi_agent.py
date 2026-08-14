@@ -9,6 +9,7 @@ counting, trajectory construction, termination, and grading.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -24,8 +25,14 @@ from tau2.data_model.message import (
 )
 
 from tau_adapter.policy_region import assert_matches_environment
-from tau_adapter.tool_bridge import ToolBridge
+from tau_adapter.tool_bridge import EpisodeChannel
 from tau_adapter.transport import AgentTransport, AssistantTurn, TransportFailure
+
+#: Opens this episode's rendezvous channel; the keyword argument is the stall sink.
+#: The runner chooses which opener an agent gets: `ToolBridge.open_channel` on the local
+#: lane (fresh URL per episode, safe at any concurrency) or `ToolBridge.open_run_channel`
+#: on the development lane (the pinned URL `dev` was handed, sequential episodes only).
+ChannelOpener = Callable[..., EpisodeChannel]
 
 # A turn covers one model call plus Pi's own overhead. Generous on purpose: this is plumbing,
 # and τ's --max-steps-seconds is what bounds the episode.
@@ -58,14 +65,15 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         tools: list[Any],
         domain_policy: str,
         *,
-        bridge: ToolBridge,
+        open_channel: ChannelOpener,
         transport: AgentTransport,
         recipe_policy: str,
         domain: str,
         base_env: dict[str, str],
     ) -> None:
         super().__init__(tools=tools, domain_policy=domain_policy)
-        self._bridge = bridge
+        self._open_channel = open_channel
+        self._channel: EpisodeChannel | None = None
         self._transport = transport
         self._recipe_policy = recipe_policy
         self._domain = domain
@@ -80,23 +88,24 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         assert_matches_environment(self._recipe_policy, self.domain_policy, self._domain)
 
         if not self._started:
-            # The bridge is started by the runner and shared by every episode: the development
-            # lane's `introspection dev` attachment is handed one URL before the first episode
-            # and holds it for the whole run, so a per-episode bridge could not be reached.
-            # Safe at max_concurrency 1, where only one episode is ever in flight.
-            # What must NOT be shared is rendezvous state — see reset_for_episode.
-            # The transport's incident sink (when it keeps one) receives this episode's stall
-            # warnings, so a stalled rendezvous reaches the episode manifest.
+            # The bridge is started by the runner and shared by every episode; what is NOT
+            # shared is rendezvous state. Each episode opens its own channel — its own
+            # mailbox at its own URL — which is what keeps τ's concurrent workers, and a τ
+            # retry of this same task, from ever exchanging results (see EpisodeChannel).
+            # The transport's incident sink (when it keeps one) receives this episode's
+            # stall warnings, so a stalled rendezvous reaches the episode manifest.
             sink = getattr(self._transport, "incidents", None)
-            self._bridge.reset_for_episode(on_stall=sink.count_stall if sink is not None else None)
+            self._channel = self._open_channel(
+                on_stall=sink.count_stall if sink is not None else None
+            )
             env = dict(self._base_env)
-            env.update(self._bridge.env())
+            env.update(self._channel.env())
             self._transport.start(env)
             self._transport_request_session_ref()
             self._started = True
             logger.info(
-                f"seam ready: {len(self._bridge.tau_tool_names)} τ tools bridged at "
-                f"{self._bridge.url}"
+                f"seam ready: {len(self._channel.tau_tool_names)} τ tools bridged at "
+                f"{self._channel.url}"
             )
 
         # τ seeds the trajectory with a canned agent greeting and passes it here as history.
@@ -109,8 +118,13 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         message: Message | None = None,
         state: PiAgentState | None = None,
     ) -> None:
-        # Only the transport: the bridge outlives this episode and is stopped by the runner.
+        # Reverse acquisition order: the transport (started after the channel opened) closes
+        # first, then the channel retires. The bridge itself outlives the episode and is
+        # stopped by the runner. τ calls stop from its orchestrator's finally block, so a
+        # failed attempt's channel is retired before the retry opens its own.
         self._transport.close()
+        if self._channel is not None:
+            self._channel.close()
 
     # -------------------------------------------------------------------- stepping
 
@@ -147,8 +161,9 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
             # posting it under the wrong key would unblock the wrong handler.
             logger.warning(f"tool result {tool_message.id!r} has no pending invocation; dropping")
             return
+        assert self._channel is not None  # results only flow inside a started episode
         tau_name, arguments = invocation
-        self._bridge.post_result(
+        self._channel.post_result(
             tool_name=tau_name,
             arguments=arguments,
             content=tool_message.content or "",
@@ -156,11 +171,12 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         )
 
     def _to_tau_message(self, turn: AssistantTurn, state: PiAgentState) -> AssistantMessage:
+        assert self._channel is not None  # turns only flow inside a started episode
         tau_calls: list[ToolCall] = []
         for call in turn.tool_calls:
             # An unmapped name means the agent called something outside τ's tool set. Passed
             # through as-is so τ reports it as the invalid call it is.
-            tau_name = self._bridge.name_map.get(call.pi_name, call.pi_name)
+            tau_name = self._channel.name_map.get(call.pi_name, call.pi_name)
             tau_calls.append(
                 ToolCall(
                     id=call.id,

@@ -13,6 +13,15 @@ bridge reconciles them without either side giving up authority:
 Nothing about the trajectory is reconstructed: τ builds it, counts the steps, and grades it.
 The bridge never touches the environment, so it cannot become a second implementation of the
 benchmark's semantics.
+
+Episodes rendezvous on **channels**. One bridge serves the whole run, but every episode
+opens an `EpisodeChannel` — its own mailbox at its own `/mcp/<token>` path — so episode
+identity is the URL itself, and a result posted for one episode cannot answer another's
+call even when both name the same tool with identical arguments. τ runs its episodes from
+a worker pool (`max_concurrency`), and the channel registry is what makes N in-flight
+episodes safe; one episode at a time is simply the degenerate case of the same mechanism.
+The development lane, whose `dev` attachment is handed a single URL for the whole run,
+reuses one pinned token sequentially (`open_run_channel`) — same mechanism, same rules.
 """
 
 from __future__ import annotations
@@ -152,6 +161,66 @@ class _Mailbox:
             ) from exc
 
 
+class EpisodeChannel:
+    """One episode's rendezvous surface: its own mailbox, served at its own URL path.
+
+    Episode identity is the URL. Every MCP request carries the channel token in its path,
+    so a parked handler can only ever be answered by a result posted to the same episode's
+    channel — the keyspace two concurrent episodes could collide in no longer exists.
+    `on_stall` is bound at open, which is what attributes a stalled rendezvous to the one
+    episode (and manifest row) it belongs to.
+    """
+
+    def __init__(self, bridge: ToolBridge, token: str, on_stall: Callable[[], None] | None) -> None:
+        self._bridge = bridge
+        self.token = token
+        self._mailbox = _Mailbox(on_stall=on_stall)
+        self.calls_served = 0
+
+    @property
+    def url(self) -> str:
+        return self._bridge.url_for(self.token)
+
+    @property
+    def name_map(self) -> dict[str, str]:
+        """pi name -> τ name; the tool surface is bridge-level and frozen for the run."""
+        return self._bridge.name_map
+
+    @property
+    def tau_tool_names(self) -> list[str]:
+        return self._bridge.tau_tool_names
+
+    def env(self) -> dict[str, str]:
+        """What binds this episode's host to the Recipe's declared `tau` server.
+
+        One variable, because the URL carries both endpoint and credential in its path.
+        See `ToolBridge.path`.
+        """
+        return {f"{self._bridge.server_id.upper()}_MCP_URL": self.url}
+
+    def post_result(
+        self, tool_name: str, arguments: dict | None, content: str, is_error: bool
+    ) -> None:
+        """Hand τ's ToolMessage to whichever parked handler on this episode asked for it.
+
+        `tool_name` is τ's name, matching what the MCP request carried — not the mangled
+        name the model saw.
+        """
+        self._mailbox.post(_Key.of(tool_name, arguments), content, is_error)
+
+    def wait(self, tool_name: str, arguments: dict | None, timeout: float) -> tuple[str, bool]:
+        """Park until τ posts this invocation's result. The server's call handler ends here."""
+        return self._mailbox.wait(_Key.of(tool_name, arguments), timeout)
+
+    def close(self) -> None:
+        """Retire the channel: later calls to its URL are refused rather than parked.
+
+        Any handler still parked on this mailbox times out on its own ceiling; nothing can
+        legitimately outlive its episode.
+        """
+        self._bridge._release(self)
+
+
 class ToolBridge:
     """An MCP server over a fixed τ tool set, listening on an ephemeral loopback port."""
 
@@ -173,7 +242,10 @@ class ToolBridge:
         # pi name -> τ name. Built forwards; raises on a collision.
         self.name_map = build_name_map(server_id, self.tau_tool_names)
         self._mcp_tools = [_as_mcp_tool(t, server_id) for t in self._tau_tools]
-        self._mailbox = _Mailbox()
+        # token -> live channel. Guarded: τ's workers open and close channels concurrently
+        # while the server's event loop resolves inbound calls against the same registry.
+        self._channels: dict[str, EpisodeChannel] = {}
+        self._channels_lock = threading.Lock()
 
         self._socket: socket.socket | None = None
         self._server: uvicorn.Server | None = None
@@ -196,7 +268,9 @@ class ToolBridge:
             on_list_tools=self._on_list_tools,
             on_call_tool=self._on_call_tool,
         )
-        app = low.streamable_http_app(streamable_http_path=self.path)
+        # One parameterized route serves every channel: the token in the request path is
+        # what `_on_call_tool` resolves an episode by.
+        app = low.streamable_http_app(streamable_http_path="/mcp/{token}")
         config = uvicorn.Config(app, log_level="warning", lifespan="on", access_log=False)
         self._server = uvicorn.Server(config)
 
@@ -225,56 +299,74 @@ class ToolBridge:
 
     @property
     def path(self) -> str:
-        """The endpoint path, with the token as its last segment.
+        """The run-pinned endpoint path, with its token as the last segment.
 
-        The token is in the URL rather than an `Authorization` header because the development
-        lane can only convey a URL: `introspection dev --mcp tau=<url>` carries no credentials,
-        and a *connected* MCP binding — the documented place for headers — replaces the URL with
-        its own, which cannot reach this machine from a cloud sandbox. One mechanism serves both
-        lanes, so the two cannot drift apart.
+        This is the one URL the development lane can carry: `introspection dev --mcp
+        tau=<url>` conveys a URL and nothing else — no credentials, no per-task override —
+        and a *connected* MCP binding (the documented place for headers) replaces the URL
+        with its own, which cannot reach this machine from a cloud sandbox. The token
+        therefore rides in the path, and this pinned path is the platform lane's channel
+        for every episode (`open_run_channel`). Local-lane episodes mint their own paths.
         """
         return f"/mcp/{self.token}"
 
     @property
     def url(self) -> str:
+        """The run-pinned URL — what `introspection dev` is handed for the whole run."""
+        return self.url_for(self.token)
+
+    def url_for(self, token: str) -> str:
         if self._port is None:
             raise RuntimeError("tool bridge not started")
-        return f"http://127.0.0.1:{self._port}{self.path}"
+        return f"http://127.0.0.1:{self._port}/mcp/{token}"
 
-    def env(self) -> dict[str, str]:
-        """What binds this bridge to the Recipe's declared `tau` server.
+    # ------------------------------------------------------------------- channels
 
-        One variable, because the URL carries the credential in its path. See `path`.
-        """
-        return {f"{self.server_id.upper()}_MCP_URL": self.url}
+    def open_channel(self, on_stall: Callable[[], None] | None = None) -> EpisodeChannel:
+        """Open a fresh episode channel at its own minted `/mcp/<token>` path.
 
-    # -------------------------------------------------------------------- results
-
-    def post_result(
-        self, tool_name: str, arguments: dict | None, content: str, is_error: bool
-    ) -> None:
-        """Hand τ's ToolMessage to whichever parked handler asked for it.
-
-        `tool_name` is τ's name, matching what the MCP request carried — not the mangled name
-        the model saw.
-        """
-        self._mailbox.post(_Key.of(tool_name, arguments), content, is_error)
-
-    def reset_for_episode(self, on_stall: Callable[[], None] | None = None) -> None:
-        """Drop every rendezvous slot. Called at episode start; the bridge itself lives on.
-
-        The bridge outlives the episode — the development lane's `dev` attachment holds its URL
-        for the whole run — but rendezvous state must not. A result posted for a call whose
-        handler had already given up stays queued under its name-and-arguments key, and the next
-        episode of the *same task* asks with identical arguments: it would receive the stale
-        result instantly and shift every later pairing by one, silently. A τ infrastructure
-        retry sets up exactly that sequence. Any handler still parked on the old mailbox times
-        out on its own ceiling; nothing can legitimately cross an episode boundary.
-
-        `on_stall` attributes this episode's stall warnings to its caller's incident sink,
+        The local lane's per-episode entry: the URL reaches that episode's Pi subprocess
+        through its environment, so every in-flight episode rendezvouses in isolation.
+        `on_stall` attributes the episode's stall warnings to its caller's incident sink,
         which is how a stalled rendezvous reaches the episode manifest.
         """
-        self._mailbox = _Mailbox(on_stall=on_stall)
+        with self._channels_lock:
+            token = secrets.token_urlsafe(24)
+            while token in self._channels or token == self.token:  # pragma: no cover
+                token = secrets.token_urlsafe(24)
+            channel = EpisodeChannel(self, token, on_stall)
+            self._channels[token] = channel
+            return channel
+
+    def open_run_channel(self, on_stall: Callable[[], None] | None = None) -> EpisodeChannel:
+        """Open this episode's channel at the run-pinned path, replacing any predecessor.
+
+        The development lane's entry: `dev` holds one URL for the whole run, so its episodes
+        share the pinned token *sequentially* — the runner refuses platform-lane concurrency
+        above 1. Replacement is the episode boundary: a result posted for a call whose
+        handler had already given up stays queued in the predecessor's mailbox, and a τ
+        infrastructure retry re-asks the *same task* with identical arguments — against the
+        old mailbox it would receive the stale result instantly and shift every later
+        pairing by one, silently. The fresh mailbox makes that impossible, and any handler
+        still parked on the old one times out on its own ceiling.
+        """
+        with self._channels_lock:
+            channel = EpisodeChannel(self, self.token, on_stall)
+            self._channels[self.token] = channel
+            return channel
+
+    def _release(self, channel: EpisodeChannel) -> None:
+        # Identity-guarded: a late close of a replaced run channel (τ tearing down a failed
+        # attempt after the retry already opened its own) must not evict the successor.
+        with self._channels_lock:
+            if self._channels.get(channel.token) is channel:
+                del self._channels[channel.token]
+
+    def _channel_for(self, token: str | None) -> EpisodeChannel | None:
+        if token is None:
+            return None
+        with self._channels_lock:
+            return self._channels.get(token)
 
     # ------------------------------------------------------------------- handlers
 
@@ -286,11 +378,28 @@ class ToolBridge:
     async def _on_call_tool(
         self, ctx: ServerRequestContext, params: mcp_types.CallToolRequestParams
     ) -> mcp_types.CallToolResult:
-        key = _Key.of(params.name, params.arguments)
+        channel = self._channel_for(_token_of(ctx))
+        if channel is None:
+            # A closed or never-opened token: the episode this URL belonged to is over (or
+            # the URL is stale). Refusing immediately beats parking a handler for 300s
+            # against a mailbox nothing will ever post to.
+            return mcp_types.CallToolResult(
+                content=[
+                    mcp_types.TextContent(
+                        type="text",
+                        text=(
+                            f"no live episode channel at this endpoint for {params.name}: "
+                            "the episode has ended, or the URL is stale"
+                        ),
+                    )
+                ],
+                is_error=True,
+            )
         self.calls_served += 1
+        channel.calls_served += 1
         try:
             content, is_error = await asyncio.to_thread(
-                self._mailbox.wait, key, RESULT_WAIT_SECONDS
+                channel.wait, params.name, params.arguments, RESULT_WAIT_SECONDS
             )
         except ToolResultTimeout as exc:
             # Surfaced to the agent as a failed tool call rather than raised, so the episode
@@ -301,6 +410,19 @@ class ToolBridge:
         return mcp_types.CallToolResult(
             content=[mcp_types.TextContent(type="text", text=content)], is_error=is_error
         )
+
+
+def _token_of(ctx: ServerRequestContext) -> str | None:
+    """The channel token named by the request's URL path.
+
+    The streamable-HTTP transport attaches the live HTTP request to every inbound message,
+    and the parameterized route puts the path's token segment in its `path_params` — so the
+    token is read per request, never inferred from session state.
+    """
+    request = getattr(ctx, "request", None)
+    if request is None:
+        return None
+    return (getattr(request, "path_params", None) or {}).get("token")
 
 
 def _as_mcp_tool(tau_tool: Any, server_id: str) -> mcp_types.Tool:

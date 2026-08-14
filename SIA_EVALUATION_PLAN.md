@@ -327,13 +327,22 @@ prevents cross-episode result crossing), performant (measure serial vs concurren
 report the numbers), efficient (minimal spend, minimal seam churn). Runs in its own
 session; the frozen `max_concurrency` VALUE is untouched throughout.
 
-- [ ] Intake design note: the episode-identity mechanism (per-episode URL channels
-      vs MCP-session-keyed channels over the single run URL), grounded in
-      `tool_bridge.py`/`pi_agent.py`/`run.py` and in current Introspection docs
-      (`dev --mcp` semantics, per-task config/env, sandbox concurrency limits, MCP
-      SDK session identity); user confirms before any build.
-- [ ] Bridge episode channels (common substrate) — the result-crossing minitest
-      lands first; the degenerate single-channel case behaves exactly as today.
+- [x] Intake design note: per-episode URL channels chosen (mechanism A) over
+      MCP-session-keyed channels, on grounds probed live against the installed MCP
+      SDK 2.0.0 (parameterized route + per-request token resolution proven; B's
+      episode↔session binding undeterminable at N without a handshake); platform
+      docs pass found the native affordance (`dev --as` named attachments,
+      fail-closed `INTROSPECTION_DEV_TARGET` routing) and it is cited, not built —
+      untestable inside this phase's rules. User confirmed mechanism + ≤$3 mock
+      spend. Note: `.ai-work/episode-concurrency/{DESIGN_NOTE,RESEARCH_FINDINGS}.md`
+      (2026-08-13).
+- [x] Bridge episode channels (common substrate) — `EpisodeChannel` at
+      `/mcp/<token>` on the one run-scoped server; result-crossing minitest landed
+      first (mailbox-level + live two-client HTTP); stale-result isolation for both
+      the replaced run channel and closed fresh channels; per-channel stall
+      attribution; identity-guarded release (late close cannot evict a successor);
+      unknown/closed tokens refused loudly instead of a 300s park. Suite 208 → 216
+      (2026-08-13).
 - [ ] `run.py` thread-safety under τ's worker pool (`episode_transports`,
       `launch_argv`, `original_titles`, incident aggregation).
 - [ ] Local lane end-to-end: per-episode channel URL via env; live minitest = a

@@ -578,7 +578,13 @@ def main() -> int:
         return PiRecipeAgent(
             tools=tools,
             domain_policy=domain_policy,
-            bridge=bridge,
+            # The development lane's episodes share the one URL `dev` was handed, so they
+            # reuse the pinned run channel sequentially; local episodes each mint their own.
+            open_channel=(
+                bridge.open_run_channel
+                if spec.transport == TRANSPORT_PLATFORM
+                else bridge.open_channel
+            ),
             transport=transport,
             recipe_policy=recipe_policy,
             domain=domain,
