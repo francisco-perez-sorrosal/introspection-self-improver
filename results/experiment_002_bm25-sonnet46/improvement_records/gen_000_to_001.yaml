@@ -1,0 +1,84 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 0
+  to_generation: 1
+experiment: 002_bm25-sonnet46
+outcome: 'TODO: accepted | rejected | identity — set when the PR is merged or declined'
+batch:
+  name: batch_01
+  task_ids:
+  - task_027
+  - task_061
+  - task_081
+  - task_101
+evidence:
+  conversation_ids:
+  - 019ffeec-0fbc-7552-87ac-8a755b3ce6b5
+  - 019ffeec-1c50-7490-ba18-a37d8a7271a9
+  - 019ffeef-6e6a-74f8-89d8-d03aa541af69
+  - 019ffeef-d7ef-7185-b7df-699afdacecd8
+  summary: >
+    All four B1 conversations exported via `introspection conversations get --ids-file`
+    and read in full (harvest 1); graded action_checks and db_check read from
+    batch_01/graded/updated_results.json. Observation/pattern harvest (harvest 2)
+    returned zero rows inside the eligibility window (`introspection events list
+    --event-name introspection.observation`); the stated fallback — full-population
+    transcript read, the stronger evidence tier at n=4 — was applied. Seam health
+    clean on 4/4 rows (no stalls, 409s, or timeouts; benign stream_reattaches only;
+    evidence_complete and arm_sha_ok true everywhere), so every failure is agent
+    behavior, not infrastructure. B1 graded 0/4 — the D8 viability condition fired
+    and the user ratified proceeding with the loop (2026-08-13).
+signals:
+- description: >
+    Misapplied KB knowledge: the agent assembles facts from many bm25 KB_search
+    results, then commits writes or recommendations without verifying each specific
+    entity. task_027 identified five under-rewarded transactions, got one wrong
+    (gold expected txn_b7e2d4c5f506), and wrote the wrong set to the database;
+    task_101 gave referral advice contradicting gold on two of four people.
+  prevalence: 2/4
+- description: >
+    Capability blindness: told the user an in-chat action was impossible while the
+    discoverable user tool for exactly that action existed (task_061, deposit_check
+    — the user asked for chat access to it almost verbatim); the dependent account
+    closure never happened.
+  prevalence: 1/4
+- description: >
+    Premature escalation: transferred to a human on the first turn of a stolen-wallet
+    scenario whose gold is a ~30-action freeze/replace/dispute workflow, with the
+    user's transfer demands as scripted distractors (task_081; 10-message episode).
+  prevalence: 1/4
+counterevidence: >
+  The agent is not globally incompetent — it verified identity correctly (3/4),
+  drove discoverable agent tools through multi-step flows (task_061 matched 6/9 gold
+  actions), and searched the KB extensively. This argues the failures are specific
+  behaviors, not a broken H0 — the basis for proceeding past the D8 halt.
+hypothesis: >
+  On DB-basis tasks the reward is zeroed by a single wrong committed value, and the
+  dominant source of wrong values is trusting a conclusion synthesized from broad
+  bm25 result sets. Requiring a per-entity verification search before any commit
+  derived from KB results will catch the wrong member of a derived set before it is
+  written or recommended.
+owning_layer: agent judgment — system-prompt instructions (target-agent/SYSTEM.md <instructions>)
+proposed_change: >
+  One instruction block in SYSTEM.md: before acting on a KB-derived conclusion
+  (write, dispute, or product/program recommendation), re-verify each specific claim
+  with a targeted KB_search naming the exact entity; reconcile contradictions,
+  preferring the document naming the exact entity; never batch-commit unconfirmed
+  derived values.
+mutation:
+  branch: gen-001/kb-answer-verification
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/1
+  source_commit: d540fdf38e191a6c50e451a147b8a368ee592c08
+  candidate_commit: null
+expected_effect: >
+  Fixes the misapplied-knowledge class (2/4 in B1): derived sets get member-wise
+  confirmation before commitment, so single-member errors are caught pre-write.
+  Cost: more KB_search calls per episode. Not targeted: capability blindness and
+  premature escalation (future-generation candidates).
+human_approval:
+  approved_by: 'TODO: set at PR review (fperezsorrosal expected)'
+  date: '2026-08-14'
+held_out_result: null
