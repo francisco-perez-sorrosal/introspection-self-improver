@@ -273,6 +273,20 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         "split": (metadata or {}).get("split"),
         "mode": (metadata or {}).get("mode")
         or ("locked" if info.get("retrieval_config") else None),
+        # Diagnostic rounds (mock-domain smokes, materialised-recipe runs) are shown
+        # but never counted: they are seam checks, not experiment evidence.
+        "diagnostic": (
+            (
+                (metadata or {}).get("mode")
+                or ("locked" if info.get("retrieval_config") else None)
+            )
+            != "locked"
+            or (
+                (metadata or {}).get("domain")
+                or ((info.get("environment_info") or {}).get("domain_name"))
+            )
+            == "mock"
+        ),
         "incident_totals": incident_totals,
         "incident_count": sum(
             v for v in incident_totals.values() if isinstance(v, int)
@@ -425,6 +439,33 @@ def read_held_out(experiment_dir: Path) -> dict | None:
             "ever": int(row["ever_solved"]),
         },
     )
+
+    def _num(value: str):
+        if value in ("", None):
+            return None
+        return float(value) if "." in value else int(value)
+
+    process_by_generation = _read_csv_rows(
+        held_dir / "process_metrics_by_generation.csv",
+        lambda row: {
+            key: (row[key] if key == "generation" else _num(row[key])) for key in row
+        },
+    )
+    process_by_task = _read_csv_rows(
+        held_dir / "process_metrics_by_task.csv",
+        lambda row: {
+            key: (
+                row[key]
+                if key in ("generation", "task_id", "reward_basis")
+                else (row[key] == "true")
+                if key in ("passed", "db_match") and row[key] != ""
+                else None
+                if row[key] == ""
+                else _num(row[key])
+            )
+            for key in row
+        },
+    )
     total = generations[0]["total"] if generations else 0
     summary_path = experiment_dir / "summary.md"
     return {
@@ -438,6 +479,11 @@ def read_held_out(experiment_dir: Path) -> dict | None:
         "retention": retention,
         # Mirror of tau_adapter.reveal.noise_band_pp: one binomial SE at p=0.5, in pp (D2).
         "noise_band_pp": round(100 * 0.5 / math.sqrt(total)) if total else None,
+        "process": (
+            {"by_generation": process_by_generation, "by_task": process_by_task}
+            if process_by_generation
+            else None
+        ),
         "summary": summary_path.read_text(encoding="utf-8")
         if summary_path.exists()
         else None,
@@ -495,10 +541,22 @@ def experiment_payload(results_root: Path, dirname: str) -> dict:
             }
         )
 
-    tasks = sorted({t for g in generations for r in g["rounds"] for t in r["tasks"]})
+    # Diagnostic rounds (e.g. the mock smoke's create_task_1) never reach the
+    # experiment-level task set or statistics — they are seam checks, not evidence.
+    tasks = sorted(
+        {
+            t
+            for g in generations
+            for r in g["rounds"]
+            if not r.get("diagnostic")
+            for t in r["tasks"]
+        }
+    )
     descriptions: dict[str, str] = {}
     for generation in generations:
         for round_summary in generation["rounds"]:
+            if round_summary.get("diagnostic"):
+                continue
             descriptions.update(
                 {k: v for k, v in round_summary["task_descriptions"].items() if v}
             )

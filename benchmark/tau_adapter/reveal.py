@@ -31,6 +31,7 @@ import yaml
 
 from tau_adapter import generations as gensmod
 from tau_adapter import heldout as heldoutmod
+from tau_adapter import process_metrics
 from tau_adapter import records as recordsmod
 from tau_adapter.experiment import COMPLETION_SENTINEL, SNAPSHOT_NAME
 from tau_adapter.lock import Lock
@@ -426,6 +427,7 @@ def reveal(
     )
     (held_out_dir / TRANSITIONS_CSV).write_text(transitions_csv(results), encoding="utf-8")
     (held_out_dir / RETENTION_CSV).write_text(retention_csv(results, total), encoding="utf-8")
+    process_metrics.write_process_metrics(held_out_dir)
     revealed_on = datetime.now(UTC).strftime("%Y-%m-%d")
     (experiment_dir / SUMMARY_NAME).write_text(
         summary_md(lock, results, revealed_on), encoding="utf-8"

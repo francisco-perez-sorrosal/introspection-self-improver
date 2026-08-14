@@ -9,18 +9,41 @@ the first time — that is the point of the reveal.
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tau_adapter import lock as lockmod
+from tau_adapter import process_metrics
 from tau_adapter import reveal as revealmod
 from tau_adapter.experiment import RESULTS_ROOT
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--derive-only",
+        action="store_true",
+        help=(
+            "recompute only the derived process-metrics CSVs from an ALREADY revealed "
+            "held_out/ directory (no vault access, no record stamping; idempotent). "
+            "For backfilling experiments revealed before the metrics existed."
+        ),
+    )
+    args = parser.parse_args()
     lock = lockmod.load_lock()
+    if args.derive_only:
+        held_out_dir = (
+            RESULTS_ROOT / f"experiment_{lock.experiment_id}" / revealmod.HELD_OUT_DIRNAME
+        )
+        if not held_out_dir.exists() or not any(held_out_dir.iterdir()):
+            print(f"✗ {held_out_dir} is not a revealed experiment", file=sys.stderr)
+            return 1
+        for path in process_metrics.write_process_metrics(held_out_dir):
+            print(f"✓ wrote {path}")
+        return 0
     try:
         experiment_dir = revealmod.reveal(lock, results_root=RESULTS_ROOT)
     except revealmod.RevealError as exc:

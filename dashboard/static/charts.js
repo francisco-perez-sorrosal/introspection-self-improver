@@ -234,7 +234,9 @@ export function lineChart(container, opts) {
 
 /* ---------------------------------------------------------------- sparkline */
 
-export function sparkline(container, { values, color }) {
+export function sparkline(container, { values, color, domain }) {
+  /* `domain: [min, max]` pins the y-scale — pass it whenever auto min-max scaling
+     would visually inflate small movements (e.g. percentages belong on 0–100). */
   const w = 200;
   const h = 46;
   const pad = 6;
@@ -244,8 +246,8 @@ export function sparkline(container, { values, color }) {
     container.replaceChildren(svg);
     return;
   }
-  const min = Math.min(...finite);
-  const max = Math.max(...finite);
+  const min = domain ? domain[0] : Math.min(...finite);
+  const max = domain ? domain[1] : Math.max(...finite);
   const span = max - min || 1;
   const n = values.length;
   const x = (i) => pad + (n > 1 ? (i * (w - 2 * pad)) / (n - 1) : (w - 2 * pad) / 2);

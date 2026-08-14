@@ -5,6 +5,11 @@ Derived after the reveal from `held_out/generation_NNN/graded/updated_results.js
 render from these same files). Same fixed 8 tasks at every generation: 7 DB-basis,
 1 ACTION-basis (task_035). All figures label their set and N; T=8 resolves only
 ≥2-task effects, so everything here is diagnostic and directional, never a claim.
+Mechanized since 2026-08-14 by `tau_adapter/process_metrics.py` (written at reveal;
+`scripts/reveal.py --derive-only` backfills) into `process_metrics_by_generation.csv`
+and `process_metrics_by_task.csv` beside this file — those CSVs are authoritative
+where this prose and they disagree. (One correction they caught: the DB-match row
+below originally counted the ACTION-basis task's incidental DB flag; fixed.)
 
 ## Aggregate evolution (held-out, N=8 tasks per generation)
 
@@ -12,7 +17,7 @@ render from these same files). Same fixed 8 tasks at every generation: 7 DB-basi
 |---|---|---|---|---|---|
 | tasks passed (of 8) | 3 | 3 | 2 | 2 | decline |
 | mean reward % | 37.5 | 37.5 | 25.0 | 25.0 | decline |
-| DB match (of 7 DB-basis) | 3 (42.9%) | 3 (42.9%) | 2 (28.6%) | 2 (28.6%) | decline |
+| DB match (of 7 DB-basis) | 2 (28.6%) | 2 (28.6%) | 1 (14.3%) | 1 (14.3%) | decline |
 | gold actions matched % (93 actions) | 75.3 | 67.7 | 69.9 | 76.3 | U, ends +1.0 pp |
 | write actions matched % (60 writes) | 73.3 | 63.3 | 65.0 | 71.7 | U, ends −1.6 pp |
 | mean per-task partial action reward % | 75.8 | 72.5 | 70.3 | 76.5 | U, ends +0.7 pp |

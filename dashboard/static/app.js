@@ -143,6 +143,13 @@ function splitRounds(gen, split) {
   return roundsOf(gen).filter((r) => (r.split ?? null) === split);
 }
 
+/* Statistics never count diagnostic rounds (mock smokes, materialised-recipe runs):
+   they are seam checks, not experiment evidence. The round lists still show them,
+   carrying their "diagnostic — not reportable" badge. */
+const statsRoundsOf = (gen) => roundsOf(gen).filter((r) => !r.diagnostic);
+const statsSplitRounds = (gen, split) =>
+  statsRoundsOf(gen).filter((r) => (r.split ?? null) === split);
+
 /* ---------------------------------------------------------------- badges */
 
 function badge(kind, icon, label) {
@@ -251,12 +258,12 @@ function renderStats() {
 
   const split = primarySplit(exp);
   const perGen = exp.generations.map((g) =>
-    mergeRounds(split ? splitRounds(g, split) : roundsOf(g))
+    mergeRounds(split ? statsSplitRounds(g, split) : statsRoundsOf(g))
   );
   const withData = perGen.filter((a) => a.pass1 != null);
   const latest = [...perGen].reverse().find((a) => a.pass1 != null);
   const first = perGen.find((a) => a.pass1 != null);
-  const all = mergeRounds(exp.generations.flatMap((g) => roundsOf(g)));
+  const all = mergeRounds(exp.generations.flatMap((g) => statsRoundsOf(g)));
 
   const hero = el("div", "stat hero");
   hero.append(
@@ -308,7 +315,7 @@ function curveSeries(exp) {
     if (split == null) return; // ad-hoc rounds have no cross-generation identity
     if (state.filters.split !== "all" && state.filters.split !== split) return;
     const line = gens.map((g) => {
-      const agg = mergeRounds(splitRounds(g, split));
+      const agg = mergeRounds(statsSplitRounds(g, split));
       if (agg.pass1 == null) return null;
       return { v: agg.pass1, lo: agg.interval?.[0], hi: agg.interval?.[1] };
     });
@@ -340,7 +347,7 @@ function renderCurveTable(container, exp) {
   table.appendChild(head);
   for (const gen of exp.generations) {
     for (const split of splitValues(exp)) {
-      const rounds = splitRounds(gen, split);
+      const rounds = statsSplitRounds(gen, split);
       if (!rounds.length) continue;
       const agg = mergeRounds(rounds);
       if (agg.pass1 == null) continue;
@@ -364,7 +371,7 @@ function renderRoundBars(container, exp) {
   const list = el("div", "bar-list");
   const color = splitColor(0);
   for (const gen of exp.generations) {
-    for (const round of roundsOf(gen)) {
+    for (const round of statsRoundsOf(gen)) {
       if (round.pass1 == null) continue;
       const row = el("div", "bar-row");
       const name = el("span", "bar-name", `${genShort(gen.name)}/${round.name}`);
@@ -544,6 +551,200 @@ function renderHeldOutMatrix(holder, held) {
   holder.appendChild(legend);
 }
 
+/* ------------------------------------------- process signals (progressive disclosure)
+   Rendered from the reveal's process_metrics_*.csv — partial credit and behavioral
+   signatures under the pass/fail curve. Collapsed by default; the summary teaser
+   carries enough deltas that opening it is an informed choice. Descriptive statistics
+   only: no noise band exists for these, so chips state direction, never significance,
+   and carry no good/bad color — direction is not goodness here. */
+
+const genLabelOf = (dirname) => `H${Number(String(dirname).slice(-3))}`;
+
+function procDeltaChip(first, last, fmt) {
+  if (first == null || last == null) return el("span", "proc-chip", "—");
+  const delta = last - first;
+  const arrow = Math.abs(delta) < 1e-9 ? "≈" : delta > 0 ? "▲" : "▼";
+  return el("span", "proc-chip", `${arrow} ${fmt(Math.abs(delta))}`);
+}
+
+function procRow(xLabels, spec) {
+  const row = el("div", "proc-row");
+  row.appendChild(el("span", "proc-label", spec.label));
+  const spark = el("span", "proc-spark");
+  sparkline(spark, { values: spec.values, color: splitColor(0), domain: spec.domain });
+  row.appendChild(spark);
+  const measured = spec.values
+    .map((v, i) => (v == null ? null : i))
+    .filter((i) => i != null);
+  const firstIdx = measured[0];
+  const lastIdx = measured.at(-1);
+  const endpoints =
+    firstIdx == null
+      ? "—"
+      : `${xLabels[firstIdx]} ${spec.fmt(spec.values[firstIdx])} → ` +
+        `${xLabels[lastIdx]} ${spec.fmt(spec.values[lastIdx])}`;
+  row.appendChild(el("span", "proc-endpoints mono", endpoints));
+  row.appendChild(
+    procDeltaChip(
+      firstIdx == null ? null : spec.values[firstIdx],
+      lastIdx == null ? null : spec.values[lastIdx],
+      spec.deltaFmt || spec.fmt
+    )
+  );
+  return row;
+}
+
+function renderProcessTaskMatrix(holder, held) {
+  const gens = held.matrix_generations;
+  const byCell = new Map();
+  for (const row of held.process.by_task) {
+    byCell.set(`${row.task_id}|${genLabelOf(row.generation)}`, row);
+  }
+  const tasks = [...new Set(held.process.by_task.map((r) => r.task_id))].sort();
+  const grid = el("div", "heat-grid");
+  grid.style.gridTemplateColumns = `minmax(120px, 220px) repeat(${gens.length}, minmax(24px, 1fr))`;
+  grid.appendChild(el("div", "heat-corner"));
+  for (const g of gens) grid.appendChild(el("div", "heat-col-label", g));
+  for (const task of tasks) {
+    const label = el("div", "heat-row-label", task);
+    label.title = state.current.task_descriptions?.[task] || task;
+    grid.appendChild(label);
+    let previousPassed = null;
+    for (const g of gens) {
+      const cellRow = byCell.get(`${task}|${g}`);
+      const cell = el("div", "heat-cell");
+      if (!cellRow) {
+        cell.classList.add("heat-cell-carried");
+        grid.appendChild(cell);
+        continue;
+      }
+      const frac = cellRow.actions_total ? cellRow.actions_matched / cellRow.actions_total : 0;
+      cell.style.background = rampColor(frac);
+      if (cellRow.passed) cell.appendChild(el("span", "pass-ring"));
+      if (previousPassed != null && previousPassed !== cellRow.passed)
+        cell.appendChild(el("span", "change-dot"));
+      previousPassed = cellRow.passed;
+      cell.tabIndex = 0;
+      const showTip = (evt) => {
+        const point = evt.clientX != null ? evt : { clientX: cell.getBoundingClientRect().x, clientY: cell.getBoundingClientRect().y };
+        tooltip.show(point.clientX, point.clientY, `${task} · ${g}`, [
+          {
+            color: rampColor(frac),
+            value: `${cellRow.actions_matched}/${cellRow.actions_total} (${Math.round(100 * frac)}%)`,
+            label: "gold actions matched",
+          },
+          { value: cellRow.passed ? "passed" : "not passed", label: "single-trial result" },
+          ...(cellRow.db_match != null
+            ? [{ value: cellRow.db_match ? "matched" : "diverged", label: "final DB state" }]
+            : []),
+        ]);
+      };
+      cell.addEventListener("pointermove", showTip);
+      cell.addEventListener("focus", showTip);
+      cell.addEventListener("pointerleave", tooltip.hide);
+      cell.addEventListener("blur", tooltip.hide);
+      grid.appendChild(cell);
+    }
+  }
+  holder.appendChild(grid);
+  const legend = el("div", "heat-legend");
+  for (const [frac, text] of [[1, "all gold actions matched"], [0.5, "half"], [0, "none"]]) {
+    const item = el("span", "heat-scale");
+    const swatch = el("span", "heat-swatch");
+    swatch.style.background = rampColor(frac);
+    item.append(swatch, el("span", null, text));
+    legend.appendChild(item);
+  }
+  const ring = el("span", "heat-scale");
+  const ringWrap = el("span", "heat-swatch");
+  ringWrap.style.background = rampColor(0.9);
+  ringWrap.style.position = "relative";
+  ringWrap.appendChild(el("span", "pass-ring"));
+  ring.append(ringWrap, el("span", null, "◦ passed (reward 1.0)"));
+  legend.appendChild(ring);
+  holder.appendChild(legend);
+}
+
+function renderProcessPanel(held) {
+  const proc = held.process;
+  const gens = held.matrix_generations;
+  const byGen = new Map(proc.by_generation.map((r) => [genLabelOf(r.generation), r]));
+  const series = (pick) => gens.map((g) => (byGen.has(g) ? pick(byGen.get(g)) : null));
+  const pp = (v) => `${v.toFixed(1)} pp`;
+  const pctFmt = (v) => `${v.toFixed(1)}%`;
+  const intFmt = (v) => `${Math.round(v)}`;
+
+  const actions = series((r) => r.action_match_pct);
+  const kb = series((r) => r.kb_search_calls);
+  const transfers = series((r) => r.transfers);
+  const firstOf = (vals) => vals.find((v) => v != null);
+  const lastOf = (vals) => [...vals].reverse().find((v) => v != null);
+
+  const details = el("details", "process-panel");
+  const teaser =
+    `actions ${firstOf(actions)?.toFixed(0)}→${lastOf(actions)?.toFixed(0)}% · ` +
+    `KB searches ${firstOf(kb)}→${lastOf(kb)} · transfers ${firstOf(transfers)}→${lastOf(transfers)}`;
+  details.appendChild(
+    el("summary", null, `Process signals under the curve — ${teaser}`)
+  );
+
+  const dbBasis = proc.by_generation[0]?.db_basis_tasks;
+  const groups = [
+    {
+      caption: "Outcome, decomposed — partial credit beneath pass/fail (scale pinned 0–100%)",
+      rows: [
+        {
+          label: `DB match % (of ${dbBasis} DB-basis)`,
+          values: series((r) => (r.db_basis_tasks ? (100 * r.db_matched) / r.db_basis_tasks : null)),
+          domain: [0, 100], fmt: pctFmt, deltaFmt: pp,
+        },
+        { label: "gold actions matched %", values: actions, domain: [0, 100], fmt: pctFmt, deltaFmt: pp },
+        { label: "write actions matched %", values: series((r) => r.write_match_pct), domain: [0, 100], fmt: pctFmt, deltaFmt: pp },
+        { label: "partial action reward %", values: series((r) => r.partial_action_reward_pct), domain: [0, 100], fmt: pctFmt, deltaFmt: pp },
+      ],
+    },
+    {
+      caption: "Behavioral signatures — how the harness worked (zero-based scales)",
+      rows: [
+        { label: "KB_search calls (total)", values: kb, fmt: intFmt },
+        { label: "discoverable-tool ops (total)", values: series((r) => r.discoverable_ops), fmt: intFmt },
+        { label: "transfers to human (total)", values: transfers, fmt: intFmt },
+        { label: "messages / episode (mean)", values: series((r) => r.messages_mean), fmt: (v) => v.toFixed(1) },
+        { label: "cost / episode (mean)", values: series((r) => r.cost_usd_mean), fmt: (v) => `$${v.toFixed(2)}` },
+      ],
+    },
+  ];
+  for (const group of groups) {
+    const box = el("div", "proc-group");
+    box.appendChild(el("div", "proc-caption", group.caption));
+    for (const spec of group.rows) {
+      if (!spec.domain) {
+        const finite = spec.values.filter((v) => v != null);
+        spec.domain = [0, Math.max(...finite, 1) * 1.15];
+      }
+      box.appendChild(procRow(gens, spec));
+    }
+    details.appendChild(box);
+  }
+
+  const taskDetails = el("details", "proc-task-matrix");
+  taskDetails.appendChild(el("summary", null, "Per-task gold-action match — the grain under the aggregates"));
+  renderProcessTaskMatrix(taskDetails, held);
+  details.appendChild(taskDetails);
+
+  const total = held.generations[0]?.total;
+  details.appendChild(
+    el(
+      "p",
+      "proc-note",
+      `Descriptive statistics over the same single-trial held-out episodes (T=${total}) as the ` +
+        "curve above; no noise band is defined for them — read direction, not significance. " +
+        "Derived at reveal from graded/updated_results.json into process_metrics_*.csv."
+    )
+  );
+  return details;
+}
+
 function renderHeldOut() {
   const body = $("#heldout-body");
   const note = $("#heldout-note");
@@ -609,6 +810,7 @@ function renderHeldOut() {
   if (held.transitions?.length) tables.appendChild(heldOutTransitionsTable(held));
   body.appendChild(tables);
   renderHeldOutMatrix(body, held);
+  if (held.process) body.appendChild(renderProcessPanel(held));
   if (held.summary) {
     const details = el("details", "raw");
     details.appendChild(el("summary", null, "summary.md — the reveal's own report"));
@@ -628,7 +830,7 @@ function renderEfficiency() {
   row.replaceChildren();
   const exp = state.current;
   if (!exp || !exp.generations.length) return;
-  const perGen = exp.generations.map((g) => mergeRounds(roundsOf(g)));
+  const perGen = exp.generations.map((g) => mergeRounds(statsRoundsOf(g)));
   const specs = [
     ["avg cost / episode", perGen.map((a) => a.avgCost), usd],
     ["avg messages", perGen.map((a) => a.avgMessages), (v) => (v == null ? "—" : v.toFixed(1))],
@@ -677,7 +879,7 @@ function renderRibbon() {
   if (!exp) return;
   let previous = null;
   exp.generations.forEach((gen) => {
-    const agg = mergeRounds(roundsOf(gen));
+    const agg = mergeRounds(statsRoundsOf(gen));
     const record = recordFor(exp, gen.name);
     const card = el("div", `gen-card${gen.name === state.selectedGen ? " selected" : ""}`);
     const head = el("div", "g-name");
@@ -710,7 +912,7 @@ function renderRibbon() {
 /* ---------------------------------------------------------------- heatmap */
 
 function heatmapData(exp) {
-  const perGen = exp.generations.map((g) => mergeRounds(roundsOf(g)).tasks);
+  const perGen = exp.generations.map((g) => mergeRounds(statsRoundsOf(g)).tasks);
   const tasks = [...new Set(perGen.flatMap((t) => Object.keys(t)))];
   const rows = tasks.map((task) => {
     const cells = perGen.map((t) => t[task] || null);
