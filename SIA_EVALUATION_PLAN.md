@@ -607,19 +607,30 @@ Same isolation rules as the full experiment (protocol §29.17). Runs on the Phas
       `results/experiment_002_bm25-sonnet46/generation_000/gates/a0a.json` beside the
       freeze snapshot. Residual risk (real-agent-conditioned crash on an unprobed
       task) accepted; fallback is the documented void-and-reseq procedure.
-- [ ] H0 held-out (hidden, vault) → B1 batch → `operate` diagnosis (harvest 1
+- [x] H0 held-out (hidden, vault) → B1 batch → `operate` diagnosis (harvest 1
       immediately; harvest 2 after the ~40-min observation window, fallback stated)
       → `improve` PR → human review/merge → tag `exp2-g001` → H1 held-out (hidden)
-      → B2 → … → H3 held-out → final tag.
-- [ ] Improvement record per transition, written as it happens; B1 viability read
-      (D8) recorded. **B1 read (2026-08-13, seq 2): 0/4** — all four episodes clean
+      → B2 → … → H3 held-out → final tag. Ran 2026-08-13/14, zero mid-run mechanics
+      patching: 4 sealed held-out rounds (8/8 each, incidents none), 3 batches
+      (reads 0/4, 0/4, 2/4 — visible by design), 3 user-gated PRs merged
+      (`exp2-g001` KB-answer verification, `exp2-g002` source-grounded selection,
+      `exp2-g003` procedure completion). Observation harvest returned zero rows in
+      window every time; the stated fallback (full-population transcript reads at
+      B=4) carried each diagnosis. (2026-08-14)
+- [x] Improvement record per transition, written as it happens; B1 viability read
+      (D8) recorded (2026-08-14). **B1 read (2026-08-13, seq 2): 0/4** — all four episodes clean
       (user_stop, evidence_complete, arm_sha_ok true, benign reattaches only), rewards
       0.0/0.0/0.0/0.0 → D8's halt-and-reconsider-H0 condition fires; `operate`
       diagnosis proceeds to inform the reconsideration before any `improve` PR.
-- [ ] `make reveal` → held-out artifacts + `summary.md`; verify every §27 artifact
+- [x] `make reveal` → held-out artifacts + `summary.md`; verify every §27 artifact
       exists and every §29 guardrail held (walk the 20-item list, record the walk).
-- [ ] `contract/protocol.md` rewritten from this run (the per-generation procedure
-      as it actually executed).
+      Revealed 2026-08-14: **H0 3/8 → H1 3/8 → H2 2/8 → H3 2/8; endpoint −1 task
+      (−12.5 pp), inside the ±18 pp band — directional only**, per the D10 caveat
+      the debug scale demonstrates the loop, not the claim. All 20 guardrails HELD;
+      walk + §27 inventory at
+      `results/experiment_002_bm25-sonnet46/GUARDRAIL_WALK.md`. (2026-08-14)
+- [x] `contract/protocol.md` rewritten from this run (the per-generation procedure
+      as it actually executed) (2026-08-14).
 
 **Validate:** the complete evidence → signal → hypothesis → mutation → generation →
 hidden-measurement chain exists on disk for ≥1 accepted (or cleanly
