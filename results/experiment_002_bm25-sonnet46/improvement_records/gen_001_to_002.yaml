@@ -1,0 +1,79 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 1
+  to_generation: 2
+experiment: 002_bm25-sonnet46
+outcome: 'TODO: accepted | rejected | identity — set when PR #2 is reviewed'
+batch:
+  name: batch_02
+  task_ids:
+  - task_003
+  - task_045
+  - task_071
+  - task_087
+evidence:
+  conversation_ids:
+  - 019fff0b-3c29-74c5-9616-b9a4ec30a771
+  - 019fff0b-3b9f-742f-889e-a279003b3472
+  - 019fff0d-2d99-754e-8159-fcc174154e1f
+  - 019fff0d-5dc4-7671-94b7-d1a9e3754601
+  summary: >
+    All four B2 conversations exported via `introspection conversations get
+    --ids-file` and read in full; graded db_check and action_checks read from
+    batch_02/graded/updated_results.json, with field-level diffs computed for the
+    near-miss calls. Seam clean 4/4 (user_stop, evidence_complete, arm_sha_ok on the
+    H1 commit, benign reattaches only). Aggregate 0/4, but the action-match profile
+    moved sharply versus B1 (19/20 and 5/6 near-misses). The g1 mutation observably
+    fired: targeted verification searches throughout, and the task_003 agent stated
+    explicitly what it could not confirm.
+signals:
+- description: >
+    Ungrounded selection: the agent settles on the first plausible entity or value
+    instead of comparing the alternatives its own evidence surfaces. task_003
+    recommended Gold Rewards where gold expects Silver, after eight searches that
+    never probed the Silver sibling; task_071 opened business_savings class 'Silver
+    Plus Saver Account' where gold expects 'Gold Saver Account'; task_087 matched
+    19/20 gold actions but wrote transaction_type 'signature_purchase' where the
+    transaction record says 'pin_purchase' — one field zeroing a perfect workflow.
+  prevalence: 3/4
+- description: >
+    Workflow tail incompleteness: task_045 stopped after a retention statement
+    credit, leaving the dispute-history / pending-orders / pay-from-checking chain
+    (9 of 15 gold actions) unexecuted.
+  prevalence: 1/4
+counterevidence: >
+  The near-miss profile argues the g1 mechanism helped rather than failed — the
+  residual errors are selection and field-grounding, which g1's claim-verification
+  does not cover. Against the mutation: instruction-block growth adds turn cost
+  (more searches per episode), and B2's 0/4 aggregate cannot itself confirm g1
+  moved anything; only the hidden held-out curve can.
+hypothesis: >
+  The residual reward-zeroing errors come from selection without comparison (entity
+  choices) and from argument fields taken from memory rather than the carrying
+  record. Forcing candidate enumeration + requirement comparison before selection,
+  and record re-reads for written fields, removes the dominant residual class.
+owning_layer: agent judgment — system-prompt instructions (target-agent/SYSTEM.md <instructions>)
+proposed_change: >
+  One instruction block composing with g1's: enumerate sibling candidates and
+  compare each against every stated requirement before selecting an entity
+  (card/account class/program/category), acting only on a fully-confirmed candidate
+  and saying plainly when none confirms; and source every tool-call field value
+  from a just-read record or document, copying record-decided fields exactly.
+mutation:
+  branch: gen-002/source-grounded-selection
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/2
+  source_commit: 1cdeb07e59056d268d3b731dca69c4febebf2de4
+  candidate_commit: null
+expected_effect: >
+  Fixes the ungrounded-selection class (3/4 in B2, plus B1's task_101 shape):
+  entity choices become comparison-backed and record-decided fields become copies,
+  so single-field and wrong-sibling errors are caught before commitment. Cost:
+  additional searches and record reads per selection. Not targeted: workflow tail
+  incompleteness (task_045) — the strongest remaining candidate for generation 3.
+human_approval:
+  approved_by: 'TODO: set at PR #2 review'
+  date: '2026-08-14'
+held_out_result: null
