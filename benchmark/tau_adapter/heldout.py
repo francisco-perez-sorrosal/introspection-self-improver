@@ -15,8 +15,10 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+from collections import Counter
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -74,7 +76,17 @@ def run_round(
     console_path = round_dir / CONSOLE_LOG
     run_child = run_child or _default_run_child
 
+    expected_episodes = len(held_ids) * lock.num_trials
     already_measured = (round_dir / COMPLETION_SENTINEL).exists()
+    if already_measured and not _measurement_complete(round_dir, expected_episodes):
+        # τ's runner returned, but the round holds non-measurements — e.g. an
+        # infrastructure_error placeholder that τ's own resume replaces. The sentinel
+        # means "runner returned", never "measured": drop it, and the grading derived
+        # from the incomplete results, so the documented interrupted-run path resumes.
+        # Completed episodes are not re-spent, and a complete round never reaches here.
+        (round_dir / COMPLETION_SENTINEL).unlink()
+        shutil.rmtree(round_dir / GRADED_DIR, ignore_errors=True)
+        already_measured = False
     if not already_measured:
         rc = _run_stage(_runner_argv(round_dir), console_path, run_child)
         if rc != 0:
@@ -100,6 +112,12 @@ def run_round(
     )
     print(report)
     return 0 if complete else 1
+
+
+def _measurement_complete(round_dir: Path, expected: int) -> bool:
+    """Row counts only, per this module's vault doctrine — nothing graded is read."""
+    rows = manifestmod.read_manifest(round_dir)
+    return sum(1 for row in rows if row.get("completed")) >= expected
 
 
 def _incident_totals(round_dir: Path) -> dict[str, int] | None:
@@ -145,7 +163,7 @@ def completeness_report(
         f"   console       {CONSOLE_LOG} — every runner and grading line, sealed in the vault",
         f"   episodes      {completed}/{expected} completed"
         f" ({expected_tasks} task(s) x {num_trials} trial(s))"
-        + ("" if completed >= expected else " — INCOMPLETE"),
+        + ("" if completed >= expected else " — INCOMPLETE" + _failure_classes(rows)),
         f"   manifest      {manifestmod.MANIFEST_NAME}: {len(rows)} row(s)",
         f"   incidents     {_incident_text(incident_totals)}",
         (
@@ -163,9 +181,19 @@ def completeness_report(
     else:
         lines += [
             f"   Rerun `make heldout GEN={generation}` to resume: τ re-runs only the",
-            "   missing (trial, task, seed) pairs; completed episodes are not re-spent.",
+            "   missing (trial, task, seed) pairs and replaces infrastructure_error",
+            "   placeholders; completed episodes are not re-spent.",
         ]
     return "\n".join(lines), complete
+
+
+def _failure_classes(rows: list[dict[str, Any]]) -> str:
+    """Termination classes of the non-completed rows — infrastructure facts, never graded
+    outcomes, so an incomplete round names its failure mode without anyone opening the vault."""
+    classes = Counter(str(row.get("termination")) for row in rows if not row.get("completed"))
+    if not classes:
+        return ""
+    return " (" + ", ".join(f"{name}={count}" for name, count in sorted(classes.items())) + ")"
 
 
 def _incident_text(totals: dict[str, int] | None) -> str:

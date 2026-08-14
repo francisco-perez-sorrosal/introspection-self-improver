@@ -41,6 +41,9 @@ def _rows(completed: int, total: int = 5) -> list[dict]:
             "tau_task_id": f"task_{i:03d}",
             "trial": 0,
             "reward": 1.0 if i % 2 else 0.0,
+            "termination": (
+                "TerminationReason.USER_STOP" if i < completed else "infrastructure_error"
+            ),
             "completed": i < completed,
         }
         for i in range(total)
@@ -128,6 +131,55 @@ def test_run_round_never_reruns_a_measured_round(tmp_path, capsys):
     out = capsys.readouterr().out
     assert rc == 0
     assert "already measured (one measurement per generation)" in out
+    _assert_reward_free(out)
+
+
+def test_an_incomplete_measured_round_resumes_the_runner(tmp_path, capsys):
+    # τ returned (sentinel present) but left an infrastructure_error placeholder: the
+    # wrapper must drop the sentinel and the stale grading, then re-enter both stages —
+    # the interrupted-run path τ resumes without re-spending completed episodes.
+    round_dir = heldout.round_dir_for(_lock(), "generation_000", root=tmp_path)
+    round_dir.mkdir(parents=True)
+    (round_dir / "results.json").write_text("{}", encoding="utf-8")
+    (round_dir / COMPLETION_SENTINEL).write_text("{}", encoding="utf-8")
+    write_manifest(round_dir, _rows(4))
+    graded = round_dir / heldout.GRADED_DIR
+    graded.mkdir()
+    (graded / heldout.GRADED_RESULTS).write_text("stale", encoding="utf-8")
+    stages: list[str] = []
+
+    def child(argv, console):
+        if "--out" in argv:
+            stages.append("run")
+            assert not (round_dir / COMPLETION_SENTINEL).exists(), (
+                "the stale sentinel must be gone before the runner resumes"
+            )
+            assert not graded.exists(), "stale grading must not survive a resumed runner"
+            write_manifest(round_dir, _rows(5))
+            (round_dir / COMPLETION_SENTINEL).write_text("{}", encoding="utf-8")
+        else:
+            stages.append("grade")
+            graded.mkdir(parents=True, exist_ok=True)
+            (graded / heldout.GRADED_RESULTS).write_text("{}", encoding="utf-8")
+        return 0
+
+    rc = heldout.run_round(
+        _lock(), "generation_000", root=tmp_path, manifest=_partition(), run_child=child
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert stages == ["run", "grade"]
+    assert "5/5 completed" in out
+    _assert_reward_free(out)
+
+
+def test_an_incomplete_round_names_its_failure_classes(tmp_path, capsys):
+    rc = heldout.run_round(
+        _lock(), "generation_000", root=tmp_path, manifest=_partition(), run_child=_fake_child(4)
+    )
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "INCOMPLETE (infrastructure_error=1)" in out
     _assert_reward_free(out)
 
 
