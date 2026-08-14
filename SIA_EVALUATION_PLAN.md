@@ -691,8 +691,12 @@ instrument: `benchmark/scripts/power_sim.py`.
 - [ ] Start gate: `make reset_h0` (H0 = `h0-baseline`, restore committed); lock flipped
       PROVISIONAL → FROZEN; A.0a PASS recorded beside the freeze snapshot; partition
       `--verify` re-run; user-sim screen re-run under the luna pair (`screen_user_sim.py`
-      — screening evidence is model-conditioned, D12); the first platform batch episode
-      doubles as the managed-runtime luna check.
+      — screening evidence is model-conditioned, D12); platform-lane luna check re-run
+      (`make single_task TRANSPORT=platform TASK=task_001`) — **currently BLOCKED
+      platform-side**: the sandbox Pi sends `reasoning.level` to OpenAI `/v1/responses`
+      (400; current parameter is `reasoning.effort`), diagnosed 2026-08-14 with the
+      recipe format the Introspection CTO confirmed current; evidence + unblock
+      condition in `.ai-state/UPSTREAM_ISSUES.md`. Local lane unaffected.
 - [ ] Run: 6 held-out rounds × 28 (local, sealed) interleaved with 5 batches × 8
       (platform) ≈ $132 at measured rates, $150–165 with instruction-growth headroom;
       budget go/no-go with the user at each generation boundary.
