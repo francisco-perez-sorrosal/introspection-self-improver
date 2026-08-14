@@ -205,7 +205,6 @@ class EpisodeChannel:
         #: would re-register a dead channel in the routing table.
         self.closed = False
         self._mailbox = _Mailbox(on_stall=on_stall)
-        self.calls_served = 0
 
     def bind(self, key: str) -> None:
         """Also answer for `key` — the episode's sandbox session id on the platform lane.
@@ -294,7 +293,6 @@ class ToolBridge:
         self._server: uvicorn.Server | None = None
         self._thread: threading.Thread | None = None
         self._port: int | None = None
-        self.calls_served = 0
 
     # ------------------------------------------------------------------ lifecycle
 
@@ -322,11 +320,10 @@ class ToolBridge:
         )
         self._thread.start()
 
-        deadline = threading.Event()
         for _ in range(600):  # up to ~30s
             if self._server.started:
                 break
-            deadline.wait(0.05)
+            time.sleep(0.05)
         if not self._server.started:
             raise RuntimeError("tool bridge failed to start")
         return self.url
@@ -341,22 +338,17 @@ class ToolBridge:
                 self._socket.close()
 
     @property
-    def path(self) -> str:
-        """The run endpoint path — what `introspection dev --mcp tau=<url>` is handed.
+    def url(self) -> str:
+        """The run-pinned URL — what `introspection dev --mcp tau=<url>` is handed.
 
         A `dev` attachment can carry exactly one URL: `--mcp` conveys a URL and nothing
         else — no credentials, no per-task override — and a *connected* MCP binding (the
         documented place for headers) replaces the URL with its own, which cannot reach
-        this machine from a cloud sandbox. The token therefore rides in the path as the
-        run's credential. Requests arriving here are tunneled and carry their sandbox's
-        session header, which is what routes them to an episode's channel; local-lane
-        episodes mint their own per-episode paths instead.
+        this machine from a cloud sandbox. The run token therefore rides in the path.
+        Tunneled requests arriving here carry their sandbox's session header, which is
+        what routes them to an episode's channel; local-lane episodes mint their own
+        per-episode paths instead.
         """
-        return f"/mcp/{self.token}"
-
-    @property
-    def url(self) -> str:
-        """The run-pinned URL — what `introspection dev` is handed for the whole run."""
         return self.url_for(self.token)
 
     def url_for(self, token: str) -> str:
@@ -477,8 +469,6 @@ class ToolBridge:
                 ],
                 is_error=True,
             )
-        self.calls_served += 1
-        channel.calls_served += 1
         try:
             content, is_error = await asyncio.to_thread(
                 channel.wait, params.name, params.arguments, RESULT_WAIT_SECONDS

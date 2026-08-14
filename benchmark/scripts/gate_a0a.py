@@ -4,7 +4,7 @@
 A.0a claims the bridge and transports preserve tool calls, arguments, results and message
 boundaries exactly. The evidence is the adapter test suite — the name transform pinned
 byte-for-byte against the platform's JS implementation, the AG-UI contract pinned against
-captured live event shapes, the mailbox and reset semantics — plus the mock end-to-end
+captured live event shapes, the mailbox and channel-lifecycle semantics — plus the mock end-to-end
 smoke. This script runs both and writes the verdict under the generation's gates/ directory,
 because a gate that only ever passed in a terminal is a gate nobody can cite. Blocking:
 a failure stops the experiment.

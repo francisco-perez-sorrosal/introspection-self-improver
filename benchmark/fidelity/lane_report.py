@@ -65,10 +65,9 @@ class EpisodeReport:
     shape: str = ""
 
 
-def _shape_and_counts(messages: list[dict[str, Any]]) -> tuple[str, int, int]:
+def _shape_and_counts(messages: list[dict[str, Any]]) -> tuple[str, int]:
     letters: list[str] = []
     agent_invocations = 0
-    user_tool_calls = 0
     previous: str | None = None
     for message in messages:
         role = message.get("role")
@@ -81,11 +80,10 @@ def _shape_and_counts(messages: list[dict[str, Any]]) -> tuple[str, int, int]:
                 agent_invocations += 1
         elif role == "user":
             letters.append(USER_CALL if calls else USER_TEXT)
-            user_tool_calls += len(calls)
         else:
             letters.append(TOOL_RESULT)
         previous = role
-    return " ".join(letters), agent_invocations, user_tool_calls
+    return " ".join(letters), agent_invocations
 
 
 def build_report(results_path: Path, lane: str, locked_tools: set[str]) -> EpisodeReport:
@@ -110,7 +108,7 @@ def _report_of(sim: dict[str, Any], lane: str, locked_tools: set[str]) -> Episod
     messages = sim.get("messages") or []
     reward_info = sim.get("reward_info") or {}
 
-    shape, agent_invocations, _ = _shape_and_counts(messages)
+    shape, agent_invocations = _shape_and_counts(messages)
 
     # Both participants hold tools in this domain, and only one surface is the adapter's.
     # The agent gets the 15 locked banking tools through our bridge. The user simulator has its

@@ -26,6 +26,7 @@ import secrets
 import signal
 import subprocess
 import threading
+import time
 from pathlib import Path
 
 from loguru import logger
@@ -200,8 +201,8 @@ class DevAttachment:
 
     `as_name` names the attachment (`dev --as`): tasks created with
     `INTROSPECTION_DEV_TARGET=<as_name>` route to this attachment and no other, fail-closed.
-    Naming every attachment — including a pool of one — also keeps two concurrent runs on
-    one machine from claiming each other's default (username-derived) dev target.
+    Naming the attachment also keeps two concurrent runs on one machine from claiming each
+    other's default (username-derived) dev target.
     """
 
     def __init__(
@@ -247,7 +248,6 @@ class DevAttachment:
         )
         threading.Thread(target=self._read, daemon=True).start()
 
-        ready = threading.Event()
         for _ in range(int(timeout * 4)):
             if self._proc.poll() is not None:
                 raise DevLaneError(
@@ -257,7 +257,7 @@ class DevAttachment:
                 self.dev_target = self._resolve_dev_target()
                 logger.info(f"development lane attached; dev target {self.dev_target!r}")
                 return
-            ready.wait(0.25)
+            time.sleep(0.25)
         raise DevLaneError(f"`{CLI} dev` never reported {READY_MARKER!r}:\n{self.log[-1500:]}")
 
     def stop(self) -> None:
