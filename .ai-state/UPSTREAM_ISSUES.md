@@ -5,8 +5,12 @@ Grep here before recommending a new filing (`upstream-stewardship` skill).
 
 ## sierra-research/tau2-bench#470 — text-mode user-sim empty-completion crash
 
-- **Filed:** 2026-08-13 · **Status:** open
+- **Filed:** 2026-08-13 · **Status:** open, fix PR submitted
 - **URL:** https://github.com/sierra-research/tau2-bench/issues/470
+- **Fix PR:** https://github.com/sierra-research/tau2-bench/pull/471 (2026-08-13) —
+  retry the empty completion once with a system-prompt reminder (pointing at the
+  `###STOP###` out), raise descriptively on double-empty; tests mock `generate`.
+  Branch `fix/user-sim-empty-completion` on the `francisco-perez-sorrosal` fork.
 - **Summary:** In text mode, a scenario instructing the simulated user to speak and
   fire a tracking-only user tool in one turn can crash the episode: the orchestrator
   routes the tool call to ENV before the agent sees the verbal half, the post-tool
