@@ -168,15 +168,17 @@ frozen:
   # nothing (contract/constraints.md records the correction).
   timeout_seconds: 600
 
-  # Episodes rendezvous on per-episode URL channels within one run-scoped bridge
-  # (tool_bridge.py, Phase 3.5), so the LOCAL lane executes this value directly. The
-  # platform lane runs pooled `dev --as` attachments (dev_lane.py, Phase 3.5b) but the
-  # platform accepts ONE live dev attachment per Runtime — a second one is refused with
-  # dev_slot_conflict, observed live 2026-08-13 — so platform rounds are capped at 1
-  # regardless of this value until that upstream constraint changes
-  # (contract/constraints.md § Platform-lane concurrency). Locked runs always read this
-  # value; the runner's --max-concurrency override is diagnostic-mode-only.
-  max_concurrency: 1
+  # Episodes in flight at once. Re-decided 2026-08-13 (user): an OPERATIONAL knob, not an
+  # execution budget — parallelism moves wall-clock, never what the agent can do inside an
+  # episode (each episode is independent and graded alone), so it is unfrozen from the
+  # budget doctrine. This value is the recorded default; any run may override it with
+  # --max-concurrency (1 = serial), and the effective value lands in run_metadata.json so
+  # every record still names its configuration. Episodes rendezvous on per-episode bridge
+  # channels (tool_bridge.py) on both lanes — contract/constraints.md § Platform-lane
+  # concurrency has the platform mechanism. Caveat, documented not gated: high N contends
+  # on provider rate limits (2N Anthropic streams), which can convert throttling into
+  # infra retries inside episodes.
+  max_concurrency: 10
 
   # Whether tau ends an episode when an assistant message carries both text and tool calls.
   # On the frozen list because it decides whether a protocol violation is graded at all, so

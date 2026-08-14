@@ -125,9 +125,15 @@ elsewhere; `benchmark/benchmark_lock.yaml` holds the frozen *values*, this holds
 + thinking level (`--agent-llm` is declared-and-unused; Pi owns the model) · `--user-llm` +
 args (including `timeout`) · `num_trials` · `--seed` · `--max-steps` · `--max-errors` ·
 `timeout_seconds` (τ's `TextRunConfig.timeout`; `--max-steps-seconds` is inert in text mode) ·
-`--max-concurrency` · `enforce_communication_protocol` · tau2-bench commit SHA · the partition
+`enforce_communication_protocol` · tau2-bench commit SHA · the partition
 manifest (improvement batches + held-out set) · the experiment's `protocol:` configuration
 (generations, batch size, held-out size).
+
+`max_concurrency` is deliberately NOT on this list (re-decided 2026-08-13): parallelism moves
+wall-clock, never what the agent can do inside an episode, so the lock's value is an
+operational default that any run may override with `--max-concurrency` (1 = serial); the
+effective value is recorded per run in `run_metadata.json`. The documented caveat is provider
+contention at high N, which shows up as infra retries, not as graded capability.
 
 Three of these are the ones that actually get missed:
 - `--retrieval-config` rewrites the tool set **and** the policy text the agent is graded
