@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
+from tau_adapter import transport_platform
 from tau_adapter.transport import AssistantTurn, TransportFailure
 from tau_adapter.transport_platform import (
     PlatformTransport,
@@ -376,11 +379,87 @@ def test_a_streamless_exit_reattaches_once_by_explicit_run_id(monkeypatch) -> No
     session = _session(drop_run_id="run-previous", reattaches_left=1)
     _make_current(transport, session)
     respawns: list[dict] = []
-    monkeypatch.setattr(transport, "_spawn_stream", lambda **kwargs: respawns.append(kwargs))
+    monkeypatch.setattr(
+        transport, "_spawn_stream", lambda **kwargs: respawns.append(kwargs) or True
+    )
     transport._on_stream_end(session)
-    assert respawns == [{"run_ref": "run-new", "drop_run_id": None, "reattaches_left": 0}]
+    assert respawns == [
+        {"run_ref": "run-new", "drop_run_id": None, "reattaches_left": 0, "replacing": session}
+    ]
+    assert transport.incidents.stream_reattaches == 1
     assert transport._turns.empty()
     assert not transport._settled.is_set()
+
+
+def test_a_superseded_reattach_installs_nothing(monkeypatch) -> None:
+    """A reattach that lost its race with _stop_stream spawns no subprocess at all.
+
+    The pre-fix failure mode: check-then-spawn without the lock could install a stream
+    after τ's worker had already moved to the next turn — a subprocess no _stop_stream
+    would ever reap."""
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    session = _session()
+    _make_current(transport, session)
+    transport._stop_stream()
+    monkeypatch.setattr(
+        transport_platform.subprocess,
+        "Popen",
+        lambda *args, **kwargs: pytest.fail("a superseded reattach must not spawn"),
+    )
+    installed = transport._spawn_stream(
+        run_ref="run-1", drop_run_id=None, reattaches_left=0, replacing=session
+    )
+    assert installed is False
+    with transport._session_lock:
+        assert transport._session is None
+
+
+def test_spawning_after_close_installs_nothing(monkeypatch) -> None:
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    transport.close()
+    monkeypatch.setattr(
+        transport_platform.subprocess,
+        "Popen",
+        lambda *args, **kwargs: pytest.fail("a closed transport must not spawn"),
+    )
+    installed = transport._spawn_stream(
+        run_ref="current", drop_run_id=None, reattaches_left=1, replacing=None
+    )
+    assert installed is False
+
+
+def test_a_flooding_stderr_cannot_block_the_stream(monkeypatch, tmp_path) -> None:
+    """The stream's stderr is drained as produced, so a chatty subprocess cannot deadlock
+    on a full pipe; the failure report carries a bounded tail of what it said."""
+    fake = tmp_path / "fake-stream"
+    fake.write_text(
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "for i in range(4000):\n"
+        "    sys.stderr.write(f'noise line {i} ' + 'x' * 80 + '\\n')\n"
+        "sys.exit(1)\n",
+        encoding="utf-8",
+    )
+    fake.chmod(0o755)
+    monkeypatch.setattr(transport_platform, "CLI", str(fake))
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    transport._task_id = "task-x"
+    transport._set_run_id("run-1")
+    transport._settled.clear()
+    assert transport._spawn_stream(
+        run_ref="run-1", drop_run_id=None, reattaches_left=0, replacing=None
+    )
+    failure = transport._turns.get(timeout=30)
+    assert isinstance(failure, TransportFailure)
+    assert "without RUN_FINISHED" in failure.reason
+    assert "noise line" in failure.reason
+    assert transport.incidents.stream_failures == 1
+    assert "noise line" in transport.stderr_tail
+    with transport._session_lock:
+        session = transport._session
+    assert session is not None
+    assert len(session.stderr_lines) <= transport_platform.STREAM_STDERR_TAIL_LINES
+    assert transport._settled.is_set()
 
 
 def test_a_dead_stream_that_already_emitted_fails_loudly_instead_of_reattaching() -> None:
@@ -554,7 +633,7 @@ def test_a_silent_stream_over_a_queued_sandbox_reattaches_instead_of_failing(
     monkeypatch.setattr(
         transport,
         "_spawn_stream",
-        lambda run_ref, drop_run_id, reattaches_left: spawned.append(run_ref),
+        lambda run_ref, drop_run_id, reattaches_left, replacing: spawned.append(run_ref) or True,
     )
     session = _silent_session()
     transport._session = session

@@ -31,12 +31,14 @@ The AG-UI vocabulary below is documented nowhere; it was read off a live run. Se
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import queue
 import subprocess
 import threading
 import time
+from collections import deque
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -70,6 +72,12 @@ BIND_POLL_CEILING_SECONDS = 120.0
 # 2m49s (contract/constraints.md § Platform-lane concurrency).
 QUEUE_WAIT_CEILING_SECONDS = 240.0
 QUEUE_POLL_SECONDS = 5.0
+
+# How many stderr lines a stream session retains for its failure report. The pipe itself is
+# drained continuously and without bound — an undrained stderr blocks the child once the OS
+# buffer (~64 KB) fills, which would present as a silent stream death with a misleading
+# cause — only the retained tail is capped.
+STREAM_STDERR_TAIL_LINES = 200
 
 
 class StreamAssembler:
@@ -197,6 +205,10 @@ class _StreamSession:
     `emitted` counts turn items queued from this stream. A reattach replays from event 0 with a
     fresh assembler, so it is only safe while nothing was emitted — one duplicated turn would
     desynchronise τ from the agent for the rest of the episode.
+
+    `stderr_lines` is the drained tail of the subprocess's stderr (a dedicated reader keeps
+    the pipe empty; only the tail is retained), read by the failure report instead of a
+    blocking `stderr.read()` after the fact.
     """
 
     def __init__(
@@ -213,6 +225,8 @@ class _StreamSession:
         self.emitted = 0
         self.dropped = 0
         self.thread: threading.Thread | None = None
+        self.stderr_thread: threading.Thread | None = None
+        self.stderr_lines: deque[str] = deque(maxlen=STREAM_STDERR_TAIL_LINES)
 
 
 def original_title_of(current: str) -> str:
@@ -322,9 +336,12 @@ class PlatformTransport:
         Both calls are best effort and independent: a failure here must not mask the episode's
         outcome, and a task that cannot be archived still completes on its own.
         """
-        if self._closed:
-            return
-        self._closed = True
+        # The flag flips under the session lock so it forms a barrier with _spawn_stream:
+        # once close() holds the lock, no reattach can install a stream nothing will reap.
+        with self._session_lock:
+            if self._closed:
+                return
+            self._closed = True
         self._stop_stream()
         if self._task_id is None:
             return
@@ -365,7 +382,9 @@ class PlatformTransport:
 
     @property
     def stderr_tail(self) -> str:
-        return ""
+        with self._session_lock:
+            session = self._session
+        return "\n".join(session.stderr_lines) if session is not None else ""
 
     # ------------------------------------------------------------------- driving
 
@@ -413,7 +432,10 @@ class PlatformTransport:
             if self._channel is not None and not self._try_bind_session(created):
                 threading.Thread(target=self._poll_session_binding, daemon=True).start()
             self._spawn_stream(
-                run_ref=self._run_id or "current", drop_run_id=None, reattaches_left=1
+                run_ref=self._run_id or "current",
+                drop_run_id=None,
+                reattaches_left=1,
+                replacing=None,
             )
         else:
             # Overlap the stream attach with the prompt, so their CLI startups run concurrently
@@ -423,7 +445,9 @@ class PlatformTransport:
             # recovered by one reattach under the explicit id once `tasks prompt` returns it.
             prior_run = self._run_id
             self._clear_run_id()
-            self._spawn_stream(run_ref="current", drop_run_id=prior_run, reattaches_left=1)
+            self._spawn_stream(
+                run_ref="current", drop_run_id=prior_run, reattaches_left=1, replacing=None
+            )
             try:
                 started = self._cli(
                     ["tasks", "prompt", self._task_id, "--prompt", text], timeout=300
@@ -551,41 +575,82 @@ class PlatformTransport:
         self._run_id_known.clear()
         self._run_id = None
 
-    def _spawn_stream(self, run_ref: str, drop_run_id: str | None, reattaches_left: int) -> None:
-        proc = subprocess.Popen(  # noqa: S603
-            [
-                CLI,
-                "tasks",
-                "stream",
-                str(self._task_id),
-                "--run",
-                run_ref,
-                "--since",
-                "0",
-            ],
-            cwd=self._repo_root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,
-        )
-        session = _StreamSession(
-            proc=proc,
-            assembler=StreamAssembler(),
-            drop_run_id=drop_run_id,
-            reattaches_left=reattaches_left,
-        )
-        session.thread = threading.Thread(target=self._read_stream, args=(session,), daemon=True)
+    def _spawn_stream(
+        self,
+        run_ref: str,
+        drop_run_id: str | None,
+        reattaches_left: int,
+        replacing: _StreamSession | None,
+    ) -> bool:
+        """Install a fresh stream session — atomically, and only if the caller's world stands.
+
+        `replacing` names the session the caller believes it is superseding (None when the
+        slot was just cleared by `_stop_stream`). The decision and the install happen under
+        the session lock, so a reattach that lost its race with `_stop_stream` or `close()`
+        — τ's worker moving to the next turn, or the episode ending — spawns *nothing*,
+        instead of installing a subprocess no `_stop_stream` will ever reap. Returns whether
+        the session was installed.
+        """
         with self._session_lock:
+            if self._closed or self._session is not replacing:
+                return False
+            proc = subprocess.Popen(  # noqa: S603
+                [
+                    CLI,
+                    "tasks",
+                    "stream",
+                    str(self._task_id),
+                    "--run",
+                    run_ref,
+                    "--since",
+                    "0",
+                ],
+                cwd=self._repo_root,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+            )
+            session = _StreamSession(
+                proc=proc,
+                assembler=StreamAssembler(),
+                drop_run_id=drop_run_id,
+                reattaches_left=reattaches_left,
+            )
+            session.thread = threading.Thread(
+                target=self._read_stream, args=(session,), daemon=True
+            )
+            session.stderr_thread = threading.Thread(
+                target=self._drain_stderr, args=(session,), daemon=True
+            )
             self._session = session
         session.thread.start()
+        session.stderr_thread.start()
+        return True
 
     def _read_stream(self, session: _StreamSession) -> None:
         proc = session.proc
         assert proc is not None and proc.stdout is not None
         for line in proc.stdout:
             self._ingest_line(session, line)
+        with contextlib.suppress(OSError, ValueError):
+            proc.stdout.close()
         self._on_stream_end(session)
+
+    def _drain_stderr(self, session: _StreamSession) -> None:
+        """Keep the subprocess's stderr pipe empty, retaining only the tail.
+
+        Undrained, the child blocks writing stderr once the OS buffer fills — a mid-episode
+        hang that would present as a silent stream death with a misleading cause. The local
+        transport drains the same way; the tail feeds the failure report.
+        """
+        proc = session.proc
+        if proc is None or proc.stderr is None:
+            return
+        for line in proc.stderr:
+            session.stderr_lines.append(line.rstrip("\n"))
+        with contextlib.suppress(OSError, ValueError):
+            proc.stderr.close()
 
     def _ingest_line(self, session: _StreamSession, line: str) -> None:
         line = line.strip()
@@ -625,19 +690,22 @@ class PlatformTransport:
             # The overlapped attach lost its race: `current` resolved before the new run
             # existed, so nothing from it was seen and an attach by explicit run id replays it
             # from event 0 with nothing double-fed. The run id arrives with `tasks prompt`'s
-            # response, which shares the CLI's 300s ceiling.
+            # response, which shares the CLI's 300s ceiling. _spawn_stream itself decides —
+            # under the lock — whether this session is still the current one; a reattach
+            # that lost that race installs nothing and this thread simply ends.
             run_known = self._run_id_known.wait(timeout=SETTLE_GRACE_SECONDS)
-            if run_known and self._run_id and self._is_current(session):
-                self.incidents.stream_reattaches += 1
-                logger.info(
-                    f"stream attach raced run creation (dropped {session.dropped} stale "
-                    f"event(s)); reattaching to run {self._run_id}"
-                )
-                self._spawn_stream(
+            if run_known and self._run_id:
+                if self._spawn_stream(
                     run_ref=self._run_id,
                     drop_run_id=None,
                     reattaches_left=session.reattaches_left - 1,
-                )
+                    replacing=session,
+                ):
+                    self.incidents.stream_reattaches += 1
+                    logger.info(
+                        f"stream attach raced run creation (dropped {session.dropped} stale "
+                        f"event(s)); reattached to run {self._run_id}"
+                    )
                 return
         if session.emitted == 0 and self._sandbox_still_queued():
             # The sandbox never started: the org's concurrency limit queues tasks beyond
@@ -648,23 +716,25 @@ class PlatformTransport:
             # the queue budget and let τ's own turn timeout stay the real arbiter.
             # Replay-safe because nothing was emitted.
             time.sleep(self._queue_poll_delay)
-            if self._is_current(session):
+            if self._spawn_stream(
+                run_ref=self._run_id or "current",
+                drop_run_id=session.drop_run_id,
+                reattaches_left=0,
+                replacing=session,
+            ):
                 self.incidents.sandbox_queue_waits += 1
                 logger.info(
-                    f"task {self._task_id}: sandbox still queued; re-attaching stream "
+                    f"task {self._task_id}: sandbox still queued; re-attached stream "
                     f"(queue wait {self.incidents.sandbox_queue_waits})"
-                )
-                self._spawn_stream(
-                    run_ref=self._run_id or "current",
-                    drop_run_id=session.drop_run_id,
-                    reattaches_left=0,
                 )
             return
         if not self._is_current(session):
             return
-        stderr = ""
-        if session.proc is not None and session.proc.stderr is not None:
-            stderr = session.proc.stderr.read() or ""
+        if session.stderr_thread is not None:
+            # The child just exited; give its drain the moment it needs to reach EOF so the
+            # failure report carries the whole tail.
+            session.stderr_thread.join(timeout=2.0)
+        stderr = "\n".join(session.stderr_lines)
         self.incidents.stream_failures += 1
         self._turns.put(
             TransportFailure(

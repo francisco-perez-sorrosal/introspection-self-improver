@@ -554,6 +554,23 @@ Same isolation rules as the full experiment (protocol §29.17). Runs on the Phas
       `transitions.csv` + `retention.csv` added to the reveal; snapshot writes lock +
       manifest value-copies. Dashboard: held-out progression view landed (pulled forward
       from Phase 5) and verified against a synthetic revealed experiment. (2026-08-13)
+- [x] Seam-risk remediation (user-directed, follow-on session to the grounding pass):
+      the audit's three RISK items landed with tests. R1 — refused tool calls are now
+      counted at the bridge by cause (`tool_refusals_unbound_session` /
+      `tool_refusals_stale_endpoint`) and folded into the round's incident totals as
+      run-level counters (a refusal has no episode to ride on — that is what it means),
+      so an episode starving on refused calls can no longer leave a healthy-looking
+      seam. R2 — the platform stream's stderr is drained continuously with a bounded
+      tail (undrained, the child blocks once the ~64 KB pipe fills, presenting as a
+      silent stream death with a misleading cause); the failure report now carries the
+      drained tail, and `stderr_tail` is real on this lane. R3 — stream install is
+      atomic and closed-aware: `_spawn_stream` decides under the session lock whether
+      its caller's world still stands, so a reattach that loses its race with
+      `_stop_stream`/`close()` spawns nothing instead of leaking a subprocess no
+      teardown would reap. Suite 250 → 254; ruff + format clean; **A.0a PASS**
+      re-proven on the changed seam (254-test suite + graded mock smoke,
+      `generation_000/gates/a0a.json`; smoke artifacts left untracked for the freeze
+      pre-flight clear, per the Phase 3.5 precedent) (2026-08-13).
 - [ ] Freeze: `experiment.seq: 1` (numbering reset) with D10 `protocol:` values (G=3, B=4, T=8) and
       the re-proposed partition already in place; flip PROVISIONAL → FROZEN;
       `reset_h0`; commit; **A.0a gate PASS** recorded.

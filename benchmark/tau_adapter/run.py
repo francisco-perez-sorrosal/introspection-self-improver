@@ -842,6 +842,12 @@ def main() -> int:
     for counters in (*incidents_by_ref.values(), *unattributed_incidents):
         for key, value in counters.items():
             incident_totals[key] = incident_totals.get(key, 0) + value
+    # Bridge-level refusals have no episode to ride on — that is what a refusal means —
+    # so they join the totals directly: a round whose seam refused calls must not read
+    # as healthy just because no manifest row could carry the count.
+    bridge_refusals = {key: value for key, value in bridge.refusal_counters().items() if value}
+    for key, value in bridge_refusals.items():
+        incident_totals[key] = incident_totals.get(key, 0) + value
 
     tasks_created = sorted(
         {
@@ -905,6 +911,7 @@ def main() -> int:
                 "incidents": {
                     "totals": incident_totals,
                     "unattributed": unattributed_incidents,
+                    "bridge": bridge_refusals,
                 },
                 "platform": (
                     {

@@ -81,6 +81,15 @@ STALL_WARN_SECONDS = 25.0
 # the call.
 UNBOUND_SESSION_GRACE_SECONDS = 30.0
 
+#: Refused-call counter keys. A refusal means a request resolved to no live channel, so
+#: there is no episode to attribute it to — the counters are run-level, and the runner
+#: folds them into the round's incident totals. Split by cause because they read
+#: differently: a session the transport never bound is the platform lane's starvation
+#: mode (the episode fails every call while the seam would otherwise look healthy); a
+#: stale or unknown endpoint token is a late call after its episode ended.
+REFUSAL_UNBOUND_SESSION = "tool_refusals_unbound_session"
+REFUSAL_STALE_ENDPOINT = "tool_refusals_stale_endpoint"
+
 #: Set TAU_ADAPTER_TRACE=1 to print every rendezvous pairing to stderr. The rendezvous is the
 #: highest-risk part of the seam and its failure mode is a hang, which leaves no evidence
 #: behind; a mismatched await/post pair is obvious in this trace and invisible without it.
@@ -288,6 +297,12 @@ class ToolBridge:
         self._channels: dict[str, EpisodeChannel] = {}
         self._channels_lock = threading.Lock()
         self._channel_bound = threading.Condition(self._channels_lock)
+        # Refused calls by cause (see the REFUSAL_* keys). Guarded by the channels lock:
+        # increments come from the server's event loop, the runner reads the totals after
+        # the run.
+        self._refusals: dict[str, int] = dict.fromkeys(
+            (REFUSAL_UNBOUND_SESSION, REFUSAL_STALE_ENDPOINT), 0
+        )
 
         self._socket: socket.socket | None = None
         self._server: uvicorn.Server | None = None
@@ -434,6 +449,18 @@ class ToolBridge:
                     return channel
         return self._channel_for(path_token)
 
+    def count_refusal(self, session_key: str | None) -> str:
+        """Count a refused call by cause; returns the counter key it landed in."""
+        reason = REFUSAL_UNBOUND_SESSION if session_key else REFUSAL_STALE_ENDPOINT
+        with self._channels_lock:
+            self._refusals[reason] += 1
+        return reason
+
+    def refusal_counters(self) -> dict[str, int]:
+        """Refused-call totals by cause — run-level, since a refusal has no episode."""
+        with self._channels_lock:
+            return dict(self._refusals)
+
     # ------------------------------------------------------------------- handlers
 
     async def _on_list_tools(
@@ -456,7 +483,16 @@ class ToolBridge:
         if channel is None:
             # A closed or never-opened token: the episode this URL belonged to is over (or
             # the URL is stale). Refusing immediately beats parking a handler for 300s
-            # against a mailbox nothing will ever post to.
+            # against a mailbox nothing will ever post to — and the refusal is counted,
+            # because an episode whose session never binds fails every call exactly here,
+            # and a round whose seam refused calls must say so instead of reporting itself
+            # healthy (the failure class this bridge exists to make loud).
+            reason = self.count_refusal(session_key)
+            token = _token_of(ctx) or ""
+            logger.warning(
+                f"refused {params.name}: no live episode channel "
+                f"(session={session_key!r}, token={token[:8]}…) — counted as {reason}"
+            )
             return mcp_types.CallToolResult(
                 content=[
                     mcp_types.TextContent(

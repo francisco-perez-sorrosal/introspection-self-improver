@@ -17,6 +17,7 @@ from typing import ClassVar
 import mcp.types as mcp_types
 import pytest
 
+from tau_adapter import tool_bridge
 from tau_adapter.tool_bridge import ToolBridge, ToolResultTimeout
 
 
@@ -258,6 +259,26 @@ def test_a_call_for_an_unknown_or_closed_token_is_refused_loudly() -> None:
     channel.close()
     refused = asyncio.run(bridge._on_call_tool(_StubCtx(channel.token), _call_params()))
     assert refused.is_error
+
+
+def test_refused_calls_are_counted_by_cause(monkeypatch) -> None:
+    """A refusal has no episode to ride on, so the bridge itself keeps the count —
+    otherwise an episode starving on refused calls leaves a healthy-looking seam,
+    which is the exact failure class the incident counters exist to prevent."""
+    bridge = ToolBridge(tau_tools=[_FakeTauTool()])
+    assert bridge.refusal_counters() == {
+        "tool_refusals_unbound_session": 0,
+        "tool_refusals_stale_endpoint": 0,
+    }
+    asyncio.run(bridge._on_call_tool(_StubCtx("no-such-token"), _call_params()))
+    monkeypatch.setattr(tool_bridge, "UNBOUND_SESSION_GRACE_SECONDS", 0.05)
+    asyncio.run(
+        bridge._on_call_tool(_StubCtx("no-such-token", session="sess-ghost"), _call_params())
+    )
+    assert bridge.refusal_counters() == {
+        "tool_refusals_unbound_session": 1,
+        "tool_refusals_stale_endpoint": 1,
+    }
 
 
 def test_channels_stay_isolated_under_a_worker_pool_of_episodes() -> None:
