@@ -43,6 +43,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -301,6 +302,29 @@ def _build_env_for_pi() -> dict[str, str]:
     return env
 
 
+class _EpisodeTransportLog:
+    """Every transport constructed, one per episode *attempt*.
+
+    τ runs episodes from a worker pool and retries infrastructure errors, so appends arrive
+    from concurrent threads and can exceed the episodes the results file names — the
+    difference is the orphan count, and it must be visible. Reads happen only after τ's
+    runner returned: the shutdown sweep (closing whatever an interrupted sweep left open)
+    and the post-run evidence pass both iterate a snapshot.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._items: list[Any] = []
+
+    def add(self, transport: Any) -> None:
+        with self._lock:
+            self._items.append(transport)
+
+    def snapshot(self) -> list[Any]:
+        with self._lock:
+            return list(self._items)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -496,7 +520,6 @@ def main() -> int:
     results_path = out_dir / "results.json"
     session_dir = out_dir / "pi_sessions"
     base_env = _build_env_for_pi()
-    launch_argv: list[str] = []
 
     # Run-scoped, not per-episode. The development lane hands one URL to `introspection dev`
     # before the first episode and holds it for the whole run, so the bridge has to outlive an
@@ -538,13 +561,20 @@ def main() -> int:
         spec.label_token or (f" {task_ids[0]}" if task_ids and len(task_ids) == 1 else "")
     )
 
-    # Every transport constructed, one per episode *attempt*. This is the queue-tolerant side
-    # of the accounting: τ retries infrastructure errors and keeps only the final attempt, so
-    # the platform tasks a run created can exceed the episodes its results file names — the
-    # difference is the orphan count, and it must be visible. The registry also lets the
-    # shutdown path archive whatever is still open, so an interrupted sweep does not leave a
-    # sandbox idling toward its timeout; close() is idempotent.
-    episode_transports: list[Any] = []
+    transports = _EpisodeTransportLog()
+
+    # The launch vector is identical for every episode, so it is computed once here rather
+    # than inside the factory τ's workers call concurrently. The local probe transport is
+    # never started; its only job is to render the argv a run's record names.
+    if spec.transport == TRANSPORT_PLATFORM:
+        launch_argv = ["introspection", "tasks", "create", "--runtime-id", str(runtime_id)]
+    else:
+        launch_argv = LocalPiTransport(
+            recipe_dir=recipe_dir,
+            session_dir=session_dir,
+            launcher=args.launcher,
+            workspace_dir=workspace_dir,
+        ).argv()
 
     def create_agent(tools, domain_policy, **kwargs):
         declared = kwargs.get("llm")
@@ -565,7 +595,6 @@ def main() -> int:
                 dev_target=dev.dev_target if dev else None,
                 episode_label=episode_label,
             )
-            launch_argv[:] = ["introspection", "tasks", "create", "--runtime-id", runtime_id]
         else:
             transport = LocalPiTransport(
                 recipe_dir=recipe_dir,
@@ -573,8 +602,7 @@ def main() -> int:
                 launcher=args.launcher,
                 workspace_dir=workspace_dir,
             )
-            launch_argv[:] = transport.argv()
-        episode_transports.append(transport)
+        transports.add(transport)
         return PiRecipeAgent(
             tools=tools,
             domain_policy=domain_policy,
@@ -692,7 +720,7 @@ def main() -> int:
         # Reverse acquisition order, and everything best-effort. Closing the transports first
         # archives any task an interrupted episode left open — otherwise its sandbox idles
         # against the org concurrency limit until the platform's timeout backstop fires.
-        for transport in episode_transports:
+        for transport in transports.snapshot():
             # Shutdown must not mask the real failure.
             with contextlib.suppress(Exception):
                 transport.close()
@@ -700,6 +728,7 @@ def main() -> int:
             dev.stop()
         bridge.stop()
     elapsed = time.monotonic() - started
+    episode_transports = transports.snapshot()
     episode_summaries = [manifestmod.episode_summary(sim) for sim in results.simulations]
 
     # Post-run evidence pass, all from the record τ just wrote: per-episode labels, batched

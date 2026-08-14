@@ -343,8 +343,13 @@ session; the frozen `max_concurrency` VALUE is untouched throughout.
       attribution; identity-guarded release (late close cannot evict a successor);
       unknown/closed tokens refused loudly instead of a 300s park. Suite 208 → 216
       (2026-08-13).
-- [ ] `run.py` thread-safety under τ's worker pool (`episode_transports`,
-      `launch_argv`, `original_titles`, incident aggregation).
+- [x] `run.py` thread-safety under τ's worker pool: transports land in a
+      lock-guarded log (concurrent `create_agent` appends, post-run snapshot
+      reads); `launch_argv` computed once instead of mutated per factory call;
+      `original_titles`, incident aggregation and the manifest pass audited as
+      post-run single-threaded (reads happen only after `run_tasks` returns).
+      Worker-pool contention test: 8 threads × 25 episodes on one (tool, args)
+      key, zero crossings. Suite 216 → 217 (2026-08-13).
 - [ ] Local lane end-to-end: per-episode channel URL via env; live minitest = a
       mock-domain round at concurrency 2–3 with fidelity per-episode invariants,
       zero rendezvous incidents, and the measured speedup vs the same round serial.

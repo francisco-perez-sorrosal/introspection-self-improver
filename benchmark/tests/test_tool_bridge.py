@@ -202,6 +202,42 @@ def test_a_call_for_an_unknown_or_closed_token_is_refused_loudly() -> None:
     assert refused.is_error
 
 
+def test_channels_stay_isolated_under_a_worker_pool_of_episodes() -> None:
+    """The shape τ's runner drives at max_concurrency N: concurrent create/rendezvous/close.
+
+    Every worker runs episodes back to back — open a channel, post and await a result under
+    the SAME (tool, arguments) key every other worker is using, close — while the registry
+    is mutated from all sides. Any crossing or lost result is an error; τ retrying an
+    episode mid-flight is just one more worker doing exactly this.
+    """
+    bridge = ToolBridge(tau_tools=[])
+    errors: list[str] = []
+
+    def worker(worker_id: int) -> None:
+        for episode in range(25):
+            channel = bridge.open_channel()
+            expected = f"answer-{worker_id}-{episode}"
+            channel.post_result("KB_search", {"query": "gold card"}, expected, is_error=False)
+            try:
+                got, _ = channel.wait("KB_search", {"query": "gold card"}, timeout=1.0)
+            except ToolResultTimeout:
+                errors.append(f"worker {worker_id} episode {episode}: result never arrived")
+            else:
+                if got != expected:
+                    errors.append(
+                        f"worker {worker_id} episode {episode}: got {got!r}, "
+                        f"expected {expected!r} — a result crossed episodes"
+                    )
+            channel.close()
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=30)
+    assert not errors, errors
+
+
 def test_a_late_close_of_a_replaced_run_channel_does_not_evict_its_successor() -> None:
     """τ's teardown of a failed attempt may close its channel after the retry opened one."""
     bridge = ToolBridge(tau_tools=[_FakeTauTool()])
