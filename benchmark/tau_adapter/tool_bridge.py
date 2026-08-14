@@ -246,6 +246,11 @@ class ToolBridge:
         # while the server's event loop resolves inbound calls against the same registry.
         self._channels: dict[str, EpisodeChannel] = {}
         self._channels_lock = threading.Lock()
+        # Pinned slot tokens: paths whose URL outlives episodes because a `dev` attachment
+        # was handed it for the whole run. Slot 0 is the run token itself; the attachment
+        # pool mints one more per additional worker. Membership is what open_pinned_channel
+        # checks, so a typo'd token cannot silently create a rogue pinned path.
+        self._pinned: set[str] = {self.token}
 
         self._socket: socket.socket | None = None
         self._server: uvicorn.Server | None = None
@@ -338,22 +343,43 @@ class ToolBridge:
             self._channels[token] = channel
             return channel
 
-    def open_run_channel(self, on_stall: Callable[[], None] | None = None) -> EpisodeChannel:
-        """Open this episode's channel at the run-pinned path, replacing any predecessor.
+    def mint_pinned_token(self) -> str:
+        """Register one more pinned slot — a path whose URL a `dev` attachment holds all run."""
+        with self._channels_lock:
+            token = secrets.token_urlsafe(24)
+            while token in self._pinned or token in self._channels:  # pragma: no cover
+                token = secrets.token_urlsafe(24)
+            self._pinned.add(token)
+            return token
 
-        The development lane's entry: `dev` holds one URL for the whole run, so its episodes
-        share the pinned token *sequentially* — the runner refuses platform-lane concurrency
-        above 1. Replacement is the episode boundary: a result posted for a call whose
-        handler had already given up stays queued in the predecessor's mailbox, and a τ
-        infrastructure retry re-asks the *same task* with identical arguments — against the
-        old mailbox it would receive the stale result instantly and shift every later
-        pairing by one, silently. The fresh mailbox makes that impossible, and any handler
-        still parked on the old one times out on its own ceiling.
+    def open_pinned_channel(
+        self, token: str, on_stall: Callable[[], None] | None = None
+    ) -> EpisodeChannel:
+        """Open this episode's channel at a pinned slot path, replacing any predecessor.
+
+        The development lane's entry: a `dev` attachment holds one URL for the whole run,
+        so that slot's episodes share its token *sequentially* — the attachment pool leases
+        a slot to exactly one episode at a time. Replacement is the episode boundary: a
+        result posted for a call whose handler had already given up stays queued in the
+        predecessor's mailbox, and a τ infrastructure retry re-asks the *same task* with
+        identical arguments — against the old mailbox it would receive the stale result
+        instantly and shift every later pairing by one, silently. The fresh mailbox makes
+        that impossible, and any handler still parked on the old one times out on its own
+        ceiling.
         """
         with self._channels_lock:
-            channel = EpisodeChannel(self, self.token, on_stall)
-            self._channels[self.token] = channel
+            if token not in self._pinned:
+                raise ValueError(
+                    f"{token[:8]}… is not a registered pinned token: pinned channels exist "
+                    "only at the run token or a slot minted by mint_pinned_token"
+                )
+            channel = EpisodeChannel(self, token, on_stall)
+            self._channels[token] = channel
             return channel
+
+    def open_run_channel(self, on_stall: Callable[[], None] | None = None) -> EpisodeChannel:
+        """Slot 0's opener: the run-pinned path. Alias for the single-attachment case."""
+        return self.open_pinned_channel(self.token, on_stall)
 
     def _release(self, channel: EpisodeChannel) -> None:
         # Identity-guarded: a late close of a replaced run channel (τ tearing down a failed

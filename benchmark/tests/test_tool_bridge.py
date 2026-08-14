@@ -133,21 +133,63 @@ def test_a_posted_result_pairs_with_the_matching_wait() -> None:
     )
 
 
-def test_a_replaced_run_channel_discards_results_posted_for_abandoned_calls() -> None:
-    """A stale result must not answer the next episode's identical call.
+def test_results_do_not_cross_between_pinned_slots_with_identical_calls() -> None:
+    """Two platform workers' episodes, same tool, same arguments — no crossing.
 
-    The development lane serves every episode from one pinned URL, and τ retries an
+    Each `dev` attachment carries one slot's URL, so with N workers in flight the
+    bridge holds N pinned channels at once. The failure this test forbids is the
+    attachment-pool version of the original crossing bug: worker 1's τ result
+    answering worker 2's parked call.
+    """
+    bridge = ToolBridge(tau_tools=[])
+    slot_one = bridge.open_pinned_channel(bridge.mint_pinned_token())
+    slot_two = bridge.open_pinned_channel(bridge.mint_pinned_token())
+
+    slot_two.post_result("KB_search", {"query": "gold card"}, "answer-for-2", is_error=False)
+    with pytest.raises(ToolResultTimeout):
+        slot_one.wait("KB_search", {"query": "gold card"}, timeout=0.05)
+
+    slot_one.post_result("KB_search", {"query": "gold card"}, "answer-for-1", is_error=False)
+    assert slot_one.wait("KB_search", {"query": "gold card"}, timeout=1.0) == (
+        "answer-for-1",
+        False,
+    )
+    assert slot_two.wait("KB_search", {"query": "gold card"}, timeout=1.0) == (
+        "answer-for-2",
+        False,
+    )
+
+
+def test_a_replaced_slot_channel_discards_results_posted_for_abandoned_calls() -> None:
+    """A stale result must not answer the next episode's identical call on that slot.
+
+    Every attachment serves its episodes from one pinned URL, and τ retries an
     episode of the same task with the same tool name and arguments after an
     infrastructure error. Without the replacement, a result posted after its handler
     gave up would satisfy the retry's first call instantly and shift every later
-    pairing by one — silent cross-episode contamination.
+    pairing by one — silent cross-episode contamination. Checked on the run token
+    (slot 0) and on a minted slot: same rule per slot.
     """
     bridge = ToolBridge(tau_tools=[])
-    first = bridge.open_run_channel()
+    first = bridge.open_pinned_channel(bridge.token)
     first.post_result("KB_search", {"query": "gold card"}, "stale", is_error=False)
-    second = bridge.open_run_channel()
+    second = bridge.open_pinned_channel(bridge.token)
     with pytest.raises(ToolResultTimeout):
         second.wait("KB_search", {"query": "gold card"}, timeout=0.05)
+
+    slot = bridge.mint_pinned_token()
+    first = bridge.open_pinned_channel(slot)
+    first.post_result("KB_search", {"query": "gold card"}, "stale", is_error=False)
+    second = bridge.open_pinned_channel(slot)
+    with pytest.raises(ToolResultTimeout):
+        second.wait("KB_search", {"query": "gold card"}, timeout=0.05)
+
+
+def test_an_unregistered_pinned_token_is_refused() -> None:
+    """A typo'd slot token must not silently create a rogue pinned path."""
+    bridge = ToolBridge(tau_tools=[])
+    with pytest.raises(ValueError, match="not a registered pinned token"):
+        bridge.open_pinned_channel("never-minted")
 
 
 def test_a_closed_channels_stale_result_cannot_answer_a_new_episode() -> None:
@@ -161,11 +203,11 @@ def test_a_closed_channels_stale_result_cannot_answer_a_new_episode() -> None:
         second.wait("KB_search", {"query": "gold card"}, timeout=0.05)
 
 
-def test_the_run_channel_keeps_its_url_across_episodes() -> None:
-    """`introspection dev` is handed one URL for the whole run; episodes must not move it."""
+def test_a_pinned_slot_keeps_its_url_across_episodes() -> None:
+    """A `dev` attachment is handed one URL for the whole run; episodes must not move it."""
     bridge = ToolBridge(tau_tools=[])
-    first = bridge.open_run_channel()
-    second = bridge.open_run_channel()
+    first = bridge.open_pinned_channel(bridge.token)
+    second = bridge.open_pinned_channel(bridge.token)
     assert first.token == second.token == bridge.token
 
 
@@ -238,11 +280,11 @@ def test_channels_stay_isolated_under_a_worker_pool_of_episodes() -> None:
     assert not errors, errors
 
 
-def test_a_late_close_of_a_replaced_run_channel_does_not_evict_its_successor() -> None:
+def test_a_late_close_of_a_replaced_slot_channel_does_not_evict_its_successor() -> None:
     """τ's teardown of a failed attempt may close its channel after the retry opened one."""
     bridge = ToolBridge(tau_tools=[_FakeTauTool()])
-    first = bridge.open_run_channel()
-    second = bridge.open_run_channel()
+    first = bridge.open_pinned_channel(bridge.token)
+    second = bridge.open_pinned_channel(bridge.token)
     first.close()
     second.post_result("KB_search", {"query": "gold card"}, "for the retry", is_error=False)
     answered = asyncio.run(bridge._on_call_tool(_StubCtx(bridge.token), _call_params()))
