@@ -241,7 +241,7 @@ lifecycle; `tau_adapter/records.py` loads it to validate every record.
 No `orchestrator/` directory. Claude Code is the orchestrator; a directory by that name would
 imply a second agent implementation exists.
 
-`contract/protocol.md` will hold the per-generation procedure, written at plan Phase 4 from
+`contract/protocol.md` holds the per-generation procedure, written at plan Phase 4 from
 the debug generation that actually ran — deliberately not before, and deliberately not
 duplicated here.
 

@@ -102,27 +102,18 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
    rather than cross-generation comparison):
    - **Narration and tool calls are reassembled into the one message Pi produced.** Pi emits a
      single assistant message that can carry narration *and* a tool call; the platform streams
-     the parts as distinct AG-UI event groups. The transport's first design forwarded that
-     split, on the view that merging would invent a message shape — and recorded the latent
-     consequence here rather than fixing it: narration taken alone hands τ's floor to the user
-     simulator while the sandbox sits parked on the bridge. The A.0b gate then observed exactly
-     that (first run 2026-08-13; the verdict now lives in git history —
-     `git show 984c598^:results/experiment_bm25-sonnet46/generation_000/gates/a0b.json`):
-     3 of 12 platform episodes hit τ's 600 s
-     ceiling, each with 5–6 rendezvous stalls — the sandbox's MCP daemon abandoning parked
-     calls at ~15 s ("MCP daemon: Timeout; remote outcome is unknown"), Pi's tool executor
-     erroring at 120 s, the agent retrying against phantom failures while the trajectory
-     recorded valid results. Example conversations: `019ffbcd-cacd-…` (graded 0 on timeout)
-     and `019ffbeb-01e4-…` (an attempt τ retried past; kept as an orphan). The platform's own
-     GenAI spans settle whose shape is real: the model's output is one message with
-     `[thinking, text, tool_call]`. The remedy — buffering a run's narration and attaching it
-     to that run's first tool call, flushing text-only at RUN_FINISHED — therefore
-     *reconstructs* the shape the host produced rather than inventing one, and the call still
-     surfaces the instant it exists, so the parked sandbox is answered while its daemon is
-     listening. Adopted by operator decision at the A.0b gate, 2026-08-13. Consequence: both
-     lanes now present the same mixed message, `enforce_communication_protocol` governs them
-     identically, and the two-compliant-messages divergence this bullet used to record no
-     longer exists.
+     the parts as distinct AG-UI event groups. Forwarding that split hands τ's floor to the
+     user simulator on the narration alone while the sandbox sits parked on the bridge — the
+     first A.0b run observed exactly that (3 of 12 platform episodes at τ's 600 s ceiling with
+     5–6 rendezvous stalls each; verdict preserved in git history:
+     `git show 984c598^:results/experiment_bm25-sonnet46/generation_000/gates/a0b.json`).
+     The transport therefore buffers a run's narration and attaches it to that run's first
+     tool call, flushing text-only runs at RUN_FINISHED — *reconstructing* the shape the host
+     produced (the platform's own GenAI spans record one message with
+     `[thinking, text, tool_call]`), never inventing one, while the call still surfaces the
+     instant it exists. Adopted by operator decision at the A.0b gate, 2026-08-13. Both lanes
+     now present the same mixed message, and `enforce_communication_protocol` governs them
+     identically.
    - **Reasoning is streamed and dropped.** `REASONING_*` events are discarded for the same reason
      the local lane drops Pi's `thinking` blocks: τ's `AssistantMessage` has nowhere to put them.
    - **Per-message cost and usage are absent**, because AG-UI events carry none. τ's own cost
@@ -131,17 +122,16 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
    - **The system prompt differs by one line.** Pi appends `Current working directory: /workspace`
      after `</policy>` in the sandbox, against the recipe path locally. Outside the frozen region,
      so the hash gate is unaffected.
-   - **The intermittent rendezvous failure is diagnosed and fixed.** A `tools/call` could park
-     15–30 s and be abandoned by the sandbox's MCP daemon, while the episode still graded 1.0 on
-     the answers that had already succeeded. The cause was never the rendezvous: each
-     `introspection` CLI invocation pays ~5.5 s of startup, and the transport paid the prompt's
-     and the stream's serially before τ could see a call — burning a third of the daemon's ~30 s
-     per-request budget per turn. The stream attach now overlaps the prompt (run-id filtering
-     plus a single reattach make the early attach safe), and a clean episode answers every call
-     in ~250–350 ms with zero span errors. `STALL_WARN_SECONDS` stays, so any recurrence names
-     itself. A platform score is never a substitute for a local one — under the evaluation
-     protocol the lanes serve different roles by design: platform episodes supply improvement
-     evidence, local episodes supply the held-out measurement (`SIA_EVALUATION_PLAN.md` D1).
+   - **The rendezvous stall class is fixed and self-naming.** Serial CLI startup (~5.5 s per
+     `introspection` invocation, paid for the prompt and then the stream) burned a third of
+     the sandbox MCP daemon's ~30 s per-request budget before τ could see a call, so parked
+     calls could be abandoned while the episode still graded on answers already landed. The
+     stream attach now overlaps the prompt (run-id filtering plus a single reattach make the
+     early attach safe); a clean episode answers every call in ~250–350 ms, and
+     `STALL_WARN_SECONDS` names any recurrence. A platform score is never a substitute for a
+     local one — the lanes serve different roles by design: platform episodes supply
+     improvement evidence, local episodes the held-out measurement (`SIA_EVALUATION_PLAN.md`
+     D1).
 
 5. **The agent is not reproducible from τ's `--seed`.** The seed reaches τ's own sampling; Pi owns
    the agent's, and τ's `llm_args_agent` never reach it. This is not a divergence the fidelity
@@ -261,15 +251,11 @@ would have silently frozen the wrong thing:
   stopping) remains mutable harness territory. Re-deciding this value means a new experiment,
   never a new value under the old id.
 - An experiment's id is *derived*, never chosen: `experiment.seq` (zero-padded to three
-  digits) + `experiment.name`, giving `001_bm25-sonnet46` and the results directory
-  `results/experiment_001_bm25-sonnet46/`. The sequence exists because a descriptive name can
-  legitimately repeat — a second freeze of the same bm25 + Sonnet 4.6 configuration is a
-  different experiment under its own seq — so the name alone cannot be the identity.
-  Re-deciding a freeze bumps `seq`. **Numbering reset 2026-08-13 (user-directed):** the
-  original bring-up freeze that first held the id `001_bm25-sonnet46` closed without a
-  graded round and was cleared to git history along with every bring-up artifact (the
-  pre-rename directory `results/experiment_bm25-sonnet46/` and its migration included);
-  seq 1 now names the generation protocol's debug experiment, which reuses the id, and
-  freeze fingerprints disambiguate the two mechanically. Platform task titles from before
-  the pre-reset rename keep their old `[exp:bm25-sonnet46]` suffix — they are records of
-  what the platform actually displayed, not re-labeled evidence.
+  digits) + `experiment.name`, giving e.g. `002_bm25-sonnet46` and the results directory
+  `results/experiment_002_bm25-sonnet46/`. The sequence exists because a descriptive name can
+  legitimately repeat — a second freeze of the same configuration is a different experiment
+  under its own seq — so the name alone cannot be the identity. Re-deciding any frozen value
+  bumps `seq`; reused ids across the 2026-08-13 numbering reset are disambiguated
+  mechanically by freeze fingerprints (the reset's history: README § One experiment, one
+  freeze). Platform task titles from before the reset keep their old `[exp:bm25-sonnet46]`
+  suffix — records of what the platform actually displayed, never re-labeled evidence.

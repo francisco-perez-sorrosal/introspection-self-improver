@@ -2,11 +2,23 @@
 
 ## Agent-Ready Experimental Design for Measuring Harness Improvement on τ-Knowledge
 
-**Status:** Proposed default evaluation protocol\
+**Status:** Adopted, and exercised end to end — the debug-scale experiment
+(`002_bm25-sonnet46`, revealed 2026-08-14) ran this protocol in full\
 **Benchmark:** τ-bench / τ-Knowledge `banking_knowledge`\
 **Purpose:** Measure whether successive Introspection target-agent
 harness generations generalize better to a fixed held-out set after
 learning from small, disjoint batches of execution experience.
+
+> **As-built note (2026-08-14).** Sections 1–30 are the design as adopted; the repo
+> cites them as "protocol §N", so their numbering is stable and they are not edited
+> to track implementation. What each concept became in code is the §3 mapping table
+> of `SIA_EVALUATION_PLAN.md`; refinements were adopted through that plan's decisions
+> D1–D11, never by rewriting a section here. Three experiment tiers now exist where
+> §3–§4 sketched two: **debug** G=3/B=4/T=8 (plan D10 — ran as seq 2), **powered**
+> G=5/B=8/T=28 (plan D11 — seq 3, sized by a power analysis on the debug run's own
+> data, with a pre-registered trend test as the primary significance instrument), and
+> the **full** default below, G=5/B=10/T=47 (deferred to seq 4). What the execution
+> taught about the design itself is §31.
 
 ------------------------------------------------------------------------
 
@@ -1096,3 +1108,65 @@ An implementation agent must preserve the following invariants:
 > trials and is optional here. The principal hypothesis is that the
 > final harness HG outperforms H0 on the fixed unseen held-out set while
 > all non-harness experimental variables remain frozen.
+
+------------------------------------------------------------------------
+
+# 31. Lessons Learned (As-Built Addendum, 2026-08-14)
+
+Recorded after the debug-scale experiment ran this protocol end to end
+(seq 2, `002_bm25-sonnet46`) and after the seq-3 sizing analysis.
+Appended without renumbering §§1–30; each refinement below was adopted
+through a plan decision (`SIA_EVALUATION_PLAN.md` D1–D11), and the
+operational counterparts live in that plan's §9.
+
+1.  **The protocol held under execution.** One full cycle — freeze, four
+    hidden measurements, three batches, three diagnoses, three
+    human-gated mutations, reveal — ran with zero mid-run mechanics
+    patching, and all twenty §29 guardrails held
+    (`results/experiment_002_bm25-sonnet46/GUARDRAIL_WALK.md`).
+2.  **§4's warning is not decorative.** The debug run's endpoint
+    (−1 task, inside the ±18 pp band at T=8) produced exactly the
+    situation §4 anticipates: a loop demonstrated, no statistical
+    conclusion available. The directional-only language did its job.
+3.  **Sizing needs a power analysis, not intuition.** A mutation moves
+    the curve only if its failure mode has witnesses in T — at T=8 a
+    ~10-task mode goes unwitnessed 40% of the time. The powered tier
+    (G=5/B=8/T=28, plan D11) was derived from the debug run's own data
+    by Monte Carlo
+    (`results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`), and
+    §25's endpoint question gained a pre-registered companion: a
+    one-sided trend test over all G+1 curve points, fixed α, computed
+    only at reveal.
+4.  **§12's firewall is implementable structurally, not just
+    procedurally.** Running held-out episodes on a lane that produces no
+    platform evidence at all, with outputs sealed out of tree and a
+    single sanctioned reveal, is stronger than the access restriction
+    the section asks for — the platform holds nothing to leak.
+5.  **§22 named the dominant noise source correctly.** Measured: one
+    frozen configuration split 6/10 across ten trials of one task, and
+    3 of 8 held-out tasks flipped between identical-harness
+    measurements. Pooling across tasks (one trial each) is the
+    load-bearing choice; §23's reliability study became a *conditional*
+    post-reveal addendum rather than a default.
+6.  **A carried result is not a new measurement.** §11's per-generation
+    evaluation meets rejected mutations (identity generations) in
+    practice; the curve carries the predecessor's result forward, and
+    any statistic over the curve must exclude carried columns rather
+    than count one draw twice.
+7.  **The pool needs screening the protocol did not specify.** A task
+    that deterministically crashes the frozen user simulator voids the
+    experiment from inside the frozen surface (observed: task_034,
+    upstream tau2-bench#470). Pre-partition screening with a real agent
+    is now freeze step 0 (`contract/protocol.md`), and pool exclusions
+    are documented in the split manifest.
+8.  **Tasks are consumable.** Once a loop has tuned on a batch task, or
+    a reveal has exposed a held-out task, that task is burnt for future
+    held-out use. Successive experiments on one domain therefore compete
+    for a shrinking fresh pool — a constraint §16 never had to face and
+    the seq-3 partition obeys (fresh-pool discipline, plan D11).
+9.  **§24's records earned their place, plus one addition.** The
+    evidence chain was written as it happened and audited at reveal; the
+    one structure the protocol lacked was an *improvement backlog* for
+    the case where a single batch surfaces more approved targets than
+    one generation may land (one-coherent-mechanism rule) — adopted in
+    `contract/protocol.md` step 4.

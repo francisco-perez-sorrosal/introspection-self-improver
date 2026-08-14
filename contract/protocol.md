@@ -46,7 +46,8 @@ file and the code disagree, the code wins and this file gets fixed.
    field-level diffs for near-misses. Try the observation harvest
    (`introspection events list --event-name introspection.observation`) after the
    ~40-min window; when it returns nothing, say so and use the full-population
-   transcript read as the (stronger, at B=4) fallback. Open-code failure modes;
+   transcript read as the fallback — at these batch sizes it is the stronger evidence
+   tier anyway. Open-code failure modes;
    prevalence is n/B by enumeration. Never read anything held-out.
 4. **Decide with the user** — two questions with different shapes. Proceed / identity /
    halt is exclusive and stays a single choice. The detected improvements are not:
@@ -85,8 +86,11 @@ file and the code disagree, the code wins and this file gets fixed.
 
 1. Final hidden measurement: `make heldout GEN=generation_00G` against the final tag.
 2. `make reveal` — the one sanctioned read of the vault: copies rounds verbatim,
-   computes progression/matrix/transitions/retention, stamps `held_out_result` into
-   every record, writes `summary.md` with the scale-aware noise band. Refuses a
+   computes progression/matrix/transitions/retention and the pre-registered trend
+   test (plan D11: one-sided over measured generations, identity generations
+   excluded; machine-readable at `held_out/trend_test.json`), stamps
+   `held_out_result` into every record, writes `summary.md` with the scale-aware
+   noise band and the trend verdict. Refuses a
    missing final tag, a mixed-fingerprint curve, or a measurement for an identity
    generation.
 3. Walk protocol §29 and record it (`GUARDRAIL_WALK.md` beside the summary), including

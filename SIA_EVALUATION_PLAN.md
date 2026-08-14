@@ -12,12 +12,28 @@ Phase 0); frozen values stay in `benchmark/benchmark_lock.yaml`.\
 **Created:** 2026-08-13, grounded in repo state @ `984c598` and in the Introspection
 plugin (0.7.0) + CLI (0.26.0) capability surface verified the same day.
 
-**Done means:** Phase 4 closed — one complete debug-scale experiment (D3's G=3, B=3,
-T=5; D10 proposes G=3, B=4, T=8 at `max_concurrency` 4 — ratify at the freeze) ran the
-real loop end to end: partition → H0 held-out (hidden) → batch → `operate` →
-`improve` PR → human approval → new generation → held-out (hidden) → … → reveal →
-result artifacts. Phase 5 then runs the full experiment (G=5, B=10, T=47) under an
-unchanged mechanism.
+**Done means:** a revealed experiment whose pre-registered analysis can carry the
+protocol's endpoint claim. The debug-scale experiment delivered the first half — the
+loop demonstrated end to end, no claim made (Phase 4, closed 2026-08-14). Phase 5 (the
+powered experiment, seq 3: G=5, B=8, T=28 per D11) is sized to carry the claim; Phase 6
+(full, T=47) stays deferred unless the powered outcome argues for it.
+
+**Where the path stands (2026-08-14):**
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0–0.5 | Ratify decisions; clear the bring-up record | ✅ closed |
+| 1 | Partition & configuration machinery | ✅ closed |
+| 2 | Runner, firewall, round targets | ✅ closed |
+| 3 | Generation lifecycle: records, reset, reveal | ✅ closed |
+| 3.5–3.5c | Episode concurrency, both lanes | ✅ closed |
+| 4 | Debug experiment (seq 1 voided at H0 → seq 2 ran and REVEALED) | ✅ closed 2026-08-14 — loop demonstrated; endpoint −1 task, inside ±18 pp; no claim |
+| 5 | **Powered experiment (seq 3, D11: G=5/B=8/T=28)** | ⏳ prepared — lock cut PROVISIONAL, fresh-pool partition frozen, trend test landed; awaiting the start gate |
+| 6 | Full experiment (seq 4, T=47) | deferred — contingent on Phase 5 |
+
+Fast orientation: every decision with its rationale is a §2 row (D1–D11); what each
+protocol concept became in code is the §3 table; per-phase history with landing dates
+is §5; the measured budget basis is §6; distilled learnings are §9.
 
 ------------------------------------------------------------------------
 
@@ -745,3 +761,53 @@ per-episode and unchanged.
 - Estimates above are replaced by recorded actuals as phases close.
 - Every writeup that touches held-out data states the enforcement boundary
   (structural on the platform, procedural on local artifacts) — no exceptions.
+
+## 9. Lessons learned
+
+Distilled from Phases 0–4 and the seq-3 sizing pass — the claim first, then the
+evidence and where the full rationale lives. Nothing here changes a decision; the
+D-rows and cited analyses stay authoritative.
+
+- **Screen the pool with a real agent before freezing.** The cheap screens (first-turn
+  probe, scripted agent) passed 97/97; the crash class that voided seq 1 needed a real
+  agent's replies to trigger (task_034, upstream tau2-bench#470). Screening is now a
+  freeze step (`contract/protocol.md` §0); the void-and-reseq procedure is the fallback.
+- **A green reward can hide a broken seam.** One stalled episode still graded 1.0 on
+  answers already landed. Completeness reporting, incident counters on every manifest
+  row, and `STALL_WARN_SECONDS` exist because of this; a score is trusted only alongside
+  its seam-health row (README § Two transports; `contract/constraints.md` § divergences).
+- **Estimates do not survive contact with episodes.** Recorded per-episode cost ran
+  ~2.3× the planning basis ($0.62/$0.53 mean/median local vs the assumed $0.20 median),
+  and episodes grew ~8%/generation with instruction size. §6 now prices from manifest
+  actuals only.
+- **Witness representation drives held-out sizing.** A mutation can only move the curve
+  if its failure mode has witnesses in T: at T=8 a ~10-task mode had 60%/19% odds of
+  ≥1/≥2 witnesses — half of seq 2's real fixes were likely invisible by construction
+  (D10 chose T=8 knowingly; D11's power analysis made the cost explicit and sized T=28).
+- **Statistical honesty scales with T.** The debug-era "+2 tasks reads directional"
+  eyeball bar does not carry: at T=28 the null produces a ≥2-task gain 29% of the time
+  and the bar is ≥4–5 tasks. Bands and bars are restated per scale, everywhere a curve
+  renders (D11; `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`).
+- **A carried measurement is not a new draw.** Identity generations repeat their
+  predecessor's held-out outcomes; the pre-registered trend test excludes them rather
+  than counting one measurement twice (`tau_adapter/reveal.py`).
+- **Diagnosis quality is the binding constraint on the loop.** The observation harvest
+  returned zero rows in-window every time; full-transcript reads carried every seq-2
+  diagnosis, and B=4 quoted prevalence in quarters. B=8 (D11) is the cheapest lever on
+  mutation quality — the variable that separates a working loop from a flat curve.
+- **Mutations over-fire.** The "thoroughness" instructions plausibly broke a passing
+  task by adding unrequested state changes (task_036 over-action). Over-action is a
+  first-class failure mode for future diagnosis
+  (`results/experiment_002_bm25-sonnet46/held_out/ANALYSIS_partial_metrics.md`).
+- **Process metrics move before reward does.** Retrieval intensity +20%, transfers
+  −67%, tool usage +18% across seq 2 while the pass count fell — tracked since as
+  pre-declared directional secondaries, never significance claims (same analysis; D11).
+- **Tasks are burnt for held-out use once a loop tunes on them or a reveal exposes
+  them.** Seq 3's partition excludes all 20 seq-2 tasks for exactly this reason — a
+  fresh-pool discipline feasible at T=28 and arithmetically impossible at T=47 (D11).
+- **The environment breaks too, and the remedy is never a local patch.** Benchmark
+  defects travel upstream (`.ai-state/UPSTREAM_ISSUES.md`); the freeze is voided and
+  re-cut under a new seq with exclusions documented (seq 1 → seq 2).
+- **Per-episode reward is a draw; pool across tasks.** Ten trials of one frozen
+  configuration split 6/10 — repeated trials buy little for generation comparison, and
+  D2's single-trial-pooled design held through both the run and the D11 re-examination.

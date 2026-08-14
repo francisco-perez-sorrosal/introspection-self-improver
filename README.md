@@ -9,7 +9,11 @@ What lives here is everything the loop runs against: an immutable objective, a m
 harness under improvement, a frozen/mutable boundary enforced mechanically rather than by
 convention, and the generation lifecycle — improvement batches, a sealed held-out vault,
 improvement records, an end-of-experiment reveal. The evaluation design is
-`self_improving_agent_evaluation_protocol.md`; `SIA_EVALUATION_PLAN.md` tracks the path.
+`self_improving_agent_evaluation_protocol.md`; `SIA_EVALUATION_PLAN.md` tracks the path
+and holds every decision's rationale (D1–D11) plus the distilled lessons;
+`contract/protocol.md` is the per-generation procedure as it actually runs, and
+`contract/constraints.md` the permission envelope. Deeper analyses live beside the
+results they analyze (e.g. `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`).
 The debug-scale experiment has run to completion and is revealed —
 `results/experiment_002_bm25-sonnet46/` holds the record (summary, guardrail walk,
 improvement records, per-generation evidence). Its endpoint sits inside the noise band,
@@ -128,55 +132,76 @@ lives in `results/experiment_<id>/improvement_records/` (schema:
 The improvement loop has no program of its own: Claude Code is the orchestrator, and an
 experiment is one conversation in which the human speaks at five gates. Everything
 between the gates is Claude Code working the CLI — the make targets above, the
-Introspection plugin's `operate` and `improve` skills, git. A debug-scale run
-(G=3 generations, 4-task batches, 8 held-out tasks) goes like this; every number below
-is invented for illustration:
+Introspection plugin's `operate` and `improve` skills, git. The shape of every run
+(the step-by-step procedure with each command: `contract/protocol.md`):
+
+1. **Freeze** — screen the pool, propose and freeze the partition (`make
+   propose_split`), `make reset_h0`, flip the lock to FROZEN, record the A.0a PASS.
+2. **Measure H0** on the held-out set — sealed into the vault, completeness only.
+3. **Per generation** — run the next improvement batch (fully observable) → diagnose
+   with `operate` → the human picks mutation targets → `improve` opens one PR → the
+   human merges or rejects (merge = the next generation; reject = an identity
+   generation, carried forward) → measure the new generation (sealed).
+4. **Reveal** — the one sanctioned read of the vault: curve, matrix, transitions,
+   retention, and the pre-registered trend verdict.
+
+This is how the debug-scale run actually went — seq 2, condensed; every number below
+is from the record at `results/experiment_002_bm25-sonnet46/`:
 
 > **You:** Start the debug experiment.
 >
 > **Claude Code:** Pre-flight done: partition verified against the lock (3×4 batches +
-> 8 held out), recipe restored to `h0-baseline` and committed, lock flipped PROVISIONAL
-> → FROZEN, A.0a gate PASS recorded. Estimated spend ≈ $11–18, ≈ 1–1.5 h compute.
-> Held-out results stay sealed in the vault until reveal — I only ever see
-> completeness. Proceed?
+> 8 held out over the 96-task screened pool), recipe byte-identical to `h0-baseline`,
+> lock flipped PROVISIONAL → FROZEN, A.0a gate PASS recorded. Held-out results stay
+> sealed in the vault until reveal — I only ever see completeness. Proceed?
 >
 > **You:** Go.
 >
 > **Claude Code:** H0 baseline — `make heldout GEN=generation_000`: 8/8 episodes
 > completed, zero seam incidents, graded results sealed in the vault. Batch 1 —
-> `make batch B=1 GEN=generation_000`: 4/4 episodes on the platform lane, rewards
-> visible by design: 1/4 passed. Viability read (plan D8): neither 0/4 nor 4/4, so H0 is
-> neither broken nor saturated — continuing. Running `operate` over the four
-> conversations (the second evidence harvest waits out the platform's ~40-minute
-> observation window)… Diagnosis: in every failure the first `KB_search` query copied
-> the user's phrasing verbatim and never reformulated; the one pass reformulated once.
-> Prevalence 3/4, conversation ids cited. `improve` proposes one mutation — a
-> query-reformulation instruction in `SYSTEM.md`, outside the frozen `<policy>` region
-> — PR #12 open on branch `gen-001/query-reformulation`.
+> `make batch B=1 GEN=generation_000`: 4/4 episodes clean on the platform lane,
+> rewards visible by design: 0/4 — the viability read (plan D8) fires, so I diagnose
+> before any mutation. `operate` over the four conversations (the observation harvest
+> returned nothing inside its window; the full-transcript read carried the diagnosis):
+> every failure is agent behavior, not infrastructure. Misapplied KB knowledge, 2/4 —
+> facts assembled from broad `KB_search` results, committed without verifying the
+> specific entity; capability blindness, 1/4; premature escalation, 1/4. Against a
+> broken-H0 reading: identity verification passed 3/4, and one failing episode still
+> drove a multi-step tool flow at 6/9 gold actions. Halt, or proceed?
 >
-> **You:** *(reads `! gh pr diff 12`)* Merge it.
+> **You:** Proceed — fix the KB one.
 >
-> **Claude Code:** Merged, tagged `exp1-g001`, improvement record `gen_000_to_001.yaml`
+> **Claude Code:** `improve` proposes one mutation: verify each KB-derived claim
+> against its specific entity before committing writes or recommendations — one
+> instruction block in `SYSTEM.md`, outside the frozen `<policy>` region. PR open on
+> `gen-001/kb-answer-verification`.
+>
+> **You:** *(reads `! gh pr diff`)* Merge it.
+>
+> **Claude Code:** Merged, tagged `exp2-g001`, improvement record `gen_000_to_001.yaml`
 > written and validated. Measuring H1 — `make heldout GEN=generation_001`: 8/8
-> completed, sealed. Generation 2 consumes batch 2 and roughly $3–5. Go?
+> completed, sealed. Generation 2 consumes batch 2. Go?
 
-The loop repeats for generations 2 and 3. A rejected PR is an identity generation — H
-stays where it was, no held-out measurement happens, the record says so — and the next
-batch is consumed as normal. A 0/4 or 4/4 batch fires the viability read
-(`SIA_EVALUATION_PLAN.md` D8) — a decision gate, not an automatic stop: in the first
-real run B1 did read 0/4, the diagnosis showed three specific mutable-surface failure
-modes rather than a broken H0, and the human ratified proceeding.
+Two more cycles ran the same shape: batch 2 graded 0/4 but with the action-match
+profile sharply up (19/20 and 5/6 near-misses — the g1 mechanism observably firing),
+diagnosis *ungrounded selection*, mutation `gen-002/source-grounded-selection`;
+batch 3 graded 2/4 — the experiment's first batch passes — diagnosis
+*required-procedure incompleteness*, mutation `gen-003/procedure-completion`.
 
 > **You:** Reveal.
 >
 > **Claude Code:** `make reveal` — the vault unseals into
-> `results/experiment_001_bm25-sonnet46/held_out/`: R_T(H0) = 2/8 → R_T(H3) = 5/8,
-> stated against the ±18 pp noise band, with the task×generation matrix, transitions,
-> retention, and `summary.md`.
+> `results/experiment_002_bm25-sonnet46/held_out/`: H0 3/8 → H1 3/8 → H2 2/8 →
+> H3 2/8. Endpoint −1 task (−12.5 pp), inside the ±18 pp band — directional only.
+> One sustained gain (task_051: fail at H0, pass from g1 onward, retained); the
+> task×generation matrix, transitions, retention and `summary.md` are written, and
+> every improvement record now carries its `held_out_result`.
 
-The sketch's numbers are invented; the first real run's record — including a voided
-first freeze — is `results/experiment_001_bm25-sonnet46/README.md` and
-`results/experiment_002_bm25-sonnet46/`.
+The whole run recorded ≈ $32 and ≈ 3.5 h including review latency, with zero mid-run
+mechanics patching. At the debug scale that curve demonstrates the loop, not a
+capability claim — carrying a claim is what the powered experiment (seq 3) is sized
+for. The voided first freeze that preceded this run is its own record,
+`results/experiment_001_bm25-sonnet46/README.md`.
 
 The gates where the human speaks: ratify the freeze; decide each diagnosis (the batch
 read is visible by design, so Claude Code presents the failure modes with prevalence
@@ -185,10 +210,10 @@ mutation targets; one generation still lands one coherent mechanism and the rest
 in the experiment's improvement backlog for later generations — or record an identity
 generation, or halt); merge or reject each `improve` PR (the merge is what defines a
 generation — the agent never merges its own work); the budget go at each generation
-boundary; order the reveal. What is not illustrative in the sketch above: no held-out
-task id, trajectory, or score appears in the conversation before the reveal — exercised
-for real, including while diagnosing a held-out infrastructure failure, which the
-completeness report attributes by failure class without unsealing anything.
+boundary; order the reveal. The firewall held throughout the run above: no held-out
+task id, trajectory, or score appeared in the conversation before the reveal —
+including while diagnosing a held-out infrastructure failure, which the completeness
+report attributes by failure class without unsealing anything.
 
 **When the environment itself breaks.** The first real run hit this immediately and the
 loop absorbed it. An H0 round came back 7/8 with `infrastructure_error:ValueError=1` on
@@ -238,11 +263,11 @@ them onto the machinery above. The ones worth knowing:
 | Say | What happens |
 |---|---|
 | "Create a new experiment" | Bumps `experiment.seq` in the lock (a new freeze identity), restores the recipe to `h0-baseline`, re-proposes the partition if the sizes changed; stays `PROVISIONAL` until you freeze |
-| "Freeze it" / "start the debug experiment" | Verifies the partition against the lock, flips the lock to `FROZEN`, commits, records the A.0a gate PASS — and then drives the whole loop, pausing at the gates |
+| "Freeze it" / "start the experiment" | Verifies the partition against the lock, flips the lock to `FROZEN`, commits, records the A.0a gate PASS — and then drives the whole loop, pausing at the gates |
 | "Measure the baseline" | `make heldout GEN=generation_000` — completeness only, results sealed in the vault |
 | "Run it again" (after an INCOMPLETE round) | The same command resumes: τ re-runs only the missing episodes and replaces infrastructure placeholders; completed episodes are never re-spent |
 | "Run the next batch" | `make batch B=g GEN=generation_<g-1>`, graded into `graded/`; batch 1 carries the viability read (plan D8). The platform lane refuses an unpushed HEAD — lineage pins to pushed `main` |
-| "Diagnose it" | The `operate` skill over the batch's conversations — prevalence, cited conversation ids, second harvest after the observation window (at debug batch sizes the async observations often lag it, and the full-transcript read is the stated fallback, not a degradation) |
+| "Diagnose it" | The `operate` skill over the batch's conversations — prevalence, cited conversation ids, second harvest after the observation window (at these batch sizes the async observations often lag it, and the full-transcript read is the stated fallback, not a degradation) |
 | "Fix these two" / "all of them" | The selected failure modes become approved targets in `results/experiment_<id>/improvement_backlog.md`; each generation consumes the top one (composed only when they form one coherent mechanism), the rest carry forward re-ranked by fresh evidence |
 | "Propose the fix" | The `improve` skill — one coherent mutation (the backlog's top approved target), branch `gen-NNN/<slug>`, PR citing the evidence |
 | "Merged" | Pull, tag `exp<seq>-g<NNN>`, push, write and validate the improvement record, then measure the new generation |
@@ -311,7 +336,7 @@ The rendezvous is driven by the bridge, not by the transport, so the same seam r
 | Agent host | Pi subprocess on this machine | cloud sandbox on a dev runtime |
 | τ environment | in-process, loopback bridge | in-process, bridged by `introspection dev --mcp` |
 | Introspection evidence | **none** | conversation, traces, spans, cost, commit lineage |
-| Episode cost / wall clock | $0.10–0.51 (median ~$0.20), ~45 s | $0.34–1.0, ~75 s (+~20 s one-off `dev` attach) |
+| Episode cost / wall clock (seq-2 manifests) | $0.53 median / $0.62 mean, ~2.8 min | $0.50 median / $0.70 mean, ~3.1 min (+~20 s one-off `dev` attach) |
 | Prerequisites | none | login, pushed repo, App grant, Runtime, dev API-key agent |
 
 Episode length, not lane, dominates cost — a 112-message platform episode billed ~$1.
