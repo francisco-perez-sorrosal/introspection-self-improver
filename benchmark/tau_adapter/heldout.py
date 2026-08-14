@@ -188,9 +188,17 @@ def completeness_report(
 
 
 def _failure_classes(rows: list[dict[str, Any]]) -> str:
-    """Termination classes of the non-completed rows — infrastructure facts, never graded
-    outcomes, so an incomplete round names its failure mode without anyone opening the vault."""
-    classes = Counter(str(row.get("termination")) for row in rows if not row.get("completed"))
+    """Termination and cause classes of the non-completed rows — infrastructure facts,
+    never graded outcomes, so an incomplete round names its failure mode without anyone
+    opening the vault. The cause is the exception class alone; free-text error messages
+    stay in the sealed record."""
+    classes: Counter[str] = Counter()
+    for row in rows:
+        if row.get("completed"):
+            continue
+        name = str(row.get("termination"))
+        error_type = (row.get("failure") or {}).get("error_type")
+        classes[f"{name}:{error_type}" if error_type else name] += 1
     if not classes:
         return ""
     return " (" + ", ".join(f"{name}={count}" for name, count in sorted(classes.items())) + ")"

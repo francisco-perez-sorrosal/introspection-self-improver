@@ -45,6 +45,15 @@ def _rows(completed: int, total: int = 5) -> list[dict]:
                 "TerminationReason.USER_STOP" if i < completed else "infrastructure_error"
             ),
             "completed": i < completed,
+            "failure": (
+                None
+                if i < completed
+                else {
+                    "error_type": "APIConnectionError",
+                    "error": "peer closed connection reward=1.0 avg 0.0",  # must never print
+                    "failed_after_attempts": 4,
+                }
+            ),
         }
         for i in range(total)
     ]
@@ -174,12 +183,15 @@ def test_an_incomplete_measured_round_resumes_the_runner(tmp_path, capsys):
 
 
 def test_an_incomplete_round_names_its_failure_classes(tmp_path, capsys):
+    # The cause class (exception type) prints; the free-text error message — which the
+    # fake laces with graded figures on purpose — must never reach the terminal.
     rc = heldout.run_round(
         _lock(), "generation_000", root=tmp_path, manifest=_partition(), run_child=_fake_child(4)
     )
     out = capsys.readouterr().out
     assert rc == 1
-    assert "INCOMPLETE (infrastructure_error=1)" in out
+    assert "INCOMPLETE (infrastructure_error:APIConnectionError=1)" in out
+    assert "peer closed connection" not in out
     _assert_reward_free(out)
 
 

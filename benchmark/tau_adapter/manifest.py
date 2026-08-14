@@ -86,12 +86,15 @@ def episode_summary(sim: Any) -> dict[str, Any]:
     """
     reward = getattr(getattr(sim, "reward_info", None), "reward", None)
     termination = str(sim.termination_reason)
+    completed = termination in NORMAL_TERMINATIONS and reward is not None
+    info = getattr(sim, "info", None)
     return {
         "task_id": str(sim.task_id),
         "trial": getattr(sim, "trial", None),
         "termination": termination,
         "reward": reward,
-        "completed": termination in NORMAL_TERMINATIONS and reward is not None,
+        "completed": completed,
+        "failure": _failure_of({"info": info if isinstance(info, dict) else None}, completed),
     }
 
 
@@ -109,6 +112,30 @@ def _completed(sim_payload: dict[str, Any]) -> tuple[Any, str, bool]:
     reward = (sim_payload.get("reward_info") or {}).get("reward")
     termination = str(sim_payload.get("termination_reason"))
     return reward, termination, termination in NORMAL_TERMINATIONS and reward is not None
+
+
+#: Bounded projection of τ's error text: the full traceback stays in results.json.
+_FAILURE_ERROR_LIMIT = 500
+
+
+def _failure_of(sim_payload: dict[str, Any], completed: bool) -> dict[str, Any] | None:
+    """The root cause τ recorded for a failed episode, projected onto its manifest row.
+
+    τ's retry-exhaustion placeholder carries `info: {error, error_type, error_traceback,
+    failed_after_attempts}` inside results.json — where a held-out round's rewards also
+    live, so nothing may read it back. Copying the cause (bounded, traceback excluded)
+    onto the row keeps "why did this episode fail" answerable from the manifest alone.
+    """
+    if completed:
+        return None
+    info = sim_payload.get("info")
+    if not isinstance(info, dict) or not (info.get("error") or info.get("error_type")):
+        return None
+    return {
+        "error_type": info.get("error_type"),
+        "error": str(info.get("error"))[:_FAILURE_ERROR_LIMIT],
+        "failed_after_attempts": info.get("failed_after_attempts"),
+    }
 
 
 def _finite(value: Any) -> Any:
@@ -145,6 +172,7 @@ def build_rows(results_payload: dict[str, Any], context: RoundContext) -> list[d
                 "reward": reward,
                 "termination": termination,
                 "completed": completed,
+                "failure": _failure_of(sim, completed),
                 "experiment": context.experiment_id,
                 "generation": context.generation,
                 "split": context.split,

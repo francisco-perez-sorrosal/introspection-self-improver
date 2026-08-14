@@ -43,6 +43,12 @@ def _payload() -> dict:
                 "termination_reason": "TerminationReason.INFRASTRUCTURE_ERROR",
                 "reward_info": None,
                 "messages": [],
+                "info": {
+                    "error": "litellm.APIConnectionError: peer closed connection " + "x" * 600,
+                    "error_type": "APIConnectionError",
+                    "error_traceback": "Traceback (most recent call last): ...",
+                    "failed_after_attempts": 4,
+                },
             },
         ]
     }
@@ -98,6 +104,19 @@ def test_infrastructure_placeholder_row_is_counted_but_joins_nothing():
     assert placeholder["recipe_git_commit_sha"] is None
     assert placeholder["arm_sha_ok"] is None
     assert placeholder["reward"] is None
+
+
+def test_failed_row_carries_the_root_cause_tau_recorded():
+    rows = build_rows(_payload(), _context())
+    placeholder = next(r for r in rows if r["tau_task_id"] == "task_002")
+    failure = placeholder["failure"]
+    assert failure["error_type"] == "APIConnectionError"
+    assert failure["failed_after_attempts"] == 4
+    assert failure["error"].startswith("litellm.APIConnectionError")
+    assert len(failure["error"]) <= 500  # bounded; the full traceback stays in results.json
+    assert "error_traceback" not in failure
+    completed = next(r for r in rows if r["tau_task_id"] == "task_001")
+    assert completed["failure"] is None
 
 
 def test_arm_sha_mismatch_and_dirty_tree_mark_rows_not_ok():
