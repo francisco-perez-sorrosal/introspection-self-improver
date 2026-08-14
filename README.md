@@ -489,14 +489,15 @@ closed without a graded round and lives only in git history. In the working tree
 debug experiment and was **voided at H0** the same day on a τ-side user-simulator defect
 no harness mutation can reach (tau2-bench#470). Seq 2 re-froze with the poisoned task
 excluded, ran the debug experiment to completion, and is revealed; seq 3 is the
-powered run (`003_powered-bm25-sonnet46`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
+powered run (`003_powered-bm25-luna56`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
 over a fresh 76-task pool — no task the seq-2 loop was tuned on, or whose result the
 reveal exposed, appears anywhere in it; the full-scale run defers to seq 4. Reused
 ids are disambiguated by freeze fingerprints. Two values were
 decided the hard way and the decisions carry forward:
 
-- `retrieval_config: bm25` is the deliberate freeze, pinned knowingly over the unavailable
-  `openai_embeddings` (this machine has no working OpenAI key). It is not a comparability
+- `retrieval_config: bm25` is the deliberate freeze — originally forced by a dead OpenAI key,
+  then pinned knowingly, and it stays pinned now that the key is live (2026-08-14): re-deciding
+  retrieval is a new experiment, never a quiet upgrade. It is not a comparability
   footnote: on `bm25`, whether one task passes can turn on whether `KB_search` returns a single
   document — one trial queried that document's card by name and did not get it — so no number
   under this freeze is comparable with published τ-Knowledge results, and none claims to be.
@@ -509,15 +510,20 @@ decided the hard way and the decisions carry forward:
   debug T=8; ±9 pp at the powered T=28; ±7 pp at T=47) as noise (`SIA_EVALUATION_PLAN.md`
   D2, bands per D11).
 
-The model pair, by contrast, is now chosen rather than defaulted, and neither half is Sonnet 5.
+The model pair was re-decided for seq 3 (`SIA_EVALUATION_PLAN.md` D12, 2026-08-14):
+**both halves run `openai/gpt-5.6-luna` at medium effort** — the agent through the recipe
+(`thinking_level: medium`; Pi owns its sampling), the user simulator through τ
+(`user_llm_args: reasoning_effort: medium`; the args reach litellm verbatim). The
+substitution was verified live before freezing: the key serves the model, and a mock
+smoke ran the full seam clean with luna on both halves.
 
-The **agent** runs Claude Sonnet 4.6 for experimental sensitivity, against cost: Sonnet 5 is
-~13% cheaper per unit of work and stronger on agentic tasks, and that is the problem. The
-harness improvements this project exists to discover — search discipline, query reformulation,
-policy extraction, plan-before-write, post-action verification — are behaviours Sonnet 5 already
-performs unprompted, so adding them explicitly would move its score less. A model that does not
-already do them leaves the harness as the binding constraint, which is the thing being measured.
-
-The **user simulator** stays on Sonnet 4.5 for an unrelated reason: Sonnet 5 rejects
-`temperature: 0.0`, which is τ's own default for the simulator and the only knob that makes that
-half of the environment reproducible.
+The re-decision trades two things, knowingly. The seq-1/2 agent choice (Sonnet 4.6) was
+made for experimental sensitivity — a model that does not already perform the harness
+behaviours under study (search discipline, verification, plan-before-write) leaves the
+harness as the binding constraint. Luna is chosen for inference cost against that
+rationale; if it performs those behaviours natively, harness mutations move the score
+less, and if H0 saturates the batches, headroom dies — the B1 viability read (plan D8)
+guards both directions. And the user-simulator determinism knob is gone: luna rejects
+`temperature: 0.0` (HTTP 400, verified) exactly as Sonnet 5 did, so the simulator now
+samples at the provider default — added episode stochasticity the single-trial-pooled
+design (D2) already absorbs.

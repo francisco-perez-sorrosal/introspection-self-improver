@@ -1,0 +1,59 @@
+{
+  "mode": "diagnostic",
+  "experiment": "003_powered-bm25-luna56",
+  "freeze_fingerprint": "sha256:27931767979a32f91ad14c96f22b7ae5cdaf2a8d3415d18008c211e2fb38ed26",
+  "domain": "mock",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 1,
+  "max_concurrency": 10,
+  "transport": "local",
+  "launcher": "pi",
+  "launch_argv": [
+    "pi",
+    "--recipe",
+    "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
+    "--agent",
+    "agent",
+    "--mode",
+    "rpc",
+    "--session-dir",
+    "/Users/fperez/dev/introspection-self-improver/results/experiment_003_powered-bm25-luna56/generation_000/mock_smoke/pi_sessions"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": null,
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "create_task_1",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "stream_reattaches": 0,
+      "settle_timeouts": 0
+    },
+    "unattributed": [],
+    "bridge": {}
+  },
+  "platform": null,
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.26.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 13.0
+}

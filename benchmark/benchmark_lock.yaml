@@ -30,7 +30,7 @@
 # fingerprint.
 experiment:
   seq: 3
-  name: powered-bm25-sonnet46
+  name: powered-bm25-luna56
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -103,8 +103,12 @@ frozen:
   # the partition is proposed, but no freeze snapshot is written or enforced until the
   # experiment's start gate flips this to FROZEN — after `make reset_h0` (H0 back to the
   # `h0-baseline` tag; seq-2 mutations are evidence, not inheritance) and the A.0a gate
-  # (SIA_EVALUATION_PLAN.md Phase 5). Every value below this status line is carried
-  # unchanged from the seq-2 freeze; the protocol block above is the re-decision (D11).
+  # (SIA_EVALUATION_PLAN.md Phase 5). Values below this status line are carried from the
+  # seq-2 freeze except the model pair and its args, re-decided as D12 (2026-08-14,
+  # inference cost: both halves openai/gpt-5.6-luna at medium effort); the protocol
+  # block above is the D11 re-decision. Re-cutting seq 3 in place is sanctioned only
+  # because it is PROVISIONAL with zero episodes and no freeze snapshot — the moment a
+  # snapshot exists, any change means a seq bump.
   # Once FROZEN: the first run writes the freeze snapshot into the results directory,
   # every later run must match it, and changing a value means a NEW experiment (bump
   # seq), never a new value under this one.
@@ -114,43 +118,40 @@ frozen:
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which
   # is what stops a later generation "improving" by quietly upgrading its own model.
   #
-  # Sonnet 4.6 deliberately, and NOT Sonnet 5, despite Sonnet 5 being cheaper per unit of work
-  # (~13%: $2/$10 per MTok against $3/$15, offset by its newer tokenizer's ~30% token inflation)
-  # and stronger on agentic work. The reason is experimental sensitivity, not cost.
-  #
-  # The improvement orchestrator is expected to discover from evidence things like:
-  # retrieval discipline, query reformulation, policy extraction, prerequisite checking,
-  # plan-before-write, post-action verification. Sonnet 5 performs much of that natively —
-  # adaptive thinking is on by default and it is explicitly trained for agentic
-  # self-verification. A harness change that adds those behaviours explicitly would therefore
-  # move the score *less* on Sonnet 5: the model compensates for the harness deficiency the
-  # experiment exists to detect. A model that does not already do them leaves the harness as
-  # the binding constraint, which is what we are trying to measure.
-  #
-  # Still provisional in one respect: H0 must show basic competence or the comparative
-  # method loses its successful controls. Under the generation protocol the viability read
-  # is the first improvement batch, which is visible by design (SIA_EVALUATION_PLAN.md D8);
-  # if H0 lands at 0/B, strengthen H0 before reconsidering this.
-  agent_model: anthropic/claude-sonnet-4-6
-  agent_thinking_level: low
+  # gpt-5.6-luna at medium thinking (D12, 2026-08-14, user-directed with a colleague):
+  # an inference-cost re-decision, superseding the seq-1/2 choice of Sonnet 4.6 whose
+  # rationale was experimental sensitivity — a model that does not already perform the
+  # harness behaviours (retrieval discipline, verification, plan-before-write) leaves the
+  # harness as the binding constraint. That trade is made CONSCIOUSLY, not forgotten:
+  # if luna performs those behaviours natively, harness mutations move the score less;
+  # if H0 saturates the batches, headroom dies. Both failure modes surface at the same
+  # place — the B1 viability read (D8, visible by design): 0/B still means strengthen H0,
+  # and B/B now also means this model choice re-opens. The D11 sizing (G=5/B=8/T=28)
+  # carries over as a prior; its calibration facts (baseline ~32%, $0.62/$0.70 per
+  # episode, difficulty mixture) are Sonnet-pair measurements and re-price at H0/B1.
+  agent_model: openai/gpt-5.6-luna
+  agent_thinking_level: medium
 
   # tau requires --agent-llm, but our agent takes its model from the recipe, so this value
   # is declared and unused. Kept equal to agent_model so the file cannot read misleadingly.
-  agent_llm_declared: anthropic/claude-sonnet-4-6
+  agent_llm_declared: openai/gpt-5.6-luna
 
   # The user simulator moves scores as much as the agent model does, with no harness change
   # at all. It is a comparison variable in its own right.
   #
-  # Anthropic by necessity as well as by choice: of the three provider keys on this machine,
-  # OpenAI returns 429 billing_not_active and Gemini fails authentication.
+  # gpt-5.6-luna here too (D12): one model pair, one provider, minimum surface. The
+  # seq-1/2 note "OpenAI returns 429 billing_not_active" is stale — the key is live
+  # (verified 2026-08-14: /v1/models HTTP 200, gpt-5.6-luna listed). The billing fix does
+  # NOT reopen `retrieval_config: bm25` above — that stays the deliberate freeze, and
+  # re-deciding it means a new experiment.
   #
-  # Also not Sonnet 5, for an independent reason that outlives the agent-side choice above:
-  # Sonnet 5 rejects non-default sampling parameters, and `temperature: 0.0` — tau's own
-  # default for the user simulator (config.py: DEFAULT_LLM_ARGS_USER) — returns a 400,
-  # verified. Running the simulator on Sonnet 5 would mean giving up the one knob that makes
-  # this half of the environment reproducible. The agent side has no such conflict, because Pi
-  # owns its sampling and tau's llm_args never reach it.
-  user_llm: anthropic/claude-sonnet-4-5
+  # The reproducibility knob is surrendered knowingly: gpt-5.6-luna rejects
+  # `temperature: 0.0` exactly as Sonnet 5 did (HTTP 400 "Only the default (1) value is
+  # supported", verified 2026-08-14), so the simulator now samples at the provider
+  # default and this half of the environment is stochastic per episode. D2's design
+  # already absorbs episode stochasticity by pooling across tasks; the seq-2 user-sim
+  # screening evidence is model-conditioned and is re-run at the start gate.
+  user_llm: openai/gpt-5.6-luna
 
   # `timeout` is a per-attempt request ceiling, not a preference. tau sets litellm's
   # `num_retries` but never a `timeout`, so a stalled provider response blocks with no bound:
@@ -161,12 +162,14 @@ frozen:
   # 60s is roughly five times the slowest healthy call observed (~12s), so a legitimate call is
   # never cut while a stall now costs 60s and a retry instead of ten minutes.
   #
-  # `temperature` is tau's own default for the user simulator and is restored here explicitly:
-  # this mapping REPLACES tau's DEFAULT_LLM_ARGS_USER rather than merging with it, so listing
-  # only `timeout` silently ran the simulator at the provider's default temperature. This is
-  # also the value Sonnet 5 rejects — see the note on user_llm above.
+  # This mapping REPLACES tau's DEFAULT_LLM_ARGS_USER rather than merging with it — every
+  # key the simulator should run with must be listed here. `temperature` is deliberately
+  # ABSENT: gpt-5.6-luna rejects any non-default value (see the note on user_llm above),
+  # so tau's own 0.0 default cannot be restored and the simulator samples at the provider
+  # default. `reasoning_effort` reaches litellm verbatim (user_simulator.py passes
+  # llm_args through) and is the "medium thinking effort" half of D12.
   user_llm_args:
-    temperature: 0.0
+    reasoning_effort: medium
     timeout: 60
 
   # 1 per SIA_EVALUATION_PLAN.md D2: every task runs once, and statistical power comes

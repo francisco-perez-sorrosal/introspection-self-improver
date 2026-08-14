@@ -240,8 +240,9 @@ would have silently frozen the wrong thing:
   the evaluator's environment rebuild (refusing when it disagrees with the lock) and then calls
   τ's own `evaluate_trajectories`. No reward is computed anywhere but the evaluator, which was
   otherwise grading against a different tool surface than the run used.
-- The `openai_embeddings` retrieval config originally intended is unavailable on this machine
-  (the OpenAI key returns `429 billing_not_active`), so bring-up used the offline `bm25`
+- The `openai_embeddings` retrieval config originally intended was unavailable at bring-up
+  (the OpenAI key then returned `429 billing_not_active`; it is live since 2026-08-14 — which
+  does **not** reopen this freeze), so bring-up used the offline `bm25`
   fallback. **Resolved 2026-08-12: `bm25` is the deliberate freeze**, pinned knowingly rather
   than provisionally. The consequence is accepted, not
   deferred: `bm25` changes both the tool set and the policy text, so no number produced under
