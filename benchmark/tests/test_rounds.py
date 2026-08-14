@@ -16,6 +16,7 @@ from tau_adapter.rounds import (
     TRANSPORT_LOCAL,
     TRANSPORT_PLATFORM,
     RoundError,
+    assert_transport_supports_concurrency,
     resolve_max_concurrency,
     resolve_round,
 )
@@ -184,3 +185,13 @@ def test_a_diagnostic_run_may_override_concurrency():
 def test_a_nonpositive_concurrency_is_refused():
     with pytest.raises(RoundError, match="at least 1"):
         resolve_max_concurrency(0, locked_mode=False, lock_value=1)
+
+
+def test_the_platform_lane_refuses_more_than_one_episode_in_flight():
+    """Every development-lane episode rendezvouses at the one URL `dev` was handed; N in
+    flight would share a channel and cross results. The documented N-attachment path is
+    cited, not built — it cannot be proven live while the frozen value is 1."""
+    assert_transport_supports_concurrency(TRANSPORT_PLATFORM, 1)
+    assert_transport_supports_concurrency(TRANSPORT_LOCAL, 3)
+    with pytest.raises(RoundError, match="one episode at a time"):
+        assert_transport_supports_concurrency(TRANSPORT_PLATFORM, 2)

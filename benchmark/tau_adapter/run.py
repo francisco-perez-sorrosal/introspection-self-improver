@@ -468,6 +468,7 @@ def main() -> int:
         max_concurrency = roundsmod.resolve_max_concurrency(
             args.max_concurrency, locked_mode=locked_mode, lock_value=lock.max_concurrency
         )
+        roundsmod.assert_transport_supports_concurrency(spec.transport, max_concurrency)
     except roundsmod.RoundError as exc:
         raise SystemExit(str(exc)) from exc
 

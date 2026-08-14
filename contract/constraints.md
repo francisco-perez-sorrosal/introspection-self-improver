@@ -154,6 +154,31 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
    `pass^k` is retired for generations; an optional endpoint reliability study (H_0 and H_G ×
    4 trials, after reveal) is the named upgrade path (`SIA_EVALUATION_PLAN.md` D2).
 
+## Platform-lane concurrency
+
+The bridge multiplexes episodes over per-episode URL channels (2026-08-13): each episode
+rendezvouses at its own `/mcp/<token>` path with its own mailbox, so the local lane runs N
+episodes in flight without any way for their results to cross. The development lane cannot
+use per-episode URLs: `introspection dev --mcp tau=<url>` is handed exactly one URL for the
+whole attachment, every sandbox reaches the bridge through it, and per-task MCP
+configuration does not exist (`tasks create --metadata` is application metadata, not a
+platform switch). N platform episodes in flight would therefore share one channel — exactly
+the cross-episode contamination the channels exist to prevent — and the runner refuses the
+combination (`tau_adapter/rounds.py`, `assert_transport_supports_concurrency`).
+
+The platform's own affordance for N>1 is documented and verified against the installed CLI,
+and deliberately not built: `introspection dev --as <name>` names an attachment, N named
+attachments can serve one Runtime concurrently, and `INTROSPECTION_DEV_TARGET=<name>`
+routes a task to its attachment fail-closed — so N workers could each own an attachment
+carrying that worker's channel URL. It is unbuilt because it cannot be proven live inside
+the current rules: the concurrency override is diagnostic-mode-only, diagnostic mode is
+local-lane-only, and locked platform rounds run at the frozen value of 1 — machinery this
+repo cannot exercise is machinery it does not ship (the same written-from-what-ran doctrine
+as `contract/protocol.md`). A future freeze that wants concurrent platform batches builds
+and proves that path first; until then batch wall-clock stays serial by design, and the
+payoff of concurrency lives where ~85% of the wall-clock does — the local held-out lane
+(`SIA_EVALUATION_PLAN.md` D7).
+
 ## Why `pi` launches the recipe locally rather than `introspection local`
 
 The standing guardrail is that the Introspection CLI is the only interface for operating the
