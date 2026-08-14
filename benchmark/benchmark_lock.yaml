@@ -179,12 +179,15 @@ frozen:
   # --max-concurrency (1 = serial), and the effective value lands in run_metadata.json so
   # every record still names its configuration. Episodes rendezvous on per-episode bridge
   # channels (tool_bridge.py) on both lanes — contract/constraints.md § Platform-lane
-  # concurrency has the platform mechanism. Caveat, documented not gated: high N contends
-  # on provider rate limits (2N Anthropic streams), which can convert throttling into
-  # infra retries inside episodes. 4 per D10 (was 10 briefly, 2026-08-13): T=8 runs in
-  # two waves, B=4 in one-to-two at the org's effective sandbox concurrency of ~2, and
-  # 8 concurrent provider streams stays modest.
-  max_concurrency: 4
+  # concurrency has the platform mechanism. A round can never use more workers than it
+  # has episodes (tau's pool idles past the task count), so a generous default is safe:
+  # held-out rounds run T-wide on the local lane, which has no sandbox constraint.
+  # Platform BATCH rounds are the exception and take --max-concurrency 2 from the batch
+  # target instead: the org runs ~2 sandboxes concurrently (observed; a third queues),
+  # and queued tasks behind a long episode churn through tau retries — noise a diagnosis
+  # round must not carry. Caveat, documented not gated: high N contends on provider rate
+  # limits (2N Anthropic streams), which can convert throttling into infra retries.
+  max_concurrency: 10
 
   # Whether tau ends an episode when an assistant message carries both text and tool calls.
   # On the frozen list because it decides whether a protocol violation is graded at all, so

@@ -119,8 +119,13 @@ bench:
 B ?= 1
 BATCH_DIR = batch_$(shell printf '%02d' $(B))
 batch: TRANSPORT = platform
+# --max-concurrency 2 matches the org's observed sandbox quota (~2 concurrent; a third
+# queues). A batch is diagnosis evidence: queued tasks behind a long episode churn
+# through tau retries, and that churn would pollute exactly the record `operate` reads.
+# Two clean waves beat four noisy lanes. Override per run if the quota changes.
 batch:
 	@$(RUN) python tau_adapter/run.py --batch $(B) --transport $(TRANSPORT) \
+		--max-concurrency 2 \
 		--out ../$(RESULTS)/$(BATCH_DIR)
 	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/$(BATCH_DIR)
 
