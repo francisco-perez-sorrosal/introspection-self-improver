@@ -594,8 +594,19 @@ Same isolation rules as the full experiment (protocol §29.17). Runs on the Phas
       manifest rows) — per this phase's validate criterion, the debug experiment
       re-runs under the next seq. Closure + firewall accounting:
       `results/experiment_001_bm25-sonnet46/README.md`. Remedy for seq 2: pre-partition
-      first-turn screen over the 97-task pool; exclusions documented in the manifest;
-      upstream issue drafted for user review before filing.
+      screening; exclusions documented in the manifest; upstream issue drafted for user
+      review before filing.
+- [x] **Seq 2 freeze** (2026-08-13): screening refined by falsification — first-turn
+      screen 97/97 clean, orchestrated scripted-agent screen
+      (`scripts/screen_user_sim.py`, ~$3) 97/97 clean, so the crash needs a real
+      agent's replies; stock-agent probes reproduced it on `task_034` (4/4; 16/16
+      cumulative) and cleared the other four combo-instruction tasks. Partition
+      re-proposed over 96 tasks (`--exclude task_034`, header-documented), lock bumped
+      to seq 2 (values otherwise unchanged) at `c1f6ecc`, recipe byte-identical to
+      `h0-baseline`, **A.0a PASS** (259-test suite + graded mock smoke) recorded at
+      `results/experiment_002_bm25-sonnet46/generation_000/gates/a0a.json` beside the
+      freeze snapshot. Residual risk (real-agent-conditioned crash on an unprobed
+      task) accepted; fallback is the documented void-and-reseq procedure.
 - [ ] H0 held-out (hidden, vault) → B1 batch → `operate` diagnosis (harvest 1
       immediately; harvest 2 after the ~40-min observation window, fallback stated)
       → `improve` PR → human review/merge → tag `exp2-g001` → H1 held-out (hidden)
