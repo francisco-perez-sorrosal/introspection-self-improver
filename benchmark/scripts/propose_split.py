@@ -76,11 +76,32 @@ def main() -> int:
         default="",
         help="extra header line recorded at --write (e.g. the held-out enforcement strength)",
     )
+    parser.add_argument(
+        "--exclude",
+        default="",
+        help=(
+            "comma-separated task ids dropped from the pool before proposing (e.g. the "
+            "user-sim screen's crashers); recorded in the manifest header. Unknown ids "
+            "are refused."
+        ),
+    )
     args = parser.parse_args()
 
     lock = lockmod.load_lock()
     rows = splitmod.load_task_rows(lock.domain)
     sizes = _sizes(args, lock)
+    excluded = sorted({t.strip() for t in args.exclude.split(",") if t.strip()})
+    if excluded:
+        try:
+            rows = splitmod.exclude_rows(rows, excluded)
+        except ValueError as error:
+            print(f"✗ {error}", file=sys.stderr)
+            return 1
+        exclusion_note = (
+            f"excluded from the pool before proposal: {', '.join(excluded)} "
+            "(benchmark/data/user_sim_screen.json has the evidence)."
+        )
+        args.note = f"{exclusion_note} {args.note}".strip()
 
     if args.verify:
         problems = splitmod.verify(splitmod.load_manifest(args.manifest), rows, lock.domain, sizes)

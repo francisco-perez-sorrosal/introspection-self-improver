@@ -16,6 +16,7 @@ from tau_adapter.split import (
     TaskRow,
     _dominant_category,
     _label_sequence,
+    exclude_rows,
     partition_sizes,
     propose,
     render_manifest,
@@ -107,6 +108,20 @@ def test_propose_sizes_disjoint_and_deterministic():
         assert len(first[name]) == quota
         all_ids.extend(first[name])
     assert len(all_ids) == len(set(all_ids))
+
+
+def test_excluded_tasks_never_enter_any_partition():
+    rows = _rows()
+    survivors = exclude_rows(rows, ["task_000", "task_901"])
+    assert len(survivors) == len(rows) - 2
+    assignment = propose(survivors, DEBUG)
+    assigned = {task_id for ids in assignment.values() for task_id in ids}
+    assert "task_000" not in assigned and "task_901" not in assigned
+
+
+def test_excluding_an_unknown_task_id_is_refused():
+    with pytest.raises(ValueError, match="task_999"):
+        exclude_rows(_rows(), ["task_999"])
 
 
 def test_propose_enforces_the_task_budget():

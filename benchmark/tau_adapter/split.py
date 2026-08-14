@@ -98,6 +98,20 @@ def partition_sizes(
     return sizes
 
 
+def exclude_rows(rows: list[TaskRow], excluded: list[str]) -> list[TaskRow]:
+    """Drop screened-out tasks from the pool before proposing (e.g. user-sim crashers).
+
+    Refuses unknown ids loudly: a typo in an exclusion list must never silently leave a
+    known-bad task eligible for the partition.
+    """
+    known = {row.task_id for row in rows}
+    unknown = sorted(set(excluded) - known)
+    if unknown:
+        raise ValueError(f"cannot exclude unknown task id(s): {', '.join(unknown)}")
+    remaining = [row for row in rows if row.task_id not in set(excluded)]
+    return remaining
+
+
 def propose(
     rows: list[TaskRow],
     sizes: dict[str, int],
