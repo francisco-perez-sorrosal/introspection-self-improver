@@ -6,7 +6,7 @@ transition:
   from_generation: 0
   to_generation: 1
 experiment: 002_bm25-sonnet46
-outcome: 'TODO: accepted | rejected | identity — set when the PR is merged or declined'
+outcome: accepted
 batch:
   name: batch_01
   task_ids:
@@ -72,13 +72,13 @@ mutation:
   branch: gen-001/kb-answer-verification
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/1
   source_commit: d540fdf38e191a6c50e451a147b8a368ee592c08
-  candidate_commit: null
+  candidate_commit: 1cdeb07e59056d268d3b731dca69c4febebf2de4
 expected_effect: >
   Fixes the misapplied-knowledge class (2/4 in B1): derived sets get member-wise
   confirmation before commitment, so single-member errors are caught pre-write.
   Cost: more KB_search calls per episode. Not targeted: capability blindness and
   premature escalation (future-generation candidates).
 human_approval:
-  approved_by: 'TODO: set at PR review (fperezsorrosal expected)'
+  approved_by: fperezsorrosal (user-directed merge of PR #1)
   date: '2026-08-14'
 held_out_result: null
