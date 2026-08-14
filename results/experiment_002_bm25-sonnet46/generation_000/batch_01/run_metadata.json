@@ -1,0 +1,196 @@
+{
+  "mode": "locked",
+  "experiment": "002_bm25-sonnet46",
+  "freeze_fingerprint": "sha256:1eaa0ec4a07bef5968da6806cf18f5c88fcee5006c14ff8c8672996d40ad061c",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": "batch_01",
+  "num_trials": 1,
+  "max_concurrency": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "019ffeeb-b7f0-7531-a665-f10af7c3f580"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "8a7de4cfefa6a9c004300d988890b79df4732c25",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_027",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_081",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_061",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_101",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "stream_reattaches": 27,
+      "settle_timeouts": 0
+    },
+    "unattributed": [],
+    "bridge": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "019ffeeb-b7f0-7531-a665-f10af7c3f580",
+    "environment": "development",
+    "dev_target": "tau-e1d7",
+    "task_ids": [
+      "019ffeec-0fbc-7552-87ac-8a755b3ce6b5",
+      "019ffeec-1c50-7490-ba18-a37d8a7271a9",
+      "019ffeef-6e6a-74f8-89d8-d03aa541af69",
+      "019ffeef-d7ef-7185-b7df-699afdacecd8"
+    ],
+    "tasks_created": [
+      "019ffeec-0fbc-7552-87ac-8a755b3ce6b5",
+      "019ffeec-1c50-7490-ba18-a37d8a7271a9",
+      "019ffeef-6e6a-74f8-89d8-d03aa541af69",
+      "019ffeef-d7ef-7185-b7df-699afdacecd8"
+    ],
+    "orphaned_task_ids": [],
+    "accounting": {
+      "019ffeec-0fbc-7552-87ac-8a755b3ce6b5": {
+        "cost": {
+          "usd": 0.6266886
+        },
+        "usage": {
+          "input_tokens": 1620729,
+          "output_tokens": 8908,
+          "total_tokens": 1629637
+        },
+        "metrics": {
+          "duration_ms": 204078.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 25,
+          "span_count": 120,
+          "tool_use_count": 23,
+          "trace_count": 11
+        },
+        "recipe_git_commit_sha": "8a7de4cfefa6a9c004300d988890b79df4732c25",
+        "evidence_complete": true,
+        "item_count": 143
+      },
+      "019ffeec-1c50-7490-ba18-a37d8a7271a9": {
+        "cost": {
+          "usd": 1.3963914
+        },
+        "usage": {
+          "input_tokens": 5285818,
+          "output_tokens": 9192,
+          "total_tokens": 5295010
+        },
+        "metrics": {
+          "duration_ms": 351741.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 48,
+          "span_count": 221,
+          "tool_use_count": 27,
+          "trace_count": 25
+        },
+        "recipe_git_commit_sha": "8a7de4cfefa6a9c004300d988890b79df4732c25",
+        "evidence_complete": true,
+        "item_count": 248
+      },
+      "019ffeef-6e6a-74f8-89d8-d03aa541af69": {
+        "cost": {
+          "usd": 0.0728139
+        },
+        "usage": {
+          "input_tokens": 63793,
+          "output_tokens": 491,
+          "total_tokens": 64284
+        },
+        "metrics": {
+          "duration_ms": 15879.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 3,
+          "span_count": 13,
+          "tool_use_count": 2,
+          "trace_count": 1
+        },
+        "recipe_git_commit_sha": "8a7de4cfefa6a9c004300d988890b79df4732c25",
+        "evidence_complete": true,
+        "item_count": 15
+      },
+      "019ffeef-d7ef-7185-b7df-699afdacecd8": {
+        "cost": {
+          "usd": 0.6211503
+        },
+        "usage": {
+          "input_tokens": 1288843,
+          "output_tokens": 8636,
+          "total_tokens": 1297479
+        },
+        "metrics": {
+          "duration_ms": 190884.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 17,
+          "span_count": 77,
+          "tool_use_count": 16,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "8a7de4cfefa6a9c004300d988890b79df4732c25",
+        "evidence_complete": true,
+        "item_count": 93
+      }
+    },
+    "retitles": {
+      "applied": 4,
+      "failed": 0
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.26.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 454.9
+}
