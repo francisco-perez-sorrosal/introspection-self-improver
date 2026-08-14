@@ -6,7 +6,7 @@ transition:
   from_generation: 1
   to_generation: 2
 experiment: 002_bm25-sonnet46
-outcome: 'TODO: accepted | rejected | identity — set when PR #2 is reviewed'
+outcome: accepted
 batch:
   name: batch_02
   task_ids:
@@ -66,7 +66,7 @@ mutation:
   branch: gen-002/source-grounded-selection
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/2
   source_commit: 1cdeb07e59056d268d3b731dca69c4febebf2de4
-  candidate_commit: null
+  candidate_commit: 6c47a07bd139190005984d2db337eff1371b2576
 expected_effect: >
   Fixes the ungrounded-selection class (3/4 in B2, plus B1's task_101 shape):
   entity choices become comparison-backed and record-decided fields become copies,
@@ -74,6 +74,6 @@ expected_effect: >
   additional searches and record reads per selection. Not targeted: workflow tail
   incompleteness (task_045) — the strongest remaining candidate for generation 3.
 human_approval:
-  approved_by: 'TODO: set at PR #2 review'
+  approved_by: fperezsorrosal (user-directed merge of PR #2)
   date: '2026-08-14'
 held_out_result: null
