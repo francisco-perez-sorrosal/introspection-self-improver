@@ -72,7 +72,7 @@ the rest are recorded here as the working defaults.
 |---|---|---|---|
 | D1 | Lane ↔ information-regime mapping | **Improvement batches: platform lane. Held-out: local lane only.** Runner refuses the other combination for each round type. | Batches must produce Introspection evidence (the point of the experiment); held-out must produce none (structural firewall — no trace mixing). Local-lane artifacts (vault) remain procedurally protected — stated in every writeup, per the existing `split_manifest.yaml` held-out doctrine. **Ratified 2026-08-13** (user: run held-out locally so traces don't mix). |
 | D2 | Trial doctrine | `num_trials: 1` for batches and held-out. Noise band ±7 pp (T=47) stated wherever a curve is shown; no `pass^k` language for generations. Optional post-reveal endpoint study (H0, H_G × 4 trials) as an addendum with its own config snapshot. | Reverses the lock:118–123 / `CLAUDE.md` doctrine — power now comes from 47-task pooling, not repeated trials. **Ratified 2026-08-13.** |
-| D3 | Experiment identity | Protocol change ⇒ new freeze: **seq 2 = debug** (G=3, B=3, T=5 → re-sized to **G=3, B=4, T=8** by D10, 2026-08-13), **seq 3 = full** (G=5, B=10, T=47). `experiment_001_bm25-sonnet46` closes as the bring-up freeze (12 ad-hoc episodes, archived as-is). | Forced mechanically anyway: the freeze fingerprint hashes lock + split manifest jointly (`experiment.py:74–83`); any partition change refuses every run under 001. |
+| D3 | Experiment identity | Protocol change ⇒ new freeze: **seq 2 = debug** (G=3, B=3, T=5 → re-sized to **G=3, B=4, T=8** by D10, 2026-08-13), **seq 3 = full** (G=5, B=10, T=47). `experiment_001_bm25-sonnet46` closes as the bring-up freeze (12 ad-hoc episodes, archived as-is). **Numbering RESET 2026-08-13 (user-directed):** with every bring-up artifact cleared to git history, the sequence restarts at **seq 1 = debug** (D10 sizes), **seq 2 = full**; the reused `001_bm25-sonnet46` id is disambiguated by freeze fingerprints and the historical archive's own README in git history. | Forced mechanically anyway: the freeze fingerprint hashes lock + split manifest jointly (`experiment.py:74–83`); any partition change refuses every run under 001. |
 | D4 | Gates | **A.0a stays blocking** per experiment (adapter suite + mock smoke — cheap, guards the seam). **A.0b demoted** from blocking gate to diagnostic instrument (`make fidelity` on demand); the Phase 2 platform-health check replaces its blocking role. **A.0c (`anchor_stock`) retired** — stock-agent comparability is explicitly no longer a goal. **Ratified 2026-08-13.** |
 | D5 | Generation semantics | `generation_NNN` dir ≡ H_n. A generation is defined by an approved, merged PR commit on `main`, tagged `exp<seq>-g<NNN>`. **Rejected mutation ⇒ identity generation**: H_(g+1) = H_g recorded in the improvement record, held-out eval skipped, R_g carried forward, next batch consumed as normal. | One batch per generation slot regardless of accept/reject (protocol §13's fresh-evidence rule); no paired baseline/candidate arms anymore. |
 | D6 | H0 reset mechanism | Tag the current recipe as **`h0-baseline`** (byte-identical `target-agent/` + `.introspection/target-agent.yaml` since the M1 freeze `0976493`). `make reset_h0` = restore from tag as **replace, not merge** (`git checkout <tag> -- …` + `git clean -fdx target-agent`), then `make bootstrap` (regenerates `.pi/mcp.local.json`), then `introspection check`, then instruct to commit — platform rounds refuse a dirty recipe tree. `.introspection/local.json` (machine-local runtime binding, CLI-written) is preserved, never restored. | Every new experiment starts from the same H0. **Ratified 2026-08-13** — tag `h0-baseline` created at `2e8058b`. |
@@ -525,7 +525,7 @@ platform round with ≥2 tasks genuinely in parallel.
       with turns under concurrency (16 on a 112-message episode) — the designed
       lost-race recovery, ~5.5s each, latency only (2026-08-13).
 
-### Phase 4 — Debug experiment (seq 2): the real-scenario test
+### Phase 4 — Debug experiment (seq 1 after the numbering reset): the real-scenario test
 
 The capstone: everything runs for real, small. Sizing per D10 (decided and executed while
 PROVISIONAL: protocol block 3/4/8, partition re-proposed and verified): 32 held-out + 12 batch episodes ≈ $11–18, compute ≈ 1–1.5 h
@@ -536,12 +536,12 @@ comparability of the curve — while each generation consumes its own disjoint b
 Same isolation rules as the full experiment (protocol §29.17). Runs on the Phase
 3.5/3.5c session-keyed bridge.
 
-- [ ] Freeze: `experiment.seq: 2` with D10 `protocol:` values (G=3, B=4, T=8) and
+- [ ] Freeze: `experiment.seq: 1` (numbering reset) with D10 `protocol:` values (G=3, B=4, T=8) and
       the re-proposed partition already in place; flip PROVISIONAL → FROZEN;
       `reset_h0`; commit; **A.0a gate PASS** recorded.
 - [ ] H0 held-out (hidden, vault) → B1 batch → `operate` diagnosis (harvest 1
       immediately; harvest 2 after the ~40-min observation window, fallback stated)
-      → `improve` PR → human review/merge → tag `exp2-g001` → H1 held-out (hidden)
+      → `improve` PR → human review/merge → tag `exp1-g001` → H1 held-out (hidden)
       → B2 → … → H3 held-out → final tag.
 - [ ] Improvement record per transition, written as it happens; B1 viability read
       (D8) recorded.
@@ -555,11 +555,11 @@ hidden-measurement chain exists on disk for ≥1 accepted (or cleanly
 rejected/identity) transition; no held-out task id, trajectory, or reward appeared in
 any orchestrator-visible output before reveal (audit the session record + vault
 `console.log` placement); loop mechanics needed zero manual patching mid-run — else
-fix and re-run Phase 4 under seq 3 before scaling up.
+fix and re-run Phase 4 under the next seq before scaling up.
 
 ### Phase 5 — Full experiment + reporting
 
-- [ ] Freeze seq 3 (or next): G=5, B=10, T=47; `reset_h0`; A.0a PASS; partition
+- [ ] Freeze seq 2 (or next): G=5, B=10, T=47; `reset_h0`; A.0a PASS; partition
       frozen.
 - [ ] Run the six held-out evaluations and five generations (~282 local + 50 platform
       episodes ≈ $75–90 compute, ~20–28 h spread over ~a week of sessions; budget
@@ -583,7 +583,7 @@ statement — all present and internally consistent.
 | Item | Episodes | Cost | Wall-clock (serial) | Wall-clock (concurrent) |
 |---|---|---|---|---|
 | Phase 2 live checks | ~6 (mock + 2+2 real) | ≈ $3 | < 1 h | — (ran serial) |
-| Debug experiment (seq 2, D10 sizes) | 32 local + 12 platform | ≈ $11–18 | ~5–8 h | **≈ 1–1.5 h** compute + review time |
+| Debug experiment (seq 1, D10 sizes) | 32 local + 12 platform | ≈ $11–18 | ~5–8 h | **≈ 1–1.5 h** compute + review time |
 | Full experiment | 282 local + 50 platform | ≈ $75–90 | ~20–28 h, ~1 week elapsed | **≈ 5–7 h** compute (held-out 6×~42 min + batches 5×~20 min), ~2–3 days elapsed |
 | Endpoint reliability addendum (optional) | 376 local | ≈ $40–75 | ~25 h | ≈ 6–8 h |
 

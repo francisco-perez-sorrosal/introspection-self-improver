@@ -8,19 +8,23 @@
 # instead, and say so in the results directory.
 
 # "Say so in the results directory" is mechanical, not aspirational: seq + name derive the
-# experiment id (`<seq, zero-padded to 3>_<name>`, here 002_bm25-sonnet46) naming the freeze
+# experiment id (`<seq, zero-padded to 3>_<name>`, here 001_bm25-sonnet46) naming the freeze
 # the values below define, and every run writes under results/experiment_<id>/<generation>/
 # — the runner refuses any other results/ path. One experiment is one freeze: re-deciding a
 # frozen value means bumping `seq` here (a NEW experiment), never a new value under the old
 # one; `name` is a configuration nickname and may repeat across experiments — the sequence
-# is the identity — which is why seq 2 keeps 001's name: same model pair, same retrieval
-# freeze, new protocol. Experiment 001 closed 2026-08-13 as the bring-up freeze
-# (results/experiment_001_bm25-sonnet46/README.md — working tree cleared 2026-08-13,
-# in git history); seq 2 is the generation protocol's
-# debug experiment (SIA_EVALUATION_PLAN.md D3), opened PROVISIONAL 2026-08-13 so plan
-# Phases 2-3 have a runnable context, values final when Phase 4 freezes it.
+# is the identity.
+#
+# NUMBERING RESET 2026-08-13 (user-directed fresh start): every pre-protocol bring-up
+# artifact was cleared from the working tree and lives in git history — including the
+# bring-up freeze that previously held the id 001_bm25-sonnet46 (its closure README is at
+# that path in history) and the 002 bring-up runs. The sequence restarts at 1: seq 1 is
+# the generation protocol's DEBUG experiment (D10 sizes), PROVISIONAL until plan Phase 4
+# freezes it; the full experiment takes seq 2. The reused id is unambiguous mechanically:
+# each freeze is identified by its own results/ snapshot fingerprint, and the historical
+# bring-up 001 exists only in git history with its own README.
 experiment:
-  seq: 2
+  seq: 1
   name: bm25-sonnet46
 
 benchmark:
@@ -57,8 +61,8 @@ benchmark:
 # and (G*B)+T must fit the domain's 97 tasks. Debug scale per D10 (2026-08-13, sized so
 # a real improvement can SHOW on the fixed held-out curve: T=8 gives a fixed failure
 # mode ~60% odds of a held-out witness vs ~43% at T=5, halves the per-task quantum to
-# 12.5 pp, and dilutes identity-harness churn across 8 matrix rows) — seq 2 proves the
-# loop end to end before the full G=5/B=10/T=47 experiment freezes under the next seq.
+# 12.5 pp, and dilutes identity-harness churn across 8 matrix rows) — the debug seq proves the
+# loop end to end (seq 1) before the full G=5/B=10/T=47 experiment freezes under seq 2.
 protocol:
   generations: 3
   improvement_tasks_per_generation: 4
@@ -84,9 +88,9 @@ protocol:
   require_human_approval: true
 
 frozen:
-  # PROVISIONAL while experiment 002 is brought up (SIA_EVALUATION_PLAN.md Phases 1-3):
-  # no freeze snapshot is written or enforced, and nothing under
-  # results/experiment_002_bm25-sonnet46/ is a citable record yet. Plan Phase 4 finalizes
+  # PROVISIONAL while the debug experiment is brought up (SIA_EVALUATION_PLAN.md
+  # Phases 1-3.5c): no freeze snapshot is written or enforced, and nothing under
+  # results/experiment_001_bm25-sonnet46/ is a citable record yet. Plan Phase 4 finalizes
   # the values and flips this to FROZEN; from that first run on, the snapshot in the
   # results directory refuses any drift. Changing a value after that means a NEW
   # experiment (bump seq), never a new value under this one.

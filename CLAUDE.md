@@ -91,12 +91,14 @@ close.
   query formulation is harness-owned, but much of the effect may be the `bm25` backend — now the
   deliberate freeze, so retrieval-*usage* findings (query formulation, k, iteration, stopping)
   are attributable harness territory. Diagnosis is `operate`'s job.
-- **No result here is a result yet.** Experiment 001 (`bm25-sonnet46`) is `FROZEN` and closed
-  as the bring-up freeze — 12 ad-hoc platform episodes, no split round, no reportable number
-  (`results/experiment_001_bm25-sonnet46/README.md`, removed from the working tree
-  2026-08-13 with the rest of the archive — recover from git history at that path). The
-  evaluation protocol re-freezes per
-  experiment: seq 2 at debug scale, then the full run (plan Phases 4–5). The model pair is
+- **No result here is a result yet.** The experiment numbering was RESET 2026-08-13
+  (user-directed): every bring-up artifact was cleared from the working tree into git
+  history — including the original bring-up freeze that held the id `001_bm25-sonnet46`
+  (12 ad-hoc platform episodes, no reportable number; its closure README sits at
+  `results/experiment_001_bm25-sonnet46/README.md` in history). Seq 1 is now the
+  generation protocol's debug experiment (G=3, B=4, T=8 per plan D10), PROVISIONAL until
+  plan Phase 4 freezes it; the full run takes seq 2. Freeze fingerprints disambiguate the
+  reused id mechanically. The model pair is
   deliberate and deliberately asymmetric, and neither half is Sonnet 5 — the agent runs
   Sonnet 4.6 to keep the harness the binding constraint rather than the model, and the user
   simulator runs Sonnet 4.5 because Sonnet 5 rejects τ's `temperature: 0.0`.

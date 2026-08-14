@@ -68,7 +68,7 @@ scheme:
   merge (files committed after the tag stage as deletions), regenerates the untracked
   runtime state, runs `introspection check`, and leaves the restore staged for a human
   commit. The machine-local `.introspection/local.json` is preserved, never restored.
-- `exp<seq>-g<NNN>` — H_NNN of experiment `<seq>` (e.g. `exp2-g001`), applied to the
+- `exp<seq>-g<NNN>` — H_NNN of experiment `<seq>` (e.g. `exp1-g001`), applied to the
   approved merge commit of each accepted mutation. A rejected or identity transition gets
   no tag: H stays where it was, recorded in that transition's improvement record.
 
@@ -111,7 +111,9 @@ sandbox session (`x-introspection-session-id`) and the transport binds each epis
 channel to its task's `agent_session_id` — so N concurrent tasks share the one `dev`
 attachment without sharing any rendezvous state (`contract/constraints.md` § Platform-lane
 concurrency). `max_concurrency` is an operational knob: the lock's value is the default,
-`--max-concurrency` overrides it per run, and 1 asks for serial execution.
+`--max-concurrency` overrides it per run, and 1 asks for serial execution. The full design
+record — intake adjudication, the refuted attachment pool, the session-keyed end state —
+is `CONCURRENCY_DESIGN.md`.
 
 **The adapter is a pipe, not a participant.** It translates message shapes and tool names and
 does nothing else — no repair, no retry, no reformatting. Anywhere the adapter helps the agent
@@ -272,8 +274,8 @@ The id derives from `benchmark_lock.yaml` — `experiment.seq` (zero-padded to t
 experiment — and the runner refuses any `results/` path outside the lock's experiment directory,
 before `--overwrite` could delete anything. Changing models, retrieval config, splits or trial
 counts is a new experiment (bump `seq`), never a new value under the old one; the name is a
-configuration nickname and may repeat — `002_bm25-sonnet46` is a second, distinct freeze of the
-same configuration.
+configuration nickname and may repeat — a later `002_bm25-sonnet46` would be a second,
+distinct freeze of the same configuration.
 
 Once the lock stops being `PROVISIONAL`, the first run into an experiment writes
 `experiment.yaml` beside its generations — a fingerprint of the parsed freeze (lock values plus
@@ -283,11 +285,12 @@ comment edit never trips the check while a re-decided frozen value refuses the r
 (`PROVISIONAL` runs landed there, unenforced and unreportable); it was removed from the
 working tree on 2026-08-13 and lives in git history.
 
-**The lock is `FROZEN` for experiment 001** (`bm25-sonnet46`), which closed 2026-08-13 as the
-bring-up freeze without a graded round — see `results/experiment_001_bm25-sonnet46/README.md`
-(working tree cleared 2026-08-13; recover from git history at that path).
-The generation-based protocol re-freezes per experiment from seq 2 onward
-(`SIA_EVALUATION_PLAN.md` Phase 4). Two values were decided the hard way and the decisions
+**The experiment numbering was reset on 2026-08-13**: the bring-up freeze that originally
+held the id `001_bm25-sonnet46` closed the same day without a graded round and lives in git
+history (closure README at `results/experiment_001_bm25-sonnet46/README.md` there). The lock
+is now `PROVISIONAL` at seq 1 — the generation protocol's debug experiment
+(`SIA_EVALUATION_PLAN.md` Phase 4, D10 sizes) — and each experiment onward is its own
+freeze; the reused id is disambiguated by freeze fingerprints. Two values were decided the hard way and the decisions
 carry forward:
 
 - `retrieval_config: bm25` is the deliberate freeze, pinned knowingly over the unavailable
