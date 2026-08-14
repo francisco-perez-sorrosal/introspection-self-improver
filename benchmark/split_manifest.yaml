@@ -16,8 +16,9 @@
 # experiment.seq in benchmark_lock.yaml), never new lists under the old one. Verify
 # with scripts/propose_split.py --verify.
 #
-# D10 re-size: G=3 B=4 T=8 (was 3/3/5); decided 2026-08-13, executed pre-freeze while
-# PROVISIONAL
+# excluded from the pool before proposal: task_034 (benchmark/data/user_sim_screen.json has the
+# evidence). Seq 2 partition (debug attempt 2): task_034 excluded after 16/16 user-sim empty-
+# completion crashes under real agents; see results/experiment_001_bm25-sonnet46/README.md.
 
 version: 2
 domain: banking_knowledge
@@ -25,27 +26,27 @@ task_split_name: base
 
 batches:
   batch_01:
-    - task_044
+    - task_027
     - task_061
-    - task_092
+    - task_081
     - task_101
   batch_02:
-    - task_040
-    - task_058
+    - task_003
+    - task_045
     - task_071
     - task_087
   batch_03:
     - task_008
-    - task_028
-    - task_039
+    - task_041
+    - task_058
     - task_089
 
 held_out:
   - task_017
-  - task_034
+  - task_035
   - task_036
-  - task_043
-  - task_054
-  - task_056
+  - task_048
+  - task_051
   - task_067
-  - task_081
+  - task_091
+  - task_099

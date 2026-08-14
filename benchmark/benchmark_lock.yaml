@@ -18,13 +18,15 @@
 # NUMBERING RESET 2026-08-13 (user-directed fresh start): every pre-protocol bring-up
 # artifact was cleared from the working tree and lives in git history — including the
 # bring-up freeze that previously held the id 001_bm25-sonnet46 (its closure README is at
-# that path in history) and the 002 bring-up runs. The sequence restarts at 1: seq 1 is
-# the generation protocol's DEBUG experiment (D10 sizes), PROVISIONAL until plan Phase 4
-# freezes it; the full experiment takes seq 2. The reused id is unambiguous mechanically:
-# each freeze is identified by its own results/ snapshot fingerprint, and the historical
-# bring-up 001 exists only in git history with its own README.
+# that path in history) and the 002 bring-up runs. Seq 1 froze the debug experiment
+# (D10 sizes) and was VOIDED the same day at H0: task_034 deterministically crashes τ's
+# text-mode user simulator under real agents, a frozen-surface defect — see
+# results/experiment_001_bm25-sonnet46/README.md. Seq 2 is the debug experiment's second
+# attempt (task_034 excluded from the partition pool); the full experiment takes seq 3.
+# Reused ids are unambiguous mechanically: each freeze is identified by its own results/
+# snapshot fingerprint.
 experiment:
-  seq: 1
+  seq: 2
   name: bm25-sonnet46
 
 benchmark:
@@ -88,11 +90,12 @@ protocol:
   require_human_approval: true
 
 frozen:
-  # FROZEN at plan Phase 4 (2026-08-13): the debug experiment (seq 1) runs under these
-  # values. The first run wrote the freeze snapshot into the results directory, and every
-  # later run must match it — drift refuses the run. Changing a value now means a NEW
-  # experiment (bump seq), never a new value under this one. The bring-up history
-  # (Phases 1-3.5c, PROVISIONAL) is recorded in SIA_EVALUATION_PLAN.md.
+  # FROZEN at plan Phase 4 (2026-08-13): the debug experiment (seq 2, after seq 1's
+  # void) runs under these values. The first run writes the freeze snapshot into the
+  # results directory, and every later run must match it — drift refuses the run.
+  # Changing a value now means a NEW experiment (bump seq), never a new value under
+  # this one. The bring-up history (Phases 1-3.5c, PROVISIONAL) and the seq-1 void are
+  # recorded in SIA_EVALUATION_PLAN.md.
   status: FROZEN
 
   # The model that actually serves the agent. Authoritative copy lives in

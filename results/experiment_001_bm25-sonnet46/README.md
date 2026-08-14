@@ -33,9 +33,19 @@ owns the crash. Re-deciding a frozen surface means a new experiment — hence se
   the exception class shown reward-free on the completeness report (`9787585`).
 - The A.0a gate record and the freeze snapshot in this directory (citable bring-up
   record; nothing here is an experiment result).
-- The remedy for seq 2: a pre-partition first-turn screen over the whole 97-task pool,
-  excluding tasks whose opening user-sim completion is empty, exclusions documented in
-  the split manifest.
+- The remedy for seq 2, refined by falsification: a first-turn-only screen passed 97/97
+  (the opening turn is not the trigger), and an orchestrated screen driving τ's own
+  orchestrator with a scripted LLM-free agent also passed 97/97 — the crash needs a
+  real agent's replies (the scenario's combo branch reacts to explaining/
+  troubleshooting). Direct stock-agent probes (`tau2 run`, `llm_agent` on Sonnet 4.6)
+  reproduced the crash on `task_034` (4/4 — 16/16 cumulative across two agent stacks)
+  and cleared the other four combo-instruction tasks (`task_015` user_stop;
+  `task_038`/`task_063`/`task_081` max_steps at the probe's 40-step cap). Seq 2
+  excludes exactly `task_034`, documented in the split manifest; the orchestrated
+  screen (`benchmark/scripts/screen_user_sim.py`, report in
+  `benchmark/data/user_sim_screen.json`) remains the pre-freeze pool-viability
+  instrument. Residual risk — a real-agent-conditioned crash on an unprobed task —
+  is accepted and, if it fires, handled by this same void-and-reseq procedure.
 
 ## Firewall accounting (sanctioned reads of the seq-1 vault)
 
