@@ -582,9 +582,23 @@ Same isolation rules as the full experiment (protocol §29.17). Runs on the Phas
       `results/experiment_001_bm25-sonnet46/generation_000/gates/a0a.json`; the first
       non-PROVISIONAL run wrote the freeze snapshot (`experiment.yaml` + lock/manifest
       value-copies) beside it. (2026-08-13)
+- [x] **Seq 1 VOID** (2026-08-13, user-ratified): the H0 held-out round could not
+      complete — `task_034` deterministically crashes τ's user simulator on the opening
+      turn (empty Sonnet 4.5 completion at the frozen `temperature: 0.0`;
+      `UserMessage.validate()` → `infrastructure_error`; 12/12 across three invocations,
+      seam counters zero, failure precedes the agent). A frozen surface owns the crash
+      (τ commit + user-sim config; upstream #440 fixed this class for voice only), so
+      the freeze is re-decided as **seq 2 = debug attempt 2** (seq 3 takes the full
+      run). Two loop-mechanics fixes landed mid-run and are keepers (`ce10da7` held-out
+      resume of a measured-but-incomplete round; `9787585` root-cause capture onto
+      manifest rows) — per this phase's validate criterion, the debug experiment
+      re-runs under the next seq. Closure + firewall accounting:
+      `results/experiment_001_bm25-sonnet46/README.md`. Remedy for seq 2: pre-partition
+      first-turn screen over the 97-task pool; exclusions documented in the manifest;
+      upstream issue drafted for user review before filing.
 - [ ] H0 held-out (hidden, vault) → B1 batch → `operate` diagnosis (harvest 1
       immediately; harvest 2 after the ~40-min observation window, fallback stated)
-      → `improve` PR → human review/merge → tag `exp1-g001` → H1 held-out (hidden)
+      → `improve` PR → human review/merge → tag `exp2-g001` → H1 held-out (hidden)
       → B2 → … → H3 held-out → final tag.
 - [ ] Improvement record per transition, written as it happens; B1 viability read
       (D8) recorded.

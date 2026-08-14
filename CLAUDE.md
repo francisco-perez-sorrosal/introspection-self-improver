@@ -98,10 +98,14 @@ close.
   (user-directed): every bring-up artifact was cleared from the working tree into git
   history — including the original bring-up freeze that held the id `001_bm25-sonnet46`
   (12 ad-hoc platform episodes, no reportable number; its closure README sits at
-  `results/experiment_001_bm25-sonnet46/README.md` in history). Seq 1 is now the
-  generation protocol's debug experiment (G=3, B=4, T=8 per plan D10), PROVISIONAL until
-  plan Phase 4 freezes it; the full run takes seq 2. Freeze fingerprints disambiguate the
-  reused id mechanically. The model pair is
+  `results/experiment_001_bm25-sonnet46/README.md` in history). Seq 1 froze the debug
+  experiment (G=3, B=4, T=8 per plan D10) and was **voided the same day at H0**:
+  `task_034` deterministically crashes τ's text-mode user simulator on the opening turn
+  (empty completion at the frozen `temperature: 0.0`), a frozen-surface defect no
+  harness mutation can reach — see `results/experiment_001_bm25-sonnet46/README.md`,
+  whose vault stays sealed forever. Seq 2 is the debug experiment's second attempt,
+  its pool screened pre-partition for that crash class; the full run takes seq 3.
+  Freeze fingerprints disambiguate the reused id mechanically. The model pair is
   deliberate and deliberately asymmetric, and neither half is Sonnet 5 — the agent runs
   Sonnet 4.6 to keep the harness the binding constraint rather than the model, and the user
   simulator runs Sonnet 4.5 because Sonnet 5 rejects τ's `temperature: 0.0`.
