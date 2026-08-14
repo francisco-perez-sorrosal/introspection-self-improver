@@ -44,10 +44,25 @@ file and the code disagree, the code wins and this file gets fixed.
    ~40-min window; when it returns nothing, say so and use the full-population
    transcript read as the (stronger, at B=4) fallback. Open-code failure modes;
    prevalence is n/B by enumeration. Never read anything held-out.
-4. **Decide with the user**: present the batch read, the modes with prevalence and
-   conversation ids, and a recommended single mechanism. The user picks proceed /
-   identity / halt, and the mechanism.
-5. **Mutate (`improve` skill)**: one coherent mechanism, on branch
+4. **Decide with the user** — two questions with different shapes. Proceed / identity /
+   halt is exclusive and stays a single choice. The detected improvements are not:
+   present every mode with prevalence and conversation ids as a **multi-select**, and
+   the user opts into any subset — or all — as approved mutation targets. Approved
+   targets land in `results/experiment_<id>/improvement_backlog.md` (mechanism,
+   evidence pointers, approval date, status: pending / consumed-by-gen / retired).
+   One generation still lands one coherent mechanism (protocol invariant): the next
+   PR takes the highest-priority approved target, composing several only when they
+   genuinely form one mechanism and saying so (seq 2's g2 did exactly this —
+   candidate comparison + record-field grounding unified as source-grounded
+   selection). The rest carry forward, re-ranked against each new batch's evidence;
+   an item later contradicted by evidence is retired with the reason recorded, never
+   silently dropped, and the backlog cannot outrun the freeze — G bounds the mutation
+   slots, so approving more targets than remaining generations is stated, not hidden.
+   Bundling independent mechanisms into one generation is possible only as an
+   explicit user override, recorded in the improvement record as multi-mechanism and
+   per-mechanism uninterpretable.
+5. **Mutate (`improve` skill)**: one coherent mechanism — the backlog's top approved
+   target — on branch
    `gen-00<g+1>/<slug>`, touching mutable surface only (seq 2: `SYSTEM.md`
    `<instructions>`; the `<policy>` block is frozen benchmark text). `make check` must
    pass. Push; open a PR citing conversation ids, prevalence, predicted effect, and

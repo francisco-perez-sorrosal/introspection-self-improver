@@ -175,8 +175,10 @@ first freeze — is `results/experiment_001_bm25-sonnet46/README.md` and
 
 The gates where the human speaks: ratify the freeze; decide each diagnosis (the batch
 read is visible by design, so Claude Code presents the failure modes with prevalence
-and conversation ids and the human picks the mutation's target — or an identity
-generation, or a halt); merge or reject each `improve` PR (the merge is what defines a
+and conversation ids as a multi-select — opt into any subset, or all, as approved
+mutation targets; one generation still lands one coherent mechanism and the rest queue
+in the experiment's improvement backlog for later generations — or record an identity
+generation, or halt); merge or reject each `improve` PR (the merge is what defines a
 generation — the agent never merges its own work); the budget go at each generation
 boundary; order the reveal. What is not illustrative in the sketch above: no held-out
 task id, trajectory, or score appears in the conversation before the reveal — exercised
@@ -236,7 +238,8 @@ them onto the machinery above. The ones worth knowing:
 | "Run it again" (after an INCOMPLETE round) | The same command resumes: τ re-runs only the missing episodes and replaces infrastructure placeholders; completed episodes are never re-spent |
 | "Run the next batch" | `make batch B=g GEN=generation_<g-1>`, graded into `graded/`; batch 1 carries the viability read (plan D8). The platform lane refuses an unpushed HEAD — lineage pins to pushed `main` |
 | "Diagnose it" | The `operate` skill over the batch's conversations — prevalence, cited conversation ids, second harvest after the observation window (at debug batch sizes the async observations often lag it, and the full-transcript read is the stated fallback, not a degradation) |
-| "Propose the fix" | The `improve` skill — one mutation, branch `gen-NNN/<slug>`, PR citing the evidence |
+| "Fix these two" / "all of them" | The selected failure modes become approved targets in `results/experiment_<id>/improvement_backlog.md`; each generation consumes the top one (composed only when they form one coherent mechanism), the rest carry forward re-ranked by fresh evidence |
+| "Propose the fix" | The `improve` skill — one coherent mutation (the backlog's top approved target), branch `gen-NNN/<slug>`, PR citing the evidence |
 | "Merged" | Pull, tag `exp<seq>-g<NNN>`, push, write and validate the improvement record, then measure the new generation |
 | "Rejected" | Identity generation: tag on the unchanged commit, record says why, no held-out measurement |
 | "Measure H2" | `make heldout GEN=generation_002` — refuses unless the tree is byte-identical to `exp<seq>-g002` |
