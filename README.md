@@ -1,18 +1,33 @@
 # Introspection Self-Improver
 
-A τ²-bench-evaluated agent built as an Introspection Recipe, with the seam between the two
-built so that a self-improvement loop can be added on top without moving anything.
+A τ²-bench-evaluated agent built as an Introspection Recipe, plus the machinery to improve
+it generation by generation without ever touching the objective.
 
-There is no improvement loop yet. What exists is the floor it needs: an immutable objective, a
-minimal harness, and a frozen/mutable boundary that is enforced mechanically rather than by
-convention. The evaluation design the loop will be measured under is
-`self_improving_agent_evaluation_protocol.md`; `SIA_EVALUATION_PLAN.md` tracks the path to it.
+The improvement loop itself is not a program in this repository — Claude Code drives it in
+conversation ([Driving an experiment from Claude Code](#driving-an-experiment-from-claude-code)).
+What lives here is everything the loop runs against: an immutable objective, a minimal
+harness under improvement, a frozen/mutable boundary enforced mechanically rather than by
+convention, and the generation lifecycle — improvement batches, a sealed held-out vault,
+improvement records, an end-of-experiment reveal. The evaluation design is
+`self_improving_agent_evaluation_protocol.md`; `SIA_EVALUATION_PLAN.md` tracks the path to
+the first experiment. No experiment has run to completion yet: no number in this repository
+is a result.
 
 ```
 τ²-bench  ──tasks──▶  target-agent (Introspection Recipe)  ──tool calls──▶  τ² environment
    ▲                                                                             │
    └────────────────────────── reward, via tau2 evaluate-trajs ◀─────────────────┘
 ```
+
+- [Quick start](#quick-start) — bootstrap, checks, round types
+- [The lanes](#the-lanes) — who may change what
+- [Generations and the vault](#generations-and-the-vault) — H0, tags, sealed held-out results
+- [Driving an experiment from Claude Code](#driving-an-experiment-from-claude-code) — the conversation that runs the loop
+- [How the seam works](#how-the-seam-works) — the τ ↔ Pi rendezvous
+- [Two run modes](#two-run-modes) — locked vs diagnostic
+- [Two transports](#two-transports) — local vs platform, and the lessons behind them
+- [Frozen surfaces](#frozen-surfaces) — what is asserted before every run
+- [One experiment, one freeze](#one-experiment-one-freeze) — experiment identity, and two values decided the hard way
 
 ## Quick start
 
@@ -60,8 +75,9 @@ the `frozen surfaces` workflow, not by the grant.
 
 ## Generations and the vault
 
-A generation is an approved merge commit on `main`. Two tags carry the whole identity
-scheme:
+A generation is an approved merge commit on `main`; a rejected mutation leaves an
+*identity generation* instead — the predecessor carried forward unchanged. Two tags carry
+the whole identity scheme:
 
 - `h0-baseline` — the H0 anchor: `target-agent/` plus `.introspection/target-agent.yaml`,
   byte-identical to the baseline freeze. `make reset_h0` restores it as a replace, not a
@@ -69,13 +85,20 @@ scheme:
   runtime state, runs `introspection check`, and leaves the restore staged for a human
   commit. The machine-local `.introspection/local.json` is preserved, never restored.
 - `exp<seq>-g<NNN>` — H_NNN of experiment `<seq>` (e.g. `exp1-g001`), applied to the
-  approved merge commit of each accepted mutation. A rejected or identity transition gets
-  no tag: H stays where it was, recorded in that transition's improvement record.
+  approved merge commit of each accepted mutation. A rejected or identity transition
+  still gets its tag — placed on the same commit the previous generation's tag points
+  at, since H_NNN *is* that harness — with the why recorded in the transition's
+  improvement record and no held-out measurement of its own. Tagging every slot keeps
+  the reveal's gate mechanical: `make reveal` requires the final tag `exp<seq>-g<G>`
+  to exist however the last transition resolved.
 
 Held-out rounds write **nothing inside the repository**. Their episodes, sessions, graded
 results and console log live in the vault at `~/.sia_vault/experiment_<id>/generation_NNN/`
 (`SIA_VAULT_DIR` overrides), out of reach of every repo sweep and of the dashboard, and the
-terminal shows completeness only. `make reveal` — runnable once `exp<seq>-g<G>` exists —
+terminal shows completeness only. A held-out round measures exactly one generation and
+proves it before any spend: it refuses a dirty recipe surface and requires the tree
+byte-identical to the measured generation's tag (`h0-baseline` for H0).
+`make reveal` — runnable once `exp<seq>-g<G>` exists —
 is the single door between the two worlds: it copies the vault into
 `results/experiment_<id>/held_out/`, computes the progression artifacts (per-generation
 counts, task x generation matrix, transitions, retention), writes `summary.md`, and fills
@@ -86,6 +109,103 @@ Each transition's evidence chain — batch, signals, hypothesis, mutation, appro
 lives in `results/experiment_<id>/improvement_records/` (schema:
 `contract/improvement_record.schema.yaml`; scaffold and check with
 `benchmark/scripts/improvement_record.py`).
+
+## Driving an experiment from Claude Code
+
+The improvement loop has no program of its own: Claude Code is the orchestrator, and an
+experiment is one conversation in which the human speaks at four gates. Everything
+between the gates is Claude Code working the CLI — the make targets above, the
+Introspection plugin's `operate` and `improve` skills, git. A debug-scale run
+(G=3 generations, 4-task batches, 8 held-out tasks) goes like this; every number below
+is invented for illustration:
+
+> **You:** Start the debug experiment.
+>
+> **Claude Code:** Pre-flight done: partition verified against the lock (3×4 batches +
+> 8 held out), recipe restored to `h0-baseline` and committed, lock flipped PROVISIONAL
+> → FROZEN, A.0a gate PASS recorded. Estimated spend ≈ $11–18, ≈ 1–1.5 h compute.
+> Held-out results stay sealed in the vault until reveal — I only ever see
+> completeness. Proceed?
+>
+> **You:** Go.
+>
+> **Claude Code:** H0 baseline — `make heldout GEN=generation_000`: 8/8 episodes
+> completed, zero seam incidents, graded results sealed in the vault. Batch 1 —
+> `make batch B=1 GEN=generation_000`: 4/4 episodes on the platform lane, rewards
+> visible by design: 1/4 passed. Viability read (plan D8): neither 0/4 nor 4/4, so H0 is
+> neither broken nor saturated — continuing. Running `operate` over the four
+> conversations (the second evidence harvest waits out the platform's ~40-minute
+> observation window)… Diagnosis: in every failure the first `KB_search` query copied
+> the user's phrasing verbatim and never reformulated; the one pass reformulated once.
+> Prevalence 3/4, conversation ids cited. `improve` proposes one mutation — a
+> query-reformulation instruction in `SYSTEM.md`, outside the frozen `<policy>` region
+> — PR #12 open on branch `gen-001/query-reformulation`.
+>
+> **You:** *(reads `! gh pr diff 12`)* Merge it.
+>
+> **Claude Code:** Merged, tagged `exp1-g001`, improvement record `gen_000_to_001.yaml`
+> written and validated. Measuring H1 — `make heldout GEN=generation_001`: 8/8
+> completed, sealed. Generation 2 consumes batch 2 and roughly $3–5. Go?
+
+The loop repeats for generations 2 and 3. A rejected PR is an identity generation — H
+stays where it was, no held-out measurement happens, the record says so — and the next
+batch is consumed as normal. Had batch 1 come back 0/4 or 4/4, the viability read
+(`SIA_EVALUATION_PLAN.md` D8) would have halted the experiment before more was spent.
+
+> **You:** Reveal.
+>
+> **Claude Code:** `make reveal` — the vault unseals into
+> `results/experiment_001_bm25-sonnet46/held_out/`: R_T(H0) = 2/8 → R_T(H3) = 5/8,
+> stated against the ±17 pp noise band, with the task×generation matrix, transitions,
+> retention, and `summary.md`.
+
+The four gates: ratify the freeze, merge or reject each `improve` PR (the merge is what
+defines a generation — the agent never merges its own work), the budget go at each
+generation boundary, order the reveal. What is not illustrative in the sketch above: no
+held-out task id, trajectory, or score appears in the conversation before the reveal.
+
+### Showcasing the run in the dashboard
+
+`make dashboard` serves a read-only viewer over `results/` at `http://127.0.0.1:8787/`,
+rendering the run as the improvement story it is — worth keeping open while driving:
+
+- **During the run** — batch evidence is fully observable: the generation ribbon gives
+  one card per improvement cycle (pass¹, Δ vs previous, the improvement record's outcome
+  and hypothesis, cost, recipe SHAs), every episode opens into its full transcript —
+  messages, tool calls, arguments — for walking an audience through a diagnosis, and the
+  efficiency small multiples (cost, messages, `KB_search` calls per episode across
+  generations) show how behaviour is shifting before any held-out score can. The
+  held-out card only states that the measurement is sealed in the vault.
+- **After `make reveal`** — the held-out progression card is the headline, and the main
+  question — did H_G beat H0? — is read there: the tasks-solved/T curve from H0 to H_G
+  with the noise band as whiskers (improvement is an endpoint gap that clears the band,
+  not a wiggle inside it), identity generations as hollow marks, the ever-solved
+  retention line, and the task × generation matrix showing which tasks each transition
+  gained, kept, or regressed.
+
+The dashboard never reads the vault and regrades nothing: held-out data renders only
+from the artifacts `make reveal` writes under `results/…/held_out/`. The full view list
+is `dashboard/README.md`.
+
+### The phrasebook
+
+None of these are commands — they are intents, and any phrasing works; Claude Code maps
+them onto the machinery above. The ones worth knowing:
+
+| Say | What happens |
+|---|---|
+| "Create a new experiment" | Bumps `experiment.seq` in the lock (a new freeze identity), restores the recipe to `h0-baseline`, re-proposes the partition if the sizes changed; stays `PROVISIONAL` until you freeze |
+| "Freeze it" / "start the debug experiment" | Verifies the partition against the lock, flips the lock to `FROZEN`, commits, records the A.0a gate PASS |
+| "Measure the baseline" | `make heldout GEN=generation_000` — completeness only, results sealed in the vault |
+| "Run the next batch" | `make batch B=g GEN=generation_<g-1>`, graded into `graded/`; batch 1 carries the viability read (plan D8) |
+| "Diagnose it" | The `operate` skill over the batch's conversations — prevalence, cited conversation ids, second harvest after the observation window |
+| "Propose the fix" | The `improve` skill — one mutation, branch `gen-NNN/<slug>`, PR citing the evidence |
+| "Merged" | Pull, tag `exp<seq>-g<NNN>`, push, write and validate the improvement record, then measure the new generation |
+| "Rejected" | Identity generation: tag on the unchanged commit, record says why, no held-out measurement |
+| "Measure H2" | `make heldout GEN=generation_002` — refuses unless the tree is byte-identical to `exp<seq>-g002` |
+| "Reveal" | `make reveal` — requires the final generation tag; the one sanctioned read of the vault |
+| "Reset the agent" | `make reset_h0` alone — replace-not-merge restore, staged for a human commit |
+| "Open the dashboard" | `make dashboard` — the viewer above |
 
 ## How the seam works
 
@@ -143,8 +263,10 @@ The rendezvous is driven by the bridge, not by the transport, so the same seam r
 | Agent host | Pi subprocess on this machine | cloud sandbox on a dev runtime |
 | τ environment | in-process, loopback bridge | in-process, bridged by `introspection dev --mcp` |
 | Introspection evidence | **none** | conversation, traces, spans, cost, commit lineage |
-| Episode cost / wall clock | ~$0.17, ~45 s | ~$0.26, ~75 s (+~20 s one-off `dev` attach) |
+| Episode cost / wall clock | $0.10–0.51 (median ~$0.20), ~45 s | $0.34–1.0, ~75 s (+~20 s one-off `dev` attach) |
 | Prerequisites | none | login, pushed repo, App grant, Runtime, dev API-key agent |
+
+Episode length, not lane, dominates cost — a 112-message platform episode billed ~$1.
 
 Both are implemented. `local` contacts nothing, so no task and therefore no conversation exists
 — Pi's session file under `results/<experiment>/<gen>/<run>/pi_sessions/` is the only record. `platform` makes
@@ -264,7 +386,9 @@ documented is not frozen:
 - the `<policy>` region of `SYSTEM.md`, against both the lock's hash (pre-commit and CI) and
   the live `env.get_policy()` (at episode start).
 
-Reward is computed only by `tau2 evaluate-trajs`, only via `make grade`.
+Reward is computed only by `tau2 evaluate-trajs`, always through `benchmark/scripts/grade.py`
+— interactively as `make grade`, by the batch target into the round's `graded/`, and by the
+held-out round's muted grading stage into the vault.
 
 ## One experiment, one freeze
 
