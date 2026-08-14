@@ -200,6 +200,10 @@ class EpisodeChannel:
         self.token = token
         #: The sandbox session this channel answers for, once bound; see `bind`.
         self.bound_key: str | None = None
+        #: Set at close, under the bridge lock. A closed channel refuses new bindings —
+        #: the transport's binding poll can race the episode's teardown, and a late bind
+        #: would re-register a dead channel in the routing table.
+        self.closed = False
         self._mailbox = _Mailbox(on_stall=on_stall)
         self.calls_served = 0
 
@@ -380,6 +384,12 @@ class ToolBridge:
 
     def _bind(self, channel: EpisodeChannel, key: str) -> None:
         with self._channel_bound:
+            if channel.closed:
+                # The transport's binding poll lost a race with the episode's teardown
+                # (τ retried, or the run ended). Registering a dead channel would leak it
+                # into the routing table; the episode it served is over either way.
+                logger.debug(f"bind of {key!r} arrived after channel close; ignored")
+                return
             existing = self._channels.get(key)
             if existing is not None and existing is not channel:
                 raise RuntimeError(
@@ -396,6 +406,7 @@ class ToolBridge:
         # it down after the retry already opened and bound its own) must not evict the
         # successor from either the token or the session namespace.
         with self._channels_lock:
+            channel.closed = True
             for key in (channel.token, channel.bound_key):
                 if key is not None and self._channels.get(key) is channel:
                     del self._channels[key]

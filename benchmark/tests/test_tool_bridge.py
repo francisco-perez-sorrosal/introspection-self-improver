@@ -314,3 +314,14 @@ def test_a_late_close_of_a_previous_attempts_channel_does_not_evict_the_retry() 
     )
     assert not answered.is_error
     assert answered.content[0].text == "for the retry"
+
+
+def test_a_bind_arriving_after_close_cannot_resurrect_the_channel() -> None:
+    """The transport's binding poll can lose a race with the episode's teardown (a τ
+    retry closes the failed attempt while `tasks get` is in flight); a late bind must
+    not re-register the dead channel in the routing table."""
+    bridge = ToolBridge(tau_tools=[])
+    channel = bridge.open_channel()
+    channel.close()
+    channel.bind("sess-late-after-close")
+    assert bridge.channel_for_request("sess-late-after-close", channel.token, grace=0.0) is None

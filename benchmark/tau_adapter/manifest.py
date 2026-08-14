@@ -44,6 +44,9 @@ class EpisodeIncidents:
     prompt_409: int = 0
     prompt_failures: int = 0
     stream_failures: int = 0
+    #: Re-attaches spent waiting out the org's sandbox queue (created, not yet started).
+    #: Latency, not damage — but a round that queued a lot should say so.
+    sandbox_queue_waits: int = 0
     stream_reattaches: int = 0
     settle_timeouts: int = 0
 

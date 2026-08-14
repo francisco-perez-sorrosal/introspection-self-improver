@@ -525,3 +525,75 @@ def test_a_conflicting_bind_surfaces_as_a_transport_failure_not_a_crash() -> Non
     failure = transport._turns.get_nowait()
     assert isinstance(failure, TransportFailure)
     assert "already bound" in failure.reason
+
+
+def _silent_session() -> _StreamSession:
+    from tau_adapter.transport_platform import StreamAssembler, _StreamSession
+
+    return _StreamSession(
+        proc=None, assembler=StreamAssembler(), drop_run_id=None, reattaches_left=0
+    )
+
+
+def test_a_silent_stream_over_a_queued_sandbox_reattaches_instead_of_failing(
+    monkeypatch,
+) -> None:
+    """The org's concurrency limit queues sandboxes beyond its cap (observed: 2m49s for
+    a third concurrent task, whose abandoned attempt still burned real tokens). A silent
+    stream while the task has not started is patience territory: re-attach within the
+    queue budget and let τ's own turn timeout arbitrate."""
+    import time as time_module
+
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    transport._task_id = "task-1"
+    transport._queue_deadline = time_module.monotonic() + 60
+    transport._queue_poll_delay = 0.0
+    transport._set_run_id("run-1")
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: {"started_at": None})
+    spawned: list[tuple] = []
+    monkeypatch.setattr(
+        transport,
+        "_spawn_stream",
+        lambda run_ref, drop_run_id, reattaches_left: spawned.append(run_ref),
+    )
+    session = _silent_session()
+    transport._session = session
+    transport._on_stream_end(session)
+    assert spawned == ["run-1"]
+    assert transport.incidents.sandbox_queue_waits == 1
+    assert transport.incidents.stream_failures == 0
+    assert transport._turns.qsize() == 0
+
+
+def test_an_expired_queue_budget_fails_the_silent_stream_loudly(monkeypatch) -> None:
+    import time as time_module
+
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    transport._task_id = "task-1"
+    transport._queue_deadline = time_module.monotonic() - 1
+    transport._set_run_id("run-1")
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: {"started_at": None})
+    session = _silent_session()
+    transport._session = session
+    transport._on_stream_end(session)
+    assert transport.incidents.stream_failures == 1
+    assert isinstance(transport._turns.get_nowait(), TransportFailure)
+
+
+def test_a_started_sandbox_with_a_dead_stream_still_fails(monkeypatch) -> None:
+    """Queue tolerance must not swallow real stream deaths: once the sandbox started,
+    a silent stream end is the failure it always was."""
+    import time as time_module
+
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    transport._task_id = "task-1"
+    transport._queue_deadline = time_module.monotonic() + 60
+    transport._set_run_id("run-1")
+    monkeypatch.setattr(
+        transport, "_cli", lambda args, timeout: {"started_at": "2026-08-14T01:55:44Z"}
+    )
+    session = _silent_session()
+    transport._session = session
+    transport._on_stream_end(session)
+    assert transport.incidents.stream_failures == 1
+    assert transport.incidents.sandbox_queue_waits == 0

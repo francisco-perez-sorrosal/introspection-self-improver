@@ -64,6 +64,13 @@ SETTLE_GRACE_SECONDS = 300.0
 BIND_POLL_SECONDS = 2.0
 BIND_POLL_CEILING_SECONDS = 120.0
 
+# How long a created-but-unstarted sandbox may sit in the org's queue before a silent
+# stream is treated as a failure rather than patience. 240s leaves boot-plus-first-turn
+# room inside τ's 300s per-turn ceiling; the observed queue wait that motivated this was
+# 2m49s (contract/constraints.md § Platform-lane concurrency).
+QUEUE_WAIT_CEILING_SECONDS = 240.0
+QUEUE_POLL_SECONDS = 5.0
+
 
 class StreamAssembler:
     """Turn AG-UI events into τ-shaped assistant turns.
@@ -245,6 +252,10 @@ class PlatformTransport:
         # bound to it so the tunnel's session header routes this episode's tool calls —
         # which is what lets N concurrent tasks share the one dev attachment.
         self._channel: Any | None = None
+        # Armed at task creation; while it runs, a silent stream over a not-yet-started
+        # sandbox re-attaches instead of failing the episode (org queueing, not a fault).
+        self._queue_deadline: float | None = None
+        self._queue_poll_delay = QUEUE_POLL_SECONDS
         # Becomes the task's title at episode end. The dashboard's conversation list shows the
         # task's title as the conversation's summary line, so this is what a row reads as.
         self._episode_label = episode_label
@@ -391,6 +402,7 @@ class PlatformTransport:
                 self._count_prompt_failure(exc)
                 raise
             self._task_id = str(created["task"]["id"])
+            self._queue_deadline = time.monotonic() + QUEUE_WAIT_CEILING_SECONDS
             self._set_run_id(self._run_id_of(created))
             logger.info(
                 f"platform task {self._task_id} on runtime {self._runtime_id} "
@@ -627,6 +639,27 @@ class PlatformTransport:
                     reattaches_left=session.reattaches_left - 1,
                 )
                 return
+        if session.emitted == 0 and self._sandbox_still_queued():
+            # The sandbox never started: the org's concurrency limit queues tasks beyond
+            # its plan cap (observed live 2026-08-13: a third concurrent sandbox sat
+            # queued 2m49s, our stream gave up, τ retried, and the orphaned attempt still
+            # burned $0.69 of real tokens after finally starting). A silent stream over a
+            # queued run is patience territory, not a failure — keep re-attaching within
+            # the queue budget and let τ's own turn timeout stay the real arbiter.
+            # Replay-safe because nothing was emitted.
+            time.sleep(self._queue_poll_delay)
+            if self._is_current(session):
+                self.incidents.sandbox_queue_waits += 1
+                logger.info(
+                    f"task {self._task_id}: sandbox still queued; re-attaching stream "
+                    f"(queue wait {self.incidents.sandbox_queue_waits})"
+                )
+                self._spawn_stream(
+                    run_ref=self._run_id or "current",
+                    drop_run_id=session.drop_run_id,
+                    reattaches_left=0,
+                )
+            return
         if not self._is_current(session):
             return
         stderr = ""
@@ -642,6 +675,24 @@ class PlatformTransport:
             )
         )
         self._settled.set()
+
+    def _sandbox_still_queued(self) -> bool:
+        """True while the task exists but its sandbox has not started, inside the budget.
+
+        Grounded on `started_at` — a field, not a status string — so a platform wording
+        change cannot silently break the check. A CLI failure reads as not-queued: the
+        failure path, with its incident counter, is the honest fallback when the state
+        cannot be determined.
+        """
+        if self._task_id is None or self._queue_deadline is None:
+            return False
+        if time.monotonic() >= self._queue_deadline:
+            return False
+        try:
+            payload = self._cli(["tasks", "get", str(self._task_id)], timeout=60)
+        except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError):
+            return False
+        return not (payload or {}).get("started_at")
 
     def _is_current(self, session: _StreamSession) -> bool:
         with self._session_lock:
