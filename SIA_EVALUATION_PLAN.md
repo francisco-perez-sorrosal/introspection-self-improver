@@ -676,6 +676,12 @@ instrument: `benchmark/scripts/power_sim.py`.
       `introspection check` green, mock smoke clean on both halves; `h0-baseline`
       re-anchored with the seq-2 referent archived as `h0-baseline-sonnet46`
       (2026-08-14).
+- [x] Calibration pilot (D12 consequence c): luna-H0 on the 28 non-partition tasks
+      (8 unused + 20 seq-2-burnt; firewall-clean — the frozen held-out set untouched)
+      for $1.06 — **7/28 = 25%** (no saturation), **$0.038/episode** (16× under the
+      Sonnet basis), episodes same length; power re-checked at the measured baseline,
+      **D11's G=5/B=8/T=28 stands**; record at
+      `results/experiment_003_powered-bm25-luna56/CALIBRATION_PILOT.md` (2026-08-14).
 - [x] Reveal computes the pre-registered primary (D11): one-sided trend test over
       H0…H5 at α=0.05 (`tau_adapter/reveal.py` — permutation-variance normal
       approximation; identity generations carry their predecessor's draws and are
@@ -733,8 +739,9 @@ statement — all present and internally consistent.
 |---|---|---|---|---|
 | Phase 2 live checks | ~6 (mock + 2+2 real) | ≈ $3 | < 1 h | — (ran serial) |
 | Debug experiment (seq 2, D10 sizes) — **recorded** | 32 local + 12 platform | **≈ $29 on manifests** ($19.92 local, agent + user-sim; $9.05 platform conversation billing — the τ-side user-sim on the platform lane is not manifest-captured) + ~$3 screens/probes | — | **≈ 3.5 h** incl. review latency (recorded) |
-| Powered experiment (seq 3, D11 sizes) | 168 local + 40 platform | ≈ **$132** at measured rates; plan **$150–165** with instruction-growth headroom (~8%/gen observed in seq 2) | ~10–14 h | ≈ 4–6 h compute (held-out 6 × ~15–20 min at 10-wide + batches 5 × ~25 min at 2-wide), ~2–3 days elapsed with review gates |
-| Full experiment (seq 4, deferred) | 282 local + 50 platform | ≈ $210–230 at measured rates (supersedes the pre-run $75–90) | ~20–28 h, ~1 week elapsed | **≈ 5–7 h** compute, ~2–3 days elapsed |
+| Luna calibration pilot (D12) — **recorded** | 28 local | **$1.06** ($0.038 mean / $0.026 median per episode) | — | ≈ 7 min at 10-wide (recorded) |
+| Powered experiment (seq 3, D11 sizes) | 168 local + 40 platform | local side ≈ **$7 at luna pilot rates** ($0.038/ep, n=28); platform re-prices at the first batch (conversation billing). The Sonnet-basis estimate ($132–165) is superseded | ~5–7 h | ≈ 2–4 h compute (luna episodes ~1.8× faster), ~2–3 days elapsed with review gates |
+| Full experiment (seq 4, deferred) | 282 local + 50 platform | local side ≈ $11 at luna rates — cost no longer separates the tiers; what still decides T=28 for seq 3 is the fresh-pool discipline (47+50 > 76) and wall-clock | ~9–12 h | ≈ 3–5 h compute, ~2–3 days elapsed |
 | Endpoint reliability addendum (conditional, D11) | 112 local (+2 trials × H0/H5 × 28) | ≈ $70 (scales with trial count) | ~5 h | ≈ 1–2 h |
 
 Basis (pre-run estimates replaced by seq-2 recorded actuals, 2026-08-14, per the
@@ -819,3 +826,9 @@ D-rows and cited analyses stay authoritative.
 - **Per-episode reward is a draw; pool across tasks.** Ten trials of one frozen
   configuration split 6/10 — repeated trials buy little for generation comparison, and
   D2's single-trial-pooled design held through both the run and the D11 re-examination.
+- **A model swap re-prices everything, and a $1 pilot re-measures it.** The tasks in
+  nobody's partition (stratification leftovers + prior-experiment burnt tasks) form a
+  firewall-clean calibration set; the luna pilot measured baseline 25% (no
+  saturation), 16× cheaper episodes, and verified the D11 sizing at the measured
+  baseline — all before the freeze, for $1.06
+  (`results/experiment_003_powered-bm25-luna56/CALIBRATION_PILOT.md`).
