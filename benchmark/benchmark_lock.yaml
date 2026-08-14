@@ -168,12 +168,17 @@ frozen:
   # nothing (contract/constraints.md records the correction).
   timeout_seconds: 600
 
-  # The run binds ONE run-scoped bridge; episodes rendezvous on per-episode URL channels
-  # within it (tool_bridge.py, Phase 3.5), so raising this value is a freeze decision, not
-  # a machinery change (SIA_EVALUATION_PLAN.md D7). The platform lane stays pinned at 1
-  # regardless — contract/constraints.md § Platform-lane concurrency. Locked runs always
-  # read this value; the runner's --max-concurrency override is diagnostic-mode-only.
-  max_concurrency: 1
+  # Episodes rendezvous on per-episode URL channels within one run-scoped bridge
+  # (tool_bridge.py, Phase 3.5); the platform lane runs one named `dev --as` attachment
+  # per worker, leased per episode (dev_lane.py, Phase 3.5b) — so BOTH lanes execute this
+  # value and raising it is a freeze decision, not a machinery change
+  # (contract/constraints.md § Platform-lane concurrency). Locked runs always read this
+  # value; the runner's --max-concurrency override is diagnostic-mode-only.
+  #
+  # TEMPORARY: 2 for the Phase 3.5b live platform proof (ad-hoc, --allow-dirty, rows
+  # non-citable); restored to 1 immediately after — the freeze value stays a Phase 4
+  # decision.
+  max_concurrency: 2
 
   # Whether tau ends an episode when an assistant message carries both text and tool calls.
   # On the frozen list because it decides whether a protocol violation is graded at all, so
