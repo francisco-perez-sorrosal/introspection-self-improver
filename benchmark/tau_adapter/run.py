@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import functools
 import json
 import os
 import shutil
@@ -56,10 +55,10 @@ from tau_adapter import manifest as manifestmod
 from tau_adapter import rounds as roundsmod
 from tau_adapter import split as splitmod
 from tau_adapter.dev_lane import (
-    AttachmentPool,
+    DevAttachment,
     assert_no_connected_binding,
+    attachment_name,
     resolve_runtime_id,
-    start_attachment_pool,
     warm_runtime,
 )
 from tau_adapter.experiment import (
@@ -304,33 +303,6 @@ def _build_env_for_pi() -> dict[str, str]:
     return env
 
 
-def _warm_pool(pool: AttachmentPool, *, runtime_id: str, environment: str) -> None:
-    """Warm every attachment before the first episode, never during one.
-
-    Each attachment has its own cold-start path, so each gets its own throwaway task —
-    concurrently, because warm-ups are independent and a pool of N would otherwise pay
-    N cold starts serially. Failure stays non-fatal per attachment (warm_runtime's own
-    contract): the worst case is the cold-start behaviour the warm-up exists to avoid.
-    """
-    threads = [
-        threading.Thread(
-            target=warm_runtime,
-            kwargs={
-                "runtime_id": runtime_id,
-                "environment": environment,
-                "repo_root": lockmod.REPO_ROOT,
-                "dev_target": slot.dev_target,
-            },
-            daemon=True,
-        )
-        for slot in pool.slots
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-
 class _EpisodeTransportLog:
     """Every transport constructed, one per episode *attempt*.
 
@@ -497,7 +469,6 @@ def main() -> int:
         max_concurrency = roundsmod.resolve_max_concurrency(
             args.max_concurrency, locked_mode=locked_mode, lock_value=lock.max_concurrency
         )
-        roundsmod.assert_transport_supports_concurrency(spec.transport, max_concurrency)
     except roundsmod.RoundError as exc:
         raise SystemExit(str(exc)) from exc
 
@@ -577,7 +548,7 @@ def main() -> int:
     bridge = ToolBridge(tau_tools=probe_env.get_tools(), port=args.bridge_port)
     bridge.start()
 
-    pool: AttachmentPool | None = None
+    dev: DevAttachment | None = None
     runtime_id: str | None = None
     if spec.transport == TRANSPORT_PLATFORM:
         if not locked_mode:
@@ -588,16 +559,25 @@ def main() -> int:
             )
         runtime_id = resolve_runtime_id(args.runtime, lockmod.REPO_ROOT)
         assert_no_connected_binding(runtime_id, args.environment, lockmod.REPO_ROOT)
-        # One named attachment per concurrent episode, each carrying its own pinned bridge
-        # slot's URL; episodes lease a slot for their lifetime. A pool of one is exactly
-        # the single-attachment behavior this lane always had.
-        pool = start_attachment_pool(
-            bridge=bridge,
-            size=max_concurrency,
+        # ONE attachment serves every concurrent episode: the platform accepts a single
+        # live dev attachment per Runtime (dev_slot_conflict, observed 2026-08-13), and one
+        # is all concurrency needs — the tunnel stamps each forwarded MCP request with its
+        # sandbox session, and channels route by it. The nonce'd name keeps a second run on
+        # this machine from claiming this run's dev target.
+        dev = DevAttachment(
+            mcp_url=bridge.url,
             repo_root=lockmod.REPO_ROOT,
             runtime_name=args.runtime,
+            as_name=attachment_name(),
         )
-        _warm_pool(pool, runtime_id=runtime_id, environment=args.environment)
+        dev.start()
+        # Before the first episode, never during one.
+        warm_runtime(
+            runtime_id=runtime_id,
+            environment=args.environment,
+            repo_root=lockmod.REPO_ROOT,
+            dev_target=dev.dev_target,
+        )
 
     # What a platform task row reads as while its episode is still running. A sweep cannot
     # name the specific τ task at creation time (the factory does not learn which simulation
@@ -632,10 +612,7 @@ def main() -> int:
             )
         transport: Any
         if spec.transport == TRANSPORT_PLATFORM:
-            assert runtime_id is not None and pool is not None
-            # Episode ↔ attachment binding: lease a slot for this episode's lifetime; the
-            # transport's close() returns it. τ's retries are just further factory calls.
-            slot = pool.lease()
+            assert runtime_id is not None and dev is not None
             transport = PlatformTransport(
                 runtime_id=runtime_id,
                 repo_root=lockmod.REPO_ROOT,
@@ -643,9 +620,8 @@ def main() -> int:
                 # Must exceed the gap while τ's user simulator thinks (2-12s healthy, up to its
                 # 60s per-attempt ceiling plus retries), or the sandbox is torn down mid-episode.
                 idle_timeout_seconds=int(lock.timeout_seconds),
-                dev_target=slot.dev_target,
+                dev_target=dev.dev_target,
                 episode_label=episode_label,
-                release=functools.partial(pool.release, slot),
             )
         else:
             transport = LocalPiTransport(
@@ -658,13 +634,9 @@ def main() -> int:
         return PiRecipeAgent(
             tools=tools,
             domain_policy=domain_policy,
-            # A platform episode rendezvouses at its leased slot's pinned URL — the one its
-            # attachment was handed for the whole run; local episodes each mint their own.
-            open_channel=(
-                functools.partial(bridge.open_pinned_channel, slot.channel_token)
-                if spec.transport == TRANSPORT_PLATFORM
-                else bridge.open_channel
-            ),
+            # Both lanes: a fresh channel per episode. The URL routes it locally; the
+            # platform transport binds it to its sandbox session for tunnel routing.
+            open_channel=bridge.open_channel,
             transport=transport,
             recipe_policy=recipe_policy,
             domain=domain,
@@ -728,8 +700,7 @@ def main() -> int:
     print(f"   transport     {spec.transport}")
     if spec.transport == TRANSPORT_PLATFORM:
         print(f"   runtime       {args.runtime} ({runtime_id}) in {args.environment}")
-        attachment_names = ", ".join(s.name for s in pool.slots) if pool else "(none)"
-        print(f"   attachments   {attachment_names}")
+        print(f"   attachment    {dev.dev_target if dev else '(none)'}")
     else:
         print(f"   launcher      {_launcher_description(args.launcher)}")
     print(f"   τ bridge      {bridge.url.rsplit('/', 1)[0]}/<token>")
@@ -782,8 +753,8 @@ def main() -> int:
             # Shutdown must not mask the real failure.
             with contextlib.suppress(Exception):
                 transport.close()
-        if pool is not None:
-            pool.stop()
+        if dev is not None:
+            dev.stop()
         bridge.stop()
     elapsed = time.monotonic() - started
     episode_transports = transports.snapshot()
@@ -900,14 +871,9 @@ def main() -> int:
                         "runtime": args.runtime,
                         "runtime_id": runtime_id,
                         "environment": args.environment,
-                        # One row per attachment: which named dev process served which
-                        # pinned slot — the evidence that lets a task row's routing be
-                        # audited after the fact.
-                        "attachments": (
-                            [{"name": s.name, "dev_target": s.dev_target} for s in pool.slots]
-                            if pool
-                            else []
-                        ),
+                        # The one named attachment every episode tunneled through; per-
+                        # episode routing keys on the sandbox session, not the attachment.
+                        "dev_target": dev.dev_target if dev else None,
                         # Task id doubles as the conversation id: the anchor that links a score
                         # back to the platform evidence that produced it.
                         "task_ids": referenced,

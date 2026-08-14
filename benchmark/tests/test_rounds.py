@@ -16,7 +16,6 @@ from tau_adapter.rounds import (
     TRANSPORT_LOCAL,
     TRANSPORT_PLATFORM,
     RoundError,
-    assert_transport_supports_concurrency,
     resolve_max_concurrency,
     resolve_round,
 )
@@ -183,13 +182,3 @@ def test_any_round_may_override_concurrency_in_either_direction():
 def test_a_nonpositive_concurrency_is_refused():
     with pytest.raises(RoundError, match="at least 1"):
         resolve_max_concurrency(0, locked_mode=False, lock_value=1)
-
-
-def test_the_platform_lane_refuses_more_than_one_episode_in_flight():
-    """The platform accepts one live dev attachment per Runtime — a second `dev --as`
-    attachment was refused server-side with dev_slot_conflict (observed live 2026-08-13).
-    The pool is ready if that changes; until then N>1 is refused before any spend."""
-    assert_transport_supports_concurrency(TRANSPORT_PLATFORM, 1)
-    assert_transport_supports_concurrency(TRANSPORT_LOCAL, 3)
-    with pytest.raises(RoundError, match="dev_slot_conflict"):
-        assert_transport_supports_concurrency(TRANSPORT_PLATFORM, 2)

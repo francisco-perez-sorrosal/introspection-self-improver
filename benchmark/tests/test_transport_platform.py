@@ -473,32 +473,55 @@ def test_original_title_is_recovered_from_under_harness_labels() -> None:
     assert original_title_of("") == ""
 
 
-def test_close_releases_the_attachment_slot_exactly_once(monkeypatch) -> None:
-    """The slot goes back to the pool on close and only once — a double release that
-    re-queued it would hand one attachment to two episodes at the same time."""
-    releases: list[int] = []
-    transport = PlatformTransport(
-        runtime_id="rt", repo_root=".", release=lambda: releases.append(1)
-    )
+class _StubChannel:
+    def __init__(self) -> None:
+        self.bound: list[str] = []
+
+    def bind(self, key: str) -> None:
+        self.bound.append(key)
+
+
+def test_the_adopted_channel_binds_from_the_create_response_when_present() -> None:
+    """tasks create may already carry metadata.agent_session_id; no poll is needed then."""
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    channel = _StubChannel()
+    transport.adopt_channel(channel)
     transport._task_id = "task-1"
-    monkeypatch.setattr(transport, "_cli", lambda args, timeout: {})
-    transport.close()
-    transport.close()
-    assert releases == [1]
-
-
-def test_close_releases_the_slot_even_when_the_platform_cli_fails(monkeypatch) -> None:
-    """Retitle/archive failures are logged and non-fatal; a leaked lease would starve the
-    pool, so the release must not depend on the CLI cooperating."""
-
-    def failing_cli(args, timeout):
-        raise RuntimeError("platform unreachable")
-
-    releases: list[int] = []
-    transport = PlatformTransport(
-        runtime_id="rt", repo_root=".", release=lambda: releases.append(1)
+    bound = transport._try_bind_session(
+        {"task": {"id": "task-1", "metadata": {"agent_session_id": "sess-123"}}}
     )
+    assert bound
+    assert channel.bound == ["sess-123"]
+
+
+def test_the_binding_poll_reads_the_task_object_shape() -> None:
+    """tasks get returns the task itself (not nested); the poll must bind from that shape."""
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    channel = _StubChannel()
+    transport.adopt_channel(channel)
     transport._task_id = "task-1"
-    monkeypatch.setattr(transport, "_cli", failing_cli)
-    transport.close()
-    assert releases == [1]
+    assert not transport._try_bind_session({"id": "task-1", "metadata": {}})
+    assert transport._try_bind_session(
+        {"id": "task-1", "metadata": {"agent_session_id": "sess-456"}}
+    )
+    assert channel.bound == ["sess-456"]
+
+
+def test_a_conflicting_bind_surfaces_as_a_transport_failure_not_a_crash() -> None:
+    """Session ids are unique per attempt; a double bind is a wiring bug the episode must
+    fail on visibly instead of the poll thread dying silently."""
+
+    class _ConflictChannel:
+        def bind(self, key: str) -> None:
+            raise RuntimeError(f"session {key!r} is already bound to a live channel")
+
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    transport.adopt_channel(_ConflictChannel())
+    transport._task_id = "task-1"
+    handled = transport._try_bind_session(
+        {"id": "task-1", "metadata": {"agent_session_id": "sess-dup"}}
+    )
+    assert handled
+    failure = transport._turns.get_nowait()
+    assert isinstance(failure, TransportFailure)
+    assert "already bound" in failure.reason

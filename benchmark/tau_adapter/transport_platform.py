@@ -36,7 +36,8 @@ import os
 import queue
 import subprocess
 import threading
-from collections.abc import Callable, Mapping
+import time
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +57,12 @@ CLI = "introspection"
 # the ceiling only matters once something has already gone wrong, and prompting early is the
 # very thing this gate exists to prevent.
 SETTLE_GRACE_SECONDS = 300.0
+
+# The session-binding poll: how often to ask `tasks get` for metadata.agent_session_id after
+# task creation, and for how long. The sandbox usually reports it within a few seconds of
+# provisioning — long before the agent's first tool call needs it.
+BIND_POLL_SECONDS = 2.0
+BIND_POLL_CEILING_SECONDS = 120.0
 
 
 class StreamAssembler:
@@ -226,7 +233,6 @@ class PlatformTransport:
         idle_timeout_seconds: int = 600,
         dev_target: str | None = None,
         episode_label: str | None = None,
-        release: Callable[[], None] | None = None,
     ) -> None:
         self._runtime_id = runtime_id
         self._repo_root = Path(repo_root)
@@ -234,10 +240,11 @@ class PlatformTransport:
         self._environment = environment
         self._idle_timeout = idle_timeout_seconds
         self._dev_target = dev_target
-        # Returns this episode's attachment slot to the pool. Invoked exactly once, from
-        # close(): the _closed guard is what makes a double close a single release, and a
-        # re-queued slot would hand one attachment to two episodes at once.
-        self._release = release
+        # This episode's bridge channel, adopted from the agent before start. Once the
+        # task's sandbox session id is known (metadata.agent_session_id), the channel is
+        # bound to it so the tunnel's session header routes this episode's tool calls —
+        # which is what lets N concurrent tasks share the one dev attachment.
+        self._channel: Any | None = None
         # Becomes the task's title at episode end. The dashboard's conversation list shows the
         # task's title as the conversation's summary line, so this is what a row reads as.
         self._episode_label = episode_label
@@ -307,54 +314,38 @@ class PlatformTransport:
         if self._closed:
             return
         self._closed = True
+        self._stop_stream()
+        if self._task_id is None:
+            return
+        # The platform auto-titles the conversation from its content ("Wanted to change
+        # the email address…"), and that summary is worth keeping: read it before the
+        # retitle below destroys it, keep it for the runner's post-run label pass, and
+        # carry it in the interim title so even an interrupted run's row stays readable.
         try:
-            self._stop_stream()
-            if self._task_id is None:
-                return
-            # The platform auto-titles the conversation from its content ("Wanted to change
-            # the email address…"), and that summary is worth keeping: read it before the
-            # retitle below destroys it, keep it for the runner's post-run label pass, and
-            # carry it in the interim title so even an interrupted run's row stays readable.
+            task = self._cli(["tasks", "get", self._task_id], timeout=60)
+            self.original_title = original_title_of(str((task or {}).get("title") or ""))
+        except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+            logger.debug(f"could not read title of task {self._task_id}: {exc}")
+        if self._episode_label:
+            title = self._episode_label + (
+                f" - {self.original_title}" if self.original_title else ""
+            )
             try:
-                task = self._cli(["tasks", "get", self._task_id], timeout=60)
-                self.original_title = original_title_of(str((task or {}).get("title") or ""))
-            except (
-                RuntimeError,
-                OSError,
-                subprocess.SubprocessError,
-                json.JSONDecodeError,
-            ) as exc:
-                logger.debug(f"could not read title of task {self._task_id}: {exc}")
-            if self._episode_label:
-                title = self._episode_label + (
-                    f" - {self.original_title}" if self.original_title else ""
+                self._cli(
+                    ["tasks", "update", self._task_id, "--title", title],
+                    timeout=60,
                 )
-                try:
-                    self._cli(
-                        ["tasks", "update", self._task_id, "--title", title],
-                        timeout=60,
-                    )
-                except (
-                    RuntimeError,
-                    OSError,
-                    subprocess.SubprocessError,
-                    json.JSONDecodeError,
-                ) as exc:
-                    logger.debug(f"could not retitle task {self._task_id}: {exc}")
-            try:
-                self._cli(["tasks", "archive", self._task_id, "-y"], timeout=120)
             except (
                 RuntimeError,
                 OSError,
                 subprocess.SubprocessError,
                 json.JSONDecodeError,
             ) as exc:
-                logger.debug(f"could not archive task {self._task_id}: {exc}")
-        finally:
-            # The slot goes back even when retitle/archive failed: a leaked lease starves
-            # the pool, and the failures above are already logged, non-fatal, and counted.
-            if self._release is not None:
-                self._release()
+                logger.debug(f"could not retitle task {self._task_id}: {exc}")
+        try:
+            self._cli(["tasks", "archive", self._task_id, "-y"], timeout=120)
+        except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+            logger.debug(f"could not archive task {self._task_id}: {exc}")
 
     @property
     def session_ref(self) -> str | None:
@@ -405,6 +396,10 @@ class PlatformTransport:
                 f"platform task {self._task_id} on runtime {self._runtime_id} "
                 f"(conversation id is the same value)"
             )
+            # Bind the episode's channel to the sandbox session: opportunistically from the
+            # create response, else by polling `tasks get` beside the stream.
+            if self._channel is not None and not self._try_bind_session(created):
+                threading.Thread(target=self._poll_session_binding, daemon=True).start()
             self._spawn_stream(
                 run_ref=self._run_id or "current", drop_run_id=None, reattaches_left=1
             )
@@ -443,6 +438,56 @@ class PlatformTransport:
 
     def request_session_ref(self) -> None:
         """No-op: the task id is known at creation, unlike Pi's session id."""
+
+    def adopt_channel(self, channel: Any) -> None:
+        """Take this episode's bridge channel, to bind once the sandbox session is known."""
+        self._channel = channel
+
+    def _try_bind_session(self, payload: Any) -> bool:
+        """Bind the adopted channel to `metadata.agent_session_id` if the payload has it.
+
+        `tasks get` returns the task object itself; `tasks create` nests it under "task".
+        """
+        if self._channel is None or not isinstance(payload, dict):
+            return False
+        task = payload.get("task") if isinstance(payload.get("task"), dict) else payload
+        session_id = ((task or {}).get("metadata") or {}).get("agent_session_id")
+        if not session_id:
+            return False
+        try:
+            self._channel.bind(str(session_id))
+        except RuntimeError as exc:
+            # A session bound to two channels is a wiring bug; surface it as this
+            # episode's failure rather than crashing the poll thread.
+            self._turns.put(TransportFailure(reason=str(exc)))
+            return True
+        logger.info(f"task {self._task_id} bound to sandbox session {session_id}")
+        return True
+
+    def _poll_session_binding(self) -> None:
+        """Learn this task's sandbox session and bind the channel; runs beside the stream.
+
+        The sandbox's first tool call cannot arrive before the sandbox boots and the agent
+        processes its first turn, so this poll wins the race by seconds in practice; the
+        bridge's UNBOUND_SESSION_GRACE covers the pathological tail. A binding that never
+        materialises leaves the episode's calls refused after the grace — visible as tool
+        errors and stream evidence, never as silent crossing.
+        """
+        deadline = time.monotonic() + BIND_POLL_CEILING_SECONDS
+        while not self._closed and time.monotonic() < deadline:
+            try:
+                payload = self._cli(["tasks", "get", str(self._task_id)], timeout=60)
+            except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError):
+                payload = None
+            if payload is not None and self._try_bind_session(payload):
+                return
+            time.sleep(BIND_POLL_SECONDS)
+        if not self._closed:
+            logger.warning(
+                f"task {self._task_id}: agent_session_id never appeared within "
+                f"{BIND_POLL_CEILING_SECONDS:.0f}s; tunneled calls will be refused after "
+                "the bridge's grace"
+            )
 
     def _count_prompt_failure(self, exc: Exception) -> None:
         """Classify a failed create/prompt. A 409 is the turn-gate regression this lane once

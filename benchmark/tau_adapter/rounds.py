@@ -66,26 +66,6 @@ def resolve_max_concurrency(flag: int | None, *, locked_mode: bool, lock_value: 
     return flag
 
 
-def assert_transport_supports_concurrency(transport: str, max_concurrency: int) -> None:
-    """The platform accepts one live `dev` attachment per Runtime; refuse N>1 pre-spend.
-
-    Not a hypothesis: the Phase 3.5b live proof started a second named attachment
-    (`dev --as`) against the same Runtime and the platform refused it server-side with
-    `dev_slot_conflict` ("this Runtime is already connected by …"), retrying for ~70s
-    before timing out. The attachment pool machinery is built and tested; the cap is
-    upstream. Refusing here beats paying the pool-startup timeout to rediscover it.
-    See `contract/constraints.md` § Platform-lane concurrency.
-    """
-    if transport == TRANSPORT_PLATFORM and max_concurrency > 1:
-        raise RoundError(
-            f"the platform accepts one live dev attachment per Runtime, so platform rounds "
-            f"run one episode at a time, not {max_concurrency}: a second `dev --as` "
-            "attachment is refused with dev_slot_conflict (observed live 2026-08-13). "
-            "The attachment pool is ready if that upstream constraint changes — "
-            "contract/constraints.md § Platform-lane concurrency."
-        )
-
-
 def resolve_round(
     *,
     batch: int | None,

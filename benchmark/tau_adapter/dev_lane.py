@@ -26,16 +26,9 @@ import secrets
 import signal
 import subprocess
 import threading
-import time
-from collections import deque
-from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from loguru import logger
-
-if TYPE_CHECKING:
-    from tau_adapter.tool_bridge import ToolBridge
 
 CLI = "introspection"
 READY_MARKER = "Development ready"
@@ -316,133 +309,10 @@ class DevAttachment:
         return parsed
 
 
-@dataclass
-class AttachmentSlot:
-    """One `dev` attachment plus the pinned bridge token whose URL it carries."""
+def attachment_name() -> str:
+    """A nonce'd dev-target name for this run's attachment.
 
-    name: str
-    channel_token: str
-    attachment: DevAttachment
-    dev_target: str | None = None
-    #: Guarded by the pool's lock. True while exactly one episode owns this slot.
-    leased: bool = False
-
-
-class AttachmentPool:
-    """N named `dev` attachments, leased to episodes one at a time.
-
-    τ's worker pool never tells the agent factory which worker it is, so the episode ↔
-    attachment binding happens here: an episode leases a slot for its lifetime and its
-    transport releases it at close. A slot queued twice would mean two episodes sharing one
-    attachment — and therefore one rendezvous channel, the exact crossing the channels
-    forbid — so release is state-guarded and can never re-queue a slot that is not leased.
-    A slot whose attachment died is refused loudly at lease and retired rather than
-    recycled: τ books the episode as an infrastructure error and the incident stays
-    visible, instead of every later episode on that slot hanging quietly.
+    Two concurrent runs on one machine must not claim each other's dev target — the
+    platform's default (username, then machine id) would collide; a per-run nonce cannot.
     """
-
-    def __init__(self, slots: list[AttachmentSlot]) -> None:
-        if not slots:
-            raise ValueError("an attachment pool needs at least one slot")
-        self._slots = list(slots)
-        self._lock = threading.Lock()
-        self._available = threading.Condition(self._lock)
-        self._free: deque[AttachmentSlot] = deque(self._slots)
-
-    @property
-    def slots(self) -> list[AttachmentSlot]:
-        return list(self._slots)
-
-    def lease(self, timeout: float = 60.0) -> AttachmentSlot:
-        deadline = time.monotonic() + timeout
-        with self._available:
-            while not self._free:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0 or not self._available.wait(timeout=remaining):
-                    states = ", ".join(
-                        f"{s.name}={'leased' if s.leased else 'retired'}" for s in self._slots
-                    )
-                    raise DevLaneError(
-                        f"no attachment slot became free within {timeout:.0f}s ({states}). "
-                        "Either every worker is mid-episode far longer than expected, or "
-                        "slots were retired after their attachments died."
-                    )
-            slot = self._free.popleft()
-            slot.leased = True
-        if not slot.attachment.alive:
-            # Retired: `leased` stays True so the slot can never re-enter the free queue.
-            raise DevLaneError(
-                f"attachment {slot.name} has exited; refusing to serve an episode on a dead "
-                "attachment. τ will book this episode as an infrastructure error."
-            )
-        return slot
-
-    def release(self, slot: AttachmentSlot) -> None:
-        with self._available:
-            if not slot.leased:
-                return  # double release must never re-queue a slot
-            slot.leased = False
-            self._free.append(slot)
-            self._available.notify()
-
-    def stop(self) -> None:
-        for slot in self._slots:
-            slot.attachment.stop()
-
-
-def start_attachment_pool(
-    *,
-    bridge: ToolBridge,
-    size: int,
-    repo_root: Path,
-    runtime_name: str | None = None,
-) -> AttachmentPool:
-    """Start `size` named attachments concurrently, one pinned bridge slot each.
-
-    Slot 0 rides the bridge's own run token, so a pool of one serves episodes at exactly
-    the URL a single attachment always got. Names carry a per-run nonce so two concurrent
-    runs on one machine cannot claim each other's dev target. Any startup failure stops
-    every attachment that did start — a partial pool would serve some episodes and strand
-    others, which is worse than failing the run before money is spent.
-    """
-    nonce = secrets.token_hex(2)
-    slots: list[AttachmentSlot] = []
-    for index in range(size):
-        token = bridge.token if index == 0 else bridge.mint_pinned_token()
-        name = f"tau-w{index:02d}-{nonce}"
-        slots.append(
-            AttachmentSlot(
-                name=name,
-                channel_token=token,
-                attachment=DevAttachment(
-                    mcp_url=bridge.url_for(token),
-                    repo_root=repo_root,
-                    runtime_name=runtime_name,
-                    as_name=name,
-                ),
-            )
-        )
-
-    failures: list[str] = []
-
-    def _start(slot: AttachmentSlot) -> None:
-        try:
-            slot.attachment.start()
-            slot.dev_target = slot.attachment.dev_target
-        except Exception as exc:  # noqa: BLE001 - collected and re-raised jointly below
-            failures.append(f"{slot.name}: {exc}")
-
-    threads = [threading.Thread(target=_start, args=(slot,), daemon=True) for slot in slots]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-    if failures:
-        for slot in slots:
-            with contextlib.suppress(Exception):
-                slot.attachment.stop()
-        raise DevLaneError(
-            "attachment pool startup failed; every attachment was stopped:\n  "
-            + "\n  ".join(failures)
-        )
-    return AttachmentPool(slots)
+    return f"tau-{secrets.token_hex(2)}"

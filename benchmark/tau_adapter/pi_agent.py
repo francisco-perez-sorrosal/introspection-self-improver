@@ -29,10 +29,9 @@ from tau_adapter.tool_bridge import EpisodeChannel
 from tau_adapter.transport import AgentTransport, AssistantTurn, TransportFailure
 
 #: Opens this episode's rendezvous channel; the keyword argument is the stall sink.
-#: The runner chooses which opener an agent gets: `ToolBridge.open_channel` on the local
-#: lane (fresh URL per episode) or a partial of `ToolBridge.open_pinned_channel` bound to
-#: the leased attachment slot's token on the development lane (the pinned URL that slot's
-#: `dev` attachment was handed; the pool leases a slot to one episode at a time).
+#: Both lanes open a fresh channel per episode (`ToolBridge.open_channel`); they differ
+#: only in how requests find it — the channel's URL locally, the sandbox-session binding
+#: (adopted and bound by the platform transport) through the development tunnel.
 ChannelOpener = Callable[..., EpisodeChannel]
 
 # A turn covers one model call plus Pi's own overhead. Generous on purpose: this is plumbing,
@@ -99,6 +98,12 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
             self._channel = self._open_channel(
                 on_stall=sink.count_stall if sink is not None else None
             )
+            # A transport that routes through the development tunnel binds the channel to
+            # its sandbox session once known; the local transport has no such hook — its
+            # episode is routed by the channel URL in its environment.
+            adopt = getattr(self._transport, "adopt_channel", None)
+            if callable(adopt):
+                adopt(self._channel)
             env = dict(self._base_env)
             env.update(self._channel.env())
             self._transport.start(env)

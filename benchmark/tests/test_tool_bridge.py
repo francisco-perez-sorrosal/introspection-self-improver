@@ -1,10 +1,11 @@
 """Episode channels: the rendezvous, and the episode identity results must not cross.
 
-The bridge serves every episode from one server, so episode identity lives in the URL:
-each channel is its own `/mcp/<token>` path with its own mailbox. These tests pin the
-property the whole experiment rests on — a result posted for one episode can never
-answer another episode's call, even when both call the same tool with identical
-arguments — plus the lifecycle rules that keep that true across τ's retries.
+One bridge serves every episode; each episode's channel is its own mailbox, found by the
+channel's `/mcp/<token>` URL locally and by the sandbox-session binding through the
+development tunnel. These tests pin the property the whole experiment rests on — a result
+posted for one episode can never answer another episode's call, even when both call the
+same tool with identical arguments — plus the lifecycle rules that keep that true across
+τ's retries and concurrent workers.
 """
 
 from __future__ import annotations
@@ -35,13 +36,14 @@ class _FakeTauTool:
 class _StubRequest:
     """What the handler reads off the transport-attached HTTP request."""
 
-    def __init__(self, token: str) -> None:
+    def __init__(self, token: str, session: str | None = None) -> None:
         self.path_params = {"token": token}
+        self.headers = {"x-introspection-session-id": session} if session else {}
 
 
 class _StubCtx:
-    def __init__(self, token: str) -> None:
-        self.request = _StubRequest(token)
+    def __init__(self, token: str, session: str | None = None) -> None:
+        self.request = _StubRequest(token, session)
 
 
 def _call_params(query: str = "gold card") -> mcp_types.CallToolRequestParams:
@@ -133,63 +135,85 @@ def test_a_posted_result_pairs_with_the_matching_wait() -> None:
     )
 
 
-def test_results_do_not_cross_between_pinned_slots_with_identical_calls() -> None:
-    """Two platform workers' episodes, same tool, same arguments — no crossing.
+def test_calls_route_by_session_binding_before_path_token() -> None:
+    """A tunneled request names its sandbox session; that identity outranks the path.
 
-    Each `dev` attachment carries one slot's URL, so with N workers in flight the
-    bridge holds N pinned channels at once. The failure this test forbids is the
-    attachment-pool version of the original crossing bug: worker 1's τ result
-    answering worker 2's parked call.
+    Every development-lane request arrives at the one URL `dev` was handed, so the path
+    token alone cannot separate N concurrent platform episodes — the
+    `x-introspection-session-id` header is what does, once the transport binds its
+    episode's channel to the session `tasks get` reports as `metadata.agent_session_id`.
     """
     bridge = ToolBridge(tau_tools=[])
-    slot_one = bridge.open_pinned_channel(bridge.mint_pinned_token())
-    slot_two = bridge.open_pinned_channel(bridge.mint_pinned_token())
+    channel_a = bridge.open_channel()
+    channel_b = bridge.open_channel()
+    channel_a.bind("sess-A")
+    channel_b.bind("sess-B")
 
-    slot_two.post_result("KB_search", {"query": "gold card"}, "answer-for-2", is_error=False)
+    assert bridge.channel_for_request("sess-A", bridge.token, grace=0.0) is channel_a
+    assert bridge.channel_for_request("sess-B", bridge.token, grace=0.0) is channel_b
+    # A local-lane request has no session header and routes by its own path token.
+    assert bridge.channel_for_request(None, channel_a.token, grace=0.0) is channel_a
+
+
+def test_results_do_not_cross_between_session_bound_channels_with_identical_calls() -> None:
+    """Two concurrent platform episodes, same tool, same arguments — no crossing."""
+    bridge = ToolBridge(tau_tools=[])
+    channel_a = bridge.open_channel()
+    channel_b = bridge.open_channel()
+    channel_a.bind("sess-A")
+    channel_b.bind("sess-B")
+
+    channel_b.post_result("KB_search", {"query": "gold card"}, "answer-for-B", is_error=False)
     with pytest.raises(ToolResultTimeout):
-        slot_one.wait("KB_search", {"query": "gold card"}, timeout=0.05)
-
-    slot_one.post_result("KB_search", {"query": "gold card"}, "answer-for-1", is_error=False)
-    assert slot_one.wait("KB_search", {"query": "gold card"}, timeout=1.0) == (
-        "answer-for-1",
+        channel_a.wait("KB_search", {"query": "gold card"}, timeout=0.05)
+    channel_a.post_result("KB_search", {"query": "gold card"}, "answer-for-A", is_error=False)
+    assert channel_a.wait("KB_search", {"query": "gold card"}, timeout=1.0) == (
+        "answer-for-A",
         False,
     )
-    assert slot_two.wait("KB_search", {"query": "gold card"}, timeout=1.0) == (
-        "answer-for-2",
+    assert channel_b.wait("KB_search", {"query": "gold card"}, timeout=1.0) == (
+        "answer-for-B",
         False,
     )
 
 
-def test_a_replaced_slot_channel_discards_results_posted_for_abandoned_calls() -> None:
-    """A stale result must not answer the next episode's identical call on that slot.
-
-    Every attachment serves its episodes from one pinned URL, and τ retries an
-    episode of the same task with the same tool name and arguments after an
-    infrastructure error. Without the replacement, a result posted after its handler
-    gave up would satisfy the retry's first call instantly and shift every later
-    pairing by one — silent cross-episode contamination. Checked on the run token
-    (slot 0) and on a minted slot: same rule per slot.
-    """
+def test_an_unbound_session_waits_for_its_binding_then_routes() -> None:
+    """The sandbox's first tool call may race the transport's `tasks get` binding poll;
+    the handler waits out the race instead of failing the call."""
     bridge = ToolBridge(tau_tools=[])
-    first = bridge.open_pinned_channel(bridge.token)
-    first.post_result("KB_search", {"query": "gold card"}, "stale", is_error=False)
-    second = bridge.open_pinned_channel(bridge.token)
-    with pytest.raises(ToolResultTimeout):
-        second.wait("KB_search", {"query": "gold card"}, timeout=0.05)
-
-    slot = bridge.mint_pinned_token()
-    first = bridge.open_pinned_channel(slot)
-    first.post_result("KB_search", {"query": "gold card"}, "stale", is_error=False)
-    second = bridge.open_pinned_channel(slot)
-    with pytest.raises(ToolResultTimeout):
-        second.wait("KB_search", {"query": "gold card"}, timeout=0.05)
+    channel = bridge.open_channel()
+    threading.Timer(0.2, lambda: channel.bind("sess-late")).start()
+    resolved = bridge.channel_for_request("sess-late", bridge.token, grace=2.0)
+    assert resolved is channel
 
 
-def test_an_unregistered_pinned_token_is_refused() -> None:
-    """A typo'd slot token must not silently create a rogue pinned path."""
+def test_a_session_that_never_binds_is_refused_after_the_grace() -> None:
     bridge = ToolBridge(tau_tools=[])
-    with pytest.raises(ValueError, match="not a registered pinned token"):
-        bridge.open_pinned_channel("never-minted")
+    assert bridge.channel_for_request("sess-ghost", "no-such-token", grace=0.05) is None
+
+
+def test_a_closed_channel_releases_its_session_binding_and_token() -> None:
+    bridge = ToolBridge(tau_tools=[])
+    channel = bridge.open_channel()
+    channel.bind("sess-A")
+    channel.close()
+    assert bridge.channel_for_request("sess-A", channel.token, grace=0.0) is None
+
+
+def test_a_session_key_cannot_be_bound_to_two_live_channels() -> None:
+    """Session ids are unique per task attempt; a double bind is a wiring bug and must
+    fail loudly rather than silently hand one episode's calls to another."""
+    bridge = ToolBridge(tau_tools=[])
+    first = bridge.open_channel()
+    second = bridge.open_channel()
+    first.bind("sess-A")
+    with pytest.raises(RuntimeError, match="already bound"):
+        second.bind("sess-A")
+    # After the first episode closes, the key is free again (a fresh attempt could
+    # legitimately reuse it only if the platform ever reissued it).
+    first.close()
+    second.bind("sess-A")
+    assert bridge.channel_for_request("sess-A", bridge.token, grace=0.0) is second
 
 
 def test_a_closed_channels_stale_result_cannot_answer_a_new_episode() -> None:
@@ -201,14 +225,6 @@ def test_a_closed_channels_stale_result_cannot_answer_a_new_episode() -> None:
     second = bridge.open_channel()
     with pytest.raises(ToolResultTimeout):
         second.wait("KB_search", {"query": "gold card"}, timeout=0.05)
-
-
-def test_a_pinned_slot_keeps_its_url_across_episodes() -> None:
-    """A `dev` attachment is handed one URL for the whole run; episodes must not move it."""
-    bridge = ToolBridge(tau_tools=[])
-    first = bridge.open_pinned_channel(bridge.token)
-    second = bridge.open_pinned_channel(bridge.token)
-    assert first.token == second.token == bridge.token
 
 
 def test_fresh_channels_get_distinct_tokens_and_urls() -> None:
@@ -280,13 +296,21 @@ def test_channels_stay_isolated_under_a_worker_pool_of_episodes() -> None:
     assert not errors, errors
 
 
-def test_a_late_close_of_a_replaced_slot_channel_does_not_evict_its_successor() -> None:
-    """τ's teardown of a failed attempt may close its channel after the retry opened one."""
+def test_a_late_close_of_a_previous_attempts_channel_does_not_evict_the_retry() -> None:
+    """τ's teardown of a failed attempt may close its channel after the retry opened one.
+
+    Sessions make this structural — each attempt binds its own session id — but the
+    routing must still hold when a stale close arrives after the retry is live.
+    """
     bridge = ToolBridge(tau_tools=[_FakeTauTool()])
-    first = bridge.open_pinned_channel(bridge.token)
-    second = bridge.open_pinned_channel(bridge.token)
+    first = bridge.open_channel()
+    first.bind("sess-attempt-1")
+    second = bridge.open_channel()
+    second.bind("sess-attempt-2")
     first.close()
     second.post_result("KB_search", {"query": "gold card"}, "for the retry", is_error=False)
-    answered = asyncio.run(bridge._on_call_tool(_StubCtx(bridge.token), _call_params()))
+    answered = asyncio.run(
+        bridge._on_call_tool(_StubCtx("ignored-path", session="sess-attempt-2"), _call_params())
+    )
     assert not answered.is_error
     assert answered.content[0].text == "for the retry"
