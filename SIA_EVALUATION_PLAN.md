@@ -569,8 +569,10 @@ Same isolation rules as the full experiment (protocol §29.17). Runs on the Phas
       `_stop_stream`/`close()` spawns nothing instead of leaking a subprocess no
       teardown would reap. Suite 250 → 254; ruff + format clean; **A.0a PASS**
       re-proven on the changed seam (254-test suite + graded mock smoke,
-      `generation_000/gates/a0a.json`; smoke artifacts left untracked for the freeze
-      pre-flight clear, per the Phase 3.5 precedent) (2026-08-13).
+      `generation_000/gates/a0a.json`; the untracked gate/smoke artifacts were cleared
+      from `results/` the same day, user-directed, so the debug experiment starts into
+      an empty tree — this entry is the durable record of the PASS, per the Phase 3.5
+      precedent) (2026-08-13).
 - [ ] Freeze: `experiment.seq: 1` (numbering reset) with D10 `protocol:` values (G=3, B=4, T=8) and
       the re-proposed partition already in place; flip PROVISIONAL → FROZEN;
       `reset_h0`; commit; **A.0a gate PASS** recorded.
