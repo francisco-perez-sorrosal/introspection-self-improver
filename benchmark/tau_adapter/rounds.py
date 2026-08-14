@@ -49,7 +49,7 @@ class RoundSpec:
     label_token: str
 
 
-def resolve_max_concurrency(flag: int | None, *, locked_mode: bool, lock_value: int) -> int:
+def resolve_max_concurrency(flag: int | None, *, lock_value: int) -> int:
     """The run's episode concurrency: the lock's recorded default, or the operator's flag.
 
     Re-decided 2026-08-13 (user): concurrency is an operational knob, not a frozen
@@ -58,7 +58,6 @@ def resolve_max_concurrency(flag: int | None, *, locked_mode: bool, lock_value: 
     how an operator asks for serial execution). The effective value is recorded in
     run_metadata.json, so every record still names its configuration.
     """
-    del locked_mode  # every round type takes the override; kept for call-site clarity
     if flag is None:
         return int(lock_value)
     if flag < 1:

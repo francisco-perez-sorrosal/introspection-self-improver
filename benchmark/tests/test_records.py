@@ -96,6 +96,17 @@ def test_non_accepted_outcomes_pin_the_generation(outcome):
     assert _problems(record, filename="gen_000_to_001.yaml") == ""
 
 
+def test_scaffold_todo_placeholders_are_refused():
+    assert "TODO placeholder" in _problems(_record(hypothesis="TODO"))
+
+
+def test_placeholder_conversation_ids_are_refused():
+    record = _record(
+        evidence={"conversation_ids": ["TODO: conv_..."], "summary": "read the tool calls"}
+    )
+    assert "TODO placeholder" in _problems(record)
+
+
 def test_every_record_cites_at_least_one_conversation():
     record = _record(evidence={"conversation_ids": [], "summary": "s"})
     assert "cites the executions" in _problems(record)

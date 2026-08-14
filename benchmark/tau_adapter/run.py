@@ -50,6 +50,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from tau_adapter import generations as gensmod
 from tau_adapter import lock as lockmod
 from tau_adapter import manifest as manifestmod
 from tau_adapter import rounds as roundsmod
@@ -63,6 +64,8 @@ from tau_adapter.dev_lane import (
 )
 from tau_adapter.experiment import (
     enforce_snapshot,
+    enforce_snapshot_for_experiment,
+    freeze_fingerprint,
     generation_of,
     prepare_round_dir,
     pushed_main_sha,
@@ -431,9 +434,9 @@ def main() -> int:
         type=int,
         default=None,
         help=(
-            "episodes in flight at once, each on its own bridge channel. Diagnostic mode "
-            "only: max_concurrency is a frozen execution budget, so locked-domain runs "
-            "always read the lock and refuse this flag."
+            "episodes in flight at once, each on its own bridge channel. Overrides the "
+            "lock's operational default on any round type (1 = serial); the effective "
+            "value is recorded in run_metadata.json."
         ),
     )
     args = parser.parse_args()
@@ -467,7 +470,7 @@ def main() -> int:
 
     try:
         max_concurrency = roundsmod.resolve_max_concurrency(
-            args.max_concurrency, locked_mode=locked_mode, lock_value=lock.max_concurrency
+            args.max_concurrency, lock_value=lock.max_concurrency
         )
     except roundsmod.RoundError as exc:
         raise SystemExit(str(exc)) from exc
@@ -500,6 +503,15 @@ def main() -> int:
     # the base commit, so a dirty served surface makes every arm claim soft: the platform
     # lane refuses it outright unless --allow-dirty records it prominently.
     arm_sha, dirty_paths = repo_arm_state() if locked_mode else (None, [])
+    if muted and dirty_paths:
+        # No --allow-dirty escape here: a held-out round measures exactly one generation,
+        # and dirt on the served recipe surface makes the measurement unattributable.
+        # Debugging belongs in ad-hoc rounds, never in the measurement.
+        raise SystemExit(
+            "the recipe surface has uncommitted changes, so this held-out round would not "
+            "measure the generation it claims to (guardrail 12). Commit or revert:\n  "
+            + "\n  ".join(dirty_paths)
+        )
     if spec.transport == TRANSPORT_PLATFORM and dirty_paths and not args.allow_dirty:
         raise SystemExit(
             "the served recipe surface has uncommitted changes, so lineage would name a "
@@ -529,10 +541,37 @@ def main() -> int:
             "scripts/run_heldout.py owns the vault layout and the console redirect — prefer "
             "`make heldout`."
         )
+    if spec.kind == roundsmod.KIND_BATCH:
+        # batch_NN is consumed by the H_(NN-1) → H_NN transition, so it is *run by*
+        # H_(NN-1) and its evidence lives under that generation's directory. Enforced so
+        # one experiment's tree cannot mix two batch↔generation conventions.
+        expected_generation = f"generation_{args.batch - 1:03d}"
+        if generation_of(out_dir) != expected_generation:
+            raise SystemExit(
+                f"batch_{args.batch:02d} is run by H{args.batch - 1} (it feeds the "
+                f"H{args.batch - 1}→H{args.batch} transition), so its round directory "
+                f"lives under {expected_generation}/ — --out names "
+                f"{generation_of(out_dir) or 'no generation directory'}. "
+                f"Use GEN={expected_generation}."
+            )
+    if muted:
+        # A held-out measurement must be attributable to exactly one generation: the recipe
+        # surface is verified byte-identical to that generation's tag before any spend.
+        try:
+            gensmod.assert_heldout_measures_a_generation(
+                lock.experiment_seq, generation_of(out_dir) or ""
+            )
+        except (gensmod.GenerationError, ValueError) as exc:
+            raise SystemExit(str(exc)) from exc
     # Before --overwrite can delete anything: a run aimed at the wrong experiment directory
     # must refuse here rather than clear another freeze's record first. Also verifies — or,
-    # for a non-PROVISIONAL lock, creates — the experiment's freeze snapshot.
-    experiment_status = enforce_snapshot(lock, out_dir)
+    # for a non-PROVISIONAL lock, creates — the experiment's freeze snapshot. Held-out
+    # rounds write outside results/ by design, so they anchor to the in-tree snapshot by
+    # experiment id instead of by path — the freeze is enforced on the measurement that
+    # matters most, not just on the observable rounds.
+    experiment_status = (
+        enforce_snapshot_for_experiment(lock) if muted else enforce_snapshot(lock, out_dir)
+    )
     round_status = prepare_round_dir(out_dir, args.overwrite)
     generation = generation_of(out_dir)
     results_path = out_dir / "results.json"
@@ -541,8 +580,8 @@ def main() -> int:
 
     # Run-scoped: the development lane hands one URL to `introspection dev` before the first
     # episode and holds it for the whole run, so the bridge has to outlive an episode.
-    # Episodes rendezvous on per-episode channels within it — each agent opens its own at
-    # episode start (fresh URL locally; the pinned run URL, sequentially, on the platform).
+    # Episodes rendezvous on per-episode channels within it — both lanes open a fresh channel
+    # per episode (the local lane by URL, the platform by sandbox-session routing).
     # Built from the probe environment's tools because the schemas are what it advertises,
     # and the tool surface is asserted identical to the lock.
     bridge = ToolBridge(tau_tools=probe_env.get_tools(), port=args.bridge_port)
@@ -559,11 +598,12 @@ def main() -> int:
             )
         runtime_id = resolve_runtime_id(args.runtime, lockmod.REPO_ROOT)
         assert_no_connected_binding(runtime_id, args.environment, lockmod.REPO_ROOT)
-        # ONE attachment serves every concurrent episode: the platform accepts a single
-        # live dev attachment per Runtime (dev_slot_conflict, observed 2026-08-13), and one
-        # is all concurrency needs — the tunnel stamps each forwarded MCP request with its
-        # sandbox session, and channels route by it. The nonce'd name keeps a second run on
-        # this machine from claiming this run's dev target.
+        # ONE attachment serves every concurrent episode: the tunnel stamps each forwarded
+        # MCP request with its sandbox session and channels route by it, so attachment
+        # multiplicity is unnecessary — and the platform accepts only a single live dev
+        # attachment per Runtime anyway (dev_slot_conflict, observed 2026-08-13). The
+        # nonce'd name keeps a second run on this machine from claiming this run's dev
+        # target.
         dev = DevAttachment(
             mcp_url=bridge.url,
             repo_root=lockmod.REPO_ROOT,
@@ -725,15 +765,12 @@ def main() -> int:
         selection = f"whole split ({len(tasks)} tasks)"
     print(f"   tasks         {selection} in {num_trials} trial(s)")
     if max_concurrency != 1:
-        print(
-            f"   concurrency   {max_concurrency} episode(s) in flight, one bridge channel "
-            "each (diagnostic override)"
-        )
+        print(f"   concurrency   {max_concurrency} episode(s) in flight, one bridge channel each")
     if lock.provisional:
         print("   lock status   PROVISIONAL — not an experiment freeze")
     if len(tasks) * num_trials > 20:
         # A sweep is the expensive path. Say what it costs before spending it rather than
-        # after; at max_concurrency 1 (the frozen value) that means running serially.
+        # after, naming the effective concurrency it will run at.
         episodes = len(tasks) * num_trials
         print(
             f"\n   sweep: {episodes} episode(s) at max_concurrency="
@@ -847,6 +884,9 @@ def main() -> int:
             {
                 "mode": "locked" if locked_mode else "diagnostic",
                 "experiment": lock.experiment_id,
+                # The freeze this round actually ran under: reveal cross-checks every
+                # held-out measurement's fingerprint against the experiment snapshot.
+                "freeze_fingerprint": freeze_fingerprint(lock),
                 "domain": domain,
                 "generation": generation,
                 "split": spec.split,

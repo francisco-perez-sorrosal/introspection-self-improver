@@ -67,11 +67,11 @@ def restore_h0(repo_root: Path = REPO_ROOT) -> None:
     _git(["add", "-A", "--", *ANCHORED_PATHS], repo_root)
 
 
-def verify_h0(repo_root: Path = REPO_ROOT) -> list[str]:
-    """Byte-identity of the anchored surface against the tag. Problems; empty means it holds."""
+def verify_against_tag(tag: str, repo_root: Path = REPO_ROOT) -> list[str]:
+    """Byte-identity of the anchored surface against a tag. Problems; empty means it holds."""
     problems: list[str] = []
     diff = subprocess.run(  # noqa: S603 - operator's git on this repo
-        ["git", "diff", "--stat", H0_TAG, "--", *ANCHORED_PATHS],  # noqa: S607
+        ["git", "diff", "--stat", tag, "--", *ANCHORED_PATHS],  # noqa: S607
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -79,7 +79,7 @@ def verify_h0(repo_root: Path = REPO_ROOT) -> list[str]:
         check=True,
     ).stdout.strip()
     if diff:
-        problems.append(f"the work tree differs from {H0_TAG}:\n{diff}")
+        problems.append(f"the work tree differs from {tag}:\n{diff}")
     untracked = [
         line
         for line in _git(["status", "--porcelain", "--", ANCHORED_PATHS[0]], repo_root).splitlines()
@@ -87,10 +87,47 @@ def verify_h0(repo_root: Path = REPO_ROOT) -> list[str]:
     ]
     if untracked:
         problems.append(
-            "untracked files under the anchored surface (not part of any H0): "
+            "untracked files under the anchored surface (not part of any generation): "
             + ", ".join(line[3:] for line in untracked)
         )
     return problems
+
+
+def verify_h0(repo_root: Path = REPO_ROOT) -> list[str]:
+    """Byte-identity of the anchored surface against the H0 tag."""
+    return verify_against_tag(H0_TAG, repo_root)
+
+
+def heldout_generation_tag(seq: int, generation_name: str) -> str:
+    """The tag a held-out round for `generation_NNN` must measure: H0's anchor, or exp<seq>-gNNN."""
+    index = int(generation_name.removeprefix("generation_"))
+    return H0_TAG if index == 0 else generation_tag(seq, index)
+
+
+def assert_heldout_measures_a_generation(
+    seq: int, generation_name: str, repo_root: Path = REPO_ROOT
+) -> str:
+    """Refuse a held-out round whose recipe surface is not exactly the named generation.
+
+    A held-out measurement is attributable only if the recipe that runs is byte-identical
+    to the generation it claims to measure (guardrails 12/13): H0 is the `h0-baseline`
+    tag, H_n (n ≥ 1) is the approved merge tagged `exp<seq>-gNNN` — created before the
+    round, per the generation loop's order. Returns the verified tag for the run banner.
+    """
+    tag = heldout_generation_tag(seq, generation_name)
+    if not tag_exists(tag, repo_root):
+        raise GenerationError(
+            f"a held-out round for {generation_name} measures the recipe under tag {tag!r}, "
+            "which does not exist: tag the approved generation first (the loop order is "
+            "merge → tag → held-out), or fix GEN if it names the wrong generation."
+        )
+    problems = verify_against_tag(tag, repo_root)
+    if problems:
+        raise GenerationError(
+            f"the recipe surface is not byte-identical to {tag!r}, so this held-out round "
+            f"would measure something other than {generation_name}:\n  ✗ " + "\n  ✗ ".join(problems)
+        )
+    return tag
 
 
 def _git(args: list[str], repo_root: Path) -> str:

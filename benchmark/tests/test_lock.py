@@ -232,3 +232,19 @@ def test_the_committed_manifest_matches_the_committed_lock() -> None:
     assert {name: len(ids) for name, ids in lists.items()} == sizes
     all_ids = [task_id for ids in lists.values() for task_id in ids]
     assert len(all_ids) == len(set(all_ids))
+
+
+def test_max_concurrency_reads_the_operational_block():
+    # An operational default, deliberately outside frozen: (and the freeze fingerprint).
+    assert Lock(raw={"operational": {"max_concurrency": 5}}).max_concurrency == 5
+
+
+def test_a_missing_operational_block_is_named():
+    with pytest.raises(LockError, match=r"operational\.max_concurrency"):
+        _ = Lock(raw={}).max_concurrency
+
+
+def test_the_committed_lock_keeps_concurrency_out_of_the_frozen_block():
+    real = lockmod.load_lock()
+    assert "max_concurrency" not in (real.raw.get("frozen") or {})
+    assert real.max_concurrency >= 1

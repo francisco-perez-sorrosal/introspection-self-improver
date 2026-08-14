@@ -207,7 +207,18 @@ class Lock:
 
     @property
     def max_concurrency(self) -> int:
-        return int(self._frozen("max_concurrency"))
+        """Episodes in flight at once — an operational default, never a frozen budget.
+
+        Lives in the lock's `operational:` block, which the freeze fingerprint excludes
+        (re-decided 2026-08-13): parallelism moves wall-clock, never what the agent can do
+        inside an episode, so changing this default mid-experiment is not freeze drift.
+        Any round may override it with --max-concurrency; the effective value is recorded
+        in run_metadata.json.
+        """
+        section = self.raw.get("operational") or {}
+        if "max_concurrency" not in section:
+            raise LockError("benchmark_lock.yaml is missing operational.max_concurrency")
+        return int(section["max_concurrency"])
 
     @property
     def enforce_communication_protocol(self) -> bool:

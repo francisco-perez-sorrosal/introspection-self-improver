@@ -157,10 +157,11 @@ frozen:
 
   # 1 per SIA_EVALUATION_PLAN.md D2: every task runs once, and statistical power comes
   # from pooling across the held-out set rather than repeating one task — deltas inside
-  # the binomial noise band (±7 pp at T=47) are noise, and pass^k is never used for
-  # generations. 4 was experiment 001's doctrine, motivated by episode-level reward being
-  # a draw (ten runs of one task split 6/4 — in git history); D2 reverses it. This value
-  # is also the held-out trials per task — the one knob; the protocol block above
+  # the binomial noise band (±7 pp at T=47; ±17 pp at the debug T=8) are noise, and
+  # pass^k is never used for generations. 4 was the retired bring-up freeze's doctrine
+  # (the pre-reset 001_bm25-sonnet46, in git history), motivated by episode-level reward
+  # being a draw (ten runs of one task split 6/4 — in git history); D2 reverses it. This
+  # value is also the held-out trials per task — the one knob; the protocol block above
   # deliberately has no second one.
   num_trials: 1
   seed: 300
@@ -176,23 +177,6 @@ frozen:
   # nothing (contract/constraints.md records the correction).
   timeout_seconds: 600
 
-  # Episodes in flight at once. Re-decided 2026-08-13 (user): an OPERATIONAL knob, not an
-  # execution budget — parallelism moves wall-clock, never what the agent can do inside an
-  # episode (each episode is independent and graded alone), so it is unfrozen from the
-  # budget doctrine. This value is the recorded default; any run may override it with
-  # --max-concurrency (1 = serial), and the effective value lands in run_metadata.json so
-  # every record still names its configuration. Episodes rendezvous on per-episode bridge
-  # channels (tool_bridge.py) on both lanes — contract/constraints.md § Platform-lane
-  # concurrency has the platform mechanism. A round can never use more workers than it
-  # has episodes (tau's pool idles past the task count), so a generous default is safe:
-  # held-out rounds run T-wide on the local lane, which has no sandbox constraint.
-  # Platform BATCH rounds are the exception and take --max-concurrency 2 from the batch
-  # target instead: the org runs ~2 sandboxes concurrently (observed; a third queues),
-  # and queued tasks behind a long episode churn through tau retries — noise a diagnosis
-  # round must not carry. Caveat, documented not gated: high N contends on provider rate
-  # limits (2N Anthropic streams), which can convert throttling into infra retries.
-  max_concurrency: 10
-
   # Whether tau ends an episode when an assistant message carries both text and tool calls.
   # On the frozen list because it decides whether a protocol violation is graded at all, so
   # flipping it moves scores with no harness change.
@@ -202,6 +186,28 @@ frozen:
   # recorded in the trajectory even though tau never delivers it to the user — the harness
   # behaviour stays visible in the evidence rather than being repaired out of existence.
   enforce_communication_protocol: false
+
+# Operational defaults — recorded configuration that is deliberately OUTSIDE the freeze:
+# the fingerprint excludes this block (tau_adapter/experiment.py), so editing a value here
+# is never freeze drift and never refuses a run.
+operational:
+  # Episodes in flight at once. Re-decided 2026-08-13 (user): an OPERATIONAL knob, not an
+  # execution budget — parallelism moves wall-clock, never what the agent can do inside an
+  # episode (each episode is independent and graded alone), so it lives outside the frozen
+  # block and the freeze fingerprint. This value is the recorded default; any run may
+  # override it with --max-concurrency (1 = serial), and the effective value lands in
+  # run_metadata.json so every record still names its configuration. Episodes rendezvous on
+  # per-episode bridge channels (tool_bridge.py) on both lanes — contract/constraints.md
+  # § Platform-lane concurrency has the platform mechanism. A round can never use more
+  # workers than it has episodes (tau's pool idles past the task count), so a generous
+  # default is safe: held-out rounds run T-wide on the local lane, which has no sandbox
+  # constraint. Platform BATCH rounds are the exception and take --max-concurrency 2 from
+  # the batch target instead: the org runs ~2 sandboxes concurrently (observed; a third
+  # queues), and queued tasks behind a long episode churn through tau retries — noise a
+  # diagnosis round must not carry. Caveat, documented not gated: high N contends on
+  # provider rate limits (2N Anthropic streams), which can convert throttling into infra
+  # retries.
+  max_concurrency: 10
 
 # Written by `make policy`. The pre-commit hook and CI compare sha256 against the
 # <policy> block of target-agent/SYSTEM.md; the adapter additionally compares the block

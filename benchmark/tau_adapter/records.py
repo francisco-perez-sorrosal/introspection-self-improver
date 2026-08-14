@@ -88,6 +88,11 @@ def _field_problems(record: dict[str, Any], schema: dict[str, Any]) -> list[str]
         if not _KIND_CHECKS[kind](value):
             problems.append(f"{name} must be a {kind}, got {type(value).__name__}")
             continue
+        if kind == "str" and spec.get("required") and _is_placeholder(value):
+            problems.append(
+                f"{name} still carries the scaffold's TODO placeholder — the record is "
+                "written while the transition happens, not left as a template"
+            )
         for key in spec.get("required_keys") or []:
             if isinstance(value, dict) and value.get(key) is None:
                 problems.append(f"{name}.{key} is missing")
@@ -128,12 +133,21 @@ def _mutation_problems(record: dict[str, Any], outcome: str) -> list[str]:
     return []
 
 
+def _is_placeholder(value: Any) -> bool:
+    return isinstance(value, str) and value.strip().upper().startswith("TODO")
+
+
 def _evidence_problems(record: dict[str, Any]) -> list[str]:
     conversations = (record.get("evidence") or {}).get("conversation_ids")
     if not conversations:
         return [
             "evidence.conversation_ids is empty: every claim cites the executions behind "
             "it, and the batch ran regardless of the outcome"
+        ]
+    if any(_is_placeholder(conversation) for conversation in conversations):
+        return [
+            "evidence.conversation_ids still carries the scaffold's TODO placeholder — "
+            "cite the real Introspection conversation ids behind the claim"
         ]
     return []
 

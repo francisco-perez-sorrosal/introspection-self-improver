@@ -166,19 +166,18 @@ def test_the_legacy_manifest_stops_a_round_loudly():
 
 
 def test_without_the_flag_every_run_reads_the_locks_concurrency():
-    assert resolve_max_concurrency(None, locked_mode=True, lock_value=10) == 10
-    assert resolve_max_concurrency(None, locked_mode=False, lock_value=10) == 10
+    assert resolve_max_concurrency(None, lock_value=10) == 10
 
 
 def test_any_round_may_override_concurrency_in_either_direction():
     """Concurrency is an operational knob, not a frozen budget (re-decided 2026-08-13):
     parallelism moves wall-clock, never what the agent can do inside an episode. Serial
     execution is the operator writing --max-concurrency 1."""
-    assert resolve_max_concurrency(3, locked_mode=True, lock_value=10) == 3
-    assert resolve_max_concurrency(1, locked_mode=True, lock_value=10) == 1
-    assert resolve_max_concurrency(3, locked_mode=False, lock_value=10) == 3
+    assert resolve_max_concurrency(3, lock_value=10) == 3
+    assert resolve_max_concurrency(1, lock_value=10) == 1
+    assert resolve_max_concurrency(30, lock_value=10) == 30
 
 
 def test_a_nonpositive_concurrency_is_refused():
     with pytest.raises(RoundError, match="at least 1"):
-        resolve_max_concurrency(0, locked_mode=False, lock_value=1)
+        resolve_max_concurrency(0, lock_value=1)

@@ -14,6 +14,7 @@ import pytest
 from tau_adapter.generations import (
     H0_TAG,
     GenerationError,
+    assert_heldout_measures_a_generation,
     final_generation_tag,
     generation_tag,
     restore_h0,
@@ -152,3 +153,26 @@ def test_final_generation_tag_reads_the_protocol():
 def test_tag_exists_is_exact(repo):
     assert tag_exists(H0_TAG, repo)
     assert not tag_exists("exp2-g003", repo)
+
+
+def test_a_heldout_round_verifies_h0_against_its_anchor(repo):
+    assert assert_heldout_measures_a_generation(2, "generation_000", repo) == H0_TAG
+
+
+def test_a_heldout_round_accepts_the_tagged_generation(repo):
+    _git(repo, "tag", "exp2-g001")
+    assert assert_heldout_measures_a_generation(2, "generation_001", repo) == "exp2-g001"
+
+
+def test_a_heldout_round_requires_the_generation_tag(repo):
+    with pytest.raises(GenerationError, match="does not exist"):
+        assert_heldout_measures_a_generation(2, "generation_001", repo)
+
+
+def test_a_heldout_round_refuses_a_drifted_recipe(repo):
+    _git(repo, "tag", "exp2-g001")
+    (repo / "target-agent" / "SYSTEM.md").write_text("drifted\n", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "drift")
+    with pytest.raises(GenerationError, match="byte-identical"):
+        assert_heldout_measures_a_generation(2, "generation_001", repo)

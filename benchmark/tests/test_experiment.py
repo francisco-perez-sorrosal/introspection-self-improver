@@ -13,6 +13,7 @@ import yaml
 from tau_adapter.experiment import (
     ExperimentError,
     enforce_snapshot,
+    enforce_snapshot_for_experiment,
     experiment_dir_for,
     freeze_fingerprint,
 )
@@ -24,7 +25,7 @@ def _lock(experiment_name: str = "exp-a", status: str = "FROZEN", **frozen_overr
         "status": status,
         "agent_model": "anthropic/claude-sonnet-4-6",
         "user_llm": "anthropic/claude-sonnet-4-5",
-        "num_trials": 4,
+        "num_trials": 1,
         "seed": 300,
     }
     frozen.update(frozen_overrides)
@@ -76,7 +77,7 @@ def test_fingerprint_tracks_values_not_bytes(tmp_path) -> None:
     original = freeze_fingerprint(_lock(), split_manifest_path=split)
     split.write_text("# a comment changes nothing\n" + split.read_text(encoding="utf-8"))
     assert freeze_fingerprint(_lock(), split_manifest_path=split) == original
-    assert freeze_fingerprint(_lock(num_trials=1), split_manifest_path=split) != original
+    assert freeze_fingerprint(_lock(num_trials=2), split_manifest_path=split) != original
 
 
 def test_first_frozen_run_writes_the_snapshot(tmp_path) -> None:
@@ -100,7 +101,41 @@ def test_freeze_drift_refuses_the_run(tmp_path) -> None:
     out = results / "experiment_001_exp-a" / "generation_000" / "task_001"
     enforce_snapshot(_lock(), out, results_root=results, split_manifest_path=split)
     with pytest.raises(ExperimentError, match=r"bump experiment\.seq"):
-        enforce_snapshot(_lock(num_trials=1), out, results_root=results, split_manifest_path=split)
+        enforce_snapshot(_lock(num_trials=2), out, results_root=results, split_manifest_path=split)
+
+
+def test_the_fingerprint_ignores_operational_defaults(tmp_path) -> None:
+    # The operational block is a recorded default, not part of the freeze: changing it
+    # mid-experiment must not read as freeze drift.
+    split = _split_manifest(tmp_path)
+    original = freeze_fingerprint(_lock(), split_manifest_path=split)
+    raw = dict(_lock().raw)
+    raw["operational"] = {"max_concurrency": 4}
+    assert freeze_fingerprint(Lock(raw=raw), split_manifest_path=split) == original
+
+
+def test_heldout_rounds_anchor_to_the_in_tree_snapshot(tmp_path) -> None:
+    # Held-out output lives outside results/ by design, so the snapshot is enforced by
+    # experiment id: the H0 round creates it, and later freeze drift refuses the round.
+    results, split = tmp_path / "results", _split_manifest(tmp_path)
+    status = enforce_snapshot_for_experiment(
+        _lock(), results_root=results, split_manifest_path=split
+    )
+    assert "created" in status
+    assert (results / "experiment_001_exp-a" / "experiment.yaml").exists()
+    with pytest.raises(ExperimentError, match=r"bump experiment\.seq"):
+        enforce_snapshot_for_experiment(
+            _lock(num_trials=2), results_root=results, split_manifest_path=split
+        )
+
+
+def test_the_snapshot_writes_value_copies_of_lock_and_partition(tmp_path) -> None:
+    results, split = tmp_path / "results", _split_manifest(tmp_path)
+    enforce_snapshot_for_experiment(_lock(), results_root=results, split_manifest_path=split)
+    exp = results / "experiment_001_exp-a"
+    assert yaml.safe_load((exp / "benchmark_lock.yaml").read_text(encoding="utf-8")) == _lock().raw
+    split_copy = yaml.safe_load((exp / "split_manifest.yaml").read_text(encoding="utf-8"))
+    assert split_copy["held_out"] == ["task_002"]
 
 
 def test_fingerprint_drifts_on_partition_change(tmp_path) -> None:

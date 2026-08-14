@@ -19,6 +19,9 @@ from tau_adapter.lock import Lock
 
 TASKS = ["task_101", "task_102", "task_103", "task_104", "task_105"]
 
+#: The freeze every synthetic round claims to have run under; the snapshot pins the same.
+FINGERPRINT = "sha256:test-freeze"
+
 #: task → solved, per measured generation. H2 is an identity generation (no measurement).
 MEASURED = {
     0: {"task_101": 1.0, "task_102": 0.0, "task_103": 0.0, "task_104": 1.0, "task_105": 0.0},
@@ -106,14 +109,20 @@ def experiment(tmp_path):
         )
     vault = tmp_path / "vault"
     for generation, rewards in MEASURED.items():
-        graded = (
-            vault / "experiment_002_exp-b" / f"generation_{generation:03d}" / heldout.GRADED_DIR
-        )
+        generation_dir = vault / "experiment_002_exp-b" / f"generation_{generation:03d}"
+        graded = generation_dir / heldout.GRADED_DIR
         graded.mkdir(parents=True)
         (graded / heldout.GRADED_RESULTS).write_text(
             json.dumps(_graded_payload(rewards)), encoding="utf-8"
         )
+        (generation_dir / "run_metadata.json").write_text(
+            json.dumps({"freeze_fingerprint": FINGERPRINT}), encoding="utf-8"
+        )
     results_root = tmp_path / "results"
+    (results_root / "experiment_002_exp-b").mkdir(parents=True)
+    (results_root / "experiment_002_exp-b" / "experiment.yaml").write_text(
+        yaml.safe_dump({"id": "002_exp-b", "fingerprint": FINGERPRINT}), encoding="utf-8"
+    )
     records_dir = results_root / "experiment_002_exp-b" / records.RECORDS_DIRNAME
     records_dir.mkdir(parents=True)
     for source, outcome in ((0, "accepted"), (1, "rejected"), (2, "accepted")):
@@ -191,6 +200,28 @@ def test_transitions_and_retention_match_hand_computation(experiment):
     }
     kept = reveal.retention(results)
     assert [(row["currently"], row["ever"]) for row in kept] == [(2, 2), (2, 3), (2, 3), (4, 4)]
+
+
+def test_reveal_writes_transitions_and_retention_csvs(experiment):
+    experiment_dir = _reveal(experiment)
+    held = experiment_dir / "held_out"
+    moves = list(csv.DictReader((held / reveal.TRANSITIONS_CSV).open()))
+    assert [
+        (r["transition"], r["gains"], r["regressions"], r["net"], r["identity"]) for r in moves
+    ] == [
+        ("H0→H1", "1", "1", "0", "false"),
+        ("H1→H2", "0", "0", "0", "true"),
+        ("H2→H3", "2", "0", "2", "false"),
+    ]
+    kept = list(csv.DictReader((held / reveal.RETENTION_CSV).open()))
+    assert [
+        (r["generation"], r["currently_solved"], r["ever_solved"], r["total"]) for r in kept
+    ] == [
+        ("H0", "2", "2", "5"),
+        ("H1", "2", "3", "5"),
+        ("H2", "2", "3", "5"),
+        ("H3", "4", "4", "5"),
+    ]
 
 
 def test_summary_states_the_endpoint_against_the_noise_band(experiment):
@@ -274,6 +305,19 @@ def test_reveal_refuses_the_wrong_task_set(experiment):
     rewards["task_999"] = rewards.pop("task_105")
     graded.write_text(json.dumps(_graded_payload(rewards)), encoding="utf-8")
     with pytest.raises(reveal.RevealError, match=r"not measured on the frozen held-out set"):
+        _reveal(experiment)
+
+
+def test_reveal_refuses_a_measurement_under_a_different_freeze(experiment):
+    meta = experiment["vault"] / "experiment_002_exp-b" / "generation_001" / "run_metadata.json"
+    meta.write_text(json.dumps({"freeze_fingerprint": "sha256:other"}), encoding="utf-8")
+    with pytest.raises(reveal.RevealError, match="cannot mix"):
+        _reveal(experiment)
+
+
+def test_reveal_refuses_without_the_freeze_snapshot(experiment):
+    (experiment["results_root"] / "experiment_002_exp-b" / "experiment.yaml").unlink()
+    with pytest.raises(reveal.RevealError, match="PROVISIONAL"):
         _reveal(experiment)
 
 

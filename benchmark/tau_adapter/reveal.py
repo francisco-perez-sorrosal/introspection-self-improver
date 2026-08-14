@@ -27,9 +27,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from tau_adapter import generations as gensmod
 from tau_adapter import heldout as heldoutmod
 from tau_adapter import records as recordsmod
+from tau_adapter.experiment import COMPLETION_SENTINEL, SNAPSHOT_NAME
 from tau_adapter.lock import Lock
 
 PASS_THRESHOLD = 1.0 - 1e-9
@@ -37,6 +40,8 @@ PASS_THRESHOLD = 1.0 - 1e-9
 HELD_OUT_DIRNAME = "held_out"
 RESULTS_BY_GENERATION_CSV = "results_by_generation.csv"
 TASK_GENERATION_MATRIX_CSV = "task_generation_matrix.csv"
+TRANSITIONS_CSV = "transitions.csv"
+RETENTION_CSV = "retention.csv"
 SUMMARY_NAME = "summary.md"
 
 
@@ -116,6 +121,50 @@ def load_records(records_path: Path, total_generations: int) -> dict[int, dict[s
     if broken:
         raise RevealError("improvement records fail validation:\n  ✗ " + "\n  ✗ ".join(broken))
     return records
+
+
+def verify_freeze_chain(
+    experiment_dir: Path,
+    vault_experiment_dir: Path,
+    results: list[GenerationResult],
+) -> None:
+    """Every measured round must have run under the experiment's one frozen configuration.
+
+    The runner stamps each round's run_metadata.json with the freeze fingerprint it ran
+    under, and the in-tree snapshot (experiment.yaml, written on the experiment's first
+    frozen round — the H0 held-out round included) pins the experiment's. A mismatch, or a
+    measurement with no recorded fingerprint, means the curve would compare measurements
+    taken under different configurations — exactly what the freeze forbids.
+    """
+    snapshot_path = experiment_dir / SNAPSHOT_NAME
+    if not snapshot_path.exists():
+        raise RevealError(
+            f"{snapshot_path} does not exist: a frozen experiment writes it on first "
+            "contact (the H0 held-out round included), so its absence means these "
+            "measurements were taken under a PROVISIONAL lock — not a revealable "
+            "experiment."
+        )
+    pinned = (yaml.safe_load(snapshot_path.read_text(encoding="utf-8")) or {}).get("fingerprint")
+    for result in results:
+        if result.carried:
+            continue
+        meta_path = (
+            vault_experiment_dir / generation_dirname(result.generation) / COMPLETION_SENTINEL
+        )
+        recorded = None
+        if meta_path.exists():
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8")) or {}
+            except json.JSONDecodeError:
+                meta = {}
+            recorded = meta.get("freeze_fingerprint")
+        if recorded != pinned:
+            raise RevealError(
+                f"{generation_dirname(result.generation)} was not measured under this "
+                f"experiment's freeze: its round records fingerprint {recorded!r}, the "
+                f"snapshot pins {pinned!r}. The progression curve cannot mix "
+                "configurations."
+            )
 
 
 def assemble(
@@ -218,6 +267,36 @@ def task_generation_matrix_csv(results: list[GenerationResult], task_ids: list[s
     return out.getvalue()
 
 
+def transitions_csv(results: list[GenerationResult]) -> str:
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(
+        ["transition", "gains", "retained", "regressions", "unresolved", "net", "identity"]
+    )
+    for row in transitions(results):
+        writer.writerow(
+            [
+                row["transition"],
+                row["gains"],
+                row["retained"],
+                row["regressions"],
+                row["unresolved"],
+                row["net"],
+                str(row["identity"]).lower(),
+            ]
+        )
+    return out.getvalue()
+
+
+def retention_csv(results: list[GenerationResult], total: int) -> str:
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["generation", "currently_solved", "ever_solved", "total"])
+    for row in retention(results):
+        writer.writerow([row["generation"], row["currently"], row["ever"], total])
+    return out.getvalue()
+
+
 def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) -> str:
     protocol = lock.protocol
     total = protocol.held_out_tasks
@@ -276,7 +355,9 @@ def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) ->
         "## Provenance",
         "",
         f"- `{HELD_OUT_DIRNAME}/{RESULTS_BY_GENERATION_CSV}`, "
-        f"`{HELD_OUT_DIRNAME}/{TASK_GENERATION_MATRIX_CSV}` — computed at this reveal.",
+        f"`{HELD_OUT_DIRNAME}/{TASK_GENERATION_MATRIX_CSV}`, "
+        f"`{HELD_OUT_DIRNAME}/{TRANSITIONS_CSV}`, `{HELD_OUT_DIRNAME}/{RETENTION_CSV}` — "
+        "computed at this reveal.",
         f"- `{HELD_OUT_DIRNAME}/generation_NNN/` — the vault rounds, copied verbatim.",
         "- `improvement_records/` — the evidence chain, `held_out_result` filled at this "
         "reveal and at no other time.",
@@ -328,6 +409,7 @@ def reveal(
     held_out_ids = list(manifest.get(splitmod.HELD_OUT) or [])
     records = load_records(experiment_dir / recordsmod.RECORDS_DIRNAME, lock.protocol.generations)
     results = assemble(lock, vault_experiment_dir, records, held_out_ids)
+    verify_freeze_chain(experiment_dir, vault_experiment_dir, results)
 
     held_out_dir.mkdir(parents=True, exist_ok=True)
     for result in results:
@@ -342,6 +424,8 @@ def reveal(
     (held_out_dir / TASK_GENERATION_MATRIX_CSV).write_text(
         task_generation_matrix_csv(results, held_out_ids), encoding="utf-8"
     )
+    (held_out_dir / TRANSITIONS_CSV).write_text(transitions_csv(results), encoding="utf-8")
+    (held_out_dir / RETENTION_CSV).write_text(retention_csv(results, total), encoding="utf-8")
     revealed_on = datetime.now(UTC).strftime("%Y-%m-%d")
     (experiment_dir / SUMMARY_NAME).write_text(
         summary_md(lock, results, revealed_on), encoding="utf-8"

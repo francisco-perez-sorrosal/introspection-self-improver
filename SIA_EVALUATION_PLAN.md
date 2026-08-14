@@ -89,13 +89,13 @@ the rest are recorded here as the working defaults.
 |---|---|
 | Experiment config (§26) | `protocol:` block in `benchmark_lock.yaml` (`generations`, `improvement_tasks_per_generation`, `held_out_tasks`, `allow_within_batch_verification: false`, `holdout_visibility` flags, `require_human_approval: true`). Inside the freeze fingerprint automatically via `lock.raw`. `held_out_trials_per_task` ≡ `frozen.num_trials` (one knob). |
 | Partition (§3, §16) | `benchmark/split_manifest.yaml` rewritten: `batches: {batch_01: […], …}` + `held_out: […]`, sizes derived from the lock's `protocol:` block. Same stratification machinery (reward_basis 88 DB / 9 ACTION, dominant doc category, doc count; stride scheduler), disjointness verified dynamically across G+1 partitions, (G×B)+T ≤ 97 enforced, ACTION spread re-expressed (held-out gets its proportional share ≥4 at T=47; batches jointly cover the rest). |
-| Improvement batch run (§7) | `make batch B=1 GEN=generation_001` — platform lane forced, resume-friendly (no `--overwrite`), round dir `generation_NNN/batch_01/`, manifest `split: batch_01`, labels `[exp_00N:…] τ²-bench banking_knowledge task_X trial 0 gen_001 b01 - …`. |
+| Improvement batch run (§7) | `make batch B=1 GEN=generation_000` — platform lane forced, resume-friendly (no `--overwrite`), round dir `generation_NNN/batch_NN/`, manifest `split: batch_NN`, labels `[exp_00N:…] τ²-bench banking_knowledge task_X trial 0 gen_NNN bNN - …`. Convention enforced by the runner (2026-08-13): batch_NN is *run by* H\_(NN−1), so it lives under `generation_(NN-1)/` — the wrong GEN is refused pre-spend. Graded output persists to `batch_NN/graded/`. |
 | Held-out evaluation (§6, §11) | `make heldout GEN=generation_001` → `scripts/run_heldout.py`: local lane forced, all child stdout/stderr redirected into the vault's `console.log`, grading persisted to the vault (never printed), prints **completeness only** (episodes expected/completed, manifest joined, zero reward tokens — asserted by test). |
 | Firewall (§12) | D1 + D9. Platform: structural (no evidence exists). Local artifacts: procedural + out-of-tree + muted output. |
 | Diagnosis (§8) | `operate` skill over the batch's platform conversations: task rows → conversations → tool calls/spans; prevalence via `metrics query`; observations/patterns after the ~40-min window (fallback: metrics-over-spans + manual clustering, evidence tier stated). |
 | Proposal (§9) | `improve` skill: one coherent mechanism inside the mutable table → branch `gen-NNN/<slug>` → PR citing conversation ids + prevalence + predicted effect. |
 | Approval → generation (§10) | Human reviews/merges the PR on `main`; merge commit tagged `exp<seq>-g<NNN>`; `improvement_records/gen_<g>_to_<g+1>.yaml` written (schema: `contract/improvement_record.schema.yaml`, §24 fields; `held_out_result` filled at reveal only). |
-| Metrics & artifacts (§18–§21, §27) | `make reveal` → `results/experiment_<id>/held_out/{results_by_generation.csv, task_generation_matrix.csv}`, gains/regressions/retained/unresolved per transition, currently-solved vs ever-solved, `summary.md` with counts + percentages + the D2 noise band. §27's `config.yaml` is satisfied by `experiment.yaml` (lock+manifest fingerprint snapshot). |
+| Metrics & artifacts (§18–§21, §27) | `make reveal` → `results/experiment_<id>/held_out/{results_by_generation.csv, task_generation_matrix.csv, transitions.csv, retention.csv}` (gains/regressions/retained/unresolved per transition and currently- vs ever-solved are machine-readable, not summary-only), plus `summary.md` with counts + percentages + the D2 noise band. §27's `config.yaml` is satisfied by `experiment.yaml` (lock+manifest fingerprint snapshot) plus value-copies of `benchmark_lock.yaml` and `split_manifest.yaml` written beside it at snapshot creation, so a results directory describes its own configuration. The dashboard renders the progression view from exactly these revealed artifacts (curve with noise-band whiskers + carried markers, retention line, transitions table, binary matrix) and shows a sealed notice pre-reveal. |
 | Guardrail 10 (§29) | Unchanged from today: the adapter never repairs the agent (`contract/constraints.md`), integration code stays task-agnostic, `introspection check` in pre-commit/CI/runner. |
 
 ------------------------------------------------------------------------
@@ -536,6 +536,24 @@ comparability of the curve — while each generation consumes its own disjoint b
 Same isolation rules as the full experiment (protocol §29.17). Runs on the Phase
 3.5/3.5c session-keyed bridge.
 
+- [x] Pre-flight grounding pass (user-directed 2026-08-13, its own session): three parallel
+      audits (code staleness, doc truth, protocol §26/§27/§29 alignment) then the fixes.
+      Docs: every stale claim corrected (serial/frozen-at-1 comments, ±7 pp hardcoded at
+      T=47 → scale-aware, D1–D10, pre-reset narration in `constraints.md`, `protocol.md`
+      phase table, dashboard README). Code: dead `ToolBridge.path` / `calls_served` /
+      `locked_mode` param removed, stale operator-facing strings in `run.py` rewritten.
+      Alignment (all tested; suite 235 → 250, A.0a-relevant surfaces re-proven by the
+      suite): `max_concurrency` moved to a lock `operational:` block **excluded from the
+      freeze fingerprint** (the file now matches ratified D7); held-out rounds enforce the
+      in-tree freeze snapshot by experiment id, refuse a dirty recipe surface outright,
+      and verify the recipe byte-identical to the measured generation's tag (h0-baseline
+      for H0, `exp<seq>-gNNN` after — guardrails 12/13); every round records its
+      `freeze_fingerprint` in `run_metadata.json` and `make reveal` refuses a curve that
+      mixes fingerprints; improvement-record validation rejects scaffold TODO
+      placeholders; batch↔generation binding enforced; batch grading persisted;
+      `transitions.csv` + `retention.csv` added to the reveal; snapshot writes lock +
+      manifest value-copies. Dashboard: held-out progression view landed (pulled forward
+      from Phase 5) and verified against a synthetic revealed experiment. (2026-08-13)
 - [ ] Freeze: `experiment.seq: 1` (numbering reset) with D10 `protocol:` values (G=3, B=4, T=8) and
       the re-proposed partition already in place; flip PROVISIONAL → FROZEN;
       `reset_h0`; commit; **A.0a gate PASS** recorded.
@@ -564,8 +582,10 @@ fix and re-run Phase 4 under the next seq before scaling up.
 - [ ] Run the six held-out evaluations and five generations (~282 local + 50 platform
       episodes ≈ $75–90 compute, ~20–28 h spread over ~a week of sessions; budget
       go/no-go with the user at each generation boundary).
-- [ ] Dashboard progression view over revealed artifacts (held-out curve with noise
-      band, task×generation heatmap, transition table); trim dead pass^k plumbing.
+- [x] Dashboard progression view over revealed artifacts (held-out curve with noise
+      band, task×generation heatmap, transition table) — landed early at the Phase 4
+      pre-flight grounding pass, verified against a synthetic revealed experiment; the
+      retired arm/learning-record plumbing was trimmed with it (2026-08-13).
 - [ ] Reveal; `summary.md`; the final claim written per protocol §25 with the D2
       noise band stated.
 - [ ] Optional (budget-gated): endpoint reliability addendum — H0 and H_G × 4 trials

@@ -45,7 +45,7 @@ help:
 	@echo "make smoke       one mock-domain task through the seam (diagnostic, not reportable)"
 	@echo "make single_task one locked-domain task, then grade it: make single_task TASK=task_001"
 	@echo "make bench       the WHOLE locked task split, then grade it (long and costly)"
-	@echo "make batch       improvement batch round, platform lane: make batch B=1 GEN=generation_001"
+	@echo "make batch       improvement batch round, platform lane: make batch B=1 GEN=generation_000"
 	@echo "make heldout     hidden held-out round into the vault: make heldout GEN=generation_000"
 	@echo "make reset_h0    restore the recipe to the h0-baseline tag (replace, not merge)"
 	@echo "make reveal      end-of-experiment: unseal the vault into results/ (final tag required)"
@@ -103,8 +103,8 @@ single_task:
 # The whole locked task split. Omitting --task-ids is what selects every task; the runner
 # prints the episode count and the concurrency it will use before starting.
 #
-# This is the expensive target: 97 tasks in the banking_knowledge base split, run serially
-# because max_concurrency is frozen at 1. Budget accordingly and expect it to be the input to
+# This is the expensive target: 97 tasks in the banking_knowledge base split, run at the
+# lock's max_concurrency default. Budget accordingly and expect it to be the input to
 # the per-generation cost estimate rather than something to run casually.
 bench:
 	@$(RUN) python tau_adapter/run.py --transport $(TRANSPORT) --launcher $(LAUNCHER) \
@@ -115,7 +115,8 @@ bench:
 # lane is the round's meaning, not a preference — a command-line TRANSPORT=local reaches
 # run.py and is refused there with the reason. Resume-friendly: no --overwrite, ever, so a
 # rerun re-runs only the missing (trial, task, seed) pairs. Graded immediately, because
-# batch evidence is fully observable by design — it is what `operate` diagnoses from.
+# batch evidence is fully observable by design — it is what `operate` diagnoses from —
+# and the graded artifact persists under graded/ so records cite a file, not a terminal.
 B ?= 1
 BATCH_DIR = batch_$(shell printf '%02d' $(B))
 batch: TRANSPORT = platform
@@ -127,7 +128,8 @@ batch:
 	@$(RUN) python tau_adapter/run.py --batch $(B) --transport $(TRANSPORT) \
 		--max-concurrency 2 \
 		--out ../$(RESULTS)/$(BATCH_DIR)
-	@$(MAKE) --no-print-directory grade OUT=$(RESULTS)/$(BATCH_DIR)
+	@$(RUN) python scripts/grade.py $(CURDIR)/$(RESULTS)/$(BATCH_DIR)/results.json \
+		--output-dir $(CURDIR)/$(RESULTS)/$(BATCH_DIR)/graded
 
 # The hidden held-out evaluation (D1/D9): local lane only, outputs sealed out of tree in
 # the vault (~/.sia_vault), terminal shows completeness alone. GEN names the generation

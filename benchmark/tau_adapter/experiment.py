@@ -79,10 +79,16 @@ def freeze_fingerprint(lock: Lock, split_manifest_path: Path = SPLIT_MANIFEST_PA
     """A digest of the parsed freeze: every lock value plus the split manifest.
 
     Parsed values, not file bytes, so a comment edit never reads as a new freeze while any
-    value change — dropping PROVISIONAL included — does.
+    value change — dropping PROVISIONAL included — does. The lock's `operational:` block
+    is excluded: those are recorded defaults an operator may change mid-experiment (the
+    effective per-run values live in run_metadata.json), and hashing them would turn a
+    wall-clock knob into freeze drift.
     """
+    frozen_view = {key: value for key, value in lock.raw.items() if key != "operational"}
     split = yaml.safe_load(split_manifest_path.read_text(encoding="utf-8")) or {}
-    material = json.dumps({"lock": lock.raw, "split_manifest": split}, sort_keys=True, default=str)
+    material = json.dumps(
+        {"lock": frozen_view, "split_manifest": split}, sort_keys=True, default=str
+    )
     return "sha256:" + hashlib.sha256(material.encode("utf-8")).hexdigest()
 
 
@@ -102,6 +108,27 @@ def enforce_snapshot(
     exp_dir = experiment_dir_for(out_dir, lock, results_root)
     if exp_dir is None:
         return None
+    return _enforce_snapshot_at(exp_dir, lock, split_manifest_path)
+
+
+def enforce_snapshot_for_experiment(
+    lock: Lock,
+    results_root: Path = RESULTS_ROOT,
+    split_manifest_path: Path = SPLIT_MANIFEST_PATH,
+) -> str:
+    """Verify/create the freeze snapshot by experiment id, independent of any output path.
+
+    Held-out rounds write outside results/ by design (D9), so their out_dir can never
+    resolve to the experiment directory — yet the measurement they produce is the one the
+    freeze exists to protect. This anchors them to the same in-tree snapshot every other
+    round verifies, so a lock or partition change between generations refuses the round
+    instead of silently producing non-comparable measurements.
+    """
+    exp_dir = results_root.resolve() / experiment_dirname(lock)
+    return _enforce_snapshot_at(exp_dir, lock, split_manifest_path)
+
+
+def _enforce_snapshot_at(exp_dir: Path, lock: Lock, split_manifest_path: Path) -> str:
     snapshot_path = exp_dir / SNAPSHOT_NAME
     fingerprint = freeze_fingerprint(lock, split_manifest_path)
     if snapshot_path.exists():
@@ -116,7 +143,7 @@ def enforce_snapshot(
         return f"freeze snapshot verified ({SNAPSHOT_NAME})"
     if lock.provisional:
         return "PROVISIONAL — no freeze snapshot written or enforced"
-    _write_snapshot(snapshot_path, lock, fingerprint)
+    _write_snapshot(snapshot_path, lock, fingerprint, split_manifest_path)
     return f"freeze snapshot created ({SNAPSHOT_NAME})"
 
 
@@ -218,7 +245,7 @@ def repo_arm_state(repo_root: Path = REPO_ROOT) -> tuple[str, list[str]]:
     return head, dirty
 
 
-def _write_snapshot(path: Path, lock: Lock, fingerprint: str) -> None:
+def _write_snapshot(path: Path, lock: Lock, fingerprint: str, split_manifest_path: Path) -> None:
     header = (
         "# Written by the runner on this experiment's first non-PROVISIONAL run. It pins\n"
         "# the freeze every result in this directory was produced under; a later run whose\n"
@@ -244,3 +271,25 @@ def _write_snapshot(path: Path, lock: Lock, fingerprint: str) -> None:
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(header + body, encoding="utf-8")
+    _write_config_copies(path.parent, lock, split_manifest_path)
+
+
+def _write_config_copies(exp_dir: Path, lock: Lock, split_manifest_path: Path) -> None:
+    """Value-faithful copies of the lock and partition beside the snapshot (protocol §27).
+
+    A results directory should describe its own configuration without needing the repo at
+    the right commit. Values, not file bytes — consistent with the fingerprint doctrine —
+    so comments are dropped and what is written is exactly what was in force.
+    """
+    copy_header = (
+        "# Value snapshot written at freeze time by the runner (comments dropped; the\n"
+        "# canonical commented file lives in benchmark/). Values cannot drift from the\n"
+        "# experiment: the freeze fingerprint refuses any change.\n"
+    )
+    (exp_dir / "benchmark_lock.yaml").write_text(
+        copy_header + yaml.safe_dump(lock.raw, sort_keys=False), encoding="utf-8"
+    )
+    split = yaml.safe_load(split_manifest_path.read_text(encoding="utf-8")) or {}
+    (exp_dir / "split_manifest.yaml").write_text(
+        copy_header + yaml.safe_dump(split, sort_keys=False), encoding="utf-8"
+    )
