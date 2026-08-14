@@ -1,0 +1,74 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 2
+  to_generation: 3
+experiment: 002_bm25-sonnet46
+outcome: 'TODO: accepted | rejected | identity — set when PR #3 is reviewed'
+batch:
+  name: batch_03
+  task_ids:
+  - task_008
+  - task_041
+  - task_058
+  - task_089
+evidence:
+  conversation_ids:
+  - 019fff1f-b11b-76bd-8f7a-ba3078741c94
+  - 019fff1f-b053-7556-96c4-c0bf356efde1
+  - 019fff21-d492-7305-8a49-76ff37333214
+  - 019fff22-cf6f-71d1-b5ad-d99c63baacdc
+  summary: >
+    All four B3 conversations exported and read; graded db_check/action_checks read
+    from batch_03/graded/updated_results.json. Seam clean 4/4, lineage on the g2
+    commit. B3 graded 2/4 — the first batch passes of the experiment (task_058
+    matched 4/4 gold actions; task_089 DB-matched with only read actions missed).
+    Batch-side trajectory across the experiment: 0/4, 0/4, 2/4 (batch reads are
+    visible by design and are not the progression metric; the held-out curve stays
+    sealed until reveal).
+signals:
+- description: >
+    Required-procedure incompleteness — the once-per-batch recurring mode: task_041
+    matched 2/25 gold actions; the 17-dispute fraud workflow its scenario requires
+    was never driven while the conversation drifted through limit-increase and
+    family-account requests. Same family as B2 task_045 (9/15 tail unexecuted) and
+    B1 task_061 (closure procedure never completed).
+  prevalence: 1/4
+- description: >
+    Policy-enumeration argument value: task_008's agent transferred to a human as
+    the gold action requires, but with reason 'unconfirmed_external_communication'
+    where the graded expectation is 'customer_demands_after_unavailable_offer_refusal'
+    — a categorical field drawn from policy text, ungrounded. The g2 mechanism
+    covers record-decided fields but did not reach policy enumerations.
+  prevalence: 1/4
+counterevidence: >
+  task_041's user pursued several concurrent asks, so part of the miss may be
+  scenario pressure rather than pure wrap-up discipline; and instruction-block
+  growth across three generations adds per-episode cost and could dilute
+  instruction-following. Both accepted as risks; the held-out curve arbitrates.
+hypothesis: >
+  The dominant residual reward loss on procedure-heavy tasks comes from ending or
+  drifting away from a KB-governed procedure before its required steps are executed
+  or offered. Forcing step-list extraction, progress tracking, and finish-or-park
+  discipline converts long almost-workflows into completed ones.
+owning_layer: agent judgment — system-prompt instructions (target-agent/SYSTEM.md <instructions>)
+proposed_change: >
+  One instruction block composing with g1/g2: when a KB procedure governs the issue,
+  extract the full required step list (verification, per-item actions, user-run
+  tools), track completion, finish or explicitly park across topic changes, and
+  never wrap up with a required step unexecuted and unoffered.
+mutation:
+  branch: gen-003/procedure-completion
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/3
+  source_commit: 6c47a07bd139190005984d2db337eff1371b2576
+  candidate_commit: null
+expected_effect: >
+  Completes procedure-heavy workflows (the 1/4-per-batch mode). Not targeted:
+  policy-enumeration argument grounding (task_008), the strongest candidate for a
+  future experiment's first generation.
+human_approval:
+  approved_by: 'TODO: set at PR #3 review'
+  date: '2026-08-14'
+held_out_result: null
