@@ -130,7 +130,16 @@ frozen:
   # carries over as a prior; its calibration facts (baseline ~32%, $0.62/$0.70 per
   # episode, difficulty mixture) are Sonnet-pair measurements and re-price at H0/B1.
   agent_model: openai/gpt-5.6-luna
-  agent_thinking_level: medium
+  # null = the recipe deliberately OMITS thinking_level (2026-08-14, user decision):
+  # the platform sandbox Pi maps the field to OpenAI's retired `reasoning.level`
+  # parameter and 400s every episode (.ai-state/UPSTREAM_ISSUES.md), while Pi's own
+  # default IS medium — so omission keeps D12's intended effort without emitting the
+  # broken parameter. The recipe-vs-lock assertion now pins the ABSENCE: a generation
+  # that adds the field back is refused. The effective level rides Pi's default
+  # (medium at Pi 0.84.1), so the Pi version joins the frozen environment de facto —
+  # do not upgrade Pi mid-experiment. Restore an explicit medium once the platform
+  # mapping is fixed.
+  agent_thinking_level: null
 
   # tau requires --agent-llm, but our agent takes its model from the recipe, so this value
   # is declared and unused. Kept equal to agent_model so the file cannot read misleadingly.
