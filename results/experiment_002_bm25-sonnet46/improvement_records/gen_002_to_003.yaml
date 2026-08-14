@@ -6,7 +6,7 @@ transition:
   from_generation: 2
   to_generation: 3
 experiment: 002_bm25-sonnet46
-outcome: 'TODO: accepted | rejected | identity — set when PR #3 is reviewed'
+outcome: accepted
 batch:
   name: batch_03
   task_ids:
@@ -63,12 +63,12 @@ mutation:
   branch: gen-003/procedure-completion
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/3
   source_commit: 6c47a07bd139190005984d2db337eff1371b2576
-  candidate_commit: null
+  candidate_commit: 8ed2027b2361a28fbb9479d35a2476d3b022730d
 expected_effect: >
   Completes procedure-heavy workflows (the 1/4-per-batch mode). Not targeted:
   policy-enumeration argument grounding (task_008), the strongest candidate for a
   future experiment's first generation.
 human_approval:
-  approved_by: 'TODO: set at PR #3 review'
+  approved_by: fperezsorrosal (user-directed merge of PR #3)
   date: '2026-08-14'
 held_out_result: null
