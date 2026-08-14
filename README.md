@@ -283,7 +283,8 @@ comment edit never trips the check while a re-decided frozen value refuses the r
 working tree on 2026-08-13 and lives in git history.
 
 **The lock is `FROZEN` for experiment 001** (`bm25-sonnet46`), which closed 2026-08-13 as the
-bring-up freeze without a graded round — see `results/experiment_001_bm25-sonnet46/README.md`.
+bring-up freeze without a graded round — see `results/experiment_001_bm25-sonnet46/README.md`
+(working tree cleared 2026-08-13; recover from git history at that path).
 The generation-based protocol re-freezes per experiment from seq 2 onward
 (`SIA_EVALUATION_PLAN.md` Phase 4). Two values were decided the hard way and the decisions
 carry forward:

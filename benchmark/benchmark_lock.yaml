@@ -15,7 +15,8 @@
 # one; `name` is a configuration nickname and may repeat across experiments — the sequence
 # is the identity — which is why seq 2 keeps 001's name: same model pair, same retrieval
 # freeze, new protocol. Experiment 001 closed 2026-08-13 as the bring-up freeze
-# (results/experiment_001_bm25-sonnet46/README.md); seq 2 is the generation protocol's
+# (results/experiment_001_bm25-sonnet46/README.md — working tree cleared 2026-08-13,
+# in git history); seq 2 is the generation protocol's
 # debug experiment (SIA_EVALUATION_PLAN.md D3), opened PROVISIONAL 2026-08-13 so plan
 # Phases 2-3 have a runnable context, values final when Phase 4 freezes it.
 experiment:

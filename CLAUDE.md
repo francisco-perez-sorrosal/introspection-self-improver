@@ -93,7 +93,9 @@ close.
   are attributable harness territory. Diagnosis is `operate`'s job.
 - **No result here is a result yet.** Experiment 001 (`bm25-sonnet46`) is `FROZEN` and closed
   as the bring-up freeze — 12 ad-hoc platform episodes, no split round, no reportable number
-  (`results/experiment_001_bm25-sonnet46/README.md`). The evaluation protocol re-freezes per
+  (`results/experiment_001_bm25-sonnet46/README.md`, removed from the working tree
+  2026-08-13 with the rest of the archive — recover from git history at that path). The
+  evaluation protocol re-freezes per
   experiment: seq 2 at debug scale, then the full run (plan Phases 4–5). The model pair is
   deliberate and deliberately asymmetric, and neither half is Sonnet 5 — the agent runs
   Sonnet 4.6 to keep the harness the binding constraint rather than the model, and the user
