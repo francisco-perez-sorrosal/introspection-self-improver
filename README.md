@@ -106,9 +106,10 @@ One bridge serves the whole run, and every episode rendezvouses on its own **cha
 per-episode mailbox at a per-episode `/mcp/<token>` URL — so episode identity is the URL
 itself and results cannot cross between episodes, even at `max_concurrency` above 1 with
 identical tool calls in flight. The local lane hands each episode's Pi subprocess its channel
-URL through the environment; the development lane, whose `dev` attachment holds a single URL
-for the whole run, reuses one pinned channel sequentially and is pinned at one episode in
-flight (`contract/constraints.md` § Platform-lane concurrency). One episode at a time is the
+URL through the environment. The development lane runs one named `dev --as` attachment per
+worker — each holding its own pinned channel URL for the whole run — and an attachment pool
+leases a slot to one episode at a time (`contract/constraints.md` § Platform-lane
+concurrency). Both lanes execute the frozen `max_concurrency`; one episode at a time is the
 degenerate case of the same mechanism, not a separate code path.
 
 **The adapter is a pipe, not a participant.** It translates message shapes and tool names and

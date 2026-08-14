@@ -177,9 +177,23 @@ name), and names carry a per-run nonce so two concurrent runs on one machine can
 each other's dev target. A pool of one slot rides the bridge's own run token — the
 single-attachment behavior this lane always had, one code path at every N.
 
-Both lanes therefore execute the frozen `max_concurrency`; the VALUE stays a freeze
-decision, with the useful ceiling set by round size (B tasks per batch, T per held-out)
-and the org's plan-derived sandbox limit, which queues rather than refuses beyond it.
+**The platform caps live dev attachments at one per Runtime — observed, not documented.**
+The Phase 3.5b live proof (2026-08-13) started a second named attachment against the same
+Runtime and the platform refused it server-side, retrying ~70s before timing out:
+
+    WARN introspection::dev_attach: development conflict this Runtime is already
+    connected by 'tau-w00-021d' on main at f40c084d code=Some("dev_slot_conflict")
+
+The pool's startup failed loudly and stopped every attachment — zero episodes spent. No
+plugin doc states this cardinality; the CLI's `--as` help ("two developers can share one
+Runtime") evidently describes named routing, not concurrent attachment multiplicity from
+one branch and machine. The runner therefore refuses platform-lane `max_concurrency` > 1
+before any spend (`assert_transport_supports_concurrency`), citing this observation. The
+machinery stays: if the platform lifts the cap (or a future decision runs N Runtimes —
+unprobed, with real platform-state and lineage implications), the pool serves N with no
+code change. Until then platform rounds are serial by upstream constraint; the local lane
+— ~85% of experiment wall-clock (`SIA_EVALUATION_PLAN.md` D7) — executes the frozen
+`max_concurrency` in full.
 
 ## Why `pi` launches the recipe locally rather than `introspection local`
 
