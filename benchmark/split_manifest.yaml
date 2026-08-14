@@ -16,10 +16,8 @@
 # experiment.seq in benchmark_lock.yaml), never new lists under the old one. Verify
 # with scripts/propose_split.py --verify.
 #
-# Experiment 002 bring-up partition at debug scale (D3). PROVISIONAL like the lock: re-proposed
-# or confirmed when plan Phase 4 freezes seq 2; held-out enforcement is structural on the
-# platform (no evidence exists) and procedural on local artifacts (out-of-tree vault, muted
-# grading).
+# D10 re-size: G=3 B=4 T=8 (was 3/3/5); decided 2026-08-13, executed pre-freeze while
+# PROVISIONAL
 
 version: 2
 domain: banking_knowledge
@@ -27,21 +25,27 @@ task_split_name: base
 
 batches:
   batch_01:
-    - task_023
-    - task_059
-    - task_091
+    - task_044
+    - task_061
+    - task_092
+    - task_101
   batch_02:
-    - task_036
-    - task_045
-    - task_090
+    - task_040
+    - task_058
+    - task_071
+    - task_087
   batch_03:
-    - task_048
-    - task_055
-    - task_098
+    - task_008
+    - task_028
+    - task_039
+    - task_089
 
 held_out:
   - task_017
-  - task_033
-  - task_050
-  - task_062
-  - task_068
+  - task_034
+  - task_036
+  - task_043
+  - task_054
+  - task_056
+  - task_067
+  - task_081

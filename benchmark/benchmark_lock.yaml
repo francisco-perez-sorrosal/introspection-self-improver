@@ -54,12 +54,15 @@ benchmark:
 # The generation protocol's experiment configuration (SIA_EVALUATION_PLAN.md §3;
 # self_improving_agent_evaluation_protocol.md §26). Frozen with everything else in this
 # file: the partition manifest is proposed from these sizes and verified against them,
-# and (G*B)+T must fit the domain's 97 tasks. Debug scale per D3 — seq 2 proves the loop
-# end to end before the full G=5/B=10/T=47 experiment freezes under the next seq.
+# and (G*B)+T must fit the domain's 97 tasks. Debug scale per D10 (2026-08-13, sized so
+# a real improvement can SHOW on the fixed held-out curve: T=8 gives a fixed failure
+# mode ~60% odds of a held-out witness vs ~43% at T=5, halves the per-task quantum to
+# 12.5 pp, and dilutes identity-harness churn across 8 matrix rows) — seq 2 proves the
+# loop end to end before the full G=5/B=10/T=47 experiment freezes under the next seq.
 protocol:
   generations: 3
-  improvement_tasks_per_generation: 3
-  held_out_tasks: 5
+  improvement_tasks_per_generation: 4
+  held_out_tasks: 8
 
   # Re-running the just-consumed batch after a mutation would be intervention
   # verification, never generalization (protocol §15). Off for the debug experiment —
@@ -178,8 +181,10 @@ frozen:
   # channels (tool_bridge.py) on both lanes — contract/constraints.md § Platform-lane
   # concurrency has the platform mechanism. Caveat, documented not gated: high N contends
   # on provider rate limits (2N Anthropic streams), which can convert throttling into
-  # infra retries inside episodes.
-  max_concurrency: 10
+  # infra retries inside episodes. 4 per D10 (was 10 briefly, 2026-08-13): T=8 runs in
+  # two waves, B=4 in one-to-two at the org's effective sandbox concurrency of ~2, and
+  # 8 concurrent provider streams stays modest.
+  max_concurrency: 4
 
   # Whether tau ends an episode when an assistant message carries both text and tool calls.
   # On the frozen list because it decides whether a protocol violation is graded at all, so
