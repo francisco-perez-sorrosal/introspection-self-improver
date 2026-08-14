@@ -16,6 +16,7 @@ from tau_adapter.rounds import (
     TRANSPORT_LOCAL,
     TRANSPORT_PLATFORM,
     RoundError,
+    resolve_max_concurrency,
     resolve_round,
 )
 from tau_adapter.split import HELD_OUT, MANIFEST_VERSION, TaskRow, partition_sizes, propose
@@ -162,3 +163,24 @@ def test_the_legacy_manifest_stops_a_round_loudly():
     legacy = {"version": 1, "domain": _DOMAIN, "discovery": ["task_001"]}
     with pytest.raises(RoundError, match="retired three-way split"):
         _resolve(heldout=True, manifest=legacy, rows=rows)
+
+
+def test_without_the_flag_every_run_reads_the_locks_concurrency():
+    assert resolve_max_concurrency(None, locked_mode=True, lock_value=1) == 1
+    assert resolve_max_concurrency(None, locked_mode=False, lock_value=1) == 1
+
+
+def test_a_locked_run_refuses_the_concurrency_flag():
+    """max_concurrency is a frozen execution budget: a later generation must not "improve"
+    by being allowed more parallelism, so the override exists for diagnostic rounds only."""
+    with pytest.raises(RoundError, match="frozen execution budget"):
+        resolve_max_concurrency(3, locked_mode=True, lock_value=1)
+
+
+def test_a_diagnostic_run_may_override_concurrency():
+    assert resolve_max_concurrency(3, locked_mode=False, lock_value=1) == 3
+
+
+def test_a_nonpositive_concurrency_is_refused():
+    with pytest.raises(RoundError, match="at least 1"):
+        resolve_max_concurrency(0, locked_mode=False, lock_value=1)

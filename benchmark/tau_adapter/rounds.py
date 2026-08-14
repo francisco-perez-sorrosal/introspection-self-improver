@@ -49,6 +49,28 @@ class RoundSpec:
     label_token: str
 
 
+def resolve_max_concurrency(flag: int | None, *, locked_mode: bool, lock_value: int) -> int:
+    """The run's episode concurrency, refused before any money is spent when it lies.
+
+    `max_concurrency` is a frozen execution budget (CLAUDE.md): a later generation must not
+    "improve" by being allowed more parallelism, so locked-mode runs — protocol rounds
+    included — always read the lock and refuse the flag outright. Diagnostic rounds are not
+    comparable to anything by definition, which is what makes the override safe there; it is
+    how the concurrency machinery is exercised while the frozen VALUE stays 1.
+    """
+    if flag is None:
+        return int(lock_value)
+    if locked_mode:
+        raise RoundError(
+            "--max-concurrency is refused on the locked domain: max_concurrency is a frozen "
+            f"execution budget and this run reads the lock's value ({lock_value}). The flag "
+            "exists for diagnostic-mode rounds only."
+        )
+    if flag < 1:
+        raise RoundError(f"--max-concurrency must be at least 1, got {flag}")
+    return flag
+
+
 def resolve_round(
     *,
     batch: int | None,

@@ -425,6 +425,16 @@ def main() -> int:
             "manifest and validates it per episode, at about +5.5s each."
         ),
     )
+    parser.add_argument(
+        "--max-concurrency",
+        type=int,
+        default=None,
+        help=(
+            "episodes in flight at once, each on its own bridge channel. Diagnostic mode "
+            "only: max_concurrency is a frozen execution budget, so locked-domain runs "
+            "always read the lock and refuse this flag."
+        ),
+    )
     args = parser.parse_args()
 
     lock = lockmod.load_lock()
@@ -453,6 +463,13 @@ def main() -> int:
     domain = args.domain or lock.domain
     locked_mode = domain == lock.domain
     muted = spec.kind == roundsmod.KIND_HELDOUT
+
+    try:
+        max_concurrency = roundsmod.resolve_max_concurrency(
+            args.max_concurrency, locked_mode=locked_mode, lock_value=lock.max_concurrency
+        )
+    except roundsmod.RoundError as exc:
+        raise SystemExit(str(exc)) from exc
 
     task_ids: list[str] | None = spec.task_ids
     num_trials = lock.num_trials
@@ -637,7 +654,7 @@ def main() -> int:
         max_steps=lock.max_steps,
         max_errors=lock.max_errors,
         timeout=lock.timeout_seconds,
-        max_concurrency=lock.max_concurrency,
+        max_concurrency=max_concurrency,
         enforce_communication_protocol=lock.enforce_communication_protocol,
         # τ's own checkpointing, adopted rather than reimplemented: results.json
         # is written incrementally, and a rerun into the same directory resumes from it,
@@ -700,16 +717,21 @@ def main() -> int:
     else:
         selection = f"whole split ({len(tasks)} tasks)"
     print(f"   tasks         {selection} in {num_trials} trial(s)")
+    if max_concurrency != 1:
+        print(
+            f"   concurrency   {max_concurrency} episode(s) in flight, one bridge channel "
+            "each (diagnostic override)"
+        )
     if lock.provisional:
         print("   lock status   PROVISIONAL — not an experiment freeze")
     if len(tasks) * num_trials > 20:
-        # A sweep is the expensive path and max_concurrency is frozen at 1, so it runs
-        # serially. Say what that costs before spending it rather than after.
+        # A sweep is the expensive path. Say what it costs before spending it rather than
+        # after; at max_concurrency 1 (the frozen value) that means running serially.
         episodes = len(tasks) * num_trials
         print(
             f"\n   sweep: {episodes} episode(s) at max_concurrency="
-            f"{lock.max_concurrency}, serial. An interruption is safe: rerunning the same "
-            "--out resumes and re-spends nothing."
+            f"{max_concurrency}{', serial' if max_concurrency == 1 else ''}. An "
+            "interruption is safe: rerunning the same --out resumes and re-spends nothing."
         )
     print()
 
@@ -822,6 +844,7 @@ def main() -> int:
                 "generation": generation,
                 "split": spec.split,
                 "num_trials": num_trials,
+                "max_concurrency": max_concurrency,
                 "transport": spec.transport,
                 "launcher": args.launcher if spec.transport == TRANSPORT_LOCAL else None,
                 "launch_argv": launch_argv,
