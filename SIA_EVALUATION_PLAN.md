@@ -75,7 +75,7 @@ the rest are recorded here as the working defaults.
 | D4 | Gates | **A.0a stays blocking** per experiment (adapter suite + mock smoke — cheap, guards the seam). **A.0b demoted** from blocking gate to diagnostic instrument (`make fidelity` on demand); the Phase 2 platform-health check replaces its blocking role. **A.0c (`anchor_stock`) retired** — stock-agent comparability is explicitly no longer a goal. **Ratified 2026-08-13.** |
 | D5 | Generation semantics | `generation_NNN` dir ≡ H_n. A generation is defined by an approved, merged PR commit on `main`, tagged `exp<seq>-g<NNN>`. **Rejected mutation ⇒ identity generation**: H_(g+1) = H_g recorded in the improvement record, held-out eval skipped, R_g carried forward, next batch consumed as normal. | One batch per generation slot regardless of accept/reject (protocol §13's fresh-evidence rule); no paired baseline/candidate arms anymore. |
 | D6 | H0 reset mechanism | Tag the current recipe as **`h0-baseline`** (byte-identical `target-agent/` + `.introspection/target-agent.yaml` since the M1 freeze `0976493`). `make reset_h0` = restore from tag as **replace, not merge** (`git checkout <tag> -- …` + `git clean -fdx target-agent`), then `make bootstrap` (regenerates `.pi/mcp.local.json`), then `introspection check`, then instruct to commit — platform rounds refuse a dirty recipe tree. `.introspection/local.json` (machine-local runtime binding, CLI-written) is preserved, never restored. | Every new experiment starts from the same H0. **Ratified 2026-08-13** — tag `h0-baseline` created at `2e8058b`. |
-| D7 | Concurrency | `max_concurrency: 1` stays (bridge is run-scoped, single-episode-safe; raising it needs bridge episode-multiplexing + a re-freeze). Revisit only if Phase 5 wall-clock is unacceptable. **Re-decided 2026-08-13 (user): the episode-multiplexing machinery is built BEFORE Phase 4 (Phase 3.5)** so the debug experiment runs the new bridge at its degenerate concurrency 1 under a fresh A.0a PASS — one code path, no seam swap between debug and full. The frozen VALUE stays 1 for seq 2; seq 3 decides the number. Lane analysis: held-out (local lane) is ~85% of episode wall-clock and the simple half — it parallelizes; platform batches stay serial unless the docs pass proves a native affordance. **Machinery landed at Phase 3.5 (2026-08-13):** per-episode URL channels on the run-scoped bridge; local lane concurrent (2.80× at N=3 on the mock round); platform lane pinned at 1 with the native affordance (`dev --as` attachments) documented in `contract/constraints.md § Platform-lane concurrency`, cited not built. Seq-3 sizing facts: local N is bounded by 2N concurrent Anthropic streams on one key (τ/litellm own retries — `num_retries` defaulted on every user-sim call) and, far later, by the bridge's `asyncio.to_thread` pool (≈ min(32, cpu+4) parked handlers). **Re-decided again 2026-08-13 (user): the platform pin is lifted too — Phase 3.5b builds the `dev --as` attachment pool so BOTH lanes execute concurrent episodes; the VALUE stays a freeze decision, useful ceiling B per batch round / T per held-out round.** **Outcome (2026-08-13): the pool is built and live-proven at N=1, but the platform itself accepts ONE live dev attachment per Runtime (`dev_slot_conflict`, observed) — platform rounds stay serial by upstream constraint, refused pre-spend with the citation; the local lane executes the frozen value in full. Paths if platform N>1 is ever needed: upstream cap lift, or N Runtimes (unprobed, lineage implications).** | Held-out eval ≈ 2.5–4 h serial at T=47; the machinery targets a 3–5× cut for seq 3, bounded by API concurrency, not code. |
+| D7 | Concurrency | `max_concurrency: 1` stays (bridge is run-scoped, single-episode-safe; raising it needs bridge episode-multiplexing + a re-freeze). Revisit only if Phase 5 wall-clock is unacceptable. **Re-decided 2026-08-13 (user): the episode-multiplexing machinery is built BEFORE Phase 4 (Phase 3.5)** so the debug experiment runs the new bridge at its degenerate concurrency 1 under a fresh A.0a PASS — one code path, no seam swap between debug and full. The frozen VALUE stays 1 for seq 2; seq 3 decides the number. Lane analysis: held-out (local lane) is ~85% of episode wall-clock and the simple half — it parallelizes; platform batches stay serial unless the docs pass proves a native affordance. **Machinery landed at Phase 3.5 (2026-08-13):** per-episode URL channels on the run-scoped bridge; local lane concurrent (2.80× at N=3 on the mock round); platform lane pinned at 1 with the native affordance (`dev --as` attachments) documented in `contract/constraints.md § Platform-lane concurrency`, cited not built. Seq-3 sizing facts: local N is bounded by 2N concurrent Anthropic streams on one key (τ/litellm own retries — `num_retries` defaulted on every user-sim call) and, far later, by the bridge's `asyncio.to_thread` pool (≈ min(32, cpu+4) parked handlers). **Re-decided again 2026-08-13 (user): the platform pin is lifted too — Phase 3.5b builds the `dev --as` attachment pool so BOTH lanes execute concurrent episodes; the VALUE stays a freeze decision, useful ceiling B per batch round / T per held-out round.** **Outcome (2026-08-13): the pool is built and live-proven at N=1, but the platform itself accepts ONE live dev attachment per Runtime (`dev_slot_conflict`, observed) — platform rounds stay serial by upstream constraint, refused pre-spend with the citation; the local lane executes the frozen value in full. Paths if platform N>1 is ever needed: upstream cap lift, or N Runtimes (unprobed, lineage implications).** **Superseded same day by Phase 3.5c: a header probe found the tunnel stamps every forwarded MCP request with its sandbox session, so ONE attachment serves N concurrent tasks via session-keyed channels; the pool is retired, `max_concurrency` is unfrozen to an operational knob (default 10, `--max-concurrency 1` = serial), and both lanes execute it.** | Held-out eval ≈ 2.5–4 h serial at T=47; the machinery targets a 3–5× cut for seq 3, bounded by API concurrency, not code. |
 | D8 | H0 viability signal | The old §13.1 discovery floor is replaced by the **B1 read**: batch results are visible by design, so if H0 lands 0/B or B/B on B1, halt and reconsider H0 before spending further generations. Not a hard floor at B=10 (2/10 is within noise of 20%). | The firewall makes a held-out floor check impossible until reveal; B1 is the legitimate window. |
 | D9 | Vault & reveal | Held-out outputs (episodes, sessions, graded results, console log) live out of tree at `~/.sia_vault/experiment_<id>/generation_NNN/`. `make reveal` — runnable only when the final generation is tagged — copies the vault into `results/experiment_<id>/held_out/`, computes the matrices, and writes `summary.md`. Until then the orchestrator does not read the vault (procedural, stated in every writeup). | Out-of-tree keeps held-out data away from glob/grep sweeps and the dashboard walk; the dashboard renders held-out views only from revealed artifacts. |
 
@@ -458,6 +458,55 @@ temporary PROVISIONAL bump during the live proof (restored immediately after).
       the frozen `max_concurrency` in full (2.80× measured at N=3); platform
       rounds stay serial by the observed upstream cap, with the pool ready the
       day it lifts (2026-08-13).
+
+### Phase 3.5c — Session-keyed platform concurrency; the knob unfrozen
+
+User-directed 2026-08-13, superseding 3.5b's pin: concurrency must work on both
+lanes unconditionally, serial execution becomes the operator's explicit
+`--max-concurrency 1`, and the `dev_slot_conflict` cap must be solved, proven by a
+platform round with ≥2 tasks genuinely in parallel.
+
+- [x] `max_concurrency` unfrozen (user re-decision): parallelism moves wall-clock,
+      never what the agent can do inside an episode, so it leaves the frozen-budget
+      doctrine — lock default 10, any round type may override in either direction,
+      effective value recorded in `run_metadata.json`; `CLAUDE.md`'s frozen list
+      updated (2026-08-13).
+- [x] Header probe (1 locked platform episode, ~$0.35 + one earlier run lost to a
+      loguru lesson): the dev tunnel stamps every forwarded MCP request with
+      `x-introspection-session-id`, and `tasks get` exposes the same value as
+      `metadata.agent_session_id` — per-episode identity exists on the platform
+      lane without any attachment multiplicity. Instrument kept:
+      `TAU_BRIDGE_TRACE_HEADERS=1`, raw stderr because τ's per-task log context
+      swallows loguru mid-simulation (2026-08-13).
+- [x] Session-keyed channels (tests first): both lanes open a fresh channel per
+      episode; the platform transport binds it to its task's session id (create
+      response, else a `tasks get` poll beside the stream) and the bridge routes
+      tunneled calls by session header with path-token fallback; unbound sessions
+      wait a 30s grace instead of losing the race; conflicting binds fail the
+      episode loudly; never-bound sessions are refused after the grace. The
+      attachment pool and pinned-token machinery retired with their premise (one
+      nonce-named attachment serves every task); the 3.5b platform pin removed.
+      Suite 231 green (2026-08-13).
+- [x] Experiment artifacts cleared from the working tree (user-directed):
+      experiment_001 archive, experiment_002 bring-up runs, and the vault — all in
+      git history; citation sites annotated (2026-08-13).
+- [x] Platform parallel minitest (2026-08-13): 3 locked tasks through ONE
+      attachment (`tau-a524`) at lock-default concurrency — **genuinely parallel**
+      (overlapping windows: task_023∥task_091, task_091∥task_059), fidelity
+      per-episode invariants clean on all 3 (every call answered, no orphan
+      results, mapped names, graded), 3 distinct tasks/conversations, evidence
+      complete on every row. 479s wall-clock, $3.04 platform-reported (task_091
+      ran 112 messages — episode length, not concurrency, drives cost). One
+      attempt failed mid-stream and τ retried it (1 orphan task, its sandbox
+      archived): the stall + stream-failure counters attribute **entirely to the
+      dead attempt** — surviving episodes carry only benign `stream_reattaches`
+      (2/1/16, scaling with turns) — so the containment the channels promise held
+      under real concurrency. Rows `arm_sha_ok=false` as declared. Watch the
+      attempt-failure rate at Phase 4 batches; it is τ-absorbed and visible, not
+      silent.
+- [x] Close: constraints/README/lock/D7 truth landed alongside the mechanism;
+      suite 231 green, ruff + format clean, `make check` green, `make gate_a0a`
+      PASS re-recorded on the session-keyed bridge (2026-08-13).
 
 ### Phase 4 — Debug experiment (seq 2): the real-scenario test
 

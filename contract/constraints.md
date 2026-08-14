@@ -156,44 +156,47 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
 
 ## Platform-lane concurrency
 
-The bridge multiplexes episodes over per-episode URL channels (2026-08-13): each episode
-rendezvouses at its own `/mcp/<token>` path with its own mailbox, so the local lane runs N
-episodes in flight without any way for their results to cross. The development lane cannot
-use per-episode URLs directly — `introspection dev --mcp tau=<url>` is handed exactly one
-URL for the whole attachment, and per-task MCP configuration does not exist (`tasks create
---metadata` is application metadata, not a platform switch) — so its concurrency rides the
-platform's own affordance instead, verified against the installed CLI and built as the
-**attachment pool** (2026-08-13, `SIA_EVALUATION_PLAN.md` Phase 3.5b): `introspection dev
---as <name>` names an attachment, N named attachments serve one Runtime concurrently, and
-`INTROSPECTION_DEV_TARGET=<name>` routes a task to its attachment fail-closed.
+Both lanes execute `max_concurrency` through one mechanism (2026-08-13): every episode
+opens its own bridge channel — its own mailbox — and what differs per lane is only how a
+request finds it. Locally, episode identity is the URL: each Pi subprocess is handed its
+channel's `/mcp/<token>` path through its environment. On the development lane, every
+sandbox reaches the bridge through the single URL its `dev` attachment was handed — per-
+episode URLs are impossible there (`--mcp` carries one URL; per-task MCP configuration
+does not exist; `tasks create --metadata` is application metadata, not a platform switch)
+— so episode identity rides the tunnel instead: **the platform stamps every forwarded MCP
+request with `x-introspection-session-id`, the sandbox session it came from, and `tasks
+get` exposes the same value as `metadata.agent_session_id`** (both observed live
+2026-08-13 with the bridge's `TAU_BRIDGE_TRACE_HEADERS=1` instrument). The platform
+transport binds its episode's channel to that session id — opportunistically from the
+`tasks create` response, else by polling `tasks get` beside the stream — and the bridge
+routes each tunneled call by its session header, falling back to the path token. An
+unknown session waits a short grace for the binding poll rather than losing the race; a
+session that never binds is refused after the grace — visible as tool errors, never as
+crossing; a conflicting bind fails the episode loudly rather than stealing another's
+calls.
 
-The pool (`tau_adapter/dev_lane.py`) starts one named attachment per worker, each handed
-its own pinned bridge slot's URL for the whole run; an episode leases a slot for its
-lifetime and its transport releases it at close. The invariants the tests pin: a slot can
-never be queued twice (two episodes on one attachment would share a rendezvous channel —
-the exact crossing the channels forbid), a dead attachment is refused loudly at lease and
-retired, a misnamed attachment is refused at startup (routing fails closed on the exact
-name), and names carry a per-run nonce so two concurrent runs on one machine cannot claim
-each other's dev target. A pool of one slot rides the bridge's own run token — the
-single-attachment behavior this lane always had, one code path at every N.
+Two hard-won facts bound this design and are worth not relearning:
 
-**The platform caps live dev attachments at one per Runtime — observed, not documented.**
-The Phase 3.5b live proof (2026-08-13) started a second named attachment against the same
-Runtime and the platform refused it server-side, retrying ~70s before timing out:
+- **The platform accepts ONE live dev attachment per Runtime.** A second named
+  attachment (`dev --as`) against the same Runtime was refused server-side —
+  `dev_slot_conflict: this Runtime is already connected by 'tau-w00-021d'` — retrying
+  ~70s before timing out (observed 2026-08-13; no plugin doc states this cardinality,
+  and the `--as` help's "two developers can share one Runtime" describes named routing,
+  not attachment multiplicity from one branch and machine). An attachment-*pool* design
+  built on N attachments was landed, live-refuted the same day, and retired; git history
+  keeps it. One attachment is also all that concurrency needs, because of the session
+  header above.
+- The attachment keeps a **nonce'd `--as` name** so two concurrent runs on one machine
+  cannot claim each other's dev target, and a misnamed attachment is refused at startup —
+  task routing fails closed on the exact name.
 
-    WARN introspection::dev_attach: development conflict this Runtime is already
-    connected by 'tau-w00-021d' on main at f40c084d code=Some("dev_slot_conflict")
-
-The pool's startup failed loudly and stopped every attachment — zero episodes spent. No
-plugin doc states this cardinality; the CLI's `--as` help ("two developers can share one
-Runtime") evidently describes named routing, not concurrent attachment multiplicity from
-one branch and machine. The runner therefore refuses platform-lane `max_concurrency` > 1
-before any spend (`assert_transport_supports_concurrency`), citing this observation. The
-machinery stays: if the platform lifts the cap (or a future decision runs N Runtimes —
-unprobed, with real platform-state and lineage implications), the pool serves N with no
-code change. Until then platform rounds are serial by upstream constraint; the local lane
-— ~85% of experiment wall-clock (`SIA_EVALUATION_PLAN.md` D7) — executes the frozen
-`max_concurrency` in full.
+`max_concurrency` itself is an operational knob, not a frozen budget (re-decided
+2026-08-13): parallelism moves wall-clock, never what the agent can do inside an episode.
+The lock's value is the recorded default, any run may override it with
+`--max-concurrency` (1 = serial), and the effective value is recorded in
+`run_metadata.json`. The practical ceilings are provider rate limits (2N Anthropic
+streams; throttling surfaces as infra retries) and the org's plan-derived sandbox limit,
+which queues rather than refuses.
 
 ## Why `pi` launches the recipe locally rather than `introspection local`
 

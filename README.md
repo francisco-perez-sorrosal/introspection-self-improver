@@ -102,15 +102,16 @@ them with a rendezvous, and neither side gives up authority:
 bridge never touches the environment, so it cannot become a second implementation of the
 benchmark's semantics. Nothing about the trajectory is reconstructed.
 
-One bridge serves the whole run, and every episode rendezvouses on its own **channel** — a
-per-episode mailbox at a per-episode `/mcp/<token>` URL — so episode identity is the URL
-itself and results cannot cross between episodes, even at `max_concurrency` above 1 with
-identical tool calls in flight. The local lane hands each episode's Pi subprocess its channel
-URL through the environment. The development lane runs one named `dev --as` attachment per
-worker — each holding its own pinned channel URL for the whole run — and an attachment pool
-leases a slot to one episode at a time (`contract/constraints.md` § Platform-lane
-concurrency). Both lanes execute the frozen `max_concurrency`; one episode at a time is the
-degenerate case of the same mechanism, not a separate code path.
+One bridge serves the whole run, and every episode rendezvouses on its own **channel** — its
+own mailbox — so results cannot cross between episodes, even at `max_concurrency` above 1
+with identical tool calls in flight. What differs per lane is only how a request finds its
+channel: the local lane hands each Pi subprocess its channel's `/mcp/<token>` URL through
+the environment, while the development lane's tunnel stamps every forwarded request with its
+sandbox session (`x-introspection-session-id`) and the transport binds each episode's
+channel to its task's `agent_session_id` — so N concurrent tasks share the one `dev`
+attachment without sharing any rendezvous state (`contract/constraints.md` § Platform-lane
+concurrency). `max_concurrency` is an operational knob: the lock's value is the default,
+`--max-concurrency` overrides it per run, and 1 asks for serial execution.
 
 **The adapter is a pipe, not a participant.** It translates message shapes and tool names and
 does nothing else — no repair, no retry, no reformatting. Anywhere the adapter helps the agent
