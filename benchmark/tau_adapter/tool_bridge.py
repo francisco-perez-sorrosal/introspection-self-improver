@@ -20,8 +20,9 @@ identity is the URL itself, and a result posted for one episode cannot answer an
 call even when both name the same tool with identical arguments. τ runs its episodes from
 a worker pool (`max_concurrency`), and the channel registry is what makes N in-flight
 episodes safe; one episode at a time is simply the degenerate case of the same mechanism.
-The development lane, whose `dev` attachment is handed a single URL for the whole run,
-reuses one pinned token sequentially (`open_run_channel`) — same mechanism, same rules.
+The development lane runs one `dev` attachment per worker, each handed one pinned slot's
+URL for the whole run (`open_pinned_channel`); the attachment pool leases a slot to one
+episode at a time — same mechanism, same rules, at every N including 1.
 """
 
 from __future__ import annotations
@@ -306,12 +307,12 @@ class ToolBridge:
     def path(self) -> str:
         """The run-pinned endpoint path, with its token as the last segment.
 
-        This is the one URL the development lane can carry: `introspection dev --mcp
-        tau=<url>` conveys a URL and nothing else — no credentials, no per-task override —
-        and a *connected* MCP binding (the documented place for headers) replaces the URL
-        with its own, which cannot reach this machine from a cloud sandbox. The token
-        therefore rides in the path, and this pinned path is the platform lane's channel
-        for every episode (`open_run_channel`). Local-lane episodes mint their own paths.
+        A `dev` attachment can carry exactly one URL: `introspection dev --mcp tau=<url>`
+        conveys a URL and nothing else — no credentials, no per-task override — and a
+        *connected* MCP binding (the documented place for headers) replaces the URL with
+        its own, which cannot reach this machine from a cloud sandbox. The token therefore
+        rides in the path. This run token is slot 0's; the attachment pool mints one more
+        pinned token per additional worker. Local-lane episodes mint their own paths.
         """
         return f"/mcp/{self.token}"
 
@@ -376,10 +377,6 @@ class ToolBridge:
             channel = EpisodeChannel(self, token, on_stall)
             self._channels[token] = channel
             return channel
-
-    def open_run_channel(self, on_stall: Callable[[], None] | None = None) -> EpisodeChannel:
-        """Slot 0's opener: the run-pinned path. Alias for the single-attachment case."""
-        return self.open_pinned_channel(self.token, on_stall)
 
     def _release(self, channel: EpisodeChannel) -> None:
         # Identity-guarded: a late close of a replaced run channel (τ tearing down a failed

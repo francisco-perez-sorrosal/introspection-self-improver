@@ -30,8 +30,9 @@ from tau_adapter.transport import AgentTransport, AssistantTurn, TransportFailur
 
 #: Opens this episode's rendezvous channel; the keyword argument is the stall sink.
 #: The runner chooses which opener an agent gets: `ToolBridge.open_channel` on the local
-#: lane (fresh URL per episode, safe at any concurrency) or `ToolBridge.open_run_channel`
-#: on the development lane (the pinned URL `dev` was handed, sequential episodes only).
+#: lane (fresh URL per episode) or a partial of `ToolBridge.open_pinned_channel` bound to
+#: the leased attachment slot's token on the development lane (the pinned URL that slot's
+#: `dev` attachment was handed; the pool leases a slot to one episode at a time).
 ChannelOpener = Callable[..., EpisodeChannel]
 
 # A turn covers one model call plus Pi's own overhead. Generous on purpose: this is plumbing,

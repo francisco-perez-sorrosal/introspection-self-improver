@@ -159,25 +159,27 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
 The bridge multiplexes episodes over per-episode URL channels (2026-08-13): each episode
 rendezvouses at its own `/mcp/<token>` path with its own mailbox, so the local lane runs N
 episodes in flight without any way for their results to cross. The development lane cannot
-use per-episode URLs: `introspection dev --mcp tau=<url>` is handed exactly one URL for the
-whole attachment, every sandbox reaches the bridge through it, and per-task MCP
-configuration does not exist (`tasks create --metadata` is application metadata, not a
-platform switch). N platform episodes in flight would therefore share one channel — exactly
-the cross-episode contamination the channels exist to prevent — and the runner refuses the
-combination (`tau_adapter/rounds.py`, `assert_transport_supports_concurrency`).
+use per-episode URLs directly — `introspection dev --mcp tau=<url>` is handed exactly one
+URL for the whole attachment, and per-task MCP configuration does not exist (`tasks create
+--metadata` is application metadata, not a platform switch) — so its concurrency rides the
+platform's own affordance instead, verified against the installed CLI and built as the
+**attachment pool** (2026-08-13, `SIA_EVALUATION_PLAN.md` Phase 3.5b): `introspection dev
+--as <name>` names an attachment, N named attachments serve one Runtime concurrently, and
+`INTROSPECTION_DEV_TARGET=<name>` routes a task to its attachment fail-closed.
 
-The platform's own affordance for N>1 is documented and verified against the installed CLI,
-and deliberately not built: `introspection dev --as <name>` names an attachment, N named
-attachments can serve one Runtime concurrently, and `INTROSPECTION_DEV_TARGET=<name>`
-routes a task to its attachment fail-closed — so N workers could each own an attachment
-carrying that worker's channel URL. It is unbuilt because it cannot be proven live inside
-the current rules: the concurrency override is diagnostic-mode-only, diagnostic mode is
-local-lane-only, and locked platform rounds run at the frozen value of 1 — machinery this
-repo cannot exercise is machinery it does not ship (the same written-from-what-ran doctrine
-as `contract/protocol.md`). A future freeze that wants concurrent platform batches builds
-and proves that path first; until then batch wall-clock stays serial by design, and the
-payoff of concurrency lives where ~85% of the wall-clock does — the local held-out lane
-(`SIA_EVALUATION_PLAN.md` D7).
+The pool (`tau_adapter/dev_lane.py`) starts one named attachment per worker, each handed
+its own pinned bridge slot's URL for the whole run; an episode leases a slot for its
+lifetime and its transport releases it at close. The invariants the tests pin: a slot can
+never be queued twice (two episodes on one attachment would share a rendezvous channel —
+the exact crossing the channels forbid), a dead attachment is refused loudly at lease and
+retired, a misnamed attachment is refused at startup (routing fails closed on the exact
+name), and names carry a per-run nonce so two concurrent runs on one machine cannot claim
+each other's dev target. A pool of one slot rides the bridge's own run token — the
+single-attachment behavior this lane always had, one code path at every N.
+
+Both lanes therefore execute the frozen `max_concurrency`; the VALUE stays a freeze
+decision, with the useful ceiling set by round size (B tasks per batch, T per held-out)
+and the org's plan-derived sandbox limit, which queues rather than refuses beyond it.
 
 ## Why `pi` launches the recipe locally rather than `introspection local`
 

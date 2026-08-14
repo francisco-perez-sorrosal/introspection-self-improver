@@ -471,3 +471,34 @@ def test_original_title_is_recovered_from_under_harness_labels() -> None:
     assert original_title_of("[exp_001:bm25-sonnet46] τ²-bench banking_knowledge") == ""
     assert original_title_of("τ²-bench banking task_004 trial0 gen000 [exp:bm25-sonnet46]") == ""
     assert original_title_of("") == ""
+
+
+def test_close_releases_the_attachment_slot_exactly_once(monkeypatch) -> None:
+    """The slot goes back to the pool on close and only once — a double release that
+    re-queued it would hand one attachment to two episodes at the same time."""
+    releases: list[int] = []
+    transport = PlatformTransport(
+        runtime_id="rt", repo_root=".", release=lambda: releases.append(1)
+    )
+    transport._task_id = "task-1"
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: {})
+    transport.close()
+    transport.close()
+    assert releases == [1]
+
+
+def test_close_releases_the_slot_even_when_the_platform_cli_fails(monkeypatch) -> None:
+    """Retitle/archive failures are logged and non-fatal; a leaked lease would starve the
+    pool, so the release must not depend on the CLI cooperating."""
+
+    def failing_cli(args, timeout):
+        raise RuntimeError("platform unreachable")
+
+    releases: list[int] = []
+    transport = PlatformTransport(
+        runtime_id="rt", repo_root=".", release=lambda: releases.append(1)
+    )
+    transport._task_id = "task-1"
+    monkeypatch.setattr(transport, "_cli", failing_cli)
+    transport.close()
+    assert releases == [1]

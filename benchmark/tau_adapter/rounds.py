@@ -71,29 +71,6 @@ def resolve_max_concurrency(flag: int | None, *, locked_mode: bool, lock_value: 
     return flag
 
 
-def assert_transport_supports_concurrency(transport: str, max_concurrency: int) -> None:
-    """The platform lane is pinned at one episode in flight; refuse anything else.
-
-    Every development-lane episode rendezvouses at the single URL `introspection dev
-    --mcp tau=<url>` was handed, so N in flight would share one bridge channel and cross
-    results between episodes — the exact contamination the channels exist to prevent. The
-    platform's own affordance for N>1 (one named `dev --as <worker>` attachment per
-    worker, tasks routed fail-closed via INTROSPECTION_DEV_TARGET) is documented but
-    deliberately not built: it cannot be live-exercised while the frozen value is 1, and
-    machinery this repo cannot prove is machinery it does not ship. See
-    `contract/constraints.md` § Platform-lane concurrency.
-    """
-    if transport == TRANSPORT_PLATFORM and max_concurrency > 1:
-        raise RoundError(
-            f"the platform lane runs one episode at a time, not {max_concurrency}: every "
-            "episode rendezvouses at the one URL `introspection dev` was handed, so N in "
-            "flight would share a single bridge channel and cross results between episodes. "
-            "Raising the frozen value for platform batches first needs the N-attachment "
-            "path (`introspection dev --as <worker>` + INTROSPECTION_DEV_TARGET routing) "
-            "built and proven — contract/constraints.md § Platform-lane concurrency."
-        )
-
-
 def resolve_round(
     *,
     batch: int | None,

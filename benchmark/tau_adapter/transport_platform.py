@@ -36,7 +36,7 @@ import os
 import queue
 import subprocess
 import threading
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -226,6 +226,7 @@ class PlatformTransport:
         idle_timeout_seconds: int = 600,
         dev_target: str | None = None,
         episode_label: str | None = None,
+        release: Callable[[], None] | None = None,
     ) -> None:
         self._runtime_id = runtime_id
         self._repo_root = Path(repo_root)
@@ -233,6 +234,10 @@ class PlatformTransport:
         self._environment = environment
         self._idle_timeout = idle_timeout_seconds
         self._dev_target = dev_target
+        # Returns this episode's attachment slot to the pool. Invoked exactly once, from
+        # close(): the _closed guard is what makes a double close a single release, and a
+        # re-queued slot would hand one attachment to two episodes at once.
+        self._release = release
         # Becomes the task's title at episode end. The dashboard's conversation list shows the
         # task's title as the conversation's summary line, so this is what a row reads as.
         self._episode_label = episode_label
@@ -302,33 +307,54 @@ class PlatformTransport:
         if self._closed:
             return
         self._closed = True
-        self._stop_stream()
-        if self._task_id is None:
-            return
-        # The platform auto-titles the conversation from its content ("Wanted to change the
-        # email address…"), and that summary is worth keeping: read it before the retitle
-        # below destroys it, keep it for the runner's post-run label pass, and carry it in
-        # the interim title so even an interrupted run's row stays readable.
         try:
-            task = self._cli(["tasks", "get", self._task_id], timeout=60)
-            self.original_title = original_title_of(str((task or {}).get("title") or ""))
-        except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
-            logger.debug(f"could not read title of task {self._task_id}: {exc}")
-        if self._episode_label:
-            title = self._episode_label + (
-                f" - {self.original_title}" if self.original_title else ""
-            )
+            self._stop_stream()
+            if self._task_id is None:
+                return
+            # The platform auto-titles the conversation from its content ("Wanted to change
+            # the email address…"), and that summary is worth keeping: read it before the
+            # retitle below destroys it, keep it for the runner's post-run label pass, and
+            # carry it in the interim title so even an interrupted run's row stays readable.
             try:
-                self._cli(
-                    ["tasks", "update", self._task_id, "--title", title],
-                    timeout=60,
+                task = self._cli(["tasks", "get", self._task_id], timeout=60)
+                self.original_title = original_title_of(str((task or {}).get("title") or ""))
+            except (
+                RuntimeError,
+                OSError,
+                subprocess.SubprocessError,
+                json.JSONDecodeError,
+            ) as exc:
+                logger.debug(f"could not read title of task {self._task_id}: {exc}")
+            if self._episode_label:
+                title = self._episode_label + (
+                    f" - {self.original_title}" if self.original_title else ""
                 )
-            except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
-                logger.debug(f"could not retitle task {self._task_id}: {exc}")
-        try:
-            self._cli(["tasks", "archive", self._task_id, "-y"], timeout=120)
-        except (RuntimeError, OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
-            logger.debug(f"could not archive task {self._task_id}: {exc}")
+                try:
+                    self._cli(
+                        ["tasks", "update", self._task_id, "--title", title],
+                        timeout=60,
+                    )
+                except (
+                    RuntimeError,
+                    OSError,
+                    subprocess.SubprocessError,
+                    json.JSONDecodeError,
+                ) as exc:
+                    logger.debug(f"could not retitle task {self._task_id}: {exc}")
+            try:
+                self._cli(["tasks", "archive", self._task_id, "-y"], timeout=120)
+            except (
+                RuntimeError,
+                OSError,
+                subprocess.SubprocessError,
+                json.JSONDecodeError,
+            ) as exc:
+                logger.debug(f"could not archive task {self._task_id}: {exc}")
+        finally:
+            # The slot goes back even when retitle/archive failed: a leaked lease starves
+            # the pool, and the failures above are already logged, non-fatal, and counted.
+            if self._release is not None:
+                self._release()
 
     @property
     def session_ref(self) -> str | None:
