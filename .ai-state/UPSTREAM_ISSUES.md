@@ -52,6 +52,11 @@ Grep here before recommending a new filing (`upstream-stewardship` skill).
 - **Local workaround:** none acceptable — dropping `thinking_level` would fork the
   harness between lanes mid-experiment. The local lane (held-out rounds) is
   unaffected; improvement batches (platform lane) stay blocked.
+- **Update 2026-08-14 (later):** omitting `thinking_level` from the recipe does NOT
+  work around it — the sandbox applies Pi's default (medium) and serializes it through
+  the same path (verified: conversation `01a002ac-996e-732a-ab50-e20c94e2a050`, request
+  body identical with the field absent). The defect therefore breaks EVERY `openai/*`
+  model on the platform unconditionally; no recipe-side workaround exists.
 - **Unblock condition:** a sandbox Pi (or gateway request-shaping) release mapping
   `thinking_level` → `reasoning.effort` for OpenAI models; re-verify with
   `make single_task TRANSPORT=platform TASK=task_001`.
