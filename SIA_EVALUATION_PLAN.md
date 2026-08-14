@@ -12,8 +12,9 @@ Phase 0); frozen values stay in `benchmark/benchmark_lock.yaml`.\
 **Created:** 2026-08-13, grounded in repo state @ `984c598` and in the Introspection
 plugin (0.7.0) + CLI (0.26.0) capability surface verified the same day.
 
-**Done means:** Phase 4 closed — one complete debug-scale experiment (G=3, B=3, T=5)
-ran the real loop end to end: partition → H0 held-out (hidden) → batch → `operate` →
+**Done means:** Phase 4 closed — one complete debug-scale experiment (D3's G=3, B=3,
+T=5; D10 proposes G=3, B=4, T=8 at `max_concurrency` 4 — ratify at the freeze) ran the
+real loop end to end: partition → H0 held-out (hidden) → batch → `operate` →
 `improve` PR → human approval → new generation → held-out (hidden) → … → reveal →
 result artifacts. Phase 5 then runs the full experiment (G=5, B=10, T=47) under an
 unchanged mechanism.
@@ -62,7 +63,7 @@ scan — the harvest cadence must respect this; the metrics-over-spans fallback 
 
 ------------------------------------------------------------------------
 
-## 2. Decisions (D1–D9)
+## 2. Decisions (D1–D10)
 
 User override always wins. Items marked **ratify** need explicit sign-off at Phase 0;
 the rest are recorded here as the working defaults.
@@ -78,6 +79,7 @@ the rest are recorded here as the working defaults.
 | D7 | Concurrency | `max_concurrency: 1` stays (bridge is run-scoped, single-episode-safe; raising it needs bridge episode-multiplexing + a re-freeze). Revisit only if Phase 5 wall-clock is unacceptable. **Re-decided 2026-08-13 (user): the episode-multiplexing machinery is built BEFORE Phase 4 (Phase 3.5)** so the debug experiment runs the new bridge at its degenerate concurrency 1 under a fresh A.0a PASS — one code path, no seam swap between debug and full. The frozen VALUE stays 1 for seq 2; seq 3 decides the number. Lane analysis: held-out (local lane) is ~85% of episode wall-clock and the simple half — it parallelizes; platform batches stay serial unless the docs pass proves a native affordance. **Machinery landed at Phase 3.5 (2026-08-13):** per-episode URL channels on the run-scoped bridge; local lane concurrent (2.80× at N=3 on the mock round); platform lane pinned at 1 with the native affordance (`dev --as` attachments) documented in `contract/constraints.md § Platform-lane concurrency`, cited not built. Seq-3 sizing facts: local N is bounded by 2N concurrent Anthropic streams on one key (τ/litellm own retries — `num_retries` defaulted on every user-sim call) and, far later, by the bridge's `asyncio.to_thread` pool (≈ min(32, cpu+4) parked handlers). **Re-decided again 2026-08-13 (user): the platform pin is lifted too — Phase 3.5b builds the `dev --as` attachment pool so BOTH lanes execute concurrent episodes; the VALUE stays a freeze decision, useful ceiling B per batch round / T per held-out round.** **Outcome (2026-08-13): the pool is built and live-proven at N=1, but the platform itself accepts ONE live dev attachment per Runtime (`dev_slot_conflict`, observed) — platform rounds stay serial by upstream constraint, refused pre-spend with the citation; the local lane executes the frozen value in full. Paths if platform N>1 is ever needed: upstream cap lift, or N Runtimes (unprobed, lineage implications).** **Superseded same day by Phase 3.5c: a header probe found the tunnel stamps every forwarded MCP request with its sandbox session, so ONE attachment serves N concurrent tasks via session-keyed channels; the pool is retired, `max_concurrency` is unfrozen to an operational knob (default 10, `--max-concurrency 1` = serial), and both lanes execute it.** | Held-out eval ≈ 2.5–4 h serial at T=47; the machinery targets a 3–5× cut for seq 3, bounded by API concurrency, not code. |
 | D8 | H0 viability signal | The old §13.1 discovery floor is replaced by the **B1 read**: batch results are visible by design, so if H0 lands 0/B or B/B on B1, halt and reconsider H0 before spending further generations. Not a hard floor at B=10 (2/10 is within noise of 20%). | The firewall makes a held-out floor check impossible until reveal; B1 is the legitimate window. |
 | D9 | Vault & reveal | Held-out outputs (episodes, sessions, graded results, console log) live out of tree at `~/.sia_vault/experiment_<id>/generation_NNN/`. `make reveal` — runnable only when the final generation is tagged — copies the vault into `results/experiment_<id>/held_out/`, computes the matrices, and writes `summary.md`. Until then the orchestrator does not read the vault (procedural, stated in every writeup). | Out-of-tree keeps held-out data away from glob/grep sweeps and the dashboard walk; the dashboard renders held-out views only from revealed artifacts. |
+| D10 | Debug-experiment sizing | **Proposed 2026-08-13 (ratify at the Phase 4 freeze): G=3, B=4, T=8, lock `max_concurrency` default 4** — superseding D3's G=3/B=3/T=5 debug values. The anchor fact: the held-out set is ONE fixed list of T tasks, measured identically at every generation H_0..H_G (frozen in `split_manifest.yaml`, inside the freeze fingerprint; `reveal.py` refuses a measurement on any other task set) — that fixedness is the entire comparability of the curve and matrix. The batches are the opposite by design: G disjoint sets, one consumed per generation, never reused (protocol §13 fresh-evidence rule). Why T=8 over T=5: one task = 12.5 pp instead of 20 pp, binomial band ≈ ±17 pp instead of ±22 pp — a 2-task gain reads as directional at T=8 and drowns at T=5 — and the task×generation matrix grows to 8 rows × 4 measurements, showing per-task flips (gains/regressions/retention) even where the aggregate stays inside the band. Why B=4: prevalence quotes in quarters (2/4 beats 1/3), a slightly stronger D8 viability read, one extra evidence episode per generation. Why N=4: matches ⌈T/2⌉ waves and B in one-to-two waves, keeps 8 concurrent Anthropic streams modest; platform batches run at effective sandbox concurrency ≈2 (org queue, now tolerated by the runner). Honest caveat, stated wherever the debug curve renders: even T=8 resolves only ≥2-task effects; the debug experiment demonstrates the loop and a directional curve — the T=47 full run carries the claim. Cost delta ≈ +$3–6 (32 local + 12 platform episodes vs 20+9); (G×B)+T = 20 ≤ 97. | Debug compute at N=4 ≈ 1–2 h (vs 4–6 h serial); the matrix/curve becomes worth looking at, which is the user's stated goal for the debug run. |
 
 ------------------------------------------------------------------------
 
@@ -507,15 +509,33 @@ platform round with ≥2 tasks genuinely in parallel.
 - [x] Close: constraints/README/lock/D7 truth landed alongside the mechanism;
       suite 231 green, ruff + format clean, `make check` green, `make gate_a0a`
       PASS re-recorded on the session-keyed bridge (2026-08-13).
+- [x] Second pass (user-directed) — the minitest's one failed attempt diagnosed
+      from its platform record: task created 01:52:55, sandbox `started_at`
+      01:55:44 — **2m49s in the org's sandbox queue** (a third concurrent sandbox;
+      effective plan cap ≈ 2 observed) — our stream read the silent queued run as
+      dead, burned its reattach, τ retried; the orphaned attempt still ran after
+      starting and burned $0.69 τ discarded. Two fixes landed (`f586941`, suite
+      231 → 235, A.0a PASS re-recorded): (1) a silent stream over a task with no
+      `started_at` now re-attaches within a 240s queue budget (inside τ's 300s
+      turn ceiling), counted as the new `sandbox_queue_waits` incident — queueing
+      is latency, not failure, and real stream deaths after start fail exactly as
+      before; (2) a `bind()` racing the episode's teardown can no longer
+      re-register a closed channel in the routing table (closed flag under the
+      bridge lock, late binds ignored). Also recorded: `stream_reattaches` scales
+      with turns under concurrency (16 on a 112-message episode) — the designed
+      lost-race recovery, ~5.5s each, latency only (2026-08-13).
 
 ### Phase 4 — Debug experiment (seq 2): the real-scenario test
 
-The capstone: everything runs for real, small (G=3, B=3, T=5; 20 held-out + 9 batch
-episodes ≈ $10–15, compute wall-clock now set by the frozen concurrency). Same
-isolation rules as the full experiment (protocol §29.17). Runs on the Phase
-3.5/3.5b bridge; the freeze decides `max_concurrency` for both lanes (machinery
-supports N; useful ceiling is B=3 for batch rounds and T=5 for held-out rounds, so
-3 is the natural debug value — decided at the freeze, not here).
+The capstone: everything runs for real, small. Sizing per D10 (proposed: G=3, B=4,
+T=8, lock `max_concurrency` default 4 — ratify at the freeze; D3's G=3/B=3/T=5 is
+the fallback): 32 held-out + 12 batch episodes ≈ $11–18, compute ≈ 1–2 h at N=4
+(held-out rounds ≈ 8–15 min each on the local lane; batch rounds ≈ 6–16 min at the
+platform's effective sandbox concurrency of ~2, queue-tolerated). The held-out set
+is one fixed list of T tasks measured identically at every generation — the entire
+comparability of the curve — while each generation consumes its own disjoint batch.
+Same isolation rules as the full experiment (protocol §29.17). Runs on the Phase
+3.5/3.5c session-keyed bridge.
 
 - [ ] Freeze: `experiment.seq: 2`, debug `protocol:` values, `num_trials: 1`,
       partition proposed + frozen; `reset_h0`; commit; **A.0a gate PASS** recorded.
@@ -560,15 +580,21 @@ statement — all present and internally consistent.
 
 ## 6. Budget & wall-clock (estimates until replaced by actuals)
 
-| Item | Episodes | Cost | Wall-clock |
-|---|---|---|---|
-| Phase 2 live checks | ~6 (mock + 2+2 real) | ≈ $3 | < 1 h |
-| Debug experiment (seq 2) | 20 local + 9 platform | ≈ $10–15 | ~4–6 h compute + review time |
-| Full experiment | 282 local + 50 platform | ≈ $75–90 | ~20–28 h compute, ~1 week elapsed |
-| Endpoint reliability addendum (optional) | 376 local | ≈ $40–75 | ~25 h |
+| Item | Episodes | Cost | Wall-clock (serial) | Wall-clock (N=4) |
+|---|---|---|---|---|
+| Phase 2 live checks | ~6 (mock + 2+2 real) | ≈ $3 | < 1 h | — (ran serial) |
+| Debug experiment, D10 sizes (seq 2) | 32 local + 12 platform | ≈ $11–18 | ~5–8 h | **≈ 1–2 h** compute + review time |
+| Debug experiment, D3 fallback sizes | 20 local + 9 platform | ≈ $10–15 | ~4–6 h | ≈ 1–1.5 h |
+| Full experiment | 282 local + 50 platform | ≈ $75–90 | ~20–28 h, ~1 week elapsed | **≈ 5–7 h** compute (held-out 6×~42 min + batches 5×~20 min), ~2–3 days elapsed |
+| Endpoint reliability addendum (optional) | 376 local | ≈ $40–75 | ~25 h | ≈ 6–8 h |
 
-Basis: measured $0.10–0.51/local episode (median ≈ $0.20) and ≈ $0.34/platform
-episode ($4.09 across the 12 live episodes); serial at `max_concurrency: 1`.
+Basis: measured $0.10–0.51/local episode (median ≈ $0.20) and ≈ $0.34–1.0/platform
+episode (long episodes dominate cost — a 112-message episode billed ~$1). N=4 columns
+assume `--max-concurrency 4` / lock default 4: local rounds parallelize fully
+(2.80× measured at N=3 on the mock round); platform rounds run at the org's observed
+effective sandbox concurrency of ~2, with queueing tolerated by the runner rather
+than converted into retries. Concurrency changes wall-clock only — cost is
+per-episode and unchanged.
 
 ## 7. Risks
 
