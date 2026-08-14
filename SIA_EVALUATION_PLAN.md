@@ -612,7 +612,10 @@ Same isolation rules as the full experiment (protocol §29.17). Runs on the Phas
       → `improve` PR → human review/merge → tag `exp2-g001` → H1 held-out (hidden)
       → B2 → … → H3 held-out → final tag.
 - [ ] Improvement record per transition, written as it happens; B1 viability read
-      (D8) recorded.
+      (D8) recorded. **B1 read (2026-08-13, seq 2): 0/4** — all four episodes clean
+      (user_stop, evidence_complete, arm_sha_ok true, benign reattaches only), rewards
+      0.0/0.0/0.0/0.0 → D8's halt-and-reconsider-H0 condition fires; `operate`
+      diagnosis proceeds to inform the reconsideration before any `improve` PR.
 - [ ] `make reveal` → held-out artifacts + `summary.md`; verify every §27 artifact
       exists and every §29 guardrail held (walk the 20-item list, record the walk).
 - [ ] `contract/protocol.md` rewritten from this run (the per-generation procedure
