@@ -22,12 +22,20 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import secrets
 import signal
 import subprocess
 import threading
+import time
+from collections import deque
+from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from loguru import logger
+
+if TYPE_CHECKING:
+    from tau_adapter.tool_bridge import ToolBridge
 
 CLI = "introspection"
 READY_MARKER = "Development ready"
@@ -195,20 +203,44 @@ def _stream_to_completion(task_id: str, repo_root: Path, timeout: float) -> bool
 
 
 class DevAttachment:
-    """`introspection dev`, held open for the run."""
+    """`introspection dev`, held open for the run.
 
-    def __init__(self, mcp_url: str, repo_root: Path, runtime_name: str | None = None) -> None:
+    `as_name` names the attachment (`dev --as`): tasks created with
+    `INTROSPECTION_DEV_TARGET=<as_name>` route to this attachment and no other, fail-closed.
+    Naming every attachment — including a pool of one — also keeps two concurrent runs on
+    one machine from claiming each other's default (username-derived) dev target.
+    """
+
+    def __init__(
+        self,
+        mcp_url: str,
+        repo_root: Path,
+        runtime_name: str | None = None,
+        as_name: str | None = None,
+    ) -> None:
         self._mcp_url = mcp_url
         self._repo_root = Path(repo_root)
         self._runtime_name = runtime_name
+        self._as_name = as_name
         self._proc: subprocess.Popen[str] | None = None
         self._lines: list[str] = []
         self.dev_target: str | None = None
 
-    def start(self, timeout: float = 180.0) -> None:
+    @property
+    def alive(self) -> bool:
+        return self._proc is not None and self._proc.poll() is None
+
+    def argv(self) -> list[str]:
+        """The launch vector. Public so a run can record exactly what served its episodes."""
         argv = [CLI, "dev", "--non-interactive", "--mcp", f"tau={self._mcp_url}"]
+        if self._as_name:
+            argv += ["--as", self._as_name]
         if self._runtime_name:
             argv += ["--runtime", self._runtime_name]
+        return argv
+
+    def start(self, timeout: float = 180.0) -> None:
+        argv = self.argv()
         # start_new_session: `dev` runs a platform binary which runs further children, so
         # teardown has to reclaim the group rather than the direct child.
         self._proc = subprocess.Popen(  # noqa: S603
@@ -229,7 +261,7 @@ class DevAttachment:
                     f"`{CLI} dev` exited during startup ({self._proc.returncode}):\n{self.log[-1500:]}"
                 )
             if any(READY_MARKER in line for line in self._lines):
-                self.dev_target = self._parse_dev_target()
+                self.dev_target = self._resolve_dev_target()
                 logger.info(f"development lane attached; dev target {self.dev_target!r}")
                 return
             ready.wait(0.25)
@@ -264,3 +296,153 @@ class DevAttachment:
             if DEV_TARGET_MARKER in line:
                 return line.split(DEV_TARGET_MARKER, 1)[1].strip().rstrip("│").strip() or None
         return None
+
+    def _resolve_dev_target(self) -> str | None:
+        """The dev target this attachment actually serves, validated against `--as`.
+
+        The banner is the source of truth; when a name was requested, the two must agree —
+        episode routing is fail-closed on this exact string, so a mismatch would strand
+        every task aimed at the requested name. Refused at startup, not discovered
+        episode-by-episode.
+        """
+        parsed = self._parse_dev_target()
+        if self._as_name is not None and parsed != self._as_name:
+            self.stop()
+            raise DevLaneError(
+                f"`dev --as {self._as_name}` reported dev target {parsed!r}; tasks routed "
+                f"to {self._as_name!r} would fail closed. Not serving episodes on a "
+                "misnamed attachment."
+            )
+        return parsed
+
+
+@dataclass
+class AttachmentSlot:
+    """One `dev` attachment plus the pinned bridge token whose URL it carries."""
+
+    name: str
+    channel_token: str
+    attachment: DevAttachment
+    dev_target: str | None = None
+    #: Guarded by the pool's lock. True while exactly one episode owns this slot.
+    leased: bool = False
+
+
+class AttachmentPool:
+    """N named `dev` attachments, leased to episodes one at a time.
+
+    τ's worker pool never tells the agent factory which worker it is, so the episode ↔
+    attachment binding happens here: an episode leases a slot for its lifetime and its
+    transport releases it at close. A slot queued twice would mean two episodes sharing one
+    attachment — and therefore one rendezvous channel, the exact crossing the channels
+    forbid — so release is state-guarded and can never re-queue a slot that is not leased.
+    A slot whose attachment died is refused loudly at lease and retired rather than
+    recycled: τ books the episode as an infrastructure error and the incident stays
+    visible, instead of every later episode on that slot hanging quietly.
+    """
+
+    def __init__(self, slots: list[AttachmentSlot]) -> None:
+        if not slots:
+            raise ValueError("an attachment pool needs at least one slot")
+        self._slots = list(slots)
+        self._lock = threading.Lock()
+        self._available = threading.Condition(self._lock)
+        self._free: deque[AttachmentSlot] = deque(self._slots)
+
+    @property
+    def slots(self) -> list[AttachmentSlot]:
+        return list(self._slots)
+
+    def lease(self, timeout: float = 60.0) -> AttachmentSlot:
+        deadline = time.monotonic() + timeout
+        with self._available:
+            while not self._free:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or not self._available.wait(timeout=remaining):
+                    states = ", ".join(
+                        f"{s.name}={'leased' if s.leased else 'retired'}" for s in self._slots
+                    )
+                    raise DevLaneError(
+                        f"no attachment slot became free within {timeout:.0f}s ({states}). "
+                        "Either every worker is mid-episode far longer than expected, or "
+                        "slots were retired after their attachments died."
+                    )
+            slot = self._free.popleft()
+            slot.leased = True
+        if not slot.attachment.alive:
+            # Retired: `leased` stays True so the slot can never re-enter the free queue.
+            raise DevLaneError(
+                f"attachment {slot.name} has exited; refusing to serve an episode on a dead "
+                "attachment. τ will book this episode as an infrastructure error."
+            )
+        return slot
+
+    def release(self, slot: AttachmentSlot) -> None:
+        with self._available:
+            if not slot.leased:
+                return  # double release must never re-queue a slot
+            slot.leased = False
+            self._free.append(slot)
+            self._available.notify()
+
+    def stop(self) -> None:
+        for slot in self._slots:
+            slot.attachment.stop()
+
+
+def start_attachment_pool(
+    *,
+    bridge: ToolBridge,
+    size: int,
+    repo_root: Path,
+    runtime_name: str | None = None,
+) -> AttachmentPool:
+    """Start `size` named attachments concurrently, one pinned bridge slot each.
+
+    Slot 0 rides the bridge's own run token, so a pool of one serves episodes at exactly
+    the URL a single attachment always got. Names carry a per-run nonce so two concurrent
+    runs on one machine cannot claim each other's dev target. Any startup failure stops
+    every attachment that did start — a partial pool would serve some episodes and strand
+    others, which is worse than failing the run before money is spent.
+    """
+    nonce = secrets.token_hex(2)
+    slots: list[AttachmentSlot] = []
+    for index in range(size):
+        token = bridge.token if index == 0 else bridge.mint_pinned_token()
+        name = f"tau-w{index:02d}-{nonce}"
+        slots.append(
+            AttachmentSlot(
+                name=name,
+                channel_token=token,
+                attachment=DevAttachment(
+                    mcp_url=bridge.url_for(token),
+                    repo_root=repo_root,
+                    runtime_name=runtime_name,
+                    as_name=name,
+                ),
+            )
+        )
+
+    failures: list[str] = []
+
+    def _start(slot: AttachmentSlot) -> None:
+        try:
+            slot.attachment.start()
+            slot.dev_target = slot.attachment.dev_target
+        except Exception as exc:  # noqa: BLE001 - collected and re-raised jointly below
+            failures.append(f"{slot.name}: {exc}")
+
+    threads = [threading.Thread(target=_start, args=(slot,), daemon=True) for slot in slots]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    if failures:
+        for slot in slots:
+            with contextlib.suppress(Exception):
+                slot.attachment.stop()
+        raise DevLaneError(
+            "attachment pool startup failed; every attachment was stopped:\n  "
+            + "\n  ".join(failures)
+        )
+    return AttachmentPool(slots)

@@ -10,6 +10,8 @@ bindings. Refusing up front, with the disconnect command in the message, is the 
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from tau_adapter import dev_lane
@@ -88,3 +90,124 @@ def test_dev_target_is_none_when_absent() -> None:
     attachment = dev_lane.DevAttachment(mcp_url="http://127.0.0.1:1/mcp/t", repo_root=".")
     attachment._lines = ["╭─ Development ready\n"]
     assert attachment._parse_dev_target() is None
+
+
+def test_as_name_reaches_the_dev_launch_vector() -> None:
+    attachment = dev_lane.DevAttachment(
+        mcp_url="http://127.0.0.1:1/mcp/t", repo_root=".", as_name="tau-w01-ab12"
+    )
+    argv = attachment.argv()
+    assert "--as" in argv
+    assert argv[argv.index("--as") + 1] == "tau-w01-ab12"
+
+
+def test_a_misnamed_attachment_is_refused_at_startup() -> None:
+    """Episode routing is fail-closed on the dev target; serving under the wrong name
+    would strand every task aimed at the requested one."""
+    attachment = dev_lane.DevAttachment(
+        mcp_url="http://127.0.0.1:1/mcp/t", repo_root=".", as_name="tau-w01-ab12"
+    )
+    attachment._lines = ["│    For your app: INTROSPECTION_DEV_TARGET=fperez\n"]
+    with pytest.raises(dev_lane.DevLaneError, match="fail closed"):
+        attachment._resolve_dev_target()
+
+
+def test_a_matching_attachment_name_is_adopted() -> None:
+    attachment = dev_lane.DevAttachment(
+        mcp_url="http://127.0.0.1:1/mcp/t", repo_root=".", as_name="tau-w01-ab12"
+    )
+    attachment._lines = ["│    For your app: INTROSPECTION_DEV_TARGET=tau-w01-ab12\n"]
+    assert attachment._resolve_dev_target() == "tau-w01-ab12"
+
+
+class _StubAttachment:
+    def __init__(self, alive: bool = True) -> None:
+        self._alive = alive
+        self.stops = 0
+
+    @property
+    def alive(self) -> bool:
+        return self._alive
+
+    def stop(self) -> None:
+        self.stops += 1
+
+
+def _pool(slot_count: int, alive: bool = True) -> dev_lane.AttachmentPool:
+    slots = [
+        dev_lane.AttachmentSlot(
+            name=f"tau-w{i:02d}-ab12", channel_token=f"token-{i}", attachment=_StubAttachment(alive)
+        )
+        for i in range(slot_count)
+    ]
+    return dev_lane.AttachmentPool(slots)
+
+
+def test_leases_hand_out_distinct_slots_and_exhaustion_blocks() -> None:
+    pool = _pool(2)
+    first = pool.lease(timeout=0.05)
+    second = pool.lease(timeout=0.05)
+    assert first is not second
+    with pytest.raises(dev_lane.DevLaneError, match="no attachment slot became free"):
+        pool.lease(timeout=0.05)
+    pool.release(first)
+    assert pool.lease(timeout=0.05) is first
+
+
+def test_a_double_release_cannot_requeue_a_slot() -> None:
+    """A slot queued twice would hand one attachment to two episodes at once — the
+    cross-episode contamination the whole design forbids."""
+    pool = _pool(2)
+    first = pool.lease(timeout=0.05)
+    second = pool.lease(timeout=0.05)
+    pool.release(first)
+    pool.release(first)
+    assert pool.lease(timeout=0.05) is first
+    with pytest.raises(dev_lane.DevLaneError, match="no attachment slot became free"):
+        pool.lease(timeout=0.05)
+    pool.release(second)
+
+
+def test_a_dead_attachment_is_refused_and_retired_at_lease() -> None:
+    pool = _pool(2, alive=False)
+    with pytest.raises(dev_lane.DevLaneError, match="has exited"):
+        pool.lease(timeout=0.05)
+    # The dead slot never re-enters the free queue; the next lease gets the other slot,
+    # which is equally dead here and equally refused.
+    with pytest.raises(dev_lane.DevLaneError, match="has exited"):
+        pool.lease(timeout=0.05)
+    with pytest.raises(dev_lane.DevLaneError, match="no attachment slot became free"):
+        pool.lease(timeout=0.05)
+
+
+def test_pool_stop_is_idempotent_across_slots() -> None:
+    pool = _pool(3)
+    pool.stop()
+    pool.stop()
+    assert [slot.attachment.stops for slot in pool.slots] == [2, 2, 2]
+
+
+def test_a_started_pool_names_slots_with_one_nonce_and_slot_zero_rides_the_run_token(
+    monkeypatch,
+) -> None:
+    from tau_adapter.tool_bridge import ToolBridge
+
+    bridge = ToolBridge(tau_tools=[])
+    bridge.start()
+    try:
+        monkeypatch.setattr(dev_lane.DevAttachment, "start", lambda self, timeout=180.0: None)
+        pool = dev_lane.start_attachment_pool(
+            bridge=bridge, size=3, repo_root=Path("."), runtime_name="target-agent"
+        )
+        names = [slot.name for slot in pool.slots]
+        nonces = {name.rsplit("-", 1)[1] for name in names}
+        assert len(set(names)) == 3
+        assert len(nonces) == 1
+        assert pool.slots[0].channel_token == bridge.token
+        assert len({slot.channel_token for slot in pool.slots}) == 3
+        # Every slot's attachment was handed the URL of ITS token, not a shared one.
+        urls = {slot.attachment._mcp_url for slot in pool.slots}
+        assert len(urls) == 3
+        assert bridge.url_for(pool.slots[1].channel_token) in urls
+    finally:
+        bridge.stop()
