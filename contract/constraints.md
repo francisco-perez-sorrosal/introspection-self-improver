@@ -19,7 +19,7 @@ Only `target-agent/`, and inside it only the harness:
 | `agents/agent.yaml` `tools`, `skills`, `subagents` | mutable | — |
 | `package.json` `pi.skills`, `pi.extensions` | mutable | — |
 | `package.json` `pi.mcp` | **frozen** | tool catalogue vs live environment before every run |
-| `benchmark/`, `contract/`, `.introspection/` | **frozen** | branch protection + the `frozen surfaces` workflow |
+| `benchmark/`, `contract/`, `.introspection/` | **frozen** | branch protection; the `frozen surfaces` workflow additionally warns (advisory, not blocking) on `benchmark/tau_adapter`, `benchmark/scripts`, the lock, the split manifest, and `contract/` |
 
 The model is frozen even though it lives in a mutable file, because a generation that raised its
 own model or thinking level would post a better score without improving the harness — the single
@@ -150,7 +150,8 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
    once; ten runs returned 1.0 six times and 0.0 four times). The remedy changed with the
    evaluation protocol (2026-08-13): repeated trials are no longer the instrument. Generations
    are compared on a fixed held-out set at one trial per task, pooling variance across tasks
-   instead of within one — binomial noise ≈ ±7 pp at T=47, stated wherever the curve renders;
+   instead of within one — binomial noise ≈ ±7 pp at T=47 (≈ ±17 pp at the debug T=8),
+   stated wherever the curve renders;
    `pass^k` is retired for generations; an optional endpoint reliability study (H_0 and H_G ×
    4 trials, after reveal) is the named upgrade path (`SIA_EVALUATION_PLAN.md` D2).
 
@@ -211,8 +212,8 @@ only in the session id. It additionally validates the recipe and resolves it thr
 `.introspection/` Runtime manifest, which is how the development lane will resolve it.
 
 It costs +5.5s per episode (median 7.3s to first event against 1.8s), because it starts node, then
-a platform binary, then probes `pi --help` before launching. That is ~9 minutes on a 97-task sweep,
-and a generation runs baseline and candidate. What it buys — knowing the recipe is valid — the
+a platform binary, then probes `pi --help` before launching. That is ~9 minutes on a 97-task sweep.
+What it buys — knowing the recipe is valid — the
 repository already has three other ways: the commit hook, CI, and one `introspection check` per run
 inside the runner, added for exactly this reason so the default path cannot grade an invalid
 harness.
@@ -260,10 +261,13 @@ would have silently frozen the wrong thing:
 - An experiment's id is *derived*, never chosen: `experiment.seq` (zero-padded to three
   digits) + `experiment.name`, giving `001_bm25-sonnet46` and the results directory
   `results/experiment_001_bm25-sonnet46/`. The sequence exists because a descriptive name can
-  legitimately repeat — a second freeze of the same bm25 + Sonnet 4.6 configuration is
-  `002_bm25-sonnet46`, a different experiment — so the name alone cannot be the identity.
-  Re-deciding a freeze bumps `seq`. The pre-rename directory
-  `results/experiment_bm25-sonnet46/` was migrated to `results/experiment_001_bm25-sonnet46/`
-  (snapshot id and fingerprint refreshed, recorded `experiment` fields rewritten); platform
-  task titles from before the rename keep their old `[exp:bm25-sonnet46]` suffix — they are
-  records of what the platform actually displayed, not re-labeled evidence.
+  legitimately repeat — a second freeze of the same bm25 + Sonnet 4.6 configuration is a
+  different experiment under its own seq — so the name alone cannot be the identity.
+  Re-deciding a freeze bumps `seq`. **Numbering reset 2026-08-13 (user-directed):** the
+  original bring-up freeze that first held the id `001_bm25-sonnet46` closed without a
+  graded round and was cleared to git history along with every bring-up artifact (the
+  pre-rename directory `results/experiment_bm25-sonnet46/` and its migration included);
+  seq 1 now names the generation protocol's debug experiment, which reuses the id, and
+  freeze fingerprints disambiguate the two mechanically. Platform task titles from before
+  the pre-reset rename keep their old `[exp:bm25-sonnet46]` suffix — they are records of
+  what the platform actually displayed, not re-labeled evidence.

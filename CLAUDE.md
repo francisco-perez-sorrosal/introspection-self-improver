@@ -8,7 +8,7 @@ The evaluation specification is `self_improving_agent_evaluation_protocol.md` �
 improvement batches drive generations H_0 → H_G, every generation is measured once against the
 same fixed held-out set whose results stay hidden until the experiment closes, and the endpoint
 question is R_T(H_G) > R_T(H_0). `SIA_EVALUATION_PLAN.md` is the forward tracker (decisions
-D1–D9, five incrementally validated phases); consult it to see where the path stands. The MVP
+D1–D10, incrementally validated phases); consult it to see where the path stands. The MVP
 design guides and the old milestone tracker were removed 2026-08-13 (git history keeps them);
 their evaluation design — pass^k, discovery/validation/test splits, checkpoints — is obsolete,
 and what survives of them is the built machinery itself, documented by `README.md` and
@@ -56,7 +56,9 @@ close.
 - **Cross-lane consistency is a diagnostic, not a gate (plan D4).** The A.0b run (12 episodes
   per lane, 2026-08-13) agreed on the aggregate within Wilson noise but FAILed on 3/12 platform
   timeouts from rendezvous stalls; the remedy — reassembling a run's narration with its tool
-  call — landed (`7aee297`) and has not been re-exercised at scale. Under the evaluation
+  call — landed (`7aee297`) and has since held under load: the Phase 2 platform-health
+  batch (3/3 episodes, zero stall/timeout incidents) and the Phase 3.5c concurrent
+  minitest both ran clean. Under the evaluation
   protocol the progression metric never crosses lanes (held-out runs locally, D1), so lane
   fidelity guards evidence quality only: `make fidelity` is the on-demand instrument, and the
   plan's Phase 2 platform-health check is the acceptance for batch rounds.
@@ -78,7 +80,8 @@ close.
   1.0 six times and 0.0 four times (16–44 messages, $0.10–$0.51); τ's `--seed` cannot fix this
   — it seeds τ's own sampling, and Pi owns the agent's. Under the evaluation protocol every
   task runs once and the metric is held-out tasks passed / T (plan D2): variance pools across
-  the held-out set, generation deltas inside ~±7 pp (T=47) are noise, `pass^k` is never used
+  the held-out set, generation deltas inside the binomial noise band (~±7 pp at T=47; ~±17 pp
+  at the debug T=8) are noise, `pass^k` is never used
   for generations, and the optional endpoint reliability study (H_0 and H_G × 4 trials,
   post-reveal) is the named upgrade path. Evidence:
   `results/experiment_dummy/generation_000/task_001_trials/` — removed from the working tree
@@ -136,7 +139,8 @@ manifest (improvement batches + held-out set) · the experiment's `protocol:` co
 `max_concurrency` is deliberately NOT on this list (re-decided 2026-08-13): parallelism moves
 wall-clock, never what the agent can do inside an episode, so the lock's value is an
 operational default that any run may override with `--max-concurrency` (1 = serial); the
-effective value is recorded per run in `run_metadata.json`. The documented caveat is provider
+effective value is recorded per run in `run_metadata.json`. `make batch` pins 2 to match the
+org's observed ~2-sandbox quota. The documented caveat is provider
 contention at high N, which shows up as infra retries, not as graded capability.
 
 Three of these are the ones that actually get missed:
@@ -178,8 +182,9 @@ dashboard, browser automation, or direct API calls for an operator action the CL
   mutation yields an identity generation — H_(g+1) = H_g, result carried forward, recorded —
   and there are no paired baseline/candidate arms.
 - **Label every number with its set (batch B_g or held-out) and its N**; report the count
-  with the percentage. Never describe generations with `pass^k`; state the ±7 pp noise band
-  (T=47) wherever the progression curve renders.
+  with the percentage. Never describe generations with `pass^k`; state the scale-aware
+  binomial noise band (±7 pp at T=47; ±17 pp at T=8) wherever the progression curve
+  renders.
 - When an effect is smaller than the held-out set can resolve, record it as **directional**
   and say so.
 - Rejected hypotheses and failed mutations are first-class results — record them.
@@ -191,7 +196,7 @@ dashboard, browser automation, or direct API calls for an operator action the CL
 
 ```text
 target-agent/   the Introspection recipe under improvement (H_0 anchor: git tag h0-baseline)
-benchmark/      tau_adapter/ (the seam) · scripts/ · tests/ · split_manifest.yaml · benchmark_lock.yaml
+benchmark/      tau_adapter/ (the seam) · fidelity/ · scripts/ · tests/ · split_manifest.yaml · benchmark_lock.yaml
 contract/       protocol.md · constraints.md
 results/        experiment_<id>/ → generation_NNN/ · improvement_records/ · held_out/ (at reveal)
 dashboard/      read-only results viewer over results/ (make dashboard; never a pipeline participant)
@@ -214,8 +219,8 @@ experiment level of `results/` and its freeze snapshot), `lock.py`, `run.py`.
 `benchmark/fidelity/` is the on-demand adapter-invariant diagnostic (`make fidelity`,
 `benchmark/fidelity/compare_lanes.py`) — per-episode invariants and factual counts only, no
 cross-lane statistical judgment; the blocking gate it once fed is retired (plan D4).
-`contract/improvement_record.schema.yaml` lands at plan Phase 3 with the generation
-lifecycle — creating it earlier would be an empty promise.
+`contract/improvement_record.schema.yaml` landed at plan Phase 3 with the generation
+lifecycle; `tau_adapter/records.py` loads it to validate every record.
 
 No `orchestrator/` directory. Claude Code is the orchestrator; a directory by that name would
 imply a second agent implementation exists.

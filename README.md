@@ -21,7 +21,7 @@ make bootstrap   # pinned τ²-bench checkout + Python environment  (~715 MB, on
 make check       # recipe validity + every frozen surface
 make smoke       # one mock-domain task end to end, then grade it
 make single_task # one locked-domain task, then grade it  (TASK=task_001 by default)
-make bench       # the WHOLE locked split (97 tasks, serial) — long and costly
+make bench       # the WHOLE locked split (97 tasks) — long and costly
 
 make single_task TRANSPORT=platform   # same task, agent on an Introspection dev runtime
 ```
@@ -30,7 +30,7 @@ The generation protocol's own round types and lifecycle
 (see *Generations and the vault* below):
 
 ```bash
-make batch B=1 GEN=generation_001     # improvement batch: platform lane, fully observable
+make batch B=1 GEN=generation_000     # improvement batch: platform lane, fully observable
 make heldout GEN=generation_000       # held-out round: local lane, sealed into the vault
 make reset_h0                         # restore the recipe to the h0-baseline tag
 make reveal                           # end of experiment: unseal the vault into results/
@@ -300,10 +300,11 @@ carry forward:
   under this freeze is comparable with published τ-Knowledge results, and none claims to be.
 - Per-episode reward is a draw: ten runs of one task under one frozen configuration returned
   1.0 six times and 0.0 four times — τ's `--seed` seeds τ's sampling, not Pi's, so the agent is
-  not reproducible episode to episode. Experiment 001 froze `num_trials: 4` against this; the
-  evaluation protocol instead freezes one trial per task and pools variance across the 47-task
-  held-out set, treating generation deltas inside the ±7 pp binomial band as noise
-  (`SIA_EVALUATION_PLAN.md` D2).
+  not reproducible episode to episode. The retired bring-up freeze (the pre-reset
+  `001_bm25-sonnet46`, in git history) froze `num_trials: 4` against this; the
+  evaluation protocol instead freezes one trial per task and pools variance across the
+  held-out set, treating generation deltas inside the binomial noise band (±7 pp at T=47;
+  ±17 pp at the debug T=8) as noise (`SIA_EVALUATION_PLAN.md` D2).
 
 The model pair, by contrast, is now chosen rather than defaulted, and neither half is Sonnet 5.
 

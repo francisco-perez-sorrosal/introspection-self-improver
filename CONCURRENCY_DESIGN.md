@@ -187,6 +187,8 @@ retries create transports concurrently — covered by Category I attribution ite
 
 # Phase 3.5b addendum — the attachment pool (platform-lane concurrency)
 
+*(Historical: this design was refuted live and later retired — see the Final chapter.)*
+
 User-directed 2026-08-13: lift the platform pin. Design:
 
 - **Bridge**: N *pinned slot tokens*. Slot 0 reuses `bridge.token` (N=1 ≡ today,
