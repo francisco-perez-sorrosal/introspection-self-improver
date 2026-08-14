@@ -81,4 +81,7 @@ expected_effect: >
 human_approval:
   approved_by: fperezsorrosal (user-directed merge of PR #1)
   date: '2026-08-14'
-held_out_result: null
+held_out_result:
+  passed: 3
+  total: 8
+  carried: false

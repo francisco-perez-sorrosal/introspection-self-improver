@@ -1,0 +1,428 @@
+
+===== 2026-08-14T07:07:36.395322+00:00 $ /Users/fperez/dev/introspection-self-improver/benchmark/.venv/bin/python3 /Users/fperez/dev/introspection-self-improver/benchmark/tau_adapter/run.py --heldout --out /Users/fperez/.sia_vault/experiment_002_bm25-sonnet46/generation_002
+2026-08-14 00:07:37.102 | INFO     | tau2.utils.utils:<module>:23 - Using data directory from environment: /Users/fperez/dev/introspection-self-improver/benchmark/vendor/tau2-bench/data
+2026-08-14 00:07:39.277 | INFO     | tau2.utils.llm_utils:<module>:102 - LiteLLM: Cache is disabled
+2026-08-14 00:07:39.338 | DEBUG    | tau2.registry:<module>:281 - Registering default components...
+2026-08-14 00:07:39.341 | DEBUG    | tau2.registry:<module>:292 - Voice dependencies not installed, skipping voice user registration
+2026-08-14 00:07:39.342 | DEBUG    | tau2.registry:<module>:350 - Default components registered successfully. Registry info: {
+  "domains": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ],
+  "agents": [
+    "llm_agent",
+    "llm_agent_gt",
+    "llm_agent_solo",
+    "discrete_time_audio_native_agent"
+  ],
+  "users": [
+    "user_simulator",
+    "dummy_user"
+  ],
+  "task_sets": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom_full",
+    "telecom_small",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ]
+}
+
+── tau-adapter: banking_knowledge [locked]
+   experiment    002_bm25-sonnet46 — freeze snapshot verified (experiment.yaml)
+   round type    held_out — hidden evaluation; grading stays in the vault
+   recipe        /Users/fperez/dev/introspection-self-improver/target-agent
+   arm           0c6df09adb6d
+   transport     local
+   launcher      pi 0.84.1 directly (Recipe resolved by path, not by Runtime manifest)
+   τ bridge      http://127.0.0.1:50740/mcp/<token>
+   agent model   anthropic/claude-sonnet-4-6 (thinking: low)
+   user model    anthropic/claude-sonnet-4-5
+   retrieval     bm25
+   τ tools       15
+   tasks         held_out: 8 task(s); outputs sealed in the vault in 1 trial(s)
+   concurrency   10 episode(s) in flight, one bridge channel each
+
+✅ Using in-memory cached documents (698 docs)
+0/8 (trial 1/1). Running task task_017, trial 1
+2/8 (trial 1/1). Running task task_036, trial 1
+3/8 (trial 1/1). Running task task_048, trial 1
+4/8 (trial 1/1). Running task task_051, trial 1
+1/8 (trial 1/1). Running task task_035, trial 1
+7/8 (trial 1/1). Running task task_099, trial 1
+6/8 (trial 1/1). Running task task_091, trial 1
+5/8 (trial 1/1). Running task task_067, trial 1
+Status: 0/8 complete. Avg reward: N/A. 8 running: task_017.0(30s), 
+task_036.0(30s), task_048.0(30s), task_051.0(30s), task_035.0(30s), 
+task_099.0(30s), task_091.0(30s), task_067.0(30s)
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_035                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 32.73s                                                             │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $0.0746                                                          │
+│ User Cost: $0.0204                                                           │
+│ Reward: ✅ 1.0000 (ACTION: 1.0)                                              │
+│                                                                              │
+│ DB Check:✅ 1.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 1: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 2: agent transfer_to_human_agents [generic] ✅ 1.0                         │
+│                                                                              │
+│ Partial Action Reward: 3/3 (100.0%)                                          │
+│   Write: 1/1 (100.0%)                                                        │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Status: 1/8 complete. Avg reward: 1.00 (N=1). 7 running: task_017.0(60s), 
+task_036.0(60s), task_048.0(60s), task_051.0(60s), task_099.0(60s), 
+task_091.0(60s), task_067.0(60s)
+Status: 1/8 complete. Avg reward: 1.00 (N=1). 7 running: task_017.0(90s), 
+task_036.0(90s), task_048.0(90s), task_051.0(90s), task_099.0(90s), 
+task_091.0(90s), task_067.0(90s)
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_099                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 107.33s                                                            │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $0.2193                                                          │
+│ User Cost: $0.0408                                                           │
+│ Reward: ❌ 0.0000 (DB: 0.0)                                                  │
+│                                                                              │
+│ DB Check:❌ 0.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent log_verification [write] ✅ 1.0                                   │
+│ - 1: agent unlock_discoverable_agent_tool [generic] ❌ 0.0                   │
+│ - 2: agent call_discoverable_agent_tool [write] ❌ 0.0                       │
+│ - 3: agent get_referrals_by_user [read] ✅ 1.0                               │
+│ - 4: user submit_referral [write] ✅ 1.0                                     │
+│                                                                              │
+│ Partial Action Reward: 3/5 (60.0%)                                           │
+│   Read:  1/1 (100.0%)                                                        │
+│   Write: 2/3 (66.7%)                                                         │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_017                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 113.02s                                                            │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $0.3614                                                          │
+│ User Cost: $0.1153                                                           │
+│ Reward: ❌ 0.0000 (DB: 0.0)                                                  │
+│                                                                              │
+│ DB Check:❌ 0.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent log_verification [write] ✅ 1.0                                   │
+│ - 1: agent give_discoverable_user_tool [generic] ❌ 0.0                      │
+│ - 2: user call_discoverable_user_tool [write] ❌ 0.0                         │
+│ - 3: user call_discoverable_user_tool [write] ❌ 0.0                         │
+│                                                                              │
+│ Partial Action Reward: 1/4 (25.0%)                                           │
+│   Write: 1/3 (33.3%)                                                         │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_036                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 114.07s                                                            │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $0.2296                                                          │
+│ User Cost: $0.0747                                                           │
+│ Reward: ❌ 0.0000 (DB: 0.0)                                                  │
+│                                                                              │
+│ DB Check:❌ 0.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent log_verification [write] ✅ 1.0                                   │
+│ - 1: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 2: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│                                                                              │
+│ Partial Action Reward: 3/3 (100.0%)                                          │
+│   Write: 2/2 (100.0%)                                                        │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Status: 4/8 complete. Avg reward: 0.25 (N=4). 4 running: task_048.0(120s), 
+task_051.0(120s), task_091.0(120s), task_067.0(120s)
+Status: 4/8 complete. Avg reward: 0.25 (N=4). 4 running: task_048.0(150s), 
+task_051.0(150s), task_091.0(150s), task_067.0(150s)
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_051                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 166.11s                                                            │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $0.5321                                                          │
+│ User Cost: $0.0463                                                           │
+│ Reward: ✅ 1.0000 (DB: 1.0)                                                  │
+│                                                                              │
+│ DB Check:✅ 1.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent log_verification [write] ✅ 1.0                                   │
+│ - 1: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 2: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 3: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 4: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 5: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 6: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 7: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 8: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 9: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 10: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 11: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                  │
+│ - 12: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 13: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                  │
+│ - 14: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 15: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                  │
+│ - 16: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 17: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 18: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                  │
+│ - 19: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│                                                                              │
+│ Partial Action Reward: 20/20 (100.0%)                                        │
+│   Write: 11/11 (100.0%)                                                      │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_048                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 168.28s                                                            │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $0.4186                                                          │
+│ User Cost: $0.1666                                                           │
+│ Reward: ❌ 0.0000 (DB: 0.0)                                                  │
+│                                                                              │
+│ DB Check:❌ 0.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent log_verification [write] ✅ 1.0                                   │
+│ - 1: agent unlock_discoverable_agent_tool [generic] ❌ 0.0                   │
+│ - 2: agent call_discoverable_agent_tool [write] ❌ 0.0                       │
+│ - 3: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 4: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 5: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 6: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 7: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 8: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 9: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 10: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 11: agent unlock_discoverable_agent_tool [generic] ❌ 0.0                  │
+│ - 12: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 13: agent unlock_discoverable_agent_tool [generic] ❌ 0.0                  │
+│ - 14: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 15: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 16: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                  │
+│ - 17: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 18: user apply_for_credit_card [write] ✅ 1.0                              │
+│ - 19: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 20: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 21: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 22: agent unlock_discoverable_agent_tool [generic] ❌ 0.0                  │
+│ - 23: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│                                                                              │
+│ Partial Action Reward: 12/24 (50.0%)                                         │
+│   Write: 8/16 (50.0%)                                                        │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Status: 6/8 complete. Avg reward: 0.33 (N=6). 2 running: task_091.0(180s), 
+task_067.0(180s)
+Status: 6/8 complete. Avg reward: 0.33 (N=6). 2 running: task_091.0(210s), 
+task_067.0(210s)
+Status: 6/8 complete. Avg reward: 0.33 (N=6). 2 running: task_091.0(240s), 
+task_067.0(240s)
+Status: 6/8 complete. Avg reward: 0.33 (N=6). 2 running: task_091.0(270s), 
+task_067.0(270s)
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_067                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 271.78s                                                            │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $1.6236                                                          │
+│ User Cost: $0.1506                                                           │
+│ Reward: ❌ 0.0000 (DB: 0.0)                                                  │
+│                                                                              │
+│ DB Check:❌ 0.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent log_verification [write] ✅ 1.0                                   │
+│ - 1: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 2: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 3: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 4: agent call_discoverable_agent_tool [write] ❌ 0.0                       │
+│ - 5: agent call_discoverable_agent_tool [write] ❌ 0.0                       │
+│ - 6: user apply_for_credit_card [write] ❌ 0.0                               │
+│ - 7: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 8: agent call_discoverable_agent_tool [write] ❌ 0.0                       │
+│                                                                              │
+│ Partial Action Reward: 5/9 (55.6%)                                           │
+│   Write: 2/6 (33.3%)                                                         │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Status: 7/8 complete. Avg reward: 0.29 (N=7). 1 running: task_091.0(300s)
+Status: 7/8 complete. Avg reward: 0.29 (N=7). 1 running: task_091.0(330s)
+Status: 7/8 complete. Avg reward: 0.29 (N=7). 1 running: task_091.0(360s)
+╭──────────────────────────── Simulation Overview ─────────────────────────────╮
+│ Task ID: task_091                                                            │
+│ Trial: 0                                                                     │
+│ Duration: 388.92s                                                            │
+│ Mode: half_duplex                                                            │
+│ Termination Reason: TerminationReason.USER_STOP                              │
+│ Agent Cost: $0.8884                                                          │
+│ User Cost: $0.1392                                                           │
+│ Reward: ❌ 0.0000 (DB: 0.0)                                                  │
+│                                                                              │
+│ DB Check:❌ 0.0                                                              │
+│                                                                              │
+│ Action Checks:                                                               │
+│ - 0: agent log_verification [write] ✅ 1.0                                   │
+│ - 1: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 2: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 3: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 4: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 5: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 6: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 7: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                   │
+│ - 8: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 9: agent call_discoverable_agent_tool [write] ✅ 1.0                       │
+│ - 10: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 11: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                  │
+│ - 12: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 13: agent unlock_discoverable_agent_tool [generic] ❌ 0.0                  │
+│ - 14: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 15: agent unlock_discoverable_agent_tool [generic] ✅ 1.0                  │
+│ - 16: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 17: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 18: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 19: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 20: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 21: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 22: agent call_discoverable_agent_tool [write] ✅ 1.0                      │
+│ - 23: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│ - 24: agent call_discoverable_agent_tool [write] ❌ 0.0                      │
+│                                                                              │
+│ Partial Action Reward: 18/25 (72.0%)                                         │
+│   Write: 12/18 (66.7%)                                                       │
+│                                                                              │
+│ Additional Info:                                                             │
+│ env: None                                                                    │
+│ nl: None                                                                     │
+│ communicate: {'note': 'No communicate_info to evaluate'}                     │
+│ action: None                                                                 │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+Successfully completed all simulations!
+To review the simulations, run: tau2 view
+
+── 8 simulation(s) in 390s → /Users/fperez/.sia_vault/experiment_002_bm25-sonnet46/generation_002/results.json
+   task_035: termination=TerminationReason.USER_STOP messages=14 [completed]
+   task_099: termination=TerminationReason.USER_STOP messages=25 [completed]
+   task_017: termination=TerminationReason.USER_STOP messages=57 [completed]
+   task_036: termination=TerminationReason.USER_STOP messages=35 [completed]
+   task_051: termination=TerminationReason.USER_STOP messages=74 [completed]
+   task_048: termination=TerminationReason.USER_STOP messages=71 [completed]
+   task_067: termination=TerminationReason.USER_STOP messages=85 [completed]
+   task_091: termination=TerminationReason.USER_STOP messages=72 [completed]
+
+   manifest      episode_manifest.jsonl: 8 episode row(s)
+   incidents     none
+
+   Held-out round: nothing graded is printed here. Grading is persisted in
+   the vault by scripts/run_heldout.py and read at reveal, never before.
+
+===== 2026-08-14T07:14:14.806948+00:00 $ /Users/fperez/dev/introspection-self-improver/benchmark/.venv/bin/python3 /Users/fperez/dev/introspection-self-improver/benchmark/scripts/grade.py /Users/fperez/.sia_vault/experiment_002_bm25-sonnet46/generation_002/results.json --output-dir /Users/fperez/.sia_vault/experiment_002_bm25-sonnet46/generation_002/graded --quiet
+2026-08-14 00:14:15.306 | INFO     | tau2.utils.utils:<module>:23 - Using data directory from environment: /Users/fperez/dev/introspection-self-improver/benchmark/vendor/tau2-bench/data
+2026-08-14 00:14:17.114 | INFO     | tau2.utils.llm_utils:<module>:102 - LiteLLM: Cache is disabled
+2026-08-14 00:14:17.175 | DEBUG    | tau2.registry:<module>:281 - Registering default components...
+2026-08-14 00:14:17.178 | DEBUG    | tau2.registry:<module>:292 - Voice dependencies not installed, skipping voice user registration
+2026-08-14 00:14:17.178 | DEBUG    | tau2.registry:<module>:350 - Default components registered successfully. Registry info: {
+  "domains": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ],
+  "agents": [
+    "llm_agent",
+    "llm_agent_gt",
+    "llm_agent_solo",
+    "discrete_time_audio_native_agent"
+  ],
+  "users": [
+    "user_simulator",
+    "dummy_user"
+  ],
+  "task_sets": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom_full",
+    "telecom_small",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ]
+}
+grading with the run's own retrieval config: bm25
+graded → /Users/fperez/.sia_vault/experiment_002_bm25-sonnet46/generation_002/graded (quiet: nothing graded was printed)
