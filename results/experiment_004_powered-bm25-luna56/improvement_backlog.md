@@ -5,9 +5,9 @@ Approved mutation targets, per `contract/protocol.md` step 4. The user approves 
 carry forward here and are re-ranked against each new batch's evidence. An item later
 contradicted by evidence is retired with the reason recorded, never silently dropped.
 
-The backlog cannot outrun the freeze: **G = 5** bounds the mutation slots. Three targets are
-approved and five generations remain, so every approved target can still be reached — stated
-rather than assumed.
+**G = 5** bounds the mutation slots, and the backlog has outrun it. See the slot accounting
+under the table: two approved targets will go unconsumed. That is stated here rather than
+discovered at the reveal.
 
 Prevalence is `n/B` by full enumeration over the batch, never sampling. Conversation ids are
 taken from `generation_NNN/batch_NN/episode_manifest.jsonl`, never from memory.
@@ -88,7 +88,8 @@ must be re-scoped against the next batch before being spent as its own generatio
 
 ## T3 — Declares "no discrepancy" without performing the required comparison
 
-**Approved** 2026-08-15 (batch B₁). **Status:** pending.
+**Approved** 2026-08-15 (batch B₁). **Status: RETIRED** 2026-08-15 — see
+[T3 retired](#t3-retired) under batch B₃ for the reason. Kept in full below, not deleted.
 
 **Mechanism.** The agent asserts a negative finding it did not establish, and so never enters
 the write procedure at all.
