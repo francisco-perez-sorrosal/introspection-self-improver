@@ -16,15 +16,24 @@ taken from `generation_NNN/batch_NN/episode_manifest.jsonl`, never from memory.
 |---|---|---|---|
 | T1 | Commits a write on an unverified KB-derived value | 3/8 (B₁) | **consumed-by-gen-001** |
 | T2 | Bails to a human instead of completing an in-scope procedure | ~~3/8~~ **2/8** (B₁, re-scoped) | pending |
-| T3 | Declares "no discrepancy" without performing the required comparison | 1/8 (B₁) | pending |
+| T3 | Declares "no discrepancy" without performing the required comparison | 1/8 (B₁) | **retired** (see B₃) |
 | T4 | Over-caution: the grounding check blocks a determinate action | 2/8 (B₂) | **consumed-by-gen-002** |
 | T5 | Performs an unrequested extra write | 1/8 (B₂) | pending |
-| T6 | Never hands over the discoverable tool the procedure requires | 2/8 (B₁+B₂) | pending |
+| T6 | Never hands over the discoverable tool the procedure requires | **4 witnesses / 3 batches** | pending — **TOP RANK** |
+| T7 | Prohibition misreading: refuses a policy-required transfer | 1/8 (B₃) | **consumed-by-gen-003** |
+| T8 | Unbounded re-search exhausts the step budget | 1/8 (B₃) | pending |
 
-**Slot accounting.** G = 5. Two generations are spent (gen-001 → T1, gen-002 → T4), leaving
-**3 slots** against **4 pending targets** (T2, T3, T5, T6). The backlog now outruns the freeze
-by one — stated, not hidden. At least one approved target will go unconsumed in this
-experiment, and the ranking at each remaining boundary decides which.
+**Slot accounting.** G = 5. Three generations are spent (gen-001 → T1, gen-002 → T4,
+gen-003 → T7), leaving **2 slots** against **4 pending targets** (T2, T5, T6, T8). Two
+approved targets will go unconsumed in this experiment. T6 is ranked first for the
+remaining slots on the strength of its evidence; the second slot is decided at the
+gen-004 boundary against whatever B₄ shows.
+
+**Three of five generations have now been spent on the same clause** — T1 installed the
+grounding check, T4 bounded its consequence, T7 repairs how that bound reads. That is a
+finding about the experiment, not only about the agent: a single instruction paragraph has
+absorbed 60% of the mutation budget, each fix creating the next defect. It is recorded here
+so the reveal can be read with it in view.
 
 ---
 
@@ -148,6 +157,60 @@ Applying the observation harvest's `environment_issue` on `task_088` (the declin
 authorization was absent from all transaction histories, so that escalation was partly forced).
 `task_005` and `task_010` remain unambiguous. Recorded as a re-scope with its reason rather
 than a silent edit.
+
+---
+
+## Batch B₃ (generation_002, H₂) — 3/8
+
+Not comparable with B₁ or B₂; disjoint task sets. Both findings below are **self-inflicted**
+— defects this project's own mutations introduced — and both are quoted, not inferred.
+
+### T7 — Prohibition misreading: refuses a policy-required transfer
+
+**Approved** 2026-08-15 (batch B₃). **Status:** consumed-by-gen-003. **Prevalence 1/8**, on the
+experiment's **first `reward_basis: ['ACTION']` task**, whose gold action *is* the transfer.
+
+`task_014` — the user asked, in their own words, to "connect me with a human agent who can
+verify this promotion". The agent answered:
+
+> "I'm sorry, but **I can't transfer this request** because the promotion remains unverified in
+> Rho-Bank's referral documentation."
+
+Gold: `transfer_to_human_agents(reason="unconfirmed_external_communication")`.
+
+Gen-002's clause says an unconfirmed value "is **never a reason to** end the conversation,
+**transfer to a human**, or leave other required actions undone". The agent parsed the middle
+phrase as a *prohibition on transferring* rather than as "unconfirmedness does not justify
+giving up" — the exact inverse of intent. It also contradicts the **frozen policy**, which
+requires helping or transferring when a user asks for a human. The instruction cannot be
+allowed to override the graded policy.
+
+Supporting but **not** decisive: transfers across B₃ were **0/8 episodes**, against 3 in B₁ and
+1 in B₂. Batches are disjoint, so that trend is suggestive only; the verbatim misreading is
+what carries this target.
+
+### T8 — Unbounded re-search exhausts the step budget
+
+**Approved** 2026-08-15 (batch B₃). **Status:** pending. **Prevalence 1/8.**
+
+`task_064` hit `max_steps` after **28 distinct** knowledge-base searches across 201 messages, at
+**$0.20** — roughly six times any other episode in the batch. Gen-001's surviving "search again
+for that exact value" clause carries no bound, and this is what unbounded looks like. Distinct
+from T4: the agent here never refused, it simply never converged.
+
+### T6 promoted to top rank
+
+Now **4 witnesses across 3 batches** — `task_026` (B₁), `task_020` (B₂), `task_028` and
+`task_038` (B₃) — three of them the same `submit_cash_back_dispute_0589` tool. The
+best-evidenced mode in the experiment, and still unconsumed.
+
+### T3 retired
+
+**Retired** 2026-08-15 with the reason recorded, per the protocol's requirement that a
+contradicted item is never silently dropped. T3 (declares "no discrepancy" without performing
+the comparison) narrowed to a single witness once T6 split out of it, and neither B₂ nor B₃
+produced a second. It is retired for lack of evidence, not because it was disproved — a
+witness in B₄ or B₅ would reopen it.
 
 ---
 
