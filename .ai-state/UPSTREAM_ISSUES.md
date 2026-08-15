@@ -71,6 +71,14 @@ Grep here before recommending a new filing (`upstream-stewardship` skill).
   has not reached this org's dev sandbox stack, or the fix rides a channel other than
   runtime images. Local lane unaffected; the seq-3 start gate stays blocked on a
   verified `reasoning.effort` span.
+- **Update 2026-08-15 (spelling-independence probe):** the modern `ai:` recipe
+  spelling changes nothing — a direct dev-lane probe (task
+  `01a00318-eaba-7501-b372-8872b897a707`, no runner involved) served the `ai:`-spelled
+  recipe and the sandbox still sent `reasoning: {"level": "medium"}` → 400 →
+  RUN_ERROR. Both spellings resolve to the same config; the serializer rides the
+  sandbox Pi build. Side-finding: platform tooling accepts `ai:` (dev serves it with
+  an advisory local-check warning) — only the pinned Recipes checker (0.19.3) refuses
+  it locally, so the repo stays on the legacy `model:` spelling to remain runnable.
 - **Unblock condition:** a sandbox Pi (or gateway request-shaping) release mapping
   `thinking_level` → `reasoning.effort` for OpenAI models; re-verify with
   `make single_task TRANSPORT=platform TASK=task_001`.
