@@ -708,7 +708,9 @@ instrument: `benchmark/scripts/power_sim.py`.
       `--verify` re-run; user-sim screen re-run under the active pair
       (`screen_user_sim.py` — screening evidence is model-conditioned, D12/D13).
       Under D13's haiku pair the platform lane is verified working (graded control
-      episode, zero incidents). The OpenAI serializer defect
+      episode, zero incidents). Haiku rounds must respect the measured org cap of
+      20M prompt-bytes/HOUR on claude-haiku-4-5 (the pilot saturated it in 9 min at
+      10-wide; overflow becomes τ infra retries) — pace concurrency or raise the cap. The OpenAI serializer defect
       (`.ai-state/UPSTREAM_ISSUES.md`) now gates only the RETURN to D12's luna pair —
       that return is a fresh re-cut + pilot, never a mid-experiment swap.
 - [ ] Run: 6 held-out rounds × 28 (local, sealed) interleaved with 5 batches × 8

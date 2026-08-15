@@ -53,6 +53,20 @@ Haiku passes: task_001, task_017, task_035. Agreement with luna on the same 28:
   the formal guard; if the loop struggles to diagnose against an almost-all-failing
   batch, strengthening H0 (or returning to luna when unblocked) re-opens per D8.
 
+## Operational constraint measured on the way out
+
+The org's Anthropic rate limit for `claude-haiku-4-5` is **20,000,000 prompt bytes
+per hour** (named verbatim in the 429 the post-pilot platform re-check hit, and
+still saturated 30+ minutes later — an hourly window, not a per-minute one). The
+pilot's 28 long-context episodes at 10-wide consumed it in ~9 minutes, which prices
+an episode at ≳0.7 MB of prompt bytes. Consequence for every haiku round: a
+held-out round (28 episodes) or two batch rounds inside one hour can saturate the
+cap mid-round, and the overflow surfaces as τ infra retries — exactly the noise a
+diagnosis round must not carry. Pace haiku rounds accordingly (lower
+`--max-concurrency`, or space rounds across hour windows), or raise the org cap
+before the experiment. Sonnet and luna carry separate limits; this is
+D13-pair-specific.
+
 ## Provenance
 
 - Run: `generation_000/calibration_pilot/` under this experiment id (manifest,
