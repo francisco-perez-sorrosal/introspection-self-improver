@@ -30,7 +30,7 @@
 # fingerprint.
 experiment:
   seq: 3
-  name: powered-bm25-haiku45
+  name: powered-bm25-luna56
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -104,10 +104,11 @@ frozen:
   # experiment's start gate flips this to FROZEN — after `make reset_h0` (H0 back to the
   # `h0-baseline` tag; seq-2 mutations are evidence, not inheritance) and the A.0a gate
   # (SIA_EVALUATION_PLAN.md Phase 5). Values below this status line are carried from the
-  # seq-2 freeze except the model pair and its args — re-decided as D12 (2026-08-14,
-  # luna for inference cost) and again as D13 (2026-08-14: both halves
-  # anthropic/claude-haiku-4-5 while the platform sandbox's OpenAI serializer defect
-  # blocks every openai/* model — .ai-state/UPSTREAM_ISSUES.md); the protocol block
+  # seq-2 freeze except the model pair and its args — re-decided as D12 (luna, for
+  # inference cost), D13 (haiku interim while the platform's OpenAI serializer defect
+  # blocked every openai/* model), and D14 (2026-08-14: LUNA RESTORED per D13's return
+  # clause after the platform team shipped the serializer fix; verified against a
+  # freshly built runtime image — .ai-state/UPSTREAM_ISSUES.md); the protocol block
   # above is the D11 re-decision. Re-cutting seq 3 in place is sanctioned only
   # because it is PROVISIONAL with zero episodes and no freeze snapshot — the moment a
   # snapshot exists, any change means a seq bump.
@@ -120,40 +121,38 @@ frozen:
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which
   # is what stops a later generation "improving" by quietly upgrading its own model.
   #
-  # claude-haiku-4-5 at medium thinking (D13, 2026-08-14, user decision): the interim
-  # pair while the platform sandbox's OpenAI serializer defect blocks every openai/*
-  # model unconditionally (it emits the retired `reasoning.level` parameter, explicit
-  # thinking level or not — .ai-state/UPSTREAM_ISSUES.md; the Anthropic control episode
-  # on this exact model completed clean, graded, zero incidents). D12's luna choice
-  # stands as the intended pair and returns when their fix ships — that return is a
-  # re-cut with its own pilot. The D12 sensitivity note carries: a model that does not
-  # already perform the harness behaviours leaves the harness as the binding
-  # constraint; the B1 viability read (D8) guards both failure modes (0/B = strengthen
-  # H0, B/B = the model choice re-opens). The D11 sizing (G=5/B=8/T=28) carries as a
-  # prior; the haiku calibration pilot re-measures baseline and cost
-  # (results/experiment_003_powered-bm25-haiku45/CALIBRATION_PILOT.md).
-  agent_model: anthropic/claude-haiku-4-5
+  # gpt-5.6-luna at medium thinking — D12's intended pair, RESTORED by D14 per D13's
+  # return clause once the platform fixed its sandbox serializer (it emitted OpenAI's
+  # retired `reasoning.level` for any thinking level; the fix rides the sandbox stack
+  # baked into runtime images, so verification requires a POST-fix image — the span of
+  # the first episode on one must show `reasoning.effort`). The
+  # inference-cost rationale and the sensitivity trade are D12's, unchanged: if luna
+  # performs the harness behaviours natively, mutations move the score less; the B1
+  # read (D8) guards both failure modes (0/B = strengthen H0, B/B = the model choice
+  # re-opens). Calibration is the D12 luna pilot (baseline 25%, $0.038/episode,
+  # G=5/B=8/T=28 verified at that baseline —
+  # results/experiment_003_powered-bm25-luna56/CALIBRATION_PILOT.md); the D13 haiku
+  # detour is archived at results/experiment_003_powered-bm25-haiku45/.
+  agent_model: openai/gpt-5.6-luna
   # Explicit again (the omission workaround was OpenAI-specific and proven ineffective
   # anyway): pinned in the lock beats riding Pi's default.
   agent_thinking_level: medium
 
   # tau requires --agent-llm, but our agent takes its model from the recipe, so this value
   # is declared and unused. Kept equal to agent_model so the file cannot read misleadingly.
-  agent_llm_declared: anthropic/claude-haiku-4-5
+  agent_llm_declared: openai/gpt-5.6-luna
 
   # The user simulator moves scores as much as the agent model does, with no harness change
   # at all. It is a comparison variable in its own right.
   #
-  # claude-haiku-4-5 here too (D13): one model pair, one provider, minimum surface —
-  # the user simulator runs τ-side on the LOCAL machine, so the platform's OpenAI
-  # defect never touched it, but a split-provider pair buys nothing and costs surface.
-  # The switch also RESTORES the reproducibility knob luna had surrendered:
-  # claude-haiku-4-5 accepts `temperature: 0.0` (HTTP 200, verified 2026-08-14),
-  # unlike Sonnet 5 and gpt-5.6-luna which both reject it — so this half of the
-  # environment is deterministic again, per the original seq-2 doctrine. The seq-2
-  # user-sim screening evidence remains model-conditioned and is re-run at the start
-  # gate.
-  user_llm: anthropic/claude-haiku-4-5
+  # gpt-5.6-luna here too (D12/D14): one model pair, one provider, minimum surface.
+  # The reproducibility knob is surrendered knowingly: luna rejects `temperature: 0.0`
+  # exactly as Sonnet 5 did (HTTP 400, verified 2026-08-14), so the simulator samples
+  # at the provider default and this half of the environment is stochastic per
+  # episode — absorbed by D2's task-pooling. (The D13 haiku detour briefly restored
+  # the knob; it leaves with haiku.) The seq-2 user-sim screening evidence is
+  # model-conditioned and is re-run at the start gate.
+  user_llm: openai/gpt-5.6-luna
 
   # `timeout` is a per-attempt request ceiling, not a preference. tau sets litellm's
   # `num_retries` but never a `timeout`, so a stalled provider response blocks with no bound:
@@ -165,12 +164,12 @@ frozen:
   # never cut while a stall now costs 60s and a retry instead of ten minutes.
   #
   # This mapping REPLACES tau's DEFAULT_LLM_ARGS_USER rather than merging with it — every
-  # key the simulator should run with must be listed here. `temperature: 0.0` is tau's
-  # own default for the user simulator, restored explicitly (and verified accepted by
-  # claude-haiku-4-5 — see the note on user_llm above); listing only `timeout` would
-  # silently run the simulator at the provider default.
+  # key the simulator should run with must be listed here. `temperature` is deliberately
+  # ABSENT: gpt-5.6-luna rejects any non-default value (see the note on user_llm above).
+  # `reasoning_effort` reaches litellm verbatim (user_simulator.py passes llm_args
+  # through) and is the medium-effort half of D12.
   user_llm_args:
-    temperature: 0.0
+    reasoning_effort: medium
     timeout: 60
 
   # 1 per SIA_EVALUATION_PLAN.md D2: every task runs once, and statistical power comes
