@@ -117,4 +117,7 @@ human_approval:
   # step 7's human gate. Recorded with provenance: the decision is the user's.
   approved_by: fperezsorrosal
   date: '2026-08-15'
-held_out_result: null
+held_out_result:
+  passed: 7
+  total: 28
+  carried: false

@@ -118,4 +118,7 @@ human_approval:
   # does not merge on its own authority, and it did not; the decision is the user's.
   approved_by: fperezsorrosal
   date: '2026-08-15'
-held_out_result: null
+held_out_result:
+  passed: 6
+  total: 28
+  carried: false

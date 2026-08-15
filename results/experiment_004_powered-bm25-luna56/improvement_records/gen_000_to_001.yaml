@@ -129,4 +129,7 @@ human_approval:
   # the mechanical merge was delegated.
   approved_by: fperezsorrosal
   date: '2026-08-15'
-held_out_result: null
+held_out_result:
+  passed: 8
+  total: 28
+  carried: false

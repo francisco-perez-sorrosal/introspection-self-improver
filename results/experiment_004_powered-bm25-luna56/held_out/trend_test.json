@@ -1,0 +1,17 @@
+{
+  "test": "one-sided trend, permutation-variance normal approximation",
+  "alpha": 0.05,
+  "measured_generations": [
+    "H0",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5"
+  ],
+  "excluded_identity": [],
+  "statistic": -6.0,
+  "z": -0.847117449603021,
+  "p_value": 0.80153517007651,
+  "significant": false
+}

@@ -121,4 +121,7 @@ human_approval:
   # and this merge was not: the decision is the user's, the mechanics were delegated.
   approved_by: fperezsorrosal
   date: '2026-08-15'
-held_out_result: null
+held_out_result:
+  passed: 5
+  total: 28
+  carried: false
