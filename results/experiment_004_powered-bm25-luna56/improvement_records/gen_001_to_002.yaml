@@ -6,7 +6,7 @@ transition:
   from_generation: 1
   to_generation: 2
 experiment: 004_powered-bm25-luna56
-outcome: 'TODO: accepted | rejected | identity'
+outcome: accepted
 batch:
   name: batch_02
   task_ids:
@@ -104,7 +104,7 @@ mutation:
   branch: gen-002/bound-the-stopping-clause
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/5
   source_commit: 421e773bcad3c086613fcb05da10c8c0b96c5370
-  candidate_commit: null
+  candidate_commit: 6e3bd164a3fc596d69dc44fa5396011776297626
 expected_effect: >-
   Episodes where a single unconfirmed value currently causes the whole procedure to be
   abandoned should instead complete the determined steps, or ask the user for that specific
@@ -115,6 +115,10 @@ expected_effect: >-
   a general licence to proceed. If B3 shows T1-shaped writes returning, this clause is the
   first suspect.
 human_approval:
-  approved_by: TODO
+  # PR #5 merged on the user's explicit instruction ("go ahead and merge and continue with
+  # the next generation") — protocol step 7's human gate. Recorded with its provenance
+  # because CLAUDE.md's guardrail is that the agent does not merge on its own authority,
+  # and this merge was not: the decision is the user's, the mechanics were delegated.
+  approved_by: fperezsorrosal
   date: '2026-08-15'
 held_out_result: null
