@@ -6,7 +6,7 @@ transition:
   from_generation: 0
   to_generation: 1
 experiment: 004_powered-bm25-luna56
-outcome: 'TODO: accepted | rejected | identity'
+outcome: accepted
 batch:
   name: batch_01
   task_ids:
@@ -112,7 +112,7 @@ mutation:
   branch: gen-001/pre-write-value-grounding
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/4
   source_commit: 03c54027bb7a5f637b9b229a570ccb6fa22ed7ff
-  candidate_commit: null
+  candidate_commit: 8168b08b43245ac7b133a23e780de194e3f8fdec
 expected_effect: >-
   Episodes that already run the correct procedure but write unconfirmed values should
   either write correct values or stop and name what could not be confirmed. Measured on
@@ -122,6 +122,11 @@ expected_effect: >-
   in B2 if H1 moves sideways: the stopping clause could convert T1 failures into T2
   failures by declining where it previously guessed, and T2 already stands at 3/8.
 human_approval:
-  approved_by: TODO
+  # PR #4 merged on the user's explicit instruction ("merge the PR and continue to the
+  # next generation"), which is protocol step 7's human gate being exercised. Recorded
+  # here rather than left implicit: CLAUDE.md's standing guardrail is that the agent does
+  # not merge on its own authority, and this merge was not — the decision is the user's,
+  # the mechanical merge was delegated.
+  approved_by: fperezsorrosal
   date: '2026-08-15'
 held_out_result: null
