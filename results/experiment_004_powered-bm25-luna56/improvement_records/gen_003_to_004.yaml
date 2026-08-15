@@ -1,0 +1,118 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 3
+  to_generation: 4
+experiment: 004_powered-bm25-luna56
+outcome: 'TODO: accepted | rejected | identity'
+batch:
+  name: batch_04
+  task_ids:
+  - task_029
+  - task_032
+  - task_037
+  - task_050
+  - task_065
+  - task_066
+  - task_070
+  - task_077
+evidence:
+  conversation_ids:
+  - 01a003fa-5fc1-70cb-babd-aba1c40240e8
+  - 01a003fa-60ca-738f-a412-170f5fdb3c12
+  - 01a003fa-63d3-753b-adc6-a91595624299
+  - 01a003fa-64f2-7218-b5a6-3734b409ff4d
+  - 01a003fa-fa6b-744b-9356-6aeda1a51c46
+  - 01a003fb-2f63-734d-bf0a-0ae8b121dbc4
+  - 01a003fb-e198-77cb-8a43-a344fde09064
+  - 01a003fc-023e-74a9-8eeb-78f49b72f43c
+  summary: >-
+    Full-population read of all 8 batch_04 episodes against H3. Batch health: 8/8
+    evidence_complete, 8/8 arm_sha_ok, all user_stop, zero incidents. The arm sha recorded is
+    ae28005 — the gate commit rather than the merge commit — so its target-agent/ tree was
+    VERIFIED byte-identical to the exp4-g003 tag before any diagnosis was drawn from it,
+    rather than assumed. Graded read with the nested-JSON-aware comparison: 27 of 48
+    action-check misses formatting-only, none entering the counts. task_029's handover calls
+    and task_065's account-class arguments were compared field-by-field against gold, and
+    task_070's tool inventory was enumerated rather than sampled — it is the finding that a
+    tail-read alone would have missed. Batch reward 2/8, labelled with set and N, not
+    compared across disjoint batches.
+signals:
+- description: >-
+    Botches the discoverable-tool handover — and B4 corrected what this mode IS. It is not
+    "never hands the tool over": task_029 (01a003fa-5fc1) called give_discoverable_user_tool
+    for the RIGHT tool, submit_cash_back_dispute_0589, FOUR times, each call carrying a
+    pre-filled "arguments" payload that the gold action does not have, so not one handover
+    matched. The omission shape also recurs: task_037 (01a003fa-63d3) never handed over
+    get_card_last_4_digits. Across the experiment: task_026 (B1), task_020 (B2), task_028 and
+    task_038 (B3), task_037 and task_029 (B4) — six witnesses in four batches, four of them
+    the same submit_cash_back_dispute_0589 tool. Best-evidenced mode in the run and the only
+    one no generation had touched. Backlog T6, consumed by this generation.
+  prevalence: 2/8 this batch, 6 witnesses across 4 batches
+- description: >-
+    T1 returned under the loosened stop, exactly as gen-002's record predicted it might.
+    task_065 (01a003fa-fa6b) opened Green as CHECKING and Gold as SAVINGS where gold wanted
+    Green savings and Evergreen checking, and wrote account_class "Green Account (checking)"
+    — a paraphrase, not a product name. task_066 (01a003fb-2f63) applied for the card with
+    wrong arguments. Backlog T1/T9 — not consumed by this generation.
+  prevalence: 2/8
+- description: >-
+    Abandons the entire procedure over one unconfirmed value — STILL PRESENT at H3 despite
+    two generations aimed at it. task_070 (01a003fb-e198) used ONLY KB_search, twenty calls,
+    no other tool of any kind, and closed with "No application has been started. You will
+    need Brightwave Digital's formation date to determine whether it qualifies." It never
+    even logged verification. This is what gen-002 was written to prevent and gen-003 to
+    clarify. Backlog T2/T4/T8 — not consumed by this generation.
+  prevalence: 1/8
+counterevidence: >-
+  The experiment's FIRST POSITIVE EVIDENCE lands in this batch and belongs here because it
+  cuts against the pessimistic reading of the loop: task_032 (01a003fa-60ca) is a
+  reward_basis ['ACTION'] task requiring a transfer, and it PASSED with one
+  transfer_to_human_agents call — gen-003 repaired the prohibition misreading it was written
+  for. It is one episode on a different task from the one that motivated the fix, so it
+  evidences the mechanism, never a gain in score. Cutting the other way, and recorded with
+  equal weight: two mutations demonstrably did NOT do their job (task_070's total
+  abandonment; T1's return in task_065), so this loop has produced at least one working
+  repair, at least one persisting defect, and one regression it introduced and then fixed.
+  Finally, an assumption made during diagnosis was WRONG and is corrected rather than
+  quietly dropped: B2's task_069 and B4's task_065 were initially read as one scenario under
+  two instruction regimes; they are different tasks that share customer rp65a7b3c4. The
+  comparison survives the correction — strict stop refused, loosened stop acted and chose
+  wrong — but it is weaker evidence than a true paired scenario would have been, and is
+  reported as such.
+hypothesis: >-
+  The handover fails in two ways with one root: the agent treats give_discoverable_user_tool
+  as something to describe rather than perform, and when it does perform it, it packs the
+  user's arguments into the call because that is what "giving the user a tool to run" seems to
+  require. Stating that the handover is a step that must actually happen, and that the call
+  carries the tool NAME alone with arguments going to the user in prose, should fix both.
+owning_layer: >-
+  The target agent's system prompt — target-agent/SYSTEM.md <instructions>. It operationalizes
+  what the FROZEN policy already requires (use the function with the exact name; "just
+  explaining isn't enough"), and so reinforces the graded policy rather than competing with
+  it — the failure mode gen-002 fell into.
+proposed_change: >-
+  target-agent/SYSTEM.md <instructions>, +5/-0. Handing the tool over is a step that must
+  actually be taken and is not replaced by describing it; the call carries the exact tool name
+  from the knowledge base and nothing else; the arguments the user needs go in the message to
+  them, never inside the call. Deliberately silent on unlock_discoverable_agent_tool, which
+  has matched correctly throughout — widening the rule there would add risk with no evidence.
+mutation:
+  branch: gen-004/hand-over-tools-by-name
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/7
+  source_commit: b6300372bdbabdb249fc3b44712f4f46c629c710
+  candidate_commit: null
+expected_effect: >-
+  Episodes whose procedure requires the user to act should produce a matching
+  give_discoverable_user_tool call carrying the tool name alone, so the user-side
+  call_discoverable_user_tool can follow. Measured on the held-out set at H4 and nowhere else.
+  Risk, stated: an instruction to "actually hand it over" could produce handovers in episodes
+  that do not call for one, which would be an unrequested-action failure of the T5 family
+  (1/8, task_046) rather than the omission this fixes. The instruction is conditioned on "when
+  the knowledge base says the user performs an action themselves" precisely to bound that.
+human_approval:
+  approved_by: TODO
+  date: '2026-08-15'
+held_out_result: null
