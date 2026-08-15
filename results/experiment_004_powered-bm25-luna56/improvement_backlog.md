@@ -15,8 +15,16 @@ taken from `generation_NNN/batch_NN/episode_manifest.jsonl`, never from memory.
 | id | mechanism | prevalence | status |
 |---|---|---|---|
 | T1 | Commits a write on an unverified KB-derived value | 3/8 (B₁) | **consumed-by-gen-001** |
-| T2 | Bails to a human instead of completing an in-scope procedure | 3/8 (B₁) | pending |
+| T2 | Bails to a human instead of completing an in-scope procedure | ~~3/8~~ **2/8** (B₁, re-scoped) | pending |
 | T3 | Declares "no discrepancy" without performing the required comparison | 1/8 (B₁) | pending |
+| T4 | Over-caution: the grounding check blocks a determinate action | 2/8 (B₂) | **consumed-by-gen-002** |
+| T5 | Performs an unrequested extra write | 1/8 (B₂) | pending |
+| T6 | Never hands over the discoverable tool the procedure requires | 2/8 (B₁+B₂) | pending |
+
+**Slot accounting.** G = 5. Two generations are spent (gen-001 → T1, gen-002 → T4), leaving
+**3 slots** against **4 pending targets** (T2, T3, T5, T6). The backlog now outruns the freeze
+by one — stated, not hidden. At least one approved target will go unconsumed in this
+experiment, and the ranking at each remaining boundary decides which.
 
 ---
 
@@ -83,6 +91,63 @@ expected four mis-rewarded transactions to be found, the dispute tool handed to 
 
 At 1/8 this is the weakest-powered target in the set; a second witness in a later batch would
 strengthen it considerably.
+
+---
+
+## Batch B₂ (generation_001, H₁) — 4/8
+
+**Not comparable with B₁'s 1/8.** The partition makes batches disjoint, so B₁ and B₂ are
+different task sets of different difficulty. Batch reads diagnose; the progression metric is
+the held-out curve, sealed until reveal. No cross-batch inference is drawn anywhere below.
+
+### T4 — Over-caution: the grounding check blocks a determinate action
+
+**Approved** 2026-08-15 (batch B₂). **Status:** consumed-by-gen-002. **Prevalence 2/8.**
+
+This is gen-001's own stopping clause over-firing — the risk its PR and record both named in
+advance, now visible in the agent's stated reasons rather than inferred:
+
+- `task_094` — transferred to a human, saying: "**No correction was applied yet because the
+  exact statement period and daily balances still need to be confirmed.**" Gold expected
+  `apply_savings_account_credit_6831` at `amount: 140.00`.
+- `task_069` — searched the knowledge base **seventeen** times, then declined: "I searched the
+  personal products and found **no combination whose documentation confirms all three
+  requirements** simultaneously." Gold expected two accounts opened
+  (`open_bank_account_4821` × 2).
+
+**Causation is not claimed.** B₁ and B₂ are disjoint and the held-out numbers are sealed, so
+whether gen-001 helped, hurt, or did nothing is unknown until reveal. What *is* established is
+mechanistic: the instruction's stopping clause is being read as licence to abandon the whole
+procedure, not merely to withhold one unconfirmed value. That is a defect in the clause's
+scope regardless of its net effect on score.
+
+### T5 — Performs an unrequested extra write
+
+**Approved** 2026-08-15 (batch B₂). **Status:** pending. **Prevalence 1/8.**
+
+`task_046` matched **every** gold action and still failed `db_check`, because it additionally
+called `pay_credit_card_from_checking_9182` with a garbled `checking_account_id: "05"` — a
+payment nobody asked for. Low prevalence, but arguably the highest-severity mode seen so far:
+every other mode is a failure to act, and this one is an unrequested real-money state change.
+A second witness would justify promoting it above higher-prevalence targets.
+
+### T6 — Never hands over the discoverable tool the procedure requires
+
+**Approved** 2026-08-15. **Status:** pending. **Prevalence 2/8 across two batches.**
+
+- `task_020` (B₂) — never called `give_discoverable_user_tool` for
+  `submit_cash_back_dispute_0589`.
+- `task_026` (B₁) — same omission for the same tool; previously counted under T3.
+
+Two witnesses in different batches make this a mode in its own right rather than an aspect of
+T3. T3 accordingly narrows to the *unfounded negative finding* itself.
+
+### T2 re-scoped: 3/8 → 2/8
+
+Applying the observation harvest's `environment_issue` on `task_088` (the declined
+authorization was absent from all transaction histories, so that escalation was partly forced).
+`task_005` and `task_010` remain unambiguous. Recorded as a re-scope with its reason rather
+than a silent edit.
 
 ---
 
