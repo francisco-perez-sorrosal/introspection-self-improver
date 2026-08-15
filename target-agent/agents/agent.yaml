@@ -6,9 +6,11 @@ description: Banking support agent evaluated by tau2-bench; the harness under im
 # rather than a better harness. Their locked values live in benchmark/benchmark_lock.yaml
 # and the runner refuses to start when the two disagree.
 #
-# The `model:` block is the legacy spelling of `ai.model`. It is used deliberately: the
-# vendored checker behind `introspection check` does not yet accept `ai:`, and a recipe that
-# fails validation fails the pre-commit hook and CI. Revisit when the checker catches up.
+# The `ai:` block is the current spelling (adopted 2026-08-15, user decision). The
+# platform's cloud validator (introspection-recipe-check 0.3.0) accepts it; the LOCAL
+# Recipes checker (0.19.3, newest available) does not yet — so `introspection check`,
+# the pre-commit hook, CI, and the runner's own gate all fail until the matching
+# Recipes release ships. Commits meanwhile need --no-verify, and no lane can run.
 ai:
   model: openai/gpt-5.6-luna
 

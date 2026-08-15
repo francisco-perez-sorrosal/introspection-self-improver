@@ -134,9 +134,11 @@ frozen:
   # results/experiment_003_powered-bm25-luna56/CALIBRATION_PILOT.md); the D13 haiku
   # detour is archived at results/experiment_003_powered-bm25-haiku45/.
   agent_model: openai/gpt-5.6-luna
-  # Explicit again (the omission workaround was OpenAI-specific and proven ineffective
-  # anyway): pinned in the lock beats riding Pi's default.
-  agent_thinking_level: medium
+  # null = the ai:-spelled recipe omits thinking_level (user decision at the merge of
+  # probe/ai-no-thinking, 2026-08-15). The assertion pins the ABSENCE; whether the
+  # platform sandbox injects a default reasoning parameter for this shape is exactly
+  # what the next platform episode's span must show.
+  agent_thinking_level: null
 
   # tau requires --agent-llm, but our agent takes its model from the recipe, so this value
   # is declared and unused. Kept equal to agent_model so the file cannot read misleadingly.
