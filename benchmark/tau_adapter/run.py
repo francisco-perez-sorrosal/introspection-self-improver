@@ -76,7 +76,12 @@ from tau_adapter.policy_region import extract_policy, replace_policy
 from tau_adapter.rounds import TRANSPORT_LOCAL, TRANSPORT_PLATFORM, TRANSPORTS
 from tau_adapter.tool_bridge import ToolBridge
 from tau_adapter.transport_local import LAUNCHER_CLI, LAUNCHER_PI, LAUNCHERS, LocalPiTransport
-from tau_adapter.transport_platform import PlatformTransport, original_title_of
+from tau_adapter.transport_platform import (
+    DEFAULT_MAX_CONCURRENT_STARTS,
+    PlatformTransport,
+    StartGate,
+    original_title_of,
+)
 
 AGENT_KEY = "pi_recipe"
 
@@ -439,6 +444,17 @@ def main() -> int:
             "value is recorded in run_metadata.json."
         ),
     )
+    parser.add_argument(
+        "--max-concurrent-starts",
+        type=int,
+        default=None,
+        help=(
+            "platform lane only: episodes allowed between `tasks create` and their first "
+            "streamed event at once — sandbox starts, whose provisioning is heavy-tailed "
+            f"under bursts. Default {DEFAULT_MAX_CONCURRENT_STARTS}; 0 disables the gate. "
+            "Recorded in run_metadata.json; ignored on the local lane."
+        ),
+    )
     args = parser.parse_args()
 
     lock = lockmod.load_lock()
@@ -474,6 +490,18 @@ def main() -> int:
         )
     except roundsmod.RoundError as exc:
         raise SystemExit(str(exc)) from exc
+
+    # The start gate is platform-lane-only and operational, like max_concurrency: it moves
+    # wall-clock and start-latency exposure, never what an agent can do inside an episode.
+    if args.max_concurrent_starts is not None and args.max_concurrent_starts < 0:
+        raise SystemExit("--max-concurrent-starts must be >= 0 (0 disables the gate)")
+    max_concurrent_starts: int | None = None
+    if spec.transport == TRANSPORT_PLATFORM:
+        max_concurrent_starts = (
+            DEFAULT_MAX_CONCURRENT_STARTS
+            if args.max_concurrent_starts is None
+            else args.max_concurrent_starts
+        )
 
     task_ids: list[str] | None = spec.task_ids
     num_trials = lock.num_trials
@@ -631,6 +659,10 @@ def main() -> int:
 
     transports = _EpisodeTransportLog()
 
+    # One gate per run, shared by every episode transport: it bounds concurrent sandbox
+    # *starts* (create → first streamed event), not episodes in flight.
+    start_gate = StartGate(max_concurrent_starts) if max_concurrent_starts else None
+
     # The launch vector is identical for every episode, so it is computed once here rather
     # than inside the factory τ's workers call concurrently. The local probe transport is
     # never started; its only job is to render the argv a run's record names.
@@ -662,6 +694,7 @@ def main() -> int:
                 idle_timeout_seconds=int(lock.timeout_seconds),
                 dev_target=dev.dev_target,
                 episode_label=episode_label,
+                start_gate=start_gate,
             )
         else:
             transport = LocalPiTransport(
@@ -766,6 +799,8 @@ def main() -> int:
     print(f"   tasks         {selection} in {num_trials} trial(s)")
     if max_concurrency != 1:
         print(f"   concurrency   {max_concurrency} episode(s) in flight, one bridge channel each")
+    if max_concurrent_starts and max_concurrency != 1:
+        print(f"   start gate    {max_concurrent_starts} concurrent sandbox start(s)")
     if lock.provisional:
         print("   lock status   PROVISIONAL — not an experiment freeze")
     if len(tasks) * num_trials > 20:
@@ -898,6 +933,7 @@ def main() -> int:
                 "split": spec.split,
                 "num_trials": num_trials,
                 "max_concurrency": max_concurrency,
+                "max_concurrent_starts": max_concurrent_starts,
                 "transport": spec.transport,
                 "launcher": args.launcher if spec.transport == TRANSPORT_LOCAL else None,
                 "launch_argv": launch_argv,

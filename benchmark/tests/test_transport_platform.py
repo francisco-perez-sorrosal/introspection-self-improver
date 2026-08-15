@@ -677,3 +677,146 @@ def test_a_started_sandbox_with_a_dead_stream_still_fails(monkeypatch) -> None:
     transport._on_stream_end(session)
     assert transport.incidents.stream_failures == 1
     assert transport.incidents.sandbox_queue_waits == 0
+
+
+# --------------------------------------------------------------------------- start gate
+
+
+def _permit_available(gate) -> bool:
+    """Probe-and-restore: whether the gate has a free slot right now."""
+    probe = gate.acquire(timeout=0.01)
+    if probe is None:
+        return False
+    probe.release()
+    return True
+
+
+def test_start_gate_bounds_concurrent_holders_and_frees_on_release() -> None:
+    gate = transport_platform.StartGate(2)
+    first = gate.acquire(timeout=1)
+    second = gate.acquire(timeout=1)
+    assert first is not None and second is not None
+    assert gate.acquire(timeout=0.05) is None
+    first.release()
+    third = gate.acquire(timeout=1)
+    assert third is not None
+    third.release()
+    second.release()
+
+
+def test_start_gate_permit_release_is_idempotent() -> None:
+    """A permit freed from two terminal paths must give back exactly one slot — a double
+    release widening the gate would defeat the bound it exists to hold."""
+    gate = transport_platform.StartGate(1)
+    permit = gate.acquire(timeout=1)
+    assert permit is not None
+    permit.release()
+    permit.release()
+    refill = gate.acquire(timeout=1)
+    assert refill is not None
+    assert gate.acquire(timeout=0.05) is None
+    refill.release()
+
+
+def test_start_gate_rejects_a_nonpositive_limit() -> None:
+    with pytest.raises(ValueError):
+        transport_platform.StartGate(0)
+
+
+def _create_response() -> dict:
+    return {"task": {"id": "task-1"}, "run": {"id": "run-1"}}
+
+
+def test_a_permit_is_taken_at_creation_and_freed_by_the_first_streamed_event(
+    monkeypatch,
+) -> None:
+    gate = transport_platform.StartGate(1)
+    transport = PlatformTransport(runtime_id="rt", repo_root=".", start_gate=gate)
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: _create_response())
+    monkeypatch.setattr(
+        transport,
+        "_spawn_stream",
+        lambda run_ref, drop_run_id, reattaches_left, replacing: True,
+    )
+    transport.send_user_text("hello")
+    assert transport._task_id == "task-1"
+    assert not _permit_available(gate)
+    transport._ingest_line(_silent_session(), json.dumps(envelope({"type": "RUN_STARTED"})))
+    assert _permit_available(gate)
+    assert transport.incidents.start_gate_timeouts == 0
+
+
+def test_a_failed_task_creation_frees_the_start_slot(monkeypatch) -> None:
+    gate = transport_platform.StartGate(1)
+    transport = PlatformTransport(runtime_id="rt", repo_root=".", start_gate=gate)
+
+    def _refuse(args, timeout):
+        raise RuntimeError("Failed to reach Restate ingress")
+
+    monkeypatch.setattr(transport, "_cli", _refuse)
+    with pytest.raises(RuntimeError):
+        transport.send_user_text("hello")
+    assert _permit_available(gate)
+    assert transport.incidents.prompt_failures == 1
+
+
+def test_close_frees_a_permit_that_never_saw_an_event() -> None:
+    gate = transport_platform.StartGate(1)
+    transport = PlatformTransport(runtime_id="rt", repo_root=".", start_gate=gate)
+    transport._start_permit = gate.acquire(timeout=1)
+    assert not _permit_available(gate)
+    transport.close()
+    assert _permit_available(gate)
+
+
+def test_a_stream_failure_frees_the_start_slot(monkeypatch) -> None:
+    import time as time_module
+
+    gate = transport_platform.StartGate(1)
+    transport = PlatformTransport(runtime_id="rt", repo_root=".", start_gate=gate)
+    transport._start_permit = gate.acquire(timeout=1)
+    transport._task_id = "task-1"
+    transport._queue_deadline = time_module.monotonic() - 1
+    transport._set_run_id("run-1")
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: {"started_at": None})
+    session = _silent_session()
+    transport._session = session
+    transport._on_stream_end(session)
+    assert transport.incidents.stream_failures == 1
+    assert _permit_available(gate)
+
+
+def test_a_gate_timeout_degrades_to_ungated_and_is_counted(monkeypatch) -> None:
+    """The gate is an optimization, never a failure mode: an episode that cannot get a
+    permit inside the ceiling creates its task anyway and records that it did."""
+    gate = transport_platform.StartGate(1)
+    holder = gate.acquire(timeout=1)
+    assert holder is not None
+    monkeypatch.setattr(transport_platform, "START_GATE_WAIT_CEILING_SECONDS", 0.05)
+    transport = PlatformTransport(runtime_id="rt", repo_root=".", start_gate=gate)
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: _create_response())
+    monkeypatch.setattr(
+        transport,
+        "_spawn_stream",
+        lambda run_ref, drop_run_id, reattaches_left, replacing: True,
+    )
+    transport.send_user_text("hello")
+    assert transport._task_id == "task-1"
+    assert transport.incidents.start_gate_timeouts == 1
+    transport.close()
+    assert not _permit_available(gate)
+    holder.release()
+
+
+def test_an_ungated_transport_never_touches_a_gate(monkeypatch) -> None:
+    transport = PlatformTransport(runtime_id="rt", repo_root=".")
+    monkeypatch.setattr(transport, "_cli", lambda args, timeout: _create_response())
+    monkeypatch.setattr(
+        transport,
+        "_spawn_stream",
+        lambda run_ref, drop_run_id, reattaches_left, replacing: True,
+    )
+    transport.send_user_text("hello")
+    assert transport._start_permit is None
+    assert transport.incidents.start_gate_timeouts == 0
+    assert transport.incidents.start_gate_wait_seconds == 0

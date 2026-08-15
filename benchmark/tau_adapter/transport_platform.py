@@ -75,6 +75,23 @@ BIND_POLL_CEILING_SECONDS = 120.0
 QUEUE_WAIT_CEILING_SECONDS = 240.0
 QUEUE_POLL_SECONDS = 5.0
 
+# The start gate: how many of a run's episodes may sit between `tasks create` and their
+# first streamed event at once. Sandbox provisioning is heavy-tailed under concurrent
+# starts (40-90s alone, 100-650s observed at 3-wide bursts — no org quota is involved;
+# contract/constraints.md § Platform-lane concurrency), and a start slower than
+# QUEUE_WAIT_CEILING_SECONDS converts into exactly the τ-retry churn that budget exists
+# to absorb. Serializing only the *start* phase lets any number of episodes run while at
+# most this many sandboxes provision and boot concurrently.
+DEFAULT_MAX_CONCURRENT_STARTS = 2
+# How long an episode may wait for a start permit before proceeding ungated. The wait
+# spends τ's frozen 300s first-turn ceiling alongside creation (~5.5s CLI startup) and
+# boot (typically 40-90s once starts are serialized), so it cannot be generous: at
+# N episodes over a K-wide gate the last waiter sits ~ceil(N/K - 1) boot-times deep,
+# which bounds practical N at roughly 3K before timeouts begin. On expiry the gate
+# degrades to advisory — an episode must never fail because of the gate — and the
+# episode's start_gate_timeouts counter records that it happened.
+START_GATE_WAIT_CEILING_SECONDS = 120.0
+
 # How many stderr lines a stream session retains for its failure report. The pipe itself is
 # drained continuously and without bound — an undrained stderr blocks the child once the OS
 # buffer (~64 KB) fills, which would present as a silent stream death with a misleading
@@ -244,6 +261,58 @@ def original_title_of(current: str) -> str:
     return current.strip()
 
 
+class _StartPermit:
+    """One held slot of a StartGate.
+
+    `release()` is thread-safe and idempotent: the slot is freed by whichever terminal
+    path runs first — first streamed envelope, creation failure, stream failure, or
+    transport close — and every later caller is a no-op. Idempotence lives here, at the
+    permit, so release sites never need to coordinate with each other.
+    """
+
+    __slots__ = ("_lock", "_released", "_semaphore", "wait_seconds")
+
+    def __init__(self, semaphore: threading.Semaphore, wait_seconds: float) -> None:
+        self._semaphore = semaphore
+        self._released = False
+        self._lock = threading.Lock()
+        self.wait_seconds = wait_seconds
+
+    def release(self) -> None:
+        with self._lock:
+            if self._released:
+                return
+            self._released = True
+        self._semaphore.release()
+
+
+class StartGate:
+    """Run-scoped bound on concurrent platform sandbox *starts* — never on running episodes.
+
+    One instance is shared by every episode transport of a run. A permit covers the window
+    from `tasks create` until the task's stream yields its first event (sandbox provisioned,
+    runtime booted and streaming — the window whose contention stretches starts to 100-650s
+    and storms the dev tunnel's MCP catalog discovery); episodes already streaming are
+    unlimited. A `BoundedSemaphore` backs the gate so a true over-release — a bug the
+    permit's idempotence should make impossible — raises loudly instead of silently
+    widening the gate. CPython's condition queues wake waiters in FIFO order, so blocked
+    episodes proceed in roughly arrival order; strict fairness is deliberately not built.
+    """
+
+    def __init__(self, limit: int) -> None:
+        if limit < 1:
+            raise ValueError(f"start-gate limit must be >= 1, got {limit}")
+        self.limit = limit
+        self._semaphore = threading.BoundedSemaphore(limit)
+
+    def acquire(self, timeout: float) -> _StartPermit | None:
+        """Block for a start slot; None on timeout, and the caller proceeds ungated."""
+        waited_from = time.monotonic()
+        if not self._semaphore.acquire(timeout=timeout):
+            return None
+        return _StartPermit(self._semaphore, time.monotonic() - waited_from)
+
+
 class PlatformTransport:
     """One Introspection task per episode, one run per user turn."""
 
@@ -256,6 +325,7 @@ class PlatformTransport:
         idle_timeout_seconds: int = 600,
         dev_target: str | None = None,
         episode_label: str | None = None,
+        start_gate: StartGate | None = None,
     ) -> None:
         self._runtime_id = runtime_id
         self._repo_root = Path(repo_root)
@@ -263,6 +333,12 @@ class PlatformTransport:
         self._environment = environment
         self._idle_timeout = idle_timeout_seconds
         self._dev_target = dev_target
+        # The run's shared start gate (None = ungated). The permit is taken on the τ worker
+        # thread before `tasks create` and released from whichever thread reaches a terminal
+        # condition first; _StartPermit.release() is idempotent, so the reference is set once
+        # and never cleared — no cross-thread coordination needed beyond the permit's own lock.
+        self._start_gate = start_gate
+        self._start_permit: _StartPermit | None = None
         # This episode's bridge channel, adopted from the agent before start. Once the
         # task's sandbox session id is known (metadata.agent_session_id), the channel is
         # bound to it so the tunnel's session header routes this episode's tool calls —
@@ -345,6 +421,9 @@ class PlatformTransport:
                 return
             self._closed = True
         self._stop_stream()
+        # The backstop for every path that never streamed an event: an episode torn down
+        # mid-provisioning gives its start slot back here.
+        self._release_start_permit()
         if self._task_id is None:
             return
         # The platform auto-titles the conversation from its content ("Wanted to change
@@ -401,6 +480,17 @@ class PlatformTransport:
         self._stop_stream()
         if self._task_id is None:
             # The first turn cannot overlap: the stream needs a task id, which creation returns.
+            if self._start_gate is not None:
+                permit = self._start_gate.acquire(timeout=START_GATE_WAIT_CEILING_SECONDS)
+                if permit is None:
+                    self.incidents.start_gate_timeouts += 1
+                    logger.warning(
+                        f"no start permit within {START_GATE_WAIT_CEILING_SECONDS:.0f}s; "
+                        "creating the task ungated (the gate is advisory, never a failure)"
+                    )
+                else:
+                    self._start_permit = permit
+                    self.incidents.start_gate_wait_seconds += round(permit.wait_seconds)
             try:
                 created = self._cli(
                     [
@@ -421,6 +511,9 @@ class PlatformTransport:
                 )
             except Exception as exc:
                 self._count_prompt_failure(exc)
+                # No task exists, so no sandbox will ever start: free the slot before τ
+                # sees the failure, or a retried episode would wait on its own corpse.
+                self._release_start_permit()
                 raise
             self._task_id = str(created["task"]["id"])
             self._queue_deadline = time.monotonic() + QUEUE_WAIT_CEILING_SECONDS
@@ -526,6 +619,12 @@ class PlatformTransport:
                 f"{BIND_POLL_CEILING_SECONDS:.0f}s; tunneled calls will be refused after "
                 "the bridge's grace"
             )
+
+    def _release_start_permit(self) -> None:
+        """Free this episode's start slot; safe from any thread, any number of times."""
+        permit = self._start_permit
+        if permit is not None:
+            permit.release()
 
     def _count_prompt_failure(self, exc: Exception) -> None:
         """Classify a failed create/prompt. A 409 is the turn-gate regression this lane once
@@ -662,6 +761,10 @@ class PlatformTransport:
             envelope = json.loads(line)
         except json.JSONDecodeError:
             return
+        # Any decoded event proves the sandbox started and its runtime is streaming: the
+        # provisioning window the start permit covers is over, whichever session won the
+        # attach race — a superseded stream's line is just as much proof as the current one's.
+        self._release_start_permit()
         if session.drop_run_id is not None and envelope.get("run_id") == session.drop_run_id:
             # A replay of the previous, already-consumed run. See _StreamSession.
             session.dropped += 1
@@ -739,6 +842,8 @@ class PlatformTransport:
             session.stderr_thread.join(timeout=2.0)
         stderr = "\n".join(session.stderr_lines)
         self.incidents.stream_failures += 1
+        # A failing episode must not keep a start slot hostage while τ books the failure.
+        self._release_start_permit()
         self._turns.put(
             TransportFailure(
                 reason=(

@@ -222,7 +222,13 @@ fit inside τ's frozen 300s per-turn ceiling) — a start slower than the budget
 stream death and re-triggers exactly the τ-retry churn the budget was built to absorb.
 `make batch` keeps `--max-concurrency 2` for that reason — bounding concurrent-start
 provisioning contention in diagnosis rounds — not because of any quota. Going wider
-needs staggered episode starts (ramp-up), not a larger budget: the τ ceiling is frozen.
+needs staggered episode starts, not a larger budget (the τ ceiling is frozen) — built
+2026-08-14 as the transport's **start gate**: a run-scoped bound (default 2,
+`--max-concurrent-starts`, 0 disables, recorded in `run_metadata.json`) on episodes
+sitting between `tasks create` and their first streamed event, so any number of episodes
+run while at most K sandboxes provision and boot at once. The gate is advisory by
+design — a permit that cannot be had within its ceiling lets the episode proceed ungated
+and counts a `start_gate_timeouts` incident; waits land in `start_gate_wait_seconds`.
 
 ## Why `pi` launches the recipe locally rather than `introspection local`
 

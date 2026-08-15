@@ -44,9 +44,15 @@ class EpisodeIncidents:
     prompt_409: int = 0
     prompt_failures: int = 0
     stream_failures: int = 0
-    #: Re-attaches spent waiting out the org's sandbox queue (created, not yet started).
-    #: Latency, not damage — but a round that queued a lot should say so.
+    #: Re-attaches spent waiting out a slow sandbox start (created, not yet started).
+    #: Latency, not damage — but a round that waited a lot should say so.
     sandbox_queue_waits: int = 0
+    #: Whole seconds this episode waited at the run's start gate before `tasks create`.
+    #: Latency by design — sandbox starts are deliberately serialized — never damage.
+    start_gate_wait_seconds: int = 0
+    #: Start-gate waits that hit the ceiling; the episode proceeded ungated. Nonzero means
+    #: the round ran more episodes than the gate can drain inside tau's first-turn budget.
+    start_gate_timeouts: int = 0
     stream_reattaches: int = 0
     settle_timeouts: int = 0
 

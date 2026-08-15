@@ -302,7 +302,9 @@ baseline, 100–650s under concurrent starts — the 2m49s incident was mid-dist
 for its burst (a sibling took 457s) and was the second-created task, not the third. The
 vendor confirms no plan-derived cap. The binding constraint for wide platform rounds is
 that provisioning tail against `QUEUE_WAIT_CEILING_SECONDS` (240s, inside τ's frozen
-300s turn ceiling); going wider needs staggered starts, not a bigger budget. Evidence
+300s turn ceiling); going wider needs staggered starts, not a bigger budget — built
+2026-08-14 as the transport's run-scoped **start gate** (`StartGate`, default 2
+concurrent sandbox starts, `--max-concurrent-starts`, advisory-on-timeout). Evidence
 and task ids: `contract/constraints.md` § Platform-lane concurrency.
 
 ## Operational doctrine (the knob, final form)
