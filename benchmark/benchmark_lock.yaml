@@ -32,8 +32,11 @@
 # trend p=0.802, no improvement demonstrated; the loop's machinery held (208 episodes,
 # zero seam incidents, all twenty §29 guardrails). Seq 5 IS the loop-reliability
 # experiment (plan D17/D18/D19): batch_mode fixed + num_trials 3 asks the prerequisite
-# question seq 4 could not answer — can the loop fix what it stares at? The full T=47
-# run stays deferred to seq 6.
+# question seq 4 could not answer — can the loop fix what it stares at? Run at a
+# REDUCED G=2 (plan D20, user-authorized 2026-08-15) — two mutation slots plus the
+# endpoint round, enough to exercise every loop mechanic at ~40% of the episode cost;
+# the design question is loop mechanics, not curve power. The full T=47 run stays
+# deferred to seq 6.
 #
 # PARITY CONVENTION (plan D15, 2026-08-15): EVEN seqs are stable, reportable
 # experiments; ODD seqs are experimentation — bring-up, detours, voided freezes
@@ -88,19 +91,30 @@ benchmark:
 # lever, compounding mutations AND adding curve points to the pre-registered trend
 # test). The full G=5/B=10/T=47 experiment is deferred to seq 6: at measured per-episode
 # costs it adds ~10 pp of trend power for ~$80.
+#
+# G REDUCED 5 -> 2 for seq 5 (plan D20, user-authorized 2026-08-15, lock still
+# PROVISIONAL with zero episodes). B and T are UNCHANGED, so D11's per-round sizing
+# rationale above stands verbatim; only the number of mutation slots moves. The cost
+# accepted knowingly and stated wherever the curve renders: G is the strongest power
+# lever (D11), so the held-out trend test runs over 3 points instead of 6 and is
+# underpowered by construction — but seq 5's pre-registered PRIMARY is the paired batch
+# endpoint test (H2 vs H0, 8 tasks, 2^8 exact enumeration), whose power depends on B and
+# num_trials, not on G. Two slots still exercise every loop mechanic end to end
+# (diagnose -> mutate -> PR -> tag -> re-measure the same batch), which is what a
+# loop-reliability experiment is for.
 protocol:
-  generations: 5
+  generations: 2
   improvement_tasks_per_generation: 8
   held_out_tasks: 28
 
   # THE SEQ-5 DESIGN CHANGE (plan D17): one fixed batch task set measured under every
-  # generation, H5 included (batch_06 is H5's measurement-only endpoint round, consumed
+  # generation, H2 included (batch_03 is H2's measurement-only endpoint round, consumed
   # by no transition). Seq 4's null left two explanations standing — "the mutations did
   # nothing" vs "the measurement could not see it" — and fixed mode attacks the
   # prerequisite question directly: can the improvement loop fix what it stares at?
   # The batch curve becomes a PAIRED saturation curve (same tasks per generation);
   # its pre-registered primary is scripts/batch_curve.py's exact paired sign-flip
-  # endpoint test, H5 vs H0, alpha 0.05. The held-out lane is unchanged and stays the
+  # endpoint test, H2 vs H0, alpha 0.05. The held-out lane is unchanged and stays the
   # transfer probe. The reading key, pre-registered with the freeze:
   #   B rises + T rises  -> the loop works and generalizes
   #   B rises + T flat   -> the loop optimizes but overfits (mutations task-shaped)
@@ -128,7 +142,8 @@ protocol:
 
 frozen:
   # PROVISIONAL while seq 5 (the loop-reliability experiment) is prepared: values cut
-  # 2026-08-15 (plan D17 fixed batch mode, D18 num_trials 3, D19 partition reuse), the
+  # 2026-08-15 (plan D17 fixed batch mode, D18 num_trials 3, D19 partition reuse, D20
+  # generations 5 -> 2 — the last re-cut in place under this same sanction), the
   # partition frozen with hand-chosen lists, no freeze snapshot written or enforced
   # until the start gate flips this to FROZEN — after `make reset_h0` (H0 back to the
   # D16-corrected `h0-baseline`; seq-4 mutations are evidence, not inheritance) and the
@@ -139,7 +154,7 @@ frozen:
   # the moment a snapshot exists, any change means a seq bump (next ODD number for
   # experimentation per D15 — seq 5 is deliberately odd: it studies the loop, not the
   # capability claim).
-  status: PROVISIONAL
+  status: FROZEN
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which

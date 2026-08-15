@@ -157,14 +157,18 @@ close.
 - **Seq 5 is the loop-reliability experiment (plan D17/D18/D19), cut PROVISIONAL
   2026-08-15 as `005_fixedb-bm25-luna56`** — deliberately ODD per D15: it studies the
   loop, not the capability claim. `protocol.batch_mode: fixed` measures ONE hand-chosen
-  batch of 8 known-fail tasks under every generation (batch_06 is H5's endpoint round,
-  consumed by no transition) — deliberate intervention verification, asking "can the
-  loop fix what it stares at?"; `num_trials: 3` on every round turns per-task cells
-  into pass rates (band ±9 → ±5 pp at T=28; one knob, both lanes, D2's structure kept).
+  batch of 8 known-fail tasks under every generation (the last batch round is the
+  endpoint round, consumed by no transition) — deliberate intervention verification,
+  asking "can the loop fix what it stares at?"; `num_trials: 3` on every round turns
+  per-task cells into pass rates (band ±9 → ±5 pp at T=28; one knob, both lanes, D2's
+  structure kept). **G reduced 5 → 2 (plan D20, user-authorized 2026-08-15)**: two
+  mutation slots plus `batch_03` as H2's endpoint round; B and T unchanged. The
+  held-out trend test therefore runs over 3 points and is underpowered by construction
+  — G is the strongest power lever (D11) — which the batch primary does not depend on.
   Held-out reuses seq-4's T=28 verbatim — the pool has zero virgin tasks — with the D19
   caveat recorded: the orchestrator has seen seq-4's revealed per-task results, so the
   firewall is weaker and the BATCH curve is the primary (batch_curve.py's exact paired
-  sign-flip endpoint test, H5 vs H0, α=0.05; `make batch_curve`). Pre-registered
+  sign-flip endpoint test, H2 vs H0, α=0.05; `make batch_curve`). Pre-registered
   reading key: B↑T↑ loop works; B↑T→ overfits; B→ the meta-agent is the problem.
   Batch reads from B2 on measure a tuned-on set and every diagnosis must say so.
 
