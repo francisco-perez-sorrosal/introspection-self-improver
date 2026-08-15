@@ -49,7 +49,7 @@
 
   <section class="card" id="curve-card">
     <div class="card-head">
-      <h2>Observable rounds — pass¹ across generations</h2>
+      <h2>Improvement batches — pass¹ across generations</h2>
       <div class="card-tools">
         <span id="curve-legend" class="legend"></span>
         <button id="curve-table-toggle" class="ghost-btn">table</button>
@@ -96,7 +96,9 @@
   Rewards shown are τ's own recorded in-run evaluations read from <code>results.json</code>;
   the reportable number remains <code>make grade</code> (tau2 evaluate-trajs). Rates follow
   τ's metric convention — infrastructure errors are excluded from rates and counted
-  separately. Diagnostic-mode rounds are never reportable. Held-out views come only from
+  separately. Only improvement-batch rounds enter any statistic; every other round under a
+  generation (calibration pilots, smokes, probes) is a diagnostic — listed, badged, never
+  counted. Held-out views come only from
   the revealed artifacts under <code>results/experiment_&lt;id&gt;/held_out/</code> —
   the vault is never read.
 </footer>

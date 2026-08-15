@@ -143,10 +143,14 @@ function splitRounds(gen, split) {
   return roundsOf(gen).filter((r) => (r.split ?? null) === split);
 }
 
-/* Statistics never count diagnostic rounds (mock smokes, materialised-recipe runs):
-   they are seam checks, not experiment evidence. The round lists still show them,
-   carrying their "diagnostic — not reportable" badge. */
-const statsRoundsOf = (gen) => roundsOf(gen).filter((r) => !r.diagnostic);
+/* Statistics count IMPROVEMENT BATCHES only (round.batch, from the runner's own
+   split record). Everything else that lands under a generation — calibration
+   pilots, mock smokes, single-task probes, concurrency smokes — is a diagnostic:
+   still listed in the detail card with its "excluded from metrics" badge, but it
+   never reaches a task set, statistic, curve, heatmap or aggregate. Pilots run on
+   the locked domain, so a domain/mode test cannot catch them; batch membership is
+   the only filter that can. */
+const statsRoundsOf = (gen) => roundsOf(gen).filter((r) => r.batch);
 const statsSplitRounds = (gen, split) =>
   statsRoundsOf(gen).filter((r) => (r.split ?? null) === split);
 
@@ -160,7 +164,7 @@ function badge(kind, icon, label) {
 
 function roundBadges(round) {
   const badges = [];
-  if (round.mode && round.mode !== "locked") badges.push(badge("warn", "⚠", "diagnostic — not reportable"));
+  if (!round.batch) badges.push(badge("warn", "⚠", "not a batch — excluded from metrics"));
   if (!round.has_sentinel) badges.push(badge("critical", "⛔", "interrupted — no completion sentinel"));
   if (round.arm_mismatches > 0) badges.push(badge("critical", "✗", `${round.arm_mismatches} arm sha mismatch`));
   else if (round.arm_dirty) badges.push(badge("warn", "⚠", "dirty arm — lineage soft"));
@@ -209,11 +213,17 @@ function renderBanner() {
 }
 
 function latestRound(exp) {
+  /* Freeze-chip fallback: prefer the newest batch round; any round only when the
+     experiment has no batches at all (bring-up experiments). */
+  let anyRound = null;
   for (let g = exp.generations.length - 1; g >= 0; g--) {
     const rounds = exp.generations[g].rounds;
-    if (rounds.length) return rounds[rounds.length - 1];
+    if (!rounds.length) continue;
+    anyRound ||= rounds[rounds.length - 1];
+    const batches = rounds.filter((r) => r.batch);
+    if (batches.length) return batches[batches.length - 1];
   }
-  return null;
+  return anyRound;
 }
 
 function renderFreeze() {
@@ -242,24 +252,16 @@ function renderFreeze() {
   strip.appendChild(status);
 }
 
-function primarySplit(exp) {
-  for (const split of splitValues(exp)) {
-    if (split == null) continue;
-    if (exp.generations.some((g) => roundsOf(g).some((r) => r.split === split))) return split;
-  }
-  return null;
-}
-
 function renderStats() {
   const row = $("#stat-row");
   row.replaceChildren();
   const exp = state.current;
   if (!exp || !exp.generations.length) return;
 
-  const split = primarySplit(exp);
-  const perGen = exp.generations.map((g) =>
-    mergeRounds(split ? statsSplitRounds(g, split) : statsRoundsOf(g))
-  );
+  /* Per generation: its improvement-batch rounds, merged. Batches carry per-generation
+     split names (batch_01, batch_02, …), so "latest" means the newest generation with a
+     batch — never a single split name pinned across the experiment. */
+  const perGen = exp.generations.map((g) => mergeRounds(statsRoundsOf(g)));
   const withData = perGen.filter((a) => a.pass1 != null);
   const latest = [...perGen].reverse().find((a) => a.pass1 != null);
   const first = perGen.find((a) => a.pass1 != null);
@@ -267,7 +269,7 @@ function renderStats() {
 
   const hero = el("div", "stat hero");
   hero.append(
-    el("div", "s-label", split ? `latest ${split} pass¹` : "latest pass¹ (all rounds)"),
+    el("div", "s-label", "latest improvement-batch pass¹"),
     el("div", "s-value", pct(latest?.pass1))
   );
   if (latest?.interval) hero.append(el("div", "s-sub", `≈95% CI ${pct(latest.interval[0])}–${pct(latest.interval[1])} · N=${latest.taskStats.length} tasks`));
@@ -283,15 +285,15 @@ function renderStats() {
 
   const episodes = el("div", "stat");
   episodes.append(
-    el("div", "s-label", "episodes (filtered)"),
+    el("div", "s-label", "batch episodes"),
     el("div", "s-value", String(all.graded)),
-    el("div", "s-sub", `${all.episodes} run · ${all.infra} infra excluded`)
+    el("div", "s-sub", `${all.episodes} run · ${all.infra} infra excluded · diagnostics not counted`)
   );
   row.appendChild(episodes);
 
   const cost = el("div", "stat");
   cost.append(
-    el("div", "s-label", "total cost"),
+    el("div", "s-label", "batch cost"),
     el("div", "s-value", usd(all.totalCost)),
     el("div", "s-sub", `avg ${usd(all.avgCost)} / episode`)
   );
@@ -309,21 +311,17 @@ function renderStats() {
 /* -------------------------------------------------------------- the curve */
 
 function curveSeries(exp) {
+  /* One series: each generation's improvement-batch rounds, merged. Batch split names
+     are per-generation (batch_01, batch_02, …), so a per-split series would fragment
+     the curve into single points; the cross-generation identity is "the batch". */
   const gens = exp.generations;
-  const series = [];
-  splitValues(exp).forEach((split, index) => {
-    if (split == null) return; // ad-hoc rounds have no cross-generation identity
-    if (state.filters.split !== "all" && state.filters.split !== split) return;
-    const line = gens.map((g) => {
-      const agg = mergeRounds(statsSplitRounds(g, split));
-      if (agg.pass1 == null) return null;
-      return { v: agg.pass1, lo: agg.interval?.[0], hi: agg.interval?.[1] };
-    });
-    if (line.some(Boolean)) {
-      series.push({ key: split, label: `${split} pass¹`, color: splitColor(index), points: line });
-    }
+  const line = gens.map((g) => {
+    const agg = mergeRounds(statsRoundsOf(g));
+    if (agg.pass1 == null) return null;
+    return { v: agg.pass1, lo: agg.interval?.[0], hi: agg.interval?.[1] };
   });
-  return series;
+  if (!line.some(Boolean)) return [];
+  return [{ key: "batches", label: "improvement-batch pass¹", color: splitColor(0), points: line }];
 }
 
 function renderLegend(legend, series) {
@@ -415,8 +413,8 @@ function renderCurve() {
     renderLegend($("#curve-legend"), []);
     renderRoundBars(body, exp);
     note.textContent =
-      "No split-labeled rounds yet — showing per-round pass¹ instead. " +
-      "The generation curve appears once run_metadata.json records a split.";
+      "No improvement-batch rounds in this experiment — only diagnostics " +
+      "(pilots, smokes, probes), which are excluded from all metrics.";
     return;
   }
   renderLegend($("#curve-legend"), series);
@@ -430,9 +428,10 @@ function renderCurve() {
     yFmt: (v) => `${Math.round(v * 100)}%`,
   });
   note.textContent =
-    "Batch and diagnostic rounds only — fully observable by design; the held-out metric " +
-    "lives in its own card. Whiskers are ≈95% intervals over per-task pass rates. " +
-    "Click a generation to inspect it.";
+    "Improvement batches ONLY — diagnostics (pilots, smokes, probes) are excluded from " +
+    "every number here. Batches are disjoint task sets, so this curve is diagnosis " +
+    "evidence, never the progression metric — that lives in the held-out card. " +
+    "Whiskers are ≈95% intervals over per-task pass rates. Click a generation to inspect it.";
 }
 
 /* ------------------------------------------------- held-out progression
@@ -1118,7 +1117,9 @@ function renderDetail() {
   if (gen.gates?.length) lrHolder.appendChild(gateStrip(gen));
   renderImprovementRecord(gen);
 
-  const rounds = roundsOf(gen);
+  /* Batch rounds lead; non-batch diagnostics trail, dimmed and badged — visible for
+     inspection (transcripts, seam evidence) but never presented as evaluation data. */
+  const rounds = [...roundsOf(gen)].sort((a, b) => (b.batch === true) - (a.batch === true));
   if (!rounds.length) {
     body.appendChild(el("div", "empty-note", "No rounds match the current filters."));
     return;
@@ -1129,7 +1130,7 @@ function renderDetail() {
     head.appendChild(el("th", null, h));
   table.appendChild(head);
   for (const round of rounds) {
-    const tr = el("tr", `round-row${round.mode !== "locked" ? " diagnostic" : ""}`);
+    const tr = el("tr", `round-row${round.batch ? "" : " diagnostic"}`);
     const flags = el("td");
     for (const b of roundBadges(round)) flags.appendChild(b);
     tr.append(

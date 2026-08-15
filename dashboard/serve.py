@@ -35,6 +35,15 @@ INFRASTRUCTURE = "infrastructure_error"
 
 SUCCESS_EPSILON = 1e-6  # τ's own definition: success = reward within 1e-6 of 1.0
 
+# The only rounds that count as experiment evidence inside a generation are the
+# improvement batches. The authority is the runner's own record — run.py writes
+# split: batch_NN into run_metadata.json exclusively for `--batch` rounds — so the
+# classification never rests on directory naming. Everything else that lands under a
+# generation directory (calibration pilots, mock smokes, single-task probes,
+# concurrency smokes, legacy bring-up trials) is a diagnostic: shown, badged, and
+# excluded from every task set, statistic and aggregate.
+BATCH_SPLIT_RE = re.compile(r"^batch_\d+$")
+
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
@@ -271,6 +280,11 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         or ((info.get("environment_info") or {}).get("domain_name")),
         # The runner's run_metadata.json record is the only split source (absent → null).
         "split": (metadata or {}).get("split"),
+        # Improvement batch iff the runner recorded a batch split. Only batch rounds
+        # enter metrics; see BATCH_SPLIT_RE for the rationale.
+        "batch": bool(
+            BATCH_SPLIT_RE.fullmatch(str((metadata or {}).get("split") or ""))
+        ),
         "mode": (metadata or {}).get("mode")
         or ("locked" if info.get("retrieval_config") else None),
         # Diagnostic rounds (mock-domain smokes, materialised-recipe runs) are shown
@@ -541,21 +555,22 @@ def experiment_payload(results_root: Path, dirname: str) -> dict:
             }
         )
 
-    # Diagnostic rounds (e.g. the mock smoke's create_task_1) never reach the
-    # experiment-level task set or statistics — they are seam checks, not evidence.
+    # Only improvement batches reach the experiment-level task set and statistics.
+    # Non-batch rounds — calibration pilots included, which run on the locked domain
+    # and would otherwise pass a domain/mode test — are diagnostics, not evidence.
     tasks = sorted(
         {
             t
             for g in generations
             for r in g["rounds"]
-            if not r.get("diagnostic")
+            if r.get("batch")
             for t in r["tasks"]
         }
     )
     descriptions: dict[str, str] = {}
     for generation in generations:
         for round_summary in generation["rounds"]:
-            if round_summary.get("diagnostic"):
+            if not round_summary.get("batch"):
                 continue
             descriptions.update(
                 {k: v for k, v in round_summary["task_descriptions"].items() if v}

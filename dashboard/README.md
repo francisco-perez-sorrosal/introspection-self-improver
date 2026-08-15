@@ -44,12 +44,14 @@ without the sequence prefix falls back to its bare id.
   cost), neutral direction chips (no good/bad coloring — direction is not goodness),
   and a nested per-task gold-action heatmap with a pass ring and flip dots.
   Descriptive statistics only: no noise band exists for them.
-- **Observable-rounds curve** — pass¹ per split for batch and diagnostic rounds (fully
-  observable by design), with ≈95% intervals over per-task rates; click a generation to
-  inspect it. A table view twin is one toggle away. Splits are grouped dynamically from
-  each round's recorded `run_metadata.json` value (no taxonomy is hard-coded; unlabeled
-  rounds form an ad-hoc bucket); when no round carries a split, the curve falls back to
-  per-round bars.
+- **Improvement-batch curve** — pass¹ across generations over improvement-batch rounds
+  ONLY, one merged point per generation, with ≈95% intervals over per-task rates; click a
+  generation to inspect it. A table view twin is one toggle away. A round is a batch iff
+  the runner recorded `split: batch_NN` in its `run_metadata.json` — the runner's record,
+  never directory naming or domain, decides. Batches are disjoint task sets per
+  generation, so this curve is diagnosis evidence, never the progression metric (that is
+  the held-out card). When an experiment has no batch rounds (bring-up experiments), the
+  card says so instead of charting diagnostics.
 - **Efficiency small multiples** — cost, messages, `KB_search` calls, duration per
   episode across generations (tracked, not optimized).
 - **Generation ribbon** — one card per improvement cycle: pass¹, Δ vs previous, the
@@ -58,7 +60,7 @@ without the sequence prefix falls back to its bare id.
 - **Improvement record panel** — the selected generation's transition record
   (`improvement_records/gen_<g>_to_<g+1>.yaml`): outcome badge, owning layer,
   hypothesis, and the raw YAML.
-- **Task × generation heatmap** — per-task pass fractions for observable rounds on a
+- **Task × generation heatmap** — per-task pass fractions for improvement-batch rounds on a
   sequential ramp, not-run cells distinct from zero; sortable by id or trend.
 - **Round and episode detail** — completeness flags (diagnostic, interrupted, infra
   errors, abnormal terminations, incomplete evidence), per-episode rewards and costs,
@@ -70,9 +72,11 @@ without the sequence prefix falls back to its bare id.
 Rewards shown are τ's own recorded in-run evaluations read from `results.json` — the
 reportable number remains `make grade` (tau2 evaluate-trajs); nothing is regraded here.
 Rates follow τ's metric convention (infrastructure errors excluded and counted
-separately); diagnostic rounds (mock smokes and other non-locked runs, flagged from
-`run_metadata.json`'s mode and domain, never by task name) stay visible in round lists
-with their "not reportable" badge but are excluded from every statistic; runs
-without `run_metadata.json` are flagged as interrupted rather than averaged in.
+separately); ONLY improvement-batch rounds enter statistics — every non-batch round
+under a generation (calibration pilots on the locked domain included, which a
+mode/domain test cannot catch, plus mock smokes, single-task probes and concurrency
+smokes) stays visible in round lists with its "not a batch — excluded from metrics"
+badge but reaches no task set, statistic, curve, heatmap or aggregate; runs
+without `run_metadata.json` carry no batch record and are likewise excluded.
 Held-out data appears only after `make reveal` and only from the revealed artifacts
 under `results/` — the dashboard never reads the vault (SIA_EVALUATION_PLAN.md D9).
