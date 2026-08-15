@@ -86,6 +86,60 @@ strengthen it considerably.
 
 ---
 
+## Observation harvest — independent corroboration, and two caveats
+
+The `introspection.observation` harvest was attempted at diagnosis time and returned nothing
+(6 minutes after the batch, against a ~40-minute eligibility window). Re-run at 05:03 UTC it
+returned **59 observations across the 8 batch-1 conversations**. This is a lens that had no
+access to the transcript analysis above, so it is a genuine second opinion — and it is
+recorded whether or not it agrees.
+
+**T1 is corroborated on all three of its tasks**, in the platform's own words:
+
+- `task_096` `agent_struggle/high` — "inferred unsupported effective rates and monthly
+  shortfalls from sparse transaction data, **then applied interest corrections without
+  verifying** the actual daily balances"; and separately, "treated the Gold Plus credit as a
+  confirmed $7.50 discrepancy even though the available records did not establish" it.
+- `task_072` `agent_struggle/high` — "miscalculated the Light Green Account's November ATM
+  charges and **applied a $10 refund without establishing** that this was the correct
+  overcharge".
+- `task_055` `agent_struggle/medium` — recommended an unaffordable product before eliciting the
+  user's constraints.
+
+**T3 is corroborated verbatim**: `task_026` `agent_struggle/high` — "Concluded that no
+discrepancy existed … **without** having the user's expected cash-back figures **or a
+complete, independently validated** comparison".
+
+### Caveat 1 — part of T2's prevalence may not be harness-addressable
+
+`task_088` carries `environment_issue/medium`: "The declined $449.99 authorization was **absent
+from all account transaction histories**, so the card and decline reason could not be identified
+from the available data." If the record genuinely is not there, the agent's escalation was
+partly forced rather than premature. T2's harness-addressable prevalence may therefore be
+**2/8 rather than 3/8**. Not retired — `task_005` and `task_010` are unambiguous, and `task_088`
+still never filed the dispute or closed the card — but T2 must be re-scoped against B₂ before
+being spent as a generation, and this caveat is why.
+
+### Caveat 2 — `task_055`'s repeated writes were a tool-availability failure, not only grounding
+
+`environment_issue/medium`: "the user-facing `deposit_check_3847` action returned an
+**unavailable-tool error**"; and `agent_struggle/medium`: "The agent **retried the same deposit
+action** after the user reported that it was unavailable, rather than diagnosing why". That
+explains the three repeated `deposit_check_3847` calls and the invented `mobile_check_deposit`
+seen in the transcript. So `task_055` is a mixed case: its wrong `account_class` is T1, but its
+repeated writes are a distinct retry-without-diagnosis behaviour. T1's evidence stands on
+`task_072` and `task_096`, which are clean.
+
+### Possible new mode, not yet a target (1/8)
+
+`task_026` `agent_struggle/medium` — the agent "logged the email and full address **discovered
+from the account record** even though the user had supplied only the requested name, date of
+birth, and phone number." Logging verification data the user never provided is a
+verification-integrity issue distinct from T1–T3. One witness only; watch for a second in B₂
+before promoting it to a target.
+
+---
+
 ## Not a target — recorded so it is not rediscovered as one
 
 **τ's action-check comparison under-reports agreement on discoverable-tool calls.**
