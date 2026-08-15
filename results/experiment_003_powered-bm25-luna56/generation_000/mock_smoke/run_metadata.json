@@ -1,12 +1,13 @@
 {
   "mode": "diagnostic",
   "experiment": "003_powered-bm25-luna56",
-  "freeze_fingerprint": "sha256:27931767979a32f91ad14c96f22b7ae5cdaf2a8d3415d18008c211e2fb38ed26",
+  "freeze_fingerprint": "sha256:7c8df493679752ca89896613f2f24298742b9d392cf7907c3152f0ded34a872e",
   "domain": "mock",
   "generation": "generation_000",
   "split": null,
   "num_trials": 1,
   "max_concurrency": 10,
+  "max_concurrent_starts": null,
   "transport": "local",
   "launcher": "pi",
   "launch_argv": [
@@ -43,6 +44,8 @@
       "prompt_failures": 0,
       "stream_failures": 0,
       "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 0,
+      "start_gate_timeouts": 0,
       "stream_reattaches": 0,
       "settle_timeouts": 0
     },
@@ -52,8 +55,8 @@
   "platform": null,
   "recipe_dir": "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
   "toolchain": {
-    "introspection": "introspection 0.26.0",
+    "introspection": "introspection 0.27.1",
     "pi": "0.84.1"
   },
-  "elapsed_seconds": 13.0
+  "elapsed_seconds": 10.6
 }
