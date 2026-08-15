@@ -220,8 +220,9 @@ Operational consequence: the binding constraint for wide platform rounds is the
 provisioning tail against the transport's `QUEUE_WAIT_CEILING_SECONDS` (240s, sized to
 fit inside τ's frozen 300s per-turn ceiling) — a start slower than the budget reads as
 stream death and re-triggers exactly the τ-retry churn the budget was built to absorb.
-`make batch` keeps `--max-concurrency 2` for that reason — bounding concurrent-start
-provisioning contention in diagnosis rounds — not because of any quota. Going wider
+`make batch` runs `--max-concurrency 4` (raised from 2 on 2026-08-15 after the 4-wide
+validation below) — not because any quota moved, but because the contention the pin
+guarded against did not materialise at 4. Going wider than the provisioning tail allows
 needs staggered episode starts, not a larger budget (the τ ceiling is frozen) — built
 2026-08-14 as the transport's **start gate**: a run-scoped bound (default 2,
 `--max-concurrent-starts`, 0 disables, recorded in `run_metadata.json`) on episodes
@@ -229,6 +230,24 @@ sitting between `tasks create` and their first streamed event, so any number of 
 run while at most K sandboxes provision and boot at once. The gate is advisory by
 design — a permit that cannot be had within its ceiling lets the episode proceed ungated
 and counts a `start_gate_timeouts` incident; waits land in `start_gate_wait_seconds`.
+
+Two facts from the 2026-08-15 4-wide validation run (4 unused-pool tasks,
+`--max-concurrency 4`, gate at its default 2 —
+`results/experiment_003_powered-bm25-luna56/generation_000/concurrency_smoke`):
+
+- **Four sandboxes provisioned and ran concurrently, cleanly.** All four tasks were
+  created within 1.6s, their created→started windows (35–65s each) fully overlap, and
+  the run finished in 78.9s with zero stall warnings, zero 409s, zero stream failures,
+  zero queue waits. Direct confirmation that no >2-sandbox limitation exists, at
+  provisioning latencies inside the healthy band.
+- **The gate releases earlier than its design comment claims.** Permits freed ~1s after
+  `tasks create` (total `start_gate_wait_seconds` 2 across the run) while boots took
+  35s+ — the task's event stream yields its first envelope at attach, before the sandbox
+  is provisioned, so "first streamed event" is not "runtime booted and streaming". As
+  implemented the gate bounds creation bursts and stream spin-up, not concurrent
+  provisioning. Harmless while provisioning behaves; if the 100–650s tail returns and the
+  gate is needed as real insurance, the release trigger must move to an envelope that
+  proves the run actually started (or to `tasks get` showing `started_at`).
 
 ## Why `pi` launches the recipe locally rather than `introspection local`
 

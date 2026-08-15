@@ -162,12 +162,14 @@ manifest (improvement batches + held-out set) · the experiment's `protocol:` co
 `max_concurrency` is deliberately NOT on this list (re-decided 2026-08-13): parallelism moves
 wall-clock, never what the agent can do inside an episode, so the lock's value is an
 operational default that any run may override with `--max-concurrency` (1 = serial); the
-effective value is recorded per run in `run_metadata.json`. `make batch` pins 2 to bound
-concurrent-start provisioning contention — the "~2-sandbox org quota" was a misdiagnosis,
-corrected 2026-08-14: three concurrent sandboxes are proven in the org's task history and
-no admission cap was ever observed; what bites is heavy-tailed sandbox start latency
-(40–650s) against the transport's 240s queue budget
-(`contract/constraints.md` § Platform-lane concurrency has the evidence). The documented
+effective value is recorded per run in `run_metadata.json`. `make batch` pins 4 — the
+"~2-sandbox org quota" was a misdiagnosis, corrected 2026-08-14 (three concurrent
+sandboxes proven in the org's task history, no admission cap ever observed), and 4-wide
+was validated 2026-08-15: four sandboxes provisioning concurrently at 35–65s each, zero
+seam incidents (`generation_000/concurrency_smoke`). What bites is heavy-tailed sandbox
+start latency (40–650s) against the transport's 240s queue budget
+(`contract/constraints.md` § Platform-lane concurrency has the evidence); drop the value
+per run if a round shows that churn. The documented
 caveat is provider contention at high N, which shows up as infra retries, not as graded
 capability.
 

@@ -137,13 +137,17 @@ bench:
 B ?= 1
 BATCH_DIR = batch_$(shell printf '%02d' $(B))
 batch: TRANSPORT = platform
-# --max-concurrency 2 matches the org's observed sandbox quota (~2 concurrent; a third
-# queues). A batch is diagnosis evidence: queued tasks behind a long episode churn
-# through tau retries, and that churn would pollute exactly the record `operate` reads.
-# Two clean waves beat four noisy lanes. Override per run if the quota changes.
+# --max-concurrency 4: no sandbox quota exists (the "~2 concurrent" reading was a
+# misdiagnosis, corrected 2026-08-14 — contract/constraints.md § Platform-lane
+# concurrency), and 4-wide ran clean on 2026-08-15: four sandboxes provisioning
+# concurrently at 35-65s each, zero stall/409/stream incidents
+# (results/experiment_003_powered-bm25-luna56/generation_000/concurrency_smoke).
+# A batch is still diagnosis evidence: if a round shows start-latency churn (the
+# 100-650s provisioning tail returning), drop --max-concurrency per run rather than
+# editing this default, so the record `operate` reads stays clean.
 batch:
 	@$(RUN) python tau_adapter/run.py --batch $(B) --transport $(TRANSPORT) \
-		--max-concurrency 2 \
+		--max-concurrency 4 \
 		--out ../$(RESULTS)/$(BATCH_DIR)
 	@$(RUN) python scripts/grade.py $(CURDIR)/$(RESULTS)/$(BATCH_DIR)/results.json \
 		--output-dir $(CURDIR)/$(RESULTS)/$(BATCH_DIR)/graded

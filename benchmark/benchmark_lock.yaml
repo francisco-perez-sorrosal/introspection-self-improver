@@ -221,13 +221,14 @@ operational:
   # § Platform-lane concurrency has the platform mechanism. A round can never use more
   # workers than it has episodes (tau's pool idles past the task count), so a generous
   # default is safe: held-out rounds run T-wide on the local lane, which has no sandbox
-  # constraint. Platform BATCH rounds are the exception and take --max-concurrency 2 from
-  # the batch target instead: concurrent starts stretch sandbox provisioning (40-90s
-  # serial baseline, 100-650s observed at 3-wide bursts) past the transport's 240s queue
-  # budget, and the resulting tau retries are noise a diagnosis round must not carry (no
-  # org sandbox quota exists — misdiagnosis corrected 2026-08-14, see
-  # contract/constraints.md § Platform-lane concurrency). Caveat, documented not gated: high N contends on
-  # provider rate limits (2N Anthropic streams), which can convert throttling into infra
+  # constraint. Platform BATCH rounds take --max-concurrency 4 from the batch target
+  # instead (no org sandbox quota exists — misdiagnosis corrected 2026-08-14, and 4-wide
+  # validated clean 2026-08-15; see contract/constraints.md § Platform-lane concurrency):
+  # the remaining hazard is the heavy-tailed provisioning burst (100-650s observed at
+  # 3-wide, vs 35-90s healthy) against the transport's 240s queue budget, whose tau
+  # retries are noise a diagnosis round must not carry — drop the value per run if a
+  # round shows that churn. Caveat, documented not gated: high N contends on
+  # provider rate limits (2N provider streams), which can convert throttling into infra
   # retries.
   max_concurrency: 10
 
