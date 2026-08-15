@@ -24,14 +24,12 @@ from tau_adapter import split as splitmod
 
 def _sizes(args, lock: lockmod.Lock) -> dict[str, int]:
     """Partition sizes from the lock's protocol block, each overridable per flag."""
-    overrides = (args.generations, args.batch_size, args.held_out)
-    if all(value is not None for value in overrides):
-        return splitmod.partition_sizes(*overrides)
     protocol = lock.protocol
     return splitmod.partition_sizes(
         args.generations or protocol.generations,
         args.batch_size or protocol.improvement_tasks_per_generation,
         args.held_out or protocol.held_out_tasks,
+        protocol.batch_mode,
     )
 
 
@@ -77,6 +75,20 @@ def main() -> int:
         help="extra header line recorded at --write (e.g. the held-out enforcement strength)",
     )
     parser.add_argument(
+        "--batch-tasks",
+        default="",
+        help=(
+            "comma-separated task ids for an EXPLICIT batch list (batch_mode fixed: the one "
+            "task set every batch round measures). Bypasses the stratified proposal; the "
+            "composition is itself a freeze decision — record its rationale in --note."
+        ),
+    )
+    parser.add_argument(
+        "--held-out-tasks",
+        default="",
+        help="comma-separated task ids for an EXPLICIT held-out list (paired with --batch-tasks)",
+    )
+    parser.add_argument(
         "--exclude",
         default="",
         help=(
@@ -104,7 +116,13 @@ def main() -> int:
         args.note = f"{exclusion_note} {args.note}".strip()
 
     if args.verify:
-        problems = splitmod.verify(splitmod.load_manifest(args.manifest), rows, lock.domain, sizes)
+        problems = splitmod.verify(
+            splitmod.load_manifest(args.manifest),
+            rows,
+            lock.domain,
+            sizes,
+            lock.protocol.batch_mode,
+        )
         if problems:
             for problem in problems:
                 print(f"✗ {problem}", file=sys.stderr)
@@ -115,9 +133,35 @@ def main() -> int:
         )
         return 0
 
-    assignment = splitmod.propose(rows, sizes, seed=args.seed)
+    batch_tasks = sorted({t.strip() for t in args.batch_tasks.split(",") if t.strip()})
+    held_out_tasks = sorted({t.strip() for t in args.held_out_tasks.split(",") if t.strip()})
+    if bool(batch_tasks) != bool(held_out_tasks):
+        print("✗ --batch-tasks and --held-out-tasks come together or not at all", file=sys.stderr)
+        return 1
+    if batch_tasks:
+        known = {row.task_id for row in rows}
+        unknown = sorted((set(batch_tasks) | set(held_out_tasks)) - known)
+        if unknown:
+            print(f"✗ unknown task id(s): {', '.join(unknown)}", file=sys.stderr)
+            return 1
+        assignment = splitmod.explicit_assignment(batch_tasks, held_out_tasks, sizes)
+    else:
+        if lock.protocol.batch_mode == "fixed":
+            print(
+                "✗ batch_mode fixed takes an explicit, deliberately chosen batch "
+                "(--batch-tasks/--held-out-tasks); a stratified proposal would defeat "
+                "the composition decision",
+                file=sys.stderr,
+            )
+            return 1
+        assignment = splitmod.propose(rows, sizes, seed=args.seed)
     rendered = splitmod.render_manifest(
-        assignment, lock.domain, lock.task_split_name, args.seed, args.note
+        assignment,
+        lock.domain,
+        lock.task_split_name,
+        args.seed,
+        args.note,
+        lock.protocol.batch_mode,
     )
     print(splitmod.strata_report(rows, assignment), file=sys.stderr)
 

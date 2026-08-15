@@ -122,8 +122,9 @@ def _verify_partition(manifest: dict[str, Any], rows: list[splitmod.TaskRow], lo
         protocol.generations,
         protocol.improvement_tasks_per_generation,
         protocol.held_out_tasks,
+        protocol.batch_mode,
     )
-    problems = splitmod.verify(manifest, rows, lock.domain, sizes)
+    problems = splitmod.verify(manifest, rows, lock.domain, sizes, protocol.batch_mode)
     if problems:
         raise RoundError(
             "the frozen partition no longer verifies against the lock's protocol config, "

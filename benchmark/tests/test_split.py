@@ -243,3 +243,107 @@ def test_rendered_manifest_verifies_as_written():
     rows = _rows()
     rendered = render_manifest(propose(rows, FULL), "banking_knowledge", "base", seed=7)
     assert verify(yaml.safe_load(rendered), rows, "banking_knowledge", FULL) == []
+
+
+# ---------------------------------------------------------------- fixed batch mode
+
+
+#: Fixed-mode sizes: G+1 batch rounds (the extra one is H_G's endpoint measurement).
+FIXED = partition_sizes(5, 8, 28, "fixed")
+
+
+def _fixed_manifest(batch_ids=None, held_ids=None) -> dict:
+    rows = _rows()
+    batch_ids = batch_ids or sorted(r.task_id for r in rows[:8])
+    # 26 DB + 2 ACTION rows: the held-out side must hold its proportional ACTION share
+    # (floor = 9 * 28 // 97 = 2), exactly as a real frozen manifest must.
+    held_ids = held_ids or sorted(r.task_id for r in rows[10:36]) + sorted(
+        r.task_id for r in rows[-2:]
+    )
+    return {
+        "version": MANIFEST_VERSION,
+        "domain": "banking_knowledge",
+        "batch_mode": "fixed",
+        "batches": {name: list(batch_ids) for name in FIXED if name != HELD_OUT},
+        HELD_OUT: list(held_ids),
+    }
+
+
+def test_fixed_sizes_add_the_endpoint_batch_round() -> None:
+    names = sorted(name for name in FIXED if name != HELD_OUT)
+    assert names == [f"batch_{n:02d}" for n in range(1, 7)]
+    assert all(FIXED[name] == 8 for name in names)
+
+
+def test_fixed_manifest_with_identical_batches_verifies() -> None:
+    rows = _rows()
+    assert verify(_fixed_manifest(), rows, "banking_knowledge", FIXED, "fixed") == []
+
+
+def test_fixed_mode_flags_batches_that_differ() -> None:
+    rows = _rows()
+    manifest = _fixed_manifest()
+    manifest["batches"]["batch_03"] = list(manifest["batches"]["batch_03"])
+    manifest["batches"]["batch_03"][0] = rows[40].task_id
+    problems = verify(manifest, rows, "banking_knowledge", FIXED, "fixed")
+    assert any("batch_03 differs" in problem for problem in problems)
+
+
+def test_fixed_mode_still_enforces_batch_held_out_disjointness() -> None:
+    rows = _rows()
+    held = sorted(r.task_id for r in rows[10:38])
+    batch = sorted(r.task_id for r in rows[:7]) + [held[0]]
+    manifest = _fixed_manifest(batch_ids=batch)
+    problems = verify(manifest, rows, "banking_knowledge", FIXED, "fixed")
+    assert any("multiple partitions" in problem for problem in problems)
+
+
+def test_fixed_mode_budget_counts_distinct_tasks_not_rounds() -> None:
+    """B+T = 36 distinct tasks must fit a 40-task pool even though 6 rounds x 8 = 48."""
+    rows = _rows(n_db=36, n_action=4)
+    manifest = {
+        "version": MANIFEST_VERSION,
+        "domain": "banking_knowledge",
+        "batch_mode": "fixed",
+        "batches": {
+            name: sorted(r.task_id for r in rows[:8]) for name in FIXED if name != HELD_OUT
+        },
+        HELD_OUT: sorted(r.task_id for r in rows[8:36]),
+    }
+    problems = verify(manifest, rows, "banking_knowledge", FIXED, "fixed")
+    assert not any("exceeds" in problem for problem in problems)
+
+
+def test_manifest_mode_must_agree_with_the_lock() -> None:
+    rows = _rows()
+    manifest = _fixed_manifest()
+    manifest["batch_mode"] = "fresh"
+    problems = verify(manifest, rows, "banking_knowledge", FIXED, "fixed")
+    assert any("batch_mode" in problem for problem in problems)
+
+
+def test_explicit_assignment_replicates_the_batch_list() -> None:
+    from tau_adapter.split import explicit_assignment
+
+    assignment = explicit_assignment(["task_002", "task_001"], ["task_010"], FIXED)
+    batch_names = [name for name in FIXED if name != HELD_OUT]
+    assert all(assignment[name] == ["task_001", "task_002"] for name in batch_names)
+    assert assignment[HELD_OUT] == ["task_010"]
+
+
+def test_fixed_rendered_manifest_verifies_as_written() -> None:
+    from tau_adapter.split import explicit_assignment
+
+    rows = _rows()
+    assignment = explicit_assignment(
+        [r.task_id for r in rows[:8]],
+        [r.task_id for r in rows[10:36]] + [r.task_id for r in rows[-2:]],
+        FIXED,
+    )
+    rendered = render_manifest(
+        assignment, "banking_knowledge", "base", 1, "fixed-mode test", "fixed"
+    )
+    manifest = yaml.safe_load(rendered)
+    assert manifest["batch_mode"] == "fixed"
+    assert verify(manifest, rows, "banking_knowledge", FIXED, "fixed") == []
+

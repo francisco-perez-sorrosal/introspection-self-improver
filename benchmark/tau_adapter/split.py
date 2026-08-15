@@ -90,12 +90,36 @@ def batch_name(generation: int) -> str:
 
 
 def partition_sizes(
-    generations: int, tasks_per_generation: int, held_out_tasks: int
+    generations: int,
+    tasks_per_generation: int,
+    held_out_tasks: int,
+    batch_mode: str = "fresh",
 ) -> dict[str, int]:
-    """The partition's names and sizes: G improvement batches, then the held-out set."""
-    sizes = {batch_name(g): tasks_per_generation for g in range(1, generations + 1)}
+    """The partition's names and sizes, per batch mode.
+
+    fresh: G disjoint improvement batches, then the held-out set. fixed: G+1 batch
+    rounds all sharing one task list — batch_0(G+1) is H_G's measurement-only round,
+    consumed by no transition, so the batch curve gets an endpoint under the final
+    harness exactly as the held-out curve does.
+    """
+    batch_rounds = generations + 1 if batch_mode == "fixed" else generations
+    sizes = {batch_name(g): tasks_per_generation for g in range(1, batch_rounds + 1)}
     sizes[HELD_OUT] = held_out_tasks
     return sizes
+
+
+def explicit_assignment(
+    batch_tasks: list[str],
+    held_out_tasks: list[str],
+    sizes: dict[str, int],
+) -> dict[str, list[str]]:
+    """A fixed-mode assignment from hand-chosen lists: every batch name carries the SAME
+    task list (that identity is the mode's meaning, and verify enforces it), held-out its
+    own. Used when the freeze deliberately selects tasks — e.g. seq 5's known-fail batch —
+    instead of stratified sampling."""
+    assignment = {name: sorted(batch_tasks) for name in sizes if name != HELD_OUT}
+    assignment[HELD_OUT] = sorted(held_out_tasks)
+    return assignment
 
 
 def exclude_rows(rows: list[TaskRow], excluded: list[str]) -> list[TaskRow]:
@@ -166,8 +190,15 @@ def verify(
     rows: list[TaskRow],
     domain: str,
     sizes: dict[str, int],
+    batch_mode: str = "fresh",
 ) -> list[str]:
-    """Mechanical checks on a frozen manifest. Returns problems; empty means it holds."""
+    """Mechanical checks on a frozen manifest. Returns problems; empty means it holds.
+
+    The batch mode decides what the batch lists must satisfy: fresh batches are pairwise
+    DISJOINT (each spent once); fixed batches are pairwise IDENTICAL (one task set,
+    re-measured per generation). Batch ↔ held-out disjointness holds in both modes — it
+    is the generalisation boundary, and the one line no mode may cross.
+    """
     if any(key in manifest for key in LEGACY_KEYS) or manifest.get("version") == 1:
         return [
             "this manifest is the retired three-way split (discovery/validation/test) — "
@@ -180,6 +211,12 @@ def verify(
         problems.append(f"manifest version {manifest.get('version')!r} != {MANIFEST_VERSION}")
     if manifest.get("domain") != domain:
         problems.append(f"manifest domain {manifest.get('domain')!r} != locked domain {domain!r}")
+    manifest_mode = manifest.get("batch_mode", "fresh")
+    if manifest_mode != batch_mode:
+        problems.append(
+            f"manifest batch_mode {manifest_mode!r} != the lock's protocol.batch_mode "
+            f"{batch_mode!r} — the two must agree or the partition's meaning is ambiguous"
+        )
     lists = partition_lists(manifest)
     expected_batches = sorted(name for name in sizes if name != HELD_OUT)
     found_batches = sorted(name for name in lists if name != HELD_OUT)
@@ -188,13 +225,40 @@ def verify(
             f"manifest holds batches [{', '.join(found_batches) or 'none'}], the protocol "
             f"config expects [{', '.join(expected_batches)}]"
         )
-    total = sum(sizes.values())
-    if total > len(rows):
-        problems.append(f"(G*B)+T = {total} exceeds the {len(rows)} available tasks")
+    batch_lists = {name: ids for name, ids in lists.items() if name != HELD_OUT}
+    if batch_mode == "fixed":
+        distinct = len(set(next(iter(batch_lists.values()), []))) + sizes.get(HELD_OUT, 0)
+        if distinct > len(rows):
+            problems.append(f"B+T = {distinct} exceeds the {len(rows)} available tasks")
+        problems += _identical_batch_problems(batch_lists)
+        problems += _disjointness_problems(
+            {
+                "batch (fixed)": next(iter(batch_lists.values()), []),
+                HELD_OUT: lists.get(HELD_OUT) or [],
+            }
+        )
+    else:
+        total = sum(sizes.values())
+        if total > len(rows):
+            problems.append(f"(G*B)+T = {total} exceeds the {len(rows)} available tasks")
+        problems += _disjointness_problems(lists)
     problems += _list_problems(lists, sizes, rows)
-    problems += _disjointness_problems(lists)
-    problems += _action_spread_problems(lists, sizes, rows)
+    problems += _action_spread_problems(lists, sizes, rows, batch_mode)
     return problems
+
+
+def _identical_batch_problems(batch_lists: dict[str, list[str]]) -> list[str]:
+    """Fixed mode: every batch name must carry the same task set — that identity IS the mode."""
+    reference_name = min(batch_lists, default=None)
+    if reference_name is None:
+        return []
+    reference = set(batch_lists[reference_name])
+    return [
+        f"{name} differs from {reference_name} — batch_mode fixed means one task set "
+        f"under every name (Δ: {', '.join(sorted(set(ids) ^ reference))})"
+        for name, ids in sorted(batch_lists.items())
+        if set(ids) != reference
+    ]
 
 
 def _list_problems(
@@ -230,7 +294,10 @@ def _disjointness_problems(lists: dict[str, list[str]]) -> list[str]:
 
 
 def _action_spread_problems(
-    lists: dict[str, list[str]], sizes: dict[str, int], rows: list[TaskRow]
+    lists: dict[str, list[str]],
+    sizes: dict[str, int],
+    rows: list[TaskRow],
+    batch_mode: str = "fresh",
 ) -> list[str]:
     """Each side of the partition must hold its proportional share of ACTION-basis tasks.
 
@@ -244,11 +311,24 @@ def _action_spread_problems(
         return []
     n = len(rows)
     held_quota = sizes.get(HELD_OUT, 0)
-    batch_quota = sum(quota for name, quota in sizes.items() if name != HELD_OUT)
+    # In fixed mode the batches are one task set measured repeatedly, so the batch side's
+    # quota and count are over DISTINCT tasks, not the sum across identical lists — and a
+    # hand-chosen fixed batch (deliberately failure-heavy) is exempt from the floor: its
+    # composition is the freeze decision itself, recorded in the manifest header.
+    if batch_mode == "fixed":
+        distinct_batch = {
+            task_id for name, ids in lists.items() if name != HELD_OUT for task_id in ids
+        }
+        batch_quota = len(distinct_batch)
+        batch_count = len(action_ids & distinct_batch)
+    else:
+        batch_quota = sum(quota for name, quota in sizes.items() if name != HELD_OUT)
+        batch_count = sum(
+            len(action_ids & set(ids)) for name, ids in lists.items() if name != HELD_OUT
+        )
     held_floor = len(action_ids) * held_quota // n
-    batch_floor = len(action_ids) * batch_quota // n
+    batch_floor = 0 if batch_mode == "fixed" else len(action_ids) * batch_quota // n
     held_count = len(action_ids & set(lists.get(HELD_OUT) or []))
-    batch_count = sum(len(action_ids & set(ids)) for name, ids in lists.items() if name != HELD_OUT)
     problems: list[str] = []
     if held_count < held_floor:
         problems.append(
@@ -269,23 +349,46 @@ def render_manifest(
     task_split_name: str,
     seed: int,
     note: str = "",
+    batch_mode: str = "fresh",
 ) -> str:
     """The frozen manifest's file content, header comments included."""
-    lines = [
-        "# The generation protocol's task partition: G disjoint improvement batches plus the",
-        "# fixed held-out set, as lists of tau task ids because tau selects tasks with",
-        "# --task-ids. Sizes derive from the lock's protocol block; resizing between",
-        "# experiments costs an edit there, not a redesign here.",
-        "#",
-        "# Rules (SIA_EVALUATION_PLAN.md D1/D9; invariants in CLAUDE.md):",
-        "#   batch_NN — the improvement batch consumed by generation NN. Platform lane,",
-        "#              fully observable by design, used once and never reused.",
-        "#   held_out — measured once per generation on the local lane. Tasks, trajectories,",
-        "#              and rewards stay out of tree (the vault) until the experiment's reveal.",
-        "# Tasks in neither list are unused by this experiment.",
-        "#",
-        f"# Proposed by scripts/propose_split.py --seed {seed}: stratified over reward_basis,",
-        "# dominant required-document category, and required-document count; frozen by hand.",
+    if batch_mode == "fixed":
+        head = [
+            "# The generation protocol's task partition, batch_mode FIXED: one batch task set",
+            "# measured under every generation, plus the fixed held-out set, as lists of tau",
+            "# task ids because tau selects tasks with --task-ids.",
+            "#",
+            "# Rules (SIA_EVALUATION_PLAN.md D1/D9; invariants in CLAUDE.md):",
+            "#   batch_NN — round NN over the ONE fixed batch task set (every batch_NN list is",
+            "#              deliberately identical; verify enforces the identity). batch_NN is",
+            "#              run by H_(NN-1); the last batch round is run by H_G and consumed by",
+            "#              no transition — it is the batch curve's endpoint measurement.",
+            "#              Platform lane, fully observable, re-measured BY DESIGN: the batch",
+            "#              curve asks whether the loop can fix what it directly observes.",
+            "#   held_out — measured once per generation on the local lane. Tasks, trajectories,",
+            "#              and rewards stay out of tree (the vault) until the experiment's reveal.",
+            "#",
+            "# Hand-chosen lists (no stratified proposal): the batch composition is itself a",
+            "# freeze decision, recorded in the note below.",
+        ]
+    else:
+        head = [
+            "# The generation protocol's task partition: G disjoint improvement batches plus the",
+            "# fixed held-out set, as lists of tau task ids because tau selects tasks with",
+            "# --task-ids. Sizes derive from the lock's protocol block; resizing between",
+            "# experiments costs an edit there, not a redesign here.",
+            "#",
+            "# Rules (SIA_EVALUATION_PLAN.md D1/D9; invariants in CLAUDE.md):",
+            "#   batch_NN — the improvement batch consumed by generation NN. Platform lane,",
+            "#              fully observable by design, used once and never reused.",
+            "#   held_out — measured once per generation on the local lane. Tasks, trajectories,",
+            "#              and rewards stay out of tree (the vault) until the experiment's reveal.",
+            "# Tasks in neither list are unused by this experiment.",
+            "#",
+            f"# Proposed by scripts/propose_split.py --seed {seed}: stratified over reward_basis,",
+            "# dominant required-document category, and required-document count; frozen by hand.",
+        ]
+    lines = head + [
         "# Changing any list invalidates the experiment — a new experiment id (bump",
         "# experiment.seq in benchmark_lock.yaml), never new lists under the old one. Verify",
         "# with scripts/propose_split.py --verify.",
@@ -298,6 +401,7 @@ def render_manifest(
         f"version: {MANIFEST_VERSION}",
         f"domain: {domain}",
         f"task_split_name: {task_split_name}",
+        f"batch_mode: {batch_mode}",
         "",
         "batches:",
     ]

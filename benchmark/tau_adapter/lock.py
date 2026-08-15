@@ -40,7 +40,17 @@ _HOLDOUT_VISIBILITY_KEYS = (
 )
 _PROTOCOL_INT_KEYS = ("generations", "improvement_tasks_per_generation", "held_out_tasks")
 _PROTOCOL_BOOL_KEYS = ("allow_within_batch_verification", "require_human_approval")
-_PROTOCOL_KEYS = (*_PROTOCOL_INT_KEYS, *_PROTOCOL_BOOL_KEYS, "holdout_visibility")
+_PROTOCOL_KEYS = (*_PROTOCOL_INT_KEYS, *_PROTOCOL_BOOL_KEYS, "holdout_visibility", "batch_mode")
+
+#: How improvement batches relate across generations. `fresh` is the original design —
+#: G disjoint batches, each spent exactly once, so every diagnosis reads tasks the harness
+#: was never tuned on. `fixed` is the loop-reliability design (seq 5): ONE batch task set
+#: measured under every generation, H_G included (batch_0(G+1) is H_G's measurement-only
+#: round, consumed by no transition), so the batch curve answers "can the loop fix what it
+#: stares at" — deliberate intervention verification, embraced as the object of study.
+BATCH_MODE_FRESH = "fresh"
+BATCH_MODE_FIXED = "fixed"
+_BATCH_MODES = (BATCH_MODE_FRESH, BATCH_MODE_FIXED)
 
 
 @dataclass(frozen=True)
@@ -69,6 +79,9 @@ class ProtocolConfig:
     allow_within_batch_verification: bool
     holdout_visibility: HoldoutVisibility
     require_human_approval: bool
+    #: `fresh` (default): G disjoint batches, each spent once. `fixed`: one batch task
+    #: set measured under every generation — see _BATCH_MODES for the design rationale.
+    batch_mode: str = BATCH_MODE_FRESH
 
 
 def _protocol_positive_int(section: dict, key: str) -> int:
@@ -247,11 +260,24 @@ class Lock:
         unknown = sorted(set(section) - set(_PROTOCOL_KEYS))
         if unknown:
             raise LockError(f"protocol block has unknown keys: {', '.join(unknown)}")
-        return ProtocolConfig(
+        batch_mode = section.get("batch_mode", BATCH_MODE_FRESH)
+        if batch_mode not in _BATCH_MODES:
+            raise LockError(
+                f"protocol.batch_mode {batch_mode!r} must be one of {'/'.join(_BATCH_MODES)}"
+            )
+        config = ProtocolConfig(
             **{key: _protocol_positive_int(section, key) for key in _PROTOCOL_INT_KEYS},
             **{key: _protocol_bool(section, key) for key in _PROTOCOL_BOOL_KEYS},
             holdout_visibility=_parse_holdout_visibility(section),
+            batch_mode=batch_mode,
         )
+        if config.batch_mode == BATCH_MODE_FIXED and not config.allow_within_batch_verification:
+            raise LockError(
+                "protocol.batch_mode fixed re-measures the same batch every generation — "
+                "that IS within-batch verification, embraced as the design. Set "
+                "allow_within_batch_verification: true, or use batch_mode: fresh."
+            )
+        return config
 
     @property
     def policy_sha256(self) -> str | None:

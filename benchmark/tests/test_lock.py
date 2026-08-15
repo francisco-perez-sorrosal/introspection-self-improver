@@ -248,3 +248,25 @@ def test_the_committed_lock_keeps_concurrency_out_of_the_frozen_block():
     real = lockmod.load_lock()
     assert "max_concurrency" not in (real.raw.get("frozen") or {})
     assert real.max_concurrency >= 1
+
+
+def test_batch_mode_defaults_to_fresh() -> None:
+    assert Lock(raw={"protocol": _protocol_block()}).protocol.batch_mode == "fresh"
+
+
+def test_batch_mode_fixed_parses_with_verification_allowed() -> None:
+    block = _protocol_block(batch_mode="fixed", allow_within_batch_verification=True)
+    assert Lock(raw={"protocol": block}).protocol.batch_mode == "fixed"
+
+
+def test_batch_mode_rejects_unknown_values() -> None:
+    with pytest.raises(LockError, match="batch_mode"):
+        _ = Lock(raw={"protocol": _protocol_block(batch_mode="rotating")}).protocol
+
+
+def test_batch_mode_fixed_requires_within_batch_verification() -> None:
+    """Fixed mode re-measures the same batch every generation — a lock forbidding
+    within-batch verification while configuring it is a contradiction, refused."""
+    with pytest.raises(LockError, match="within-batch verification"):
+        _ = Lock(raw={"protocol": _protocol_block(batch_mode="fixed")}).protocol
+
