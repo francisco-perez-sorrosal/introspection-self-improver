@@ -1,7 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy propose_split smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a grade dashboard
+.PHONY: help bootstrap check policy propose_split smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a grade dashboard batch_curve
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -50,6 +50,7 @@ help:
 	@echo "make heldout     hidden held-out round into the vault: make heldout GEN=generation_000"
 	@echo "make reset_h0    restore the recipe to the h0-baseline tag (replace, not merge)"
 	@echo "make reveal      end-of-experiment: unseal the vault into results/ (final tag required)"
+	@echo "make batch_curve fixed-batch saturation curve + paired endpoint test (batch_mode fixed)"
 	@echo "make fidelity    run one task in BOTH lanes and check the adapter invariants"
 	@echo "make gate_a0a    A.0a gate: adapter suite + mock smoke, verdict under gates/"
 	@echo "make grade       re-grade an existing run: make grade OUT=results/.../mock_smoke"
@@ -83,20 +84,24 @@ check:
 policy:
 	@$(RUN) python scripts/gen_policy_region.py
 
-# Propose — and with WRITE=1 freeze — the current experiment's task partition, sizes from
-# the lock's protocol block. The default EXCLUDE list belongs to the POWERED experiment
-# (seq 4, plan D11, sized by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md):
-# task_034 (τ user-sim crash, seq-2 screening) plus all 20 seq-2 tasks — 8 revealed
-# held-out, 12 diagnosed batch — the fresh-pool discipline, so nothing the g1-g3
-# mutations were tuned on, and nothing the reveal exposed, reappears anywhere in seq 4.
-# Review the printed proposal, then freeze it with `make propose_split WRITE=1`; check a
-# frozen manifest any time with `scripts/propose_split.py --verify`. A later experiment
-# re-decides EXCLUDE through its own decision row and a seq bump, never by editing a
-# frozen manifest.
-EXCLUDE ?= task_003,task_008,task_017,task_027,task_034,task_035,task_036,task_041,task_045,task_048,task_051,task_058,task_061,task_067,task_071,task_081,task_087,task_089,task_091,task_099,task_101
-NOTE ?= seq 4 powered (plan D11): fresh pool - task_034 (user-sim crash, seq-2 screening) plus all 20 seq-2 tasks (8 revealed held-out + 12 diagnosed batch) excluded, so nothing the g1-g3 mutations were tuned on, and nothing the reveal exposed, reappears anywhere in this experiment
+# Propose — and with WRITE=1 freeze — the current experiment's task partition, sizes and
+# batch mode from the lock's protocol block. Under batch_mode fresh this stratifies over
+# the pool (EXCLUDE drops screened-out tasks); under batch_mode fixed the lists are
+# explicit freeze decisions — pass BATCH_TASKS and HELD_OUT_TASKS (comma-separated ids)
+# and record the composition rationale in NOTE. Seq 5 froze this way: the 8 known-fail
+# fixed-batch tasks plus seq-4's T reused verbatim (plan D17/D19; the manifest header
+# carries the full rationale). Check a frozen manifest any time with
+# `scripts/propose_split.py --verify`. A later experiment re-decides these through its
+# own decision row and a seq bump, never by editing a frozen manifest.
+EXCLUDE ?=
+BATCH_TASKS ?=
+HELD_OUT_TASKS ?=
+NOTE ?=
 propose_split:
-	@$(RUN) python scripts/propose_split.py --exclude "$(EXCLUDE)" \
+	@$(RUN) python scripts/propose_split.py \
+		$(if $(EXCLUDE),--exclude "$(EXCLUDE)",) \
+		$(if $(BATCH_TASKS),--batch-tasks "$(BATCH_TASKS)",) \
+		$(if $(HELD_OUT_TASKS),--held-out-tasks "$(HELD_OUT_TASKS)",) \
 		$(if $(WRITE),--write --force --note "$(NOTE)",)
 
 # Diagnostic: the mock domain is not the locked domain, so the recipe is materialised with
@@ -185,6 +190,13 @@ fidelity:
 # $(RESULTS)/gates/ so the gate's pass is citable, not just a green terminal.
 gate_a0a:
 	@$(RUN) python scripts/gate_a0a.py --gen-dir $(CURDIR)/$(RESULTS)
+
+# The fixed-batch saturation curve + its pre-registered paired endpoint test (seq 5's
+# primary instrument, plan D17). Refuses under batch_mode fresh. Batch evidence is fully
+# observable, so this runs any time; interim invocations are descriptive — the primary
+# statistic is the endpoint pair (H0's and HG's batch rounds) only.
+batch_curve:
+	@$(RUN) python scripts/batch_curve.py
 
 # Read-only viewer over results/ — its own lane, never a pipeline participant. Stdlib only;
 # reads dashboard/config.json for the results pointer and port.

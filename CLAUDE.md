@@ -140,6 +140,33 @@ close.
   the earlier 003 pilot measured the contaminated harness (25%, superseded). The haiku
   detour (baseline 10.7%, its own pilot + 20M-prompt-bytes/hour org-cap caveat) is
   archived at results/experiment_003_powered-bm25-haiku45/.
+- **Seq 4 is REVEALED (2026-08-15) and demonstrates no improvement.** Held-out curve
+  6/28 → 8 → 5 → 6 → 7 → **4/28**; endpoint −2 tasks (−7.1 pp) inside the ±9 pp band;
+  pre-registered trend z = −0.85, p = 0.802. The honest reading (closure README, which
+  also corrects the reveal commit's over-read): the data are consistent with the five
+  mutations having NO systematic effect — every movement sits inside single-trial
+  sampling noise, the exposure D2 accepted. What IS demonstrated: the loop's machinery —
+  208 episodes, zero seam incidents, five verified records, firewall enforced, all
+  twenty §29 guardrails HELD. The finding that outlives the number: four of five
+  generations went into ONE instruction paragraph, two of them repairing defects the
+  paragraph itself introduced (gen-002 forbade a policy-required transfer; gen-003
+  licensed a policy-forbidden one; gen-005 deleted the guidance and deferred to the
+  policy). Two mutations carry direct positive batch evidence (gen-003's task_032,
+  gen-004's task_040). Value-resolution from bm25 (T9) — the mode the batches kept
+  pointing at — never got a slot.
+- **Seq 5 is the loop-reliability experiment (plan D17/D18/D19), cut PROVISIONAL
+  2026-08-15 as `005_fixedb-bm25-luna56`** — deliberately ODD per D15: it studies the
+  loop, not the capability claim. `protocol.batch_mode: fixed` measures ONE hand-chosen
+  batch of 8 known-fail tasks under every generation (batch_06 is H5's endpoint round,
+  consumed by no transition) — deliberate intervention verification, asking "can the
+  loop fix what it stares at?"; `num_trials: 3` on every round turns per-task cells
+  into pass rates (band ±9 → ±5 pp at T=28; one knob, both lanes, D2's structure kept).
+  Held-out reuses seq-4's T=28 verbatim — the pool has zero virgin tasks — with the D19
+  caveat recorded: the orchestrator has seen seq-4's revealed per-task results, so the
+  firewall is weaker and the BATCH curve is the primary (batch_curve.py's exact paired
+  sign-flip endpoint test, H5 vs H0, α=0.05; `make batch_curve`). Pre-registered
+  reading key: B↑T↑ loop works; B↑T→ overfits; B→ the meta-agent is the problem.
+  Batch reads from B2 on measure a tuned-on set and every diagnosis must say so.
 
 ## Invariants
 

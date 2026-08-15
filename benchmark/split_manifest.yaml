@@ -1,80 +1,97 @@
-# The generation protocol's task partition: G disjoint improvement batches plus the
-# fixed held-out set, as lists of tau task ids because tau selects tasks with
-# --task-ids. Sizes derive from the lock's protocol block; resizing between
-# experiments costs an edit there, not a redesign here.
+# The generation protocol's task partition, batch_mode FIXED: one batch task set
+# measured under every generation, plus the fixed held-out set, as lists of tau
+# task ids because tau selects tasks with --task-ids.
 #
 # Rules (SIA_EVALUATION_PLAN.md D1/D9; invariants in CLAUDE.md):
-#   batch_NN — the improvement batch consumed by generation NN. Platform lane,
-#              fully observable by design, used once and never reused.
+#   batch_NN — round NN over the ONE fixed batch task set (every batch_NN list is
+#              deliberately identical; verify enforces the identity). batch_NN is
+#              run by H_(NN-1); the last batch round is run by H_G and consumed by
+#              no transition — it is the batch curve's endpoint measurement.
+#              Platform lane, fully observable, re-measured BY DESIGN: the batch
+#              curve asks whether the loop can fix what it directly observes.
 #   held_out — measured once per generation on the local lane. Tasks, trajectories,
 #              and rewards stay out of tree (the vault) until the experiment's reveal.
-# Tasks in neither list are unused by this experiment.
 #
-# Proposed by scripts/propose_split.py --seed 20260812: stratified over reward_basis,
-# dominant required-document category, and required-document count; frozen by hand.
+# Hand-chosen lists (no stratified proposal): the batch composition is itself a
+# freeze decision, recorded in the note below.
 # Changing any list invalidates the experiment — a new experiment id (bump
 # experiment.seq in benchmark_lock.yaml), never new lists under the old one. Verify
 # with scripts/propose_split.py --verify.
 #
-# excluded from the pool before proposal: task_003, task_008, task_017, task_027, task_034,
-# task_035, task_036, task_041, task_045, task_048, task_051, task_058, task_061, task_067,
-# task_071, task_081, task_087, task_089, task_091, task_099, task_101
-# (benchmark/data/user_sim_screen.json has the evidence). seq 4 powered (plan D11; prepared
-# as seq 3, renumbered by the D15 parity convention — lists untouched): fresh pool -
-# task_034 (user-sim crash, seq-2 screening) plus all 20 seq-2 tasks (8 revealed held-out + 12
-# diagnosed batch) excluded, so nothing the g1-g3 mutations were tuned on, and nothing the
-# reveal exposed, reappears anywhere in this experiment
+# seq 5 loop-reliability (plan D17/D19). FIXED BATCH, hand-chosen: 8 tasks that FAILED under
+# recent harnesses in seq-4 batches, covering the recurring modes — value resolution (task_065,
+# task_072, task_096), discoverable-tool handover (task_026, task_028), transfer discipline in
+# both directions (task_014 refused a required transfer; task_082 transferred on first request),
+# wholesale abandonment/unbounded search (task_070). Known-fail composition is deliberate:
+# saturation headroom is the point, and batch knowledge is fully observable so using seq-4
+# diagnosis to choose is sanctioned. HELD-OUT reuses seq 4's T=28 EXACTLY: the pool holds zero
+# virgin tasks (97 - 1 crasher - 20 seq-2 - 68 seq-4 - 8 pilot), every alternative is equally
+# exposed, and identity buys direct comparability — seq-5 H0 x 3 trials doubles as the
+# reliability study's H0 arm against seq-4's single-trial 6/28. Recorded caveat (D19): the
+# orchestrator has SEEN seq-4's revealed per-task results for these tasks; seq-5's own results
+# stay sealed until reveal, but the firewall is weaker than seq 4's and the batch curve is the
+# primary for exactly that reason.
 
 version: 2
 domain: banking_knowledge
 task_split_name: base
+batch_mode: fixed
 
 batches:
   batch_01:
-    - task_005
-    - task_010
-    - task_023
+    - task_014
     - task_026
-    - task_055
+    - task_028
+    - task_065
+    - task_070
     - task_072
-    - task_088
+    - task_082
     - task_096
   batch_02:
-    - task_015
-    - task_020
-    - task_024
-    - task_046
-    - task_047
-    - task_057
-    - task_069
-    - task_094
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
   batch_03:
     - task_014
+    - task_026
     - task_028
-    - task_038
-    - task_043
-    - task_062
-    - task_064
-    - task_076
-    - task_090
-  batch_04:
-    - task_029
-    - task_032
-    - task_037
-    - task_050
     - task_065
-    - task_066
     - task_070
-    - task_077
-  batch_05:
-    - task_006
-    - task_040
-    - task_054
-    - task_056
-    - task_063
+    - task_072
     - task_082
-    - task_083
-    - task_102
+    - task_096
+  batch_04:
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
+  batch_05:
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
+  batch_06:
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
 
 held_out:
   - task_007

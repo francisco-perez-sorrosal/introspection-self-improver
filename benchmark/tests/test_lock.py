@@ -226,12 +226,20 @@ def test_the_committed_manifest_matches_the_committed_lock() -> None:
         real.protocol.generations,
         real.protocol.improvement_tasks_per_generation,
         real.protocol.held_out_tasks,
+        real.protocol.batch_mode,
     )
     assert manifest["version"] == splitmod.MANIFEST_VERSION
     assert manifest["domain"] == real.domain
+    assert manifest.get("batch_mode", "fresh") == real.protocol.batch_mode
     assert {name: len(ids) for name, ids in lists.items()} == sizes
-    all_ids = [task_id for ids in lists.values() for task_id in ids]
-    assert len(all_ids) == len(set(all_ids))
+    if real.protocol.batch_mode == "fixed":
+        # One task set under every batch name; distinct ids = the fixed batch + held-out.
+        batch_lists = [set(ids) for name, ids in lists.items() if name != splitmod.HELD_OUT]
+        assert all(ids == batch_lists[0] for ids in batch_lists)
+        assert not (batch_lists[0] & set(lists[splitmod.HELD_OUT]))
+    else:
+        all_ids = [task_id for ids in lists.values() for task_id in ids]
+        assert len(all_ids) == len(set(all_ids))
 
 
 def test_max_concurrency_reads_the_operational_block():

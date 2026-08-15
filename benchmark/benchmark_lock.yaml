@@ -28,7 +28,12 @@
 # — and stays theirs. Seq 4 IS the powered experiment — the tier between debug and
 # full, sized from seq-2 actuals by
 # results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md (plan D11): G=5/B=8/T=28 on
-# a fresh 76-task pool; the full T=47 run is deferred to seq 6.
+# a fresh 76-task pool; REVEALED 2026-08-15 — endpoint -2 tasks inside the ±9 pp band,
+# trend p=0.802, no improvement demonstrated; the loop's machinery held (208 episodes,
+# zero seam incidents, all twenty §29 guardrails). Seq 5 IS the loop-reliability
+# experiment (plan D17/D18/D19): batch_mode fixed + num_trials 3 asks the prerequisite
+# question seq 4 could not answer — can the loop fix what it stares at? The full T=47
+# run stays deferred to seq 6.
 #
 # PARITY CONVENTION (plan D15, 2026-08-15): EVEN seqs are stable, reportable
 # experiments; ODD seqs are experimentation — bring-up, detours, voided freezes
@@ -37,8 +42,8 @@
 # right parity. Reused ids are unambiguous mechanically: each freeze is identified
 # by its own results/ snapshot fingerprint.
 experiment:
-  seq: 4
-  name: powered-bm25-luna56
+  seq: 5
+  name: fixedb-bm25-luna56
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -71,8 +76,9 @@ benchmark:
 # The generation protocol's experiment configuration (SIA_EVALUATION_PLAN.md §3;
 # self_improving_agent_evaluation_protocol.md §26). Frozen with everything else in this
 # file: the partition manifest is proposed from these sizes and verified against them,
-# and (G*B)+T must fit the eligible pool — 97 domain tasks minus the manifest's
-# header-documented exclusions (seq 4: 68 of 76). Powered scale per D11 (2026-08-14,
+# and the distinct-task budget must fit the eligible pool — (G*B)+T under batch_mode
+# fresh, B+T under fixed (seq 5: 36 of 97; the pool is exhausted of virgin tasks, so
+# reuse is a recorded freeze decision, not an accident — see the manifest header). Powered scale per D11 (2026-08-14,
 # sized from seq-2 actuals by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md:
 # powered for a ~+4-5 pp/generation loop — ~97% direction, ~82% trend-significance at
 # α=.05 — where the debug T=8 could resolve nothing smaller than ~45 pp. T=28 gives a
@@ -87,10 +93,24 @@ protocol:
   improvement_tasks_per_generation: 8
   held_out_tasks: 28
 
-  # Re-running the just-consumed batch after a mutation would be intervention
-  # verification, never generalization (protocol §15). Off, as in the debug experiment —
-  # the loop stays maximally simple and every batch is spent exactly once.
-  allow_within_batch_verification: false
+  # THE SEQ-5 DESIGN CHANGE (plan D17): one fixed batch task set measured under every
+  # generation, H5 included (batch_06 is H5's measurement-only endpoint round, consumed
+  # by no transition). Seq 4's null left two explanations standing — "the mutations did
+  # nothing" vs "the measurement could not see it" — and fixed mode attacks the
+  # prerequisite question directly: can the improvement loop fix what it stares at?
+  # The batch curve becomes a PAIRED saturation curve (same tasks per generation);
+  # its pre-registered primary is scripts/batch_curve.py's exact paired sign-flip
+  # endpoint test, H5 vs H0, alpha 0.05. The held-out lane is unchanged and stays the
+  # transfer probe. The reading key, pre-registered with the freeze:
+  #   B rises + T rises  -> the loop works and generalizes
+  #   B rises + T flat   -> the loop optimizes but overfits (mutations task-shaped)
+  #   B flat             -> the meta-agent is the problem
+  batch_mode: fixed
+
+  # True BECAUSE batch_mode is fixed: re-measuring the same batch every generation IS
+  # within-batch verification, embraced as the object of study (the lock refuses the
+  # contradictory combination). Under fresh mode this stays false (protocol §15).
+  allow_within_batch_verification: true
 
   # The held-out firewall, stated as configuration: nothing about the held-out set —
   # tasks, trajectories, per-task rewards, aggregates — reaches the orchestrator before
@@ -107,32 +127,19 @@ protocol:
   require_human_approval: true
 
 frozen:
-  # FROZEN 2026-08-15 at the seq-4 start gate (SIA_EVALUATION_PLAN.md Phase 5). Every
-  # gate item passed before this line was flipped, and each is citable rather than
-  # asserted: `make reset_h0` — recipe byte-identical to the D16-CORRECTED `h0-baseline`
-  # (seq-2 mutations are evidence, not inheritance; the reset staged nothing because the
-  # recipe already was H0); partition `--verify` — names, sizes, disjointness, task
-  # budget, ACTION spread all hold; user-sim screen RE-RUN under the active pair, whose
-  # evidence is model-conditioned (D12/D13) — 97/97 survive, zero crashers, report at
-  # benchmark/data/user_sim_screen.json (it overwrites the Sonnet-conditioned seq-2
-  # screen, which git history keeps; note task_034's crash class does NOT reproduce
-  # under luna — its exclusion stands anyway, frozen manifest, attributed there to
-  # seq-2 screening); platform-lane luna check closed 2026-08-15 (graded episode,
-  # reward 1.0, zero seam incidents); A.0a PASS recorded under the generation's gates/.
-  #
-  # Values below this status line are carried from the seq-2 freeze except the model
-  # pair and its args — re-decided as D12 (luna, for inference cost), D13 (haiku interim
-  # while the platform's OpenAI serializer defect blocked every openai/* model), and D14
-  # (2026-08-14: LUNA RESTORED per D13's return clause after the platform team shipped
-  # the serializer fix; verified against a freshly built runtime image —
-  # .ai-state/UPSTREAM_ISSUES.md); the protocol block above is the D11 re-decision.
-  #
-  # The re-cut-in-place licence is now SPENT. It was sanctioned only while this said
-  # PROVISIONAL with zero episodes and no freeze snapshot; from the first run under this
-  # freeze, the snapshot exists in the results directory, every later run must match it,
-  # and changing any value means a NEW experiment (bump seq — to the next EVEN number
-  # per the D15 parity convention), never a new value under this one.
-  status: FROZEN
+  # PROVISIONAL while seq 5 (the loop-reliability experiment) is prepared: values cut
+  # 2026-08-15 (plan D17 fixed batch mode, D18 num_trials 3, D19 partition reuse), the
+  # partition frozen with hand-chosen lists, no freeze snapshot written or enforced
+  # until the start gate flips this to FROZEN — after `make reset_h0` (H0 back to the
+  # D16-corrected `h0-baseline`; seq-4 mutations are evidence, not inheritance) and the
+  # A.0a gate. Everything below this status line is carried from the seq-4 freeze
+  # UNCHANGED except num_trials (1 -> 3, D18): same model pair (D12/D14 luna both
+  # halves), same bm25, same budgets, same seed — one variable class changed at a time.
+  # Re-cutting seq 5 in place is sanctioned only while PROVISIONAL with zero episodes;
+  # the moment a snapshot exists, any change means a seq bump (next ODD number for
+  # experimentation per D15 — seq 5 is deliberately odd: it studies the loop, not the
+  # capability claim).
+  status: PROVISIONAL
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which
@@ -194,16 +201,19 @@ frozen:
     reasoning_effort: medium
     timeout: 60
 
-  # 1 per SIA_EVALUATION_PLAN.md D2: every task runs once, and statistical power comes
-  # from pooling across the held-out set rather than repeating one task — deltas inside
-  # the binomial noise band (±17 pp at the debug T=8; ±9 pp at the powered T=28;
-  # ±7 pp at T=47) are noise, and
-  # pass^k is never used for generations. 4 was the retired bring-up freeze's doctrine
-  # (the pre-reset 001_bm25-sonnet46, in git history), motivated by episode-level reward
-  # being a draw (ten runs of one task split 6/4 — in git history); D2 reverses it. This
-  # value is also the held-out trials per task — the one knob; the protocol block above
-  # deliberately has no second one.
-  num_trials: 1
+  # 3 per plan D18 (2026-08-15), revising D2's value while keeping its structure: ONE
+  # knob governing trials on every round type, batches and held-out alike. D2 chose 1
+  # trial and pooled across tasks because trials were unaffordable at Sonnet prices;
+  # seq 4 then paid D2's stated cost in full — every cell a coin flip, the whole curve
+  # inside single-trial sampling noise (endpoint -7.1pp, trend p=0.802, all consistent
+  # with no effect). At luna's measured ~$0.022/episode the affordability objection is
+  # gone, so each per-task cell becomes a pass RATE (0..3/3): the noise band tightens
+  # ±9 -> ±5 pp at T=28, a batch task at 1/3 hands diagnosis a passing and a failing
+  # transcript of the SAME harness on the SAME task, and cross-generation flips become
+  # attributable. The aggregate stays the mean per-task rate — the same quantity seq 4
+  # estimated, comparably — and pass^k is still never used for generations (guardrail
+  # 15; within-generation pass@3/pass^3 are legitimate per-task reliability texture).
+  num_trials: 3
   seed: 300
 
   # Execution budgets. Exactly how a later generation can "improve" by being allowed to do
