@@ -1,0 +1,120 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 1
+  to_generation: 2
+experiment: 004_powered-bm25-luna56
+outcome: 'TODO: accepted | rejected | identity'
+batch:
+  name: batch_02
+  task_ids:
+  - task_015
+  - task_020
+  - task_024
+  - task_046
+  - task_047
+  - task_057
+  - task_069
+  - task_094
+evidence:
+  conversation_ids:
+  - 01a003d1-a608-74e4-ad61-de8b044cb32c
+  - 01a003d1-aa8a-7344-9e64-259901eb9c65
+  - 01a003d1-a5be-72f6-b201-2d6d27dc4b39
+  - 01a003d1-aa89-708f-9916-252532045925
+  - 01a003d2-51d9-75e8-9cf2-53904721d0d8
+  - 01a003d2-6187-72af-a82a-40c64cbc374f
+  - 01a003d2-9c5e-770b-851a-6ed15e511f6b
+  - 01a003d3-1f9b-7583-8d57-928718b17381
+  summary: >-
+    Full-population read of all 8 batch_02 episodes against H1 (recipe b6ea7ce). Batch
+    health first: 8/8 evidence_complete, 8/8 arm_sha_ok, all terminating user_stop, zero
+    stall warnings, 409s, prompt failures or stream failures — every failure here is
+    behavioural. Graded read from batch_02/graded/updated_results.json with the
+    NESTED-JSON-AWARE comparison recorded in the backlog: 18 of 32 action-check misses in
+    this batch (56%, up from 33% in B1) are semantically identical calls differing only in
+    JSON whitespace, and none of them were allowed to enter the failure counts below.
+    Transcript tails read directly for every failing episode; the two decisive findings are
+    quotations of the agent's own stated reasons rather than inferences about them. Batch
+    reward is 4/8 and is deliberately NOT compared with B1's 1/8 — the partition makes
+    batches disjoint, so the task sets differ in composition and difficulty. Batch reads
+    diagnose; the progression metric is the sealed held-out curve.
+signals:
+- description: >-
+    Gen-001's grounding check blocks an action the procedure had already determined — the
+    stopping clause read as licence to abandon the whole procedure rather than to withhold
+    one unconfirmed value. This is the risk gen-001's PR and record both named in advance,
+    and it is visible in the agent's stated reasons rather than inferred. task_094
+    (01a003d3-1f9b) transferred to a human saying "No correction was applied yet because
+    the exact statement period and daily balances still need to be confirmed" — gold
+    expected apply_savings_account_credit_6831 at amount 140.00. task_069 (01a003d2-9c5e)
+    searched the knowledge base SEVENTEEN times and then declined: "I searched the personal
+    products and found no combination whose documentation confirms all three requirements
+    simultaneously" — gold expected open_bank_account_4821 twice. Backlog T4, consumed by
+    this generation.
+  prevalence: 2/8
+- description: >-
+    Performs an unrequested extra write. task_046 (01a003d1-aa89) matched EVERY gold action
+    and still failed db_check, because it additionally called
+    pay_credit_card_from_checking_9182 with a garbled checking_account_id "05" — a payment
+    nobody asked for. Lowest prevalence of any mode recorded so far and arguably the
+    highest severity: every other mode is a failure to act, this one is an unrequested
+    state change. Backlog T5 — approved, not consumed by this generation.
+  prevalence: 1/8
+- description: >-
+    Never hands over the discoverable tool the procedure requires. task_020 (01a003d1-aa8a)
+    never called give_discoverable_user_tool for submit_cash_back_dispute_0589; task_026 in
+    B1 showed the same omission for the same tool, where it had been counted under the
+    unfounded-negative-finding mode. Two witnesses in different batches make this a mode in
+    its own right. Backlog T6 — approved, not consumed by this generation.
+  prevalence: 2/8
+counterevidence: >-
+  The strongest counterevidence is against reading this batch as a verdict on gen-001, and
+  it is decisive: NO causal claim is available. B1 and B2 are disjoint task sets by
+  construction, and the held-out numbers for H0 and H1 are sealed until reveal, so whether
+  gen-001 helped, hurt, or did nothing is unknown. The batch reward moved 1/8 to 4/8 and
+  that movement is NOT evidence of improvement — different tasks, different difficulty.
+  What survives this objection is narrower and does not depend on it: the stopping clause's
+  scope is wrong on its own terms, licensing abandonment of a procedure when a single value
+  is missing, and that is worth fixing whatever its net effect on score proves to be.
+  Second, the grading artifact grew rather than shrank — 56% of action misses here are
+  whitespace-only against 33% in B1 — which is a reminder that raw action_checks counts
+  would have produced a badly wrong picture of this batch in particular.
+hypothesis: >-
+  Gen-001 fixed the wrong-value failure by making the agent stop, but left "stop"
+  unqualified, so the agent applies it to the entire request rather than to the single
+  write whose value is unconfirmed. Scoping the consequence to that one value — while
+  keeping the grounding check itself — should preserve gen-001's mechanism and remove the
+  abandonment behaviour.
+owning_layer: >-
+  The target agent's system prompt — target-agent/SYSTEM.md <instructions>, specifically the
+  clause added by gen-001. The bm25 retrieval backend, the frozen policy text and the model
+  pair are untouched.
+proposed_change: >-
+  target-agent/SYSTEM.md <instructions>, +7/-2. The grounding check is kept and its
+  consequence scoped: an unconfirmed value means ask the user for THAT value, or carry out
+  the steps already determined and hold back only the step depending on it; explicitly never
+  a reason to end the conversation, transfer to a human, or leave other required actions
+  undone; and each step is judged on the values that step needs rather than on whether every
+  detail of the request has been established. Frozen <policy> still matches
+  benchmark_lock.yaml (5733 chars) and agents/agent.yaml is untouched.
+mutation:
+  branch: gen-002/bound-the-stopping-clause
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/5
+  source_commit: 421e773bcad3c086613fcb05da10c8c0b96c5370
+  candidate_commit: null
+expected_effect: >-
+  Episodes where a single unconfirmed value currently causes the whole procedure to be
+  abandoned should instead complete the determined steps, or ask the user for that specific
+  value. Measured on the held-out set at H2 and nowhere else — this freeze sets
+  allow_within_batch_verification false. Stated risk, to be checked first in B3: loosening
+  the stop could re-admit T1, the unverified-write mode gen-001 existed to remove. The bound
+  is deliberately narrow — withhold that value's step, never invent the value — rather than
+  a general licence to proceed. If B3 shows T1-shaped writes returning, this clause is the
+  first suspect.
+human_approval:
+  approved_by: TODO
+  date: '2026-08-15'
+held_out_result: null
