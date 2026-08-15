@@ -489,7 +489,7 @@ closed without a graded round and lives only in git history. In the working tree
 debug experiment and was **voided at H0** the same day on a τ-side user-simulator defect
 no harness mutation can reach (tau2-bench#470). Seq 2 re-froze with the poisoned task
 excluded, ran the debug experiment to completion, and is revealed; seq 3 is the
-powered run (`003_powered-bm25-haiku45`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
+powered run (`003_powered-bm25-luna56`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
 over a fresh 76-task pool — no task the seq-2 loop was tuned on, or whose result the
 reveal exposed, appears anywhere in it; the full-scale run defers to seq 4. Reused
 ids are disambiguated by freeze fingerprints. Two values were
@@ -510,26 +510,18 @@ decided the hard way and the decisions carry forward:
   debug T=8; ±9 pp at the powered T=28; ±7 pp at T=47) as noise (`SIA_EVALUATION_PLAN.md`
   D2, bands per D11).
 
-The model pair was re-decided twice on 2026-08-14 (`SIA_EVALUATION_PLAN.md` D12, D13).
-D12 chose `openai/gpt-5.6-luna` both halves for inference cost — then a platform defect
-blocked it: the Introspection sandbox Pi serializes any thinking level (explicit or
-Pi's own default) as `reasoning.level`, which OpenAI's `/v1/responses` rejects, so
-every `openai/*` model 400s on the platform lane with no recipe-side workaround
-(evidence chain: `.ai-state/UPSTREAM_ISSUES.md`; the local lane is unaffected — luna
-ran 29 clean local episodes). **D13 is the interim pair: both halves
-`anthropic/claude-haiku-4-5`** — the agent at `thinking_level: medium`, the user
-simulator back on τ's own doctrine, `temperature: 0.0` (haiku accepts it, verified;
-the determinism knob Sonnet 5 and luna both rejected is restored — and since Anthropic
-rejects temp 0 with extended thinking enabled, the simulator deliberately carries no
-thinking argument: a deterministic environment, a thinking agent under test).
-
-The seq-1/2 sensitivity rationale (a model that does not already perform the harness
-behaviours under study leaves the harness as the binding constraint) carries through
-both re-decisions, guarded at the B1 viability read (plan D8) in both directions:
-0/B = H0 too weak, B/B = saturated and the model choice re-opens. The haiku pilot
-measured the weak direction as the live one — baseline 3/28 = 10.7% on the
-non-partition calibration set, so ~40% of batches will read 0/8 and diagnoses lean on
-near-miss action-match profiles. G=5/B=8/T=28 was re-verified at the measured
-baseline (slightly better-powered — lower baseline, smaller binomial variance).
-D12's luna pair returns via its own re-cut and pilot when the platform fix ships,
-never as a mid-experiment swap.
+The model pair settled on 2026-08-15 after three re-decisions in two days
+(`SIA_EVALUATION_PLAN.md` D12–D14): **both halves run `openai/gpt-5.6-luna`**. D12
+chose luna for inference cost; a platform sandbox defect then 400'd every `openai/*`
+model (the sandbox serialized any thinking level as OpenAI's retired
+`reasoning.level` parameter), D13 ran `anthropic/claude-haiku-4-5` as the interim
+pair — restoring, briefly, the user-sim `temperature: 0.0` determinism knob — and
+D14 restored luna when the platform fix shipped. The recipe now uses the modern
+`ai:` spelling (validated by the cloud validator and, since CLI 0.27.1, locally)
+and deliberately omits `thinking_level`: the lock asserts the absence, and the
+sandbox's injected default (medium) is the effective level. The user simulator runs
+`reasoning_effort: medium` with no temperature — luna rejects `0.0`, and D2's
+task-pooling absorbs the stochasticity. End-to-end verification (2026-08-15): local
+smoke and 28-task pilot green (baseline 25%, $0.038/local episode); platform episode
+graded **reward 1.0 at $0.0157/episode** with zero seam incidents. The haiku detour
+is archived with its own pilot at `results/experiment_003_powered-bm25-haiku45/`.
