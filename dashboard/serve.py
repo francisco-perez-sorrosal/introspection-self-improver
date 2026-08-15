@@ -424,10 +424,12 @@ def read_held_out(experiment_dir: Path) -> dict | None:
         generations = [
             {
                 "generation": row["generation"],
-                "passed": int(row["passed"]),
+                # Fractional at num_trials > 1 (expected solved count = sum of rates).
+                "passed": float(row["passed"]),
                 "total": int(row["total"]),
                 "percent": float(row["percent"]),
                 "carried": row["basis"] == "carried",
+                "trials": int(row.get("trials_per_task") or 1),
             }
             for row in csv.DictReader(handle)
         ]
@@ -450,6 +452,8 @@ def read_held_out(experiment_dir: Path) -> dict | None:
         lambda row: {
             "generation": row["generation"],
             "currently": int(row["currently_solved"]),
+            # Absent in single-trial reveals (seq 2/4): no partial cell can exist there.
+            "partial": int(row.get("partially_solved") or 0),
             "ever": int(row["ever_solved"]),
         },
     )
@@ -481,18 +485,29 @@ def read_held_out(experiment_dir: Path) -> dict | None:
         },
     )
     total = generations[0]["total"] if generations else 0
+    trials = generations[0]["trials"] if generations else 1
+
+    def _cell(value: str) -> dict:
+        # Single-trial reveals write 0/1; multi-trial write "c/n". Both become {c, n}.
+        if "/" in value:
+            c, n = value.split("/", 1)
+            return {"c": int(c), "n": int(n)}
+        return {"c": int(value), "n": 1}
+
     summary_path = experiment_dir / "summary.md"
     return {
         "generations": generations,
+        "trials": trials,
         "matrix_generations": rows[0][1:] if rows else [],
         "matrix": [
-            {"task_id": row[0], "results": [int(v) for v in row[1:]]}
+            {"task_id": row[0], "results": [_cell(v) for v in row[1:]]}
             for row in rows[1:]
         ],
         "transitions": transitions,
         "retention": retention,
-        # Mirror of tau_adapter.reveal.noise_band_pp: one binomial SE at p=0.5, in pp (D2).
-        "noise_band_pp": round(100 * 0.5 / math.sqrt(total)) if total else None,
+        # Mirror of tau_adapter.reveal.noise_band_pp: one SE of the mean per-task rate
+        # at p=0.5, in pp (D2/D18) — narrows with trials per task.
+        "noise_band_pp": round(100 * 0.5 / math.sqrt(total * trials)) if total else None,
         "process": (
             {"by_generation": process_by_generation, "by_task": process_by_task}
             if process_by_generation
@@ -537,6 +552,15 @@ def experiment_payload(results_root: Path, dirname: str) -> dict:
         if snapshot_path.exists()
         else None
     )
+    # The freeze's value-copy of the lock carries protocol.batch_mode; absent (bring-up
+    # or pre-fixed-mode experiments) means fresh — the original design.
+    lock_copy_path = experiment_dir / "benchmark_lock.yaml"
+    lock_copy = (
+        parse_flat_yaml(lock_copy_path.read_text(encoding="utf-8"))
+        if lock_copy_path.exists()
+        else {}
+    )
+    batch_mode = (lock_copy.get("protocol") or {}).get("batch_mode") or "fresh"
     readme_path = experiment_dir / "README.md"
     readme = readme_path.read_text(encoding="utf-8") if readme_path.exists() else None
 
@@ -579,6 +603,7 @@ def experiment_payload(results_root: Path, dirname: str) -> dict:
         {
             "dirname": dirname,
             **experiment_identity(dirname),
+            "batch_mode": batch_mode,
             "snapshot": snapshot,
             "readme": readme,
             "generations": generations,

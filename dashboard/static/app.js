@@ -42,6 +42,8 @@ function rampColor(fraction) {
 
 const pct = (v) =>
   v == null ? "—" : `${(v * 100).toFixed(1).replace(/\.0$/, "")}%`;
+/* Expected counts (sums of per-task rates): integral values render as ints. */
+const fmtCount = (v) => (Math.abs(v - Math.round(v)) < 1e-9 ? String(Math.round(v)) : v.toFixed(1));
 const usd = (v) => (v == null ? "—" : `$${v.toFixed(v >= 10 ? 0 : 2)}`);
 const secs = (v) => (v == null ? "—" : v >= 90 ? `${(v / 60).toFixed(1)}m` : `${v.toFixed(0)}s`);
 const short = (sha) => (sha ? String(sha).slice(0, 7) : "—");
@@ -428,10 +430,16 @@ function renderCurve() {
     yFmt: (v) => `${Math.round(v * 100)}%`,
   });
   note.textContent =
-    "Improvement batches ONLY — diagnostics (pilots, smokes, probes) are excluded from " +
-    "every number here. Batches are disjoint task sets, so this curve is diagnosis " +
-    "evidence, never the progression metric — that lives in the held-out card. " +
-    "Whiskers are ≈95% intervals over per-task pass rates. Click a generation to inspect it.";
+    state.current?.batch_mode === "fixed"
+      ? "Improvement batches ONLY — diagnostics excluded from every number. batch_mode " +
+        "FIXED: every generation measures the SAME task set, so this is a paired " +
+        "saturation curve — can the loop fix what it stares at? Still not the " +
+        "progression metric (held-out card). Whiskers are ≈95% intervals over per-task " +
+        "pass rates. Click a generation to inspect it."
+      : "Improvement batches ONLY — diagnostics (pilots, smokes, probes) are excluded from " +
+        "every number here. Batches are disjoint task sets, so this curve is diagnosis " +
+        "evidence, never the progression metric — that lives in the held-out card. " +
+        "Whiskers are ≈95% intervals over per-task pass rates. Click a generation to inspect it.";
 }
 
 /* ------------------------------------------------- held-out progression
@@ -453,24 +461,30 @@ function heldOutEndpoint(held) {
       ? ` — outside the ±${band} pp noise band`
       : ` — inside the ±${band} pp noise band; directional only`;
   return (
-    `Endpoint: ${last.generation} ${last.passed}/${total} vs ${first.generation} ` +
-    `${first.passed}/${total} → ${sign(delta)}${delta} task(s) (${sign(deltaPp)}${deltaPp.toFixed(1)} pp)${verdict}`
+    `Endpoint: ${last.generation} ${fmtCount(last.passed)}/${total} vs ${first.generation} ` +
+    `${fmtCount(first.passed)}/${total} → ${sign(delta)}${fmtCount(Math.abs(delta))} task(s) ` +
+    `(${sign(deltaPp)}${deltaPp.toFixed(1)} pp)${verdict}`
   );
 }
 
 function heldOutProgressionTable(held) {
+  const multiTrial = (held.trials || 1) > 1;
   const table = el("table", "data");
   const head = el("tr");
-  for (const h of ["generation", "solved", "%", "basis"]) head.appendChild(el("th", null, h));
+  const headers = multiTrial
+    ? ["generation", "solved (expected)", "%", "trials/task", "basis"]
+    : ["generation", "solved", "%", "basis"];
+  for (const h of headers) head.appendChild(el("th", null, h));
   table.appendChild(head);
   for (const g of held.generations) {
     const tr = el("tr");
     tr.append(
       el("td", "mono", g.generation),
-      el("td", null, `${g.passed}/${g.total}`),
-      el("td", null, `${g.percent.toFixed(1)}%`),
-      el("td", null, g.carried ? "carried (identity)" : "measured")
+      el("td", null, `${fmtCount(g.passed)}/${g.total}`),
+      el("td", null, `${g.percent.toFixed(1)}%`)
     );
+    if (multiTrial) tr.append(el("td", null, String(g.trials)));
+    tr.append(el("td", null, g.carried ? "carried (identity)" : "measured"));
     table.appendChild(tr);
   }
   return table;
@@ -508,18 +522,30 @@ function renderHeldOutMatrix(holder, held) {
     const label = el("div", "heat-row-label", row.task_id);
     label.title = state.current.task_descriptions?.[row.task_id] || row.task_id;
     grid.appendChild(label);
-    row.results.forEach((v, i) => {
+    row.results.forEach((cellStat, i) => {
+      const rate = cellStat.n ? cellStat.c / cellStat.n : 0;
+      const single = cellStat.n === 1;
       const cell = el("div", "heat-cell");
-      cell.style.background = rampColor(v ? 1 : 0);
-      const changed = i > 0 && row.results[i - 1] !== v;
+      cell.style.background = rampColor(rate);
+      const prev = i > 0 ? row.results[i - 1] : null;
+      const prevRate = prev ? (prev.n ? prev.c / prev.n : 0) : null;
+      const changed = prevRate != null && prevRate !== rate;
       if (changed) cell.appendChild(el("span", "change-dot"));
+      if (!single && cellStat.c > 0 && cellStat.c < cellStat.n)
+        cell.appendChild(el("span", "unstable-dot"));
       cell.tabIndex = 0;
       const showTip = (evt) => {
         const point = evt.clientX != null ? evt : { clientX: cell.getBoundingClientRect().x, clientY: cell.getBoundingClientRect().y };
         tooltip.show(point.clientX, point.clientY, `${row.task_id} · ${gens[i]}`, [
-          { color: rampColor(v ? 1 : 0), value: v ? "solved" : "not solved", label: "single-trial result" },
+          {
+            color: rampColor(rate),
+            value: single
+              ? (cellStat.c ? "solved" : "not solved")
+              : `${cellStat.c}/${cellStat.n} (${pct(rate)})`,
+            label: single ? "single-trial result" : "trials passed",
+          },
           ...(changed
-            ? [{ value: v ? "gain" : "regression", label: "vs previous generation" }]
+            ? [{ value: rate > prevRate ? "rate up" : "rate down", label: "vs previous generation" }]
             : []),
         ]);
       };
@@ -533,7 +559,11 @@ function renderHeldOutMatrix(holder, held) {
   holder.appendChild(grid);
 
   const legend = el("div", "heat-legend");
-  for (const [frac, text] of [[1, "solved"], [0, "not solved"]]) {
+  const multiTrial = (held.trials || 1) > 1;
+  const scale = multiTrial
+    ? [[1, "all trials pass"], [0.5, "some trials pass"], [0, "none pass"]]
+    : [[1, "solved"], [0, "not solved"]];
+  for (const [frac, text] of scale) {
     const item = el("span", "heat-scale");
     const swatch = el("span", "heat-swatch");
     swatch.style.background = rampColor(frac);
@@ -777,10 +807,11 @@ function renderHeldOut() {
       hollow: g.carried,
     };
   };
+  const multiTrial = (held.trials || 1) > 1;
   const series = [
     {
       key: "held-current",
-      label: "currently solved",
+      label: multiTrial ? "mean pass rate" : "currently solved",
       color: splitColor(0),
       points: held.generations.map(point),
     },
@@ -816,12 +847,17 @@ function renderHeldOut() {
     details.appendChild(el("pre", null, held.summary));
     body.appendChild(details);
   }
+  const trialsText = multiTrial
+    ? `${held.trials} trials per task — cells are pass RATES, and the partial dot marks a ` +
+      "task that both passes and fails under one harness"
+    : "single trial per task";
   note.textContent =
-    `Held-out tasks solved / T on the one frozen set (T=${total}), measured once per ` +
-    `generation, single trial per task. Whiskers: ±${held.noise_band_pp} pp noise band ` +
-    "(one binomial SE at p=0.5) — deltas inside it are noise. Hollow markers are identity " +
-    "generations (result carried forward, never re-measured). The dashed line is the " +
-    "capability-retention diagnostic (ever solved by any generation so far).";
+    `Held-out performance on the one frozen set (T=${total}), measured once per ` +
+    `generation, ${trialsText}. Whiskers: ±${held.noise_band_pp} pp noise band ` +
+    "(one SE of the mean per-task rate at p=0.5) — deltas inside it are noise. Hollow " +
+    "markers are identity generations (result carried forward, never re-measured). The " +
+    "dashed line is the capability-retention diagnostic (ever solved by any generation " +
+    "so far).";
 }
 
 function renderEfficiency() {
