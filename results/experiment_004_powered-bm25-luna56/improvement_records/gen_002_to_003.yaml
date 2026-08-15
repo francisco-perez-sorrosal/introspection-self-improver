@@ -6,7 +6,7 @@ transition:
   from_generation: 2
   to_generation: 3
 experiment: 004_powered-bm25-luna56
-outcome: 'TODO: accepted | rejected | identity'
+outcome: accepted
 batch:
   name: batch_03
   task_ids:
@@ -102,7 +102,7 @@ mutation:
   branch: gen-003/clause-limits-values-not-tools
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/6
   source_commit: 500ce4d43d9500e73da7df939e258c002cc9d9f6
-  candidate_commit: null
+  candidate_commit: 61b24366c9f8c56905deedf48a4bb05b83d5b978
 expected_effect: >-
   Transfers that the policy or the user calls for should happen again, while the grounding
   check on written values survives. Measured on the held-out set at H3 and nowhere else.
@@ -113,6 +113,9 @@ expected_effect: >-
   recorded as such: T8's unbounded re-search remains in the instructions and cost one episode
   its entire step budget in B3.
 human_approval:
-  approved_by: TODO
+  # PR #6 merged on the user's explicit instruction ("merge it and continue") — protocol
+  # step 7's human gate. Recorded with provenance: CLAUDE.md's guardrail is that the agent
+  # does not merge on its own authority, and it did not; the decision is the user's.
+  approved_by: fperezsorrosal
   date: '2026-08-15'
 held_out_result: null
