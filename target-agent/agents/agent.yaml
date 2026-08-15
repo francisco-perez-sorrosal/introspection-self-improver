@@ -6,11 +6,11 @@ description: Banking support agent evaluated by tau2-bench; the harness under im
 # rather than a better harness. Their locked values live in benchmark/benchmark_lock.yaml
 # and the runner refuses to start when the two disagree.
 #
-# The `ai:` block is the current spelling (adopted 2026-08-15, user decision). The
-# platform's cloud validator (introspection-recipe-check 0.3.0) accepts it; the LOCAL
-# Recipes checker (0.19.3, newest available) does not yet — so `introspection check`,
-# the pre-commit hook, CI, and the runner's own gate all fail until the matching
-# Recipes release ships. Commits meanwhile need --no-verify, and no lane can run.
+# The `ai:` block is the current spelling (adopted 2026-08-15). Validated by both the
+# cloud (introspection-recipe-check 0.3.0) and the local toolchain since CLI 0.27.1;
+# `thinking_level` is deliberately omitted — the sandbox's default-injection behaviour
+# for this shape is pinned by the platform-episode span, and the lock asserts the
+# field's absence.
 ai:
   model: openai/gpt-5.6-luna
 
