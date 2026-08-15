@@ -1,0 +1,127 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 0
+  to_generation: 1
+experiment: 004_powered-bm25-luna56
+outcome: 'TODO: accepted | rejected | identity'
+batch:
+  name: batch_01
+  task_ids:
+  - task_005
+  - task_010
+  - task_023
+  - task_026
+  - task_055
+  - task_072
+  - task_088
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a0038e-d3b1-7519-bbe5-614e7e577022
+  - 01a0038e-d935-76d3-bc71-752d2154049f
+  - 01a0038e-da8b-7504-8e28-052e024116b6
+  - 01a0038e-d519-70d0-bb41-4534afddd12e
+  - 01a0038f-b771-77bb-87ef-f1face66f582
+  - 01a0038f-c557-71a2-ab6b-e8e14662363a
+  - 01a0038f-ef30-736f-a4e3-83e38896eed1
+  - 01a00390-566b-7575-b01f-9a5b4ec8ac07
+  summary: >-
+    Full-population read of all 8 batch_01 episodes — not a sample. Batch health first
+    (episode_manifest.jsonl): 8/8 evidence_complete, 8/8 arm_sha_ok, every row on recipe
+    commit bc31f80 = H0, all terminating user_stop, span counts showing
+    failed_tool_use_count 0 and has_errors false throughout, so every failure here is
+    behavioural rather than infrastructural. Graded read from
+    batch_01/graded/updated_results.json: per-task action_checks and db_check, with gold
+    actions compared field-by-field against the tool calls actually issued in each
+    transcript, then the transcript tails read directly for the episodes whose writes were
+    missing entirely. The observation harvest (introspection events list --event-name
+    introspection.observation) was attempted and returned ZERO events for these eight
+    conversations — the batch had finished ~6 minutes earlier against a ~40-minute
+    eligibility window, so this is "too early", not "nothing found"; all 100 returned
+    events carried earlier recipe commits. The full-population transcript read is the
+    stronger evidence tier at B=8 in any case, and prevalence below is enumeration over
+    the whole batch rather than sampling.
+signals:
+- description: >-
+    Commits a state-changing write using a knowledge-base-derived value it never
+    confirmed. task_096 (01a00390-566b) wrote expected_apy 3.0 where gold is 3.25 and 6.7
+    where gold is 6.85, with credit amounts 11.25/7.5 against gold 17.50/15.00, after NINE
+    KB searches that never resolved the APY boost. task_072 (01a0038f-c557) wrote
+    credit_type "rebate_credit" where gold is "fee_refund" and amount 10.0 against gold
+    3.50, after only TWO searches. task_055 (01a0038f-b771) opened the savings account as
+    account_class "Green Account" where gold is "Silver Plus Account". In task_072 and
+    task_096 the agent matched gold write-for-write in tool name and count and lost purely
+    on values — the right procedure with the wrong numbers.
+  prevalence: 3/8
+- description: >-
+    Bails to a human instead of completing an in-scope procedure. task_005
+    (01a0038e-d3b1) made ZERO write calls: its first KB_search returned an unrelated
+    rewards-representation doc, it then improvised a stricter identity rule than the
+    policy requires and transferred. task_010 (01a0038e-d935) retrieved the CORRECT
+    referral doc and transferred anyway. task_088 (01a0038f-ef30) demanded SSN-last-4
+    "enhanced verification" and transferred, never filing the dispute, closing the card,
+    or ordering a replacement. Backlog T2 — approved, not consumed by this generation.
+  prevalence: 3/8
+- description: >-
+    Declares a negative finding it did not establish, and so never enters the write
+    procedure. task_026 (01a0038e-d519) reported "no discrepancy in the recorded rewards"
+    after retrieving the KB doc stating rewards are stored as points regardless of card
+    type; gold expected four mis-rewarded transactions found, the dispute tool handed to
+    the user, and 8 writes. The agent made 1 write (log_verification). Backlog T3 —
+    approved, not consumed by this generation.
+  prevalence: 1/8
+counterevidence: >-
+  Two findings argue against over-reading the T1 signal, and both are recorded rather
+  than set aside. (1) Search VOLUME does not discriminate: the single passing episode
+  (task_023, 01a0038e-da8b) used 5 KB searches while failures ranged from 2 to 12, so
+  "search harder" is not supported by this batch and the hypothesis had to be narrowed to
+  a stopping condition rather than search effort. (2) A large share of the apparent
+  evidence is a grading artifact, not behaviour: tau's Action.compare_with_tool_call
+  compares argument dicts, but call_discoverable_agent_tool and call_discoverable_user_tool
+  carry their payload as a NESTED JSON STRING, so that field is compared by string
+  equality — the agent emits compact JSON and gold carries spaces. 14 of the 43
+  action-check misses in this batch (33%) are semantically identical calls differing only
+  in whitespace. This costs no reward, because every batch_01 task is reward_basis ['DB'],
+  but a naive read of action_checks would have produced a "fails to call discoverable
+  tools" failure mode that does not exist. It is frozen evaluator surface and is
+  deliberately NOT targeted: matching gold's JSON whitespace would be grader-gaming rather
+  than capability.
+hypothesis: >-
+  H0's instructions contain nothing between "the value is still unconfirmed" and "commit
+  the write", so when the knowledge base does not yield a needed rate, enum, amount or
+  product class cleanly, the agent supplies a plausible one and proceeds. Adding an
+  explicit pre-write grounding check with a stopping condition should convert those
+  episodes into either a correct write or an honest stop.
+owning_layer: >-
+  The target agent's system prompt — target-agent/SYSTEM.md <instructions>. Retrieval
+  USAGE (query formulation, iteration, stopping) is mutable harness surface; the bm25
+  retrieval backend, the policy text and the model pair are frozen and untouched.
+proposed_change: >-
+  Nine added lines in target-agent/SYSTEM.md <instructions>, no deletions: before a
+  state-changing tool call, check every argument value not read directly from a tool
+  result or from the user — rates, percentages, fees, monetary amounts, values chosen
+  from a fixed set, and product/plan/tier names — against a specific knowledge-base
+  passage retrieved in that conversation; on failure, re-search for that EXACT value
+  rather than the general topic; if still unconfirmed, name the value and stop instead of
+  writing a plausible one. The frozen <policy> region still matches benchmark_lock.yaml
+  (5733 chars) and agents/agent.yaml is untouched, so the model pair stays frozen.
+mutation:
+  branch: gen-001/pre-write-value-grounding
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/4
+  source_commit: 03c54027bb7a5f637b9b229a570ccb6fa22ed7ff
+  candidate_commit: null
+expected_effect: >-
+  Episodes that already run the correct procedure but write unconfirmed values should
+  either write correct values or stop and name what could not be confirmed. Measured on
+  the held-out set at H1 and nowhere else — this freeze sets
+  allow_within_batch_verification false, so re-running the consumed batch would be
+  intervention verification rather than generalization. Stated risk, to be checked first
+  in B2 if H1 moves sideways: the stopping clause could convert T1 failures into T2
+  failures by declining where it previously guessed, and T2 already stands at 3/8.
+human_approval:
+  approved_by: TODO
+  date: '2026-08-15'
+held_out_result: null
