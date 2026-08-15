@@ -706,20 +706,33 @@ instrument: `benchmark/scripts/power_sim.py`.
       excluded from the statistic), rendered in `summary.md` beside the endpoint +
       band and written machine-readable to `held_out/trend_test.json`; 9 unit tests
       against hand-computed values, suite green at 271 (2026-08-14).
-- [ ] Start gate: `make reset_h0` (H0 = `h0-baseline`, restore committed — anchor
-      CORRECTED 2026-08-15 per D16 after the tag drifted onto seq-2-mutated recipes;
-      reset now verifies byte-identity against the corrected tag, and the calibration
-      of record is the corrected-H0 pilot under `experiment_004_.../CALIBRATION_PILOT.md`);
-      lock flipped PROVISIONAL → FROZEN; A.0a PASS recorded beside the freeze snapshot;
-      partition `--verify` re-run; user-sim screen re-run under the active pair
-      (`screen_user_sim.py` — screening evidence is model-conditioned, D12/D13).
-      **Platform-lane luna check CLOSED 2026-08-15**: graded episode, reward 1.0,
+- [x] Start gate CLOSED 2026-08-15 (`bc31f80`), every item citable: `make reset_h0`
+      staged nothing — the recipe already was H0, byte-identical to the corrected tag;
+      partition `--verify` green; **user-sim screen re-run under the luna pair — 97/97
+      survive, zero crashers** (`benchmark/data/user_sim_screen.json`, overwriting the
+      Sonnet-conditioned seq-2 report that git history keeps); **A.0a PASS** — 283
+      adapter tests + clean mock smoke, recorded at `generation_000/gates/a0a.json`;
+      lock flipped PROVISIONAL → FROZEN and the freeze snapshot written
+      (`experiment.yaml`, `sha256:1c3a301e…`) — the re-cut-in-place licence is now
+      spent. Live finding kept rather than filed away: **task_034's crash class does
+      not reproduce under luna** (it voided seq 1 under Sonnet at `temperature: 0.0`);
+      the exclusion stands because the manifest is frozen and its header attributes
+      that exclusion to seq-2 screening, not to a claim about the current pair.
+      The anchor this reset verifies against is D16's CORRECTED `h0-baseline` (the tag
+      had drifted onto seq-2-mutated recipes), and the calibration of record is the
+      corrected-H0 pilot under `experiment_004_.../CALIBRATION_PILOT.md`. The
+      platform-lane luna check closed earlier the same day: graded episode, reward 1.0,
       evidence_complete, arm_sha_ok, $0.0157/episode, zero incidents — the sandbox
-      OpenAI defect is fixed platform-side and the ai:-spelled template validates on
-      both toolchains (CLI 0.27.1). If the pair ever reverts to haiku (D13), respect
-      the measured 20M prompt-bytes/HOUR org cap on claude-haiku-4-5. The OpenAI serializer defect
-      (`.ai-state/UPSTREAM_ISSUES.md`) now gates only the RETURN to D12's luna pair —
-      that return is a fresh re-cut + pilot, never a mid-experiment swap.
+      OpenAI defect is fixed platform-side and the `ai:`-spelled template validates on
+      both toolchains (CLI 0.27.1). If the pair ever reverts to haiku (D13), respect the
+      measured 20M prompt-bytes/HOUR org cap on claude-haiku-4-5; the OpenAI serializer
+      defect (`.ai-state/UPSTREAM_ISSUES.md`) now gates only the RETURN to D12's luna
+      pair — a fresh re-cut + pilot, never a mid-experiment swap.
+      Operational fact learned at the first batch, worth stating once: the platform lane
+      pins lineage to **pushed** `main`, so a freeze or infrastructure commit must be
+      pushed and its runtime version built before `make batch` will run. The escape
+      hatch (`--allow-dirty`) stamps every row `arm_sha_ok=false` and is a debugging
+      tool, never a way to start a round.
 - [ ] Run: 6 held-out rounds × 28 (local, sealed) interleaved with 5 batches × 8
       (platform) ≈ $132 at measured rates, $150–165 with instruction-growth headroom;
       budget go/no-go with the user at each generation boundary.
