@@ -22,7 +22,7 @@ subset an agent must not get wrong.
 | Task oracle | τ²-bench `banking_knowledge` | Immutable. Gives tasks + reward, never a diagnosis. |
 | Target agent (H_n) | An Introspection recipe in `target-agent/` | The only thing being improved. |
 | Evidence substrate | Introspection | Conversations, traces, observations, patterns, metrics, judgements, runtime↔commit lineage. |
-| Improvement orchestrator | **Claude Code + the Introspection plugin** | There is no orchestrator agent in this repo, and there must never be one. |
+| Improvement orchestrator | **Claude Code + the introspection.dev skills, served by the Introspection CLI (`introspection skills`)** | There is no orchestrator agent in this repo, and there must never be one. |
 
 Loop: run an improvement batch → collect Introspection evidence → `operate` (discover signal)
 → `improve` (hypothesis + one minimal mutation, landed as a PR) → human approval → next
@@ -222,9 +222,12 @@ Three of these are the ones that actually get missed:
 retrieval *usage* (query formulation, k, iteration, stopping), policy application, orchestration,
 retry, context management, verification, tests, and justified diagnostic evals/judges.
 
-## Working with the Introspection plugin
+## Working with the introspection.dev skills
 
-Route by what the work ends in; the plugin's own `BOUNDARIES.md` is binding.
+The Introspection methodology ships with the CLI: `introspection skills` lists the workflows
+with their routing descriptions, and `introspection skills <workflow>` (or
+`<workflow>/<step>`) loads one. Route by what the work ends in; the workflow descriptions
+the CLI serves are binding.
 
 - `operate` — inspect evidence, measure prevalence, diagnose. Ends in an answer.
 - `improve` — land a harness change through the repository. Ends in a PR.
@@ -232,10 +235,11 @@ Route by what the work ends in; the plugin's own `BOUNDARIES.md` is binding.
   `introspection dev`. Revisit only if a staging runtime becomes necessary.
 - `create` / `migrate` — building the initial recipe.
 
-**Do not reimplement the plugin's methodology.** Baselines, controls, falsification, earliest
-divergence, owning layer, one-mechanism-at-a-time — the plugin owns all of it. This repo
-supplies only what the plugin cannot know: the objective, the frozen surfaces, the permissions,
-and the reproducibility requirements.
+**Do not reimplement the skills' methodology.** Baselines, controls, falsification, earliest
+divergence, owning layer, one-mechanism-at-a-time — the CLI-served skills own all of it. This
+repo supplies only what they cannot know: the objective, the frozen surfaces, the permissions,
+the reproducibility requirements, and the experiment's cross-generation memory — the
+project-local `sia` skill (`skills/sia`) is their side-kick for that last part.
 
 The Introspection **CLI is the only interface** for operating the platform. Never substitute the
 dashboard, browser automation, or direct API calls for an operator action the CLI owns.
@@ -271,6 +275,7 @@ benchmark/      tau_adapter/ (the seam) · fidelity/ · scripts/ · tests/ · sp
 contract/       protocol.md · constraints.md
 results/        experiment_<id>/ → generation_NNN/ · improvement_records/ · held_out/ (at reveal)
 dashboard/      read-only results viewer over results/ (make dashboard; never a pipeline participant)
+skills/         orchestrator-facing Claude Code skills (sia — generation-transition memory; wired via .claude/skills/, never a Pi discovery path)
 ```
 
 One experiment is one freeze: `experiment.seq` + `experiment.name` in `benchmark_lock.yaml`
@@ -314,8 +319,8 @@ duplicated here.
 
 ## Standing guardrails for coding agents
 
-- **Check current Introspection docs and plugin skill sources before assuming any API, CLI
-  syntax, recipe layout, or permission behavior.** Repo documentation defers to upstream
+- **Check current Introspection docs and the CLI-served skills (`introspection skills
+  <selector>`) before assuming any API, CLI syntax, recipe layout, or permission behavior.** Repo documentation defers to upstream
   wherever they differ.
 - Recipe write access is a code-execution capability. Agent-authored changes land as PRs under
   branch protection; the agent does not merge its own work.
