@@ -6,7 +6,7 @@ transition:
   from_generation: 4
   to_generation: 5
 experiment: 004_powered-bm25-luna56
-outcome: 'TODO: accepted | rejected | identity'
+outcome: accepted
 batch:
   name: batch_05
   task_ids:
@@ -98,7 +98,7 @@ mutation:
   branch: gen-005/transfers-governed-by-policy-alone
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/8
   source_commit: f1f916975b9fe1ee55a62523c48ab7bd51e6c403
-  candidate_commit: null
+  candidate_commit: 78ebe161fe47042188c385ff9ef2b7540705fcee
 expected_effect: >-
   Transfers should track the frozen policy in both directions: not refused when the policy
   requires one, not granted on a first request when the policy says to try first. Measured on
@@ -108,6 +108,8 @@ expected_effect: >-
   unconfirmedness is not grounds for giving up beyond "does not by itself justify abandoning
   the rest of the request", which survives in the preceding sentence.
 human_approval:
-  approved_by: TODO
+  # PR #8 merged on the user's explicit instruction ("merge it and continue") — protocol
+  # step 7's human gate, the last of five. The decision is the user's throughout.
+  approved_by: fperezsorrosal
   date: '2026-08-15'
 held_out_result: null
