@@ -63,6 +63,14 @@ Grep here before recommending a new filing (`upstream-stewardship` skill).
   conversation billing (task `01a002d9-68a6-765c-acbd-f6eb3795440e`). The defect is
   therefore isolated to the sandbox Pi's OpenAI request path; everything else in the
   platform lane is healthy.
+- **Update 2026-08-14 (post-fix-report):** the platform team reports the serializer
+  fix shipped; not yet observed here. The D14 luna restore was pushed, a fresh
+  runtime version built (`01a00306-f194-…`, image ready), and the first episode on it
+  still sent `reasoning: {"level": "medium"}` — conversation
+  `01a0030c-2fa3-7427-8e33-35d14f5a7fbe` (dev env, ~18:4x local). Either the rollout
+  has not reached this org's dev sandbox stack, or the fix rides a channel other than
+  runtime images. Local lane unaffected; the seq-3 start gate stays blocked on a
+  verified `reasoning.effort` span.
 - **Unblock condition:** a sandbox Pi (or gateway request-shaping) release mapping
   `thinking_level` → `reasoning.effort` for OpenAI models; re-verify with
   `make single_task TRANSPORT=platform TASK=task_001`.
