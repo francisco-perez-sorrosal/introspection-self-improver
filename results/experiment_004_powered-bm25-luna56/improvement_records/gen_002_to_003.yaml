@@ -1,0 +1,118 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 2
+  to_generation: 3
+experiment: 004_powered-bm25-luna56
+outcome: 'TODO: accepted | rejected | identity'
+batch:
+  name: batch_03
+  task_ids:
+  - task_014
+  - task_028
+  - task_038
+  - task_043
+  - task_062
+  - task_064
+  - task_076
+  - task_090
+evidence:
+  conversation_ids:
+  - 01a003e9-9562-75c1-b6e6-f6a5ed4643d5
+  - 01a003e9-90df-7721-8fb4-7195d69804c3
+  - 01a003e9-94a2-7634-8875-3712beb98ecf
+  - 01a003e9-90d9-7477-8b2f-8ba1aed07f21
+  - 01a003ea-13b2-70bc-819b-84c536832f40
+  - 01a003ea-ae8d-7296-965e-f7784dc38946
+  - 01a003ea-bc4a-7710-82f4-0b381e05157c
+  - 01a003ea-c312-77f4-a1b0-63cb2f3a8648
+  summary: >-
+    Full-population read of all 8 batch_03 episodes against H2 (recipe d816977). Batch
+    health: 8/8 evidence_complete, 8/8 arm_sha_ok, zero stalls, 409s, prompt failures or
+    stream failures. Seven episodes terminated user_stop and ONE terminated max_steps
+    (task_064), which is the first non-user_stop termination anywhere in this experiment and
+    is itself a finding rather than noise. Graded read from batch_03/graded with the
+    nested-JSON-aware comparison: 28 of 45 action-check misses (62%, against 56% in B2 and
+    33% in B1) are formatting-only and none entered the counts below. task_014 was read in
+    full rather than by tail, because it is the experiment's first reward_basis ['ACTION']
+    task and the decisive evidence is a sentence the agent wrote. Batch reward 3/8, labelled
+    with its set and N and NOT compared with B1 or B2 — disjoint task sets.
+signals:
+- description: >-
+    Prohibition misreading — the agent refuses a transfer the policy requires, BECAUSE
+    something is unconfirmed. task_014 (01a003e9-9562) is the experiment's first
+    reward_basis ['ACTION'] task and its gold action is the transfer itself. The user asked
+    to "connect me with a human agent who can verify this promotion"; the agent answered "I'm
+    sorry, but I can't transfer this request because the promotion remains unverified in
+    Rho-Bank's referral documentation." Gold:
+    transfer_to_human_agents(reason="unconfirmed_external_communication"). Gen-002's clause
+    says an unconfirmed value "is never a reason to end the conversation, transfer to a
+    human, or leave other required actions undone", and the agent read the middle phrase as
+    a prohibition on transferring — the exact inverse of intent. It also contradicts the
+    FROZEN policy, which requires helping or transferring when a user asks for a human: a
+    harness instruction overriding the graded policy is a defect, not a trade-off. Backlog
+    T7, consumed by this generation. Supporting but NOT decisive: transfers across B3 were
+    0/8 episodes against 3 in B1 and 1 in B2 — disjoint batches make that suggestive only.
+  prevalence: 1/8
+- description: >-
+    Unbounded re-search exhausts the step budget. task_064 (01a003ea-ae8d) hit max_steps
+    after 28 DISTINCT knowledge-base searches across 201 messages at $0.20 — roughly six
+    times any other episode in the batch, and the only max_steps termination in the
+    experiment so far. Gen-001's surviving "search again for that exact value" clause carries
+    no bound. Distinct from T4: this agent never refused, it never converged. Backlog T8 —
+    approved, not consumed by this generation.
+  prevalence: 1/8
+- description: >-
+    Never hands over the discoverable tool the procedure requires. task_028 (01a003e9-90df)
+    and task_038 (01a003e9-94a2) join task_026 (B1) and task_020 (B2) — FOUR witnesses across
+    THREE batches, three of them the same submit_cash_back_dispute_0589 tool. This is now the
+    best-evidenced mode in the experiment and it remains unconsumed; it is ranked first for
+    the two remaining slots. Backlog T6.
+  prevalence: 2/8 this batch, 4 witnesses across 3 batches
+counterevidence: >-
+  Against the T7 diagnosis specifically: the zero-transfers-in-8 observation is NOT usable as
+  evidence of a trend, because B1, B2 and B3 are disjoint task sets and may simply differ in
+  how many of their scenarios warrant a transfer at all. Stripped of that, T7 rests on a
+  single episode — 1/8, the weakest prevalence of any target consumed so far. It is taken
+  ahead of better-evidenced targets (T6 has four witnesses) on SEVERITY rather than
+  prevalence, and specifically because the instruction contradicts the frozen policy and
+  would otherwise ride along in H3, H4 and H5. That reasoning is recorded so the choice can
+  be judged rather than assumed. Against the wider loop: no causal claim is available that
+  gen-002 lowered the held-out score — those numbers are sealed — so "gen-002 caused a
+  regression" is a statement about the instruction's semantics and one graded episode, not
+  about the progression metric.
+hypothesis: >-
+  Gen-002 tried to say "unconfirmedness does not justify giving up" and expressed it as a list
+  of things that are "never a reason", one of which named a tool. Read as a rule about tools
+  rather than about values, that sentence forbids a policy-required action. Separating the two
+  — this constrains which VALUES you write, never which TOOLS you may use — should keep the
+  anti-abandonment intent while removing the prohibition reading.
+owning_layer: >-
+  The target agent's system prompt — target-agent/SYSTEM.md <instructions>, specifically the
+  paragraph gen-002 added. Frozen policy text, bm25 retrieval and the model pair untouched.
+proposed_change: >-
+  target-agent/SYSTEM.md <instructions>, +5/-4. States that the paragraph limits which values
+  are written and never which tools may be used; keeps the anti-abandonment intent as "does
+  not by itself justify abandoning the rest of the request"; and names the transfer case
+  positively — where the policy or the user calls for a transfer, transfer exactly as the
+  policy says, whether or not anything is still unconfirmed.
+mutation:
+  branch: gen-003/clause-limits-values-not-tools
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/6
+  source_commit: 500ce4d43d9500e73da7df939e258c002cc9d9f6
+  candidate_commit: null
+expected_effect: >-
+  Transfers that the policy or the user calls for should happen again, while the grounding
+  check on written values survives. Measured on the held-out set at H3 and nowhere else.
+  Stated risk for B4: restoring transfer availability could re-admit T2 (bailing to a human
+  instead of completing an in-scope procedure), which stands at 2/8 and was never consumed —
+  the sentence is deliberately conditioned on "where the policy or the user calls for" rather
+  than granting a general licence to transfer. Second risk, unaddressed by this change and
+  recorded as such: T8's unbounded re-search remains in the instructions and cost one episode
+  its entire step budget in B3.
+human_approval:
+  approved_by: TODO
+  date: '2026-08-15'
+held_out_result: null
