@@ -265,3 +265,15 @@ def test_grade_argv_is_quiet_and_persisted(tmp_path):
     argv = heldout._grade_argv(tmp_path)
     assert "--quiet" in argv
     assert str(tmp_path / "graded") in argv
+
+
+def test_runner_argv_carries_an_operator_concurrency_override(tmp_path):
+    """The resume path's one knob: a round left INCOMPLETE by provider-side stream failures
+    is re-run for its missing pairs alone, and dropping concurrency for that pass must not
+    require editing the lock. Operational, so it never touches the freeze fingerprint."""
+    assert "--max-concurrency" not in heldout._runner_argv(tmp_path)
+
+    argv = heldout._runner_argv(tmp_path, 4)
+    assert argv[argv.index("--max-concurrency") + 1] == "4"
+    # Still the muted held-out invocation, not an ad-hoc round.
+    assert "--heldout" in argv

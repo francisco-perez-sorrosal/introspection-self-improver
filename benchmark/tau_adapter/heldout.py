@@ -57,6 +57,7 @@ def run_round(
     root: Path | None = None,
     manifest: dict[str, Any] | None = None,
     run_child: RunChild | None = None,
+    max_concurrency: int | None = None,
 ) -> int:
     """Drive one held-out round through its idempotent stages; print completeness only."""
     if not generation.startswith("generation"):
@@ -88,7 +89,7 @@ def run_round(
         shutil.rmtree(round_dir / GRADED_DIR, ignore_errors=True)
         already_measured = False
     if not already_measured:
-        rc = _run_stage(_runner_argv(round_dir), console_path, run_child)
+        rc = _run_stage(_runner_argv(round_dir, max_concurrency), console_path, run_child)
         if rc != 0:
             print(_failure_notice("runner", rc, round_dir, generation))
             return rc or 1
@@ -212,14 +213,25 @@ def _incident_text(totals: dict[str, int] | None) -> str:
     return f"{noted} — seam counters, not graded outcomes" if noted else "none"
 
 
-def _runner_argv(round_dir: Path) -> list[str]:
-    return [
+def _runner_argv(round_dir: Path, max_concurrency: int | None = None) -> list[str]:
+    """The muted runner invocation, optionally at an operator-chosen concurrency.
+
+    Held-out rounds otherwise take the lock's recorded default. The override exists for the
+    resume path: a round left INCOMPLETE by provider-side stream failures is re-run for its
+    missing pairs alone, and dropping concurrency for that pass is the cheapest way to get
+    them through — while staying an operational choice (outside the freeze fingerprint) that
+    `run_metadata.json` records per round.
+    """
+    argv = [
         sys.executable,
         str(BENCHMARK_DIR / "tau_adapter" / "run.py"),
         "--heldout",
         "--out",
         str(round_dir),
     ]
+    if max_concurrency is not None:
+        argv += ["--max-concurrency", str(max_concurrency)]
+    return argv
 
 
 def _grade_argv(round_dir: Path) -> list[str]:

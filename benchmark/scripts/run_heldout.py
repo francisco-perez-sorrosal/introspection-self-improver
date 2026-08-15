@@ -28,8 +28,21 @@ def main() -> int:
         required=True,
         help="generation directory name the measurement belongs to, e.g. generation_000 (H0)",
     )
+    parser.add_argument(
+        "--max-concurrency",
+        type=int,
+        default=None,
+        help=(
+            "episodes in flight for this round, overriding the lock's operational default. "
+            "Operational, never frozen: it moves wall-clock, never what the agent can do "
+            "inside an episode, and the effective value lands in run_metadata.json. Use it "
+            "to resume an INCOMPLETE round at a lower concurrency."
+        ),
+    )
     args = parser.parse_args()
-    return heldoutmod.run_round(lockmod.load_lock(), args.generation)
+    return heldoutmod.run_round(
+        lockmod.load_lock(), args.generation, max_concurrency=args.max_concurrency
+    )
 
 
 if __name__ == "__main__":
