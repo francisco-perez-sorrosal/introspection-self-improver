@@ -59,26 +59,54 @@ class RevealError(RuntimeError):
 
 @dataclass(frozen=True)
 class GenerationResult:
+    """One generation's held-out measurement, rate-native.
+
+    ``stats`` maps task_id -> (passed_trials, trials). At one trial per task every rate
+    is 0 or 1 and every derived quantity reduces exactly to the original binary
+    semantics; at num_trials > 1 each cell is a per-task pass rate, which is what turns
+    a coin flip into an estimate (plan D18).
+    """
+
     generation: int
-    passed: dict[str, bool]  # task_id -> solved
+    stats: dict[str, tuple[int, int]]  # task_id -> (passed_trials, trials)
     carried: bool  # identity generation: predecessor's result, not a measurement
 
+    def rate(self, task_id: str) -> float:
+        passed_trials, trials = self.stats[task_id]
+        return passed_trials / trials
+
     @property
-    def count(self) -> int:
-        return sum(1 for solved in self.passed.values() if solved)
+    def rates(self) -> dict[str, float]:
+        return {task_id: self.rate(task_id) for task_id in self.stats}
+
+    @property
+    def expected(self) -> float:
+        """Expected solved-task count: the sum of per-task rates (an integer at 1 trial)."""
+        return sum(self.rate(task_id) for task_id in self.stats)
+
+    @property
+    def trials(self) -> int:
+        """Trials per task, uniform across the round (load_measured enforces it)."""
+        return next(iter(self.stats.values()))[1] if self.stats else 1
 
     @property
     def label(self) -> str:
         return f"H{self.generation}"
 
 
+def fmt_count(value: float) -> str:
+    """Render an expected count: integral values as ints, else one decimal."""
+    return f"{value:.0f}" if abs(value - round(value)) < 1e-9 else f"{value:.1f}"
+
+
 def generation_dirname(generation: int) -> str:
     return f"generation_{generation:03d}"
 
 
-def noise_band_pp(held_out_tasks: int) -> int:
-    """One binomial standard error at p=0.5, in percentage points (≈7 at T=47, per D2)."""
-    return round(100 * 0.5 / math.sqrt(held_out_tasks))
+def noise_band_pp(held_out_tasks: int, trials: int = 1) -> int:
+    """One SE of the mean per-task rate at p=0.5, in percentage points (D2/D18):
+    0.5/sqrt(T*n) — ≈7 pp at T=47 n=1, ≈5 pp at T=28 n=3."""
+    return round(100 * 0.5 / math.sqrt(held_out_tasks * trials))
 
 
 def trend_test(results: list[GenerationResult]) -> dict[str, Any]:
@@ -107,8 +135,11 @@ def trend_test(results: list[GenerationResult]) -> dict[str, Any]:
     coefficient_ss = sum(c * c for c in coefficients)
     statistic = 0.0
     variance = 0.0
-    for task in measured[0].passed:
-        outcomes = [float(result.passed[task]) for result in measured]
+    # Outcomes are per-task pass RATES: 0/1 at one trial (the original binary case),
+    # c/n at num_trials > 1. The permutation null — a task's own outcomes across
+    # generations are exchangeable — holds for rates exactly as for booleans.
+    for task in measured[0].stats:
+        outcomes = [result.rate(task) for result in measured]
         mean = sum(outcomes) / columns
         statistic += sum(c * x for c, x in zip(coefficients, outcomes, strict=True))
         variance += coefficient_ss * sum((x - mean) ** 2 for x in outcomes) / (columns - 1)
@@ -147,24 +178,35 @@ def trend_sentence(trend: dict[str, Any]) -> str:
 # ---------------------------------------------------------------- assembling results
 
 
-def load_measured(vault_generation_dir: Path) -> dict[str, bool] | None:
-    """{task_id: passed} from a vault round's graded output; None when it does not exist."""
+def load_measured(
+    vault_generation_dir: Path, expected_trials: int
+) -> dict[str, tuple[int, int]] | None:
+    """{task_id: (passed_trials, trials)} from a vault round's graded output.
+
+    None when the round does not exist. Every task must carry exactly the freeze's
+    num_trials graded trials — a short task means an incomplete round, an over-count
+    means trials leaked in from outside the freeze; either way the curve would compare
+    unequal estimates, so the reveal refuses.
+    """
     graded = vault_generation_dir / heldoutmod.GRADED_DIR / heldoutmod.GRADED_RESULTS
     if not graded.exists():
         return None
     payload = json.loads(graded.read_text(encoding="utf-8"))
-    passed: dict[str, bool] = {}
+    stats: dict[str, list[int]] = {}
     for sim in payload.get("simulations") or []:
         task_id = str(sim.get("task_id"))
-        if task_id in passed:
-            raise RevealError(
-                f"{graded} holds more than one trial for {task_id}: the progression "
-                "metric is single-trial (D2); an endpoint reliability study is a separate "
-                "artifact, never mixed into this one"
-            )
         reward = (sim.get("reward_info") or {}).get("reward")
-        passed[task_id] = reward is not None and float(reward) >= PASS_THRESHOLD
-    return passed
+        entry = stats.setdefault(task_id, [0, 0])
+        entry[0] += int(reward is not None and float(reward) >= PASS_THRESHOLD)
+        entry[1] += 1
+    uneven = sorted(t for t, (_, n) in stats.items() if n != expected_trials)
+    if uneven:
+        raise RevealError(
+            f"{graded} holds a trial count other than the frozen num_trials="
+            f"{expected_trials} for: {', '.join(uneven)} — the curve cannot compare "
+            "unequal estimates"
+        )
+    return {task_id: (c, n) for task_id, (c, n) in stats.items()}
 
 
 def load_records(records_path: Path, total_generations: int) -> dict[int, dict[str, Any]]:
@@ -253,7 +295,9 @@ def assemble(
     expected = set(held_out_ids)
     results: list[GenerationResult] = []
     for generation in range(lock.protocol.generations + 1):
-        measured = load_measured(vault_experiment_dir / generation_dirname(generation))
+        measured = load_measured(
+            vault_experiment_dir / generation_dirname(generation), lock.num_trials
+        )
         if generation in identity:
             if measured is not None:
                 raise RevealError(
@@ -261,7 +305,7 @@ def assemble(
                     "record's outcome pins H to its predecessor), yet the vault holds a "
                     "measurement for it — a held-out round that should never have run"
                 )
-            results.append(GenerationResult(generation, dict(results[-1].passed), carried=True))
+            results.append(GenerationResult(generation, dict(results[-1].stats), carried=True))
             continue
         if measured is None:
             raise RevealError(
@@ -284,18 +328,23 @@ def assemble(
 
 
 def transitions(results: list[GenerationResult]) -> list[dict[str, Any]]:
+    """Per-transition movement, on rates: gains = rate rose, regressions = rate fell,
+    retained = rate equal and above zero, unresolved = rate equal at zero. At one trial
+    per task this is exactly the original binary table (fail-to-pass, pass-to-fail,
+    pass-to-pass, fail-to-fail)."""
     rows = []
     for before, after in itertools.pairwise(results):
-        gains = sum(1 for t, ok in after.passed.items() if ok and not before.passed[t])
-        regressions = sum(1 for t, ok in after.passed.items() if not ok and before.passed[t])
-        retained = sum(1 for t, ok in after.passed.items() if ok and before.passed[t])
+        deltas = {t: after.rate(t) - before.rate(t) for t in after.stats}
+        gains = sum(1 for d in deltas.values() if d > 0)
+        regressions = sum(1 for d in deltas.values() if d < 0)
+        retained = sum(1 for t, d in deltas.items() if d == 0 and after.rate(t) > 0)
         rows.append(
             {
                 "transition": f"{before.label}→{after.label}",
                 "gains": gains,
                 "retained": retained,
                 "regressions": regressions,
-                "unresolved": len(after.passed) - gains - regressions - retained,
+                "unresolved": len(after.stats) - gains - regressions - retained,
                 "net": gains - regressions,
                 "identity": after.carried,
             }
@@ -304,29 +353,46 @@ def transitions(results: list[GenerationResult]) -> list[dict[str, Any]]:
 
 
 def retention(results: list[GenerationResult]) -> list[dict[str, Any]]:
+    """currently = tasks at rate 1.0 (every trial passed), partial = 0 < rate < 1,
+    ever = tasks that have passed at least one trial under any generation so far. At one
+    trial per task, partial is structurally zero and the table is the original one."""
     ever: set[str] = set()
     rows = []
     for result in results:
-        ever |= {task for task, ok in result.passed.items() if ok}
-        rows.append({"generation": result.label, "currently": result.count, "ever": len(ever)})
+        ever |= {task for task in result.stats if result.rate(task) > 0}
+        rows.append(
+            {
+                "generation": result.label,
+                "currently": sum(1 for task in result.stats if result.rate(task) == 1.0),
+                "partial": sum(1 for task in result.stats if 0 < result.rate(task) < 1),
+                "ever": len(ever),
+            }
+        )
     return rows
 
 
 def results_by_generation_csv(results: list[GenerationResult], total: int) -> str:
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["generation", "passed", "total", "percent", "basis"])
+    writer.writerow(["generation", "passed", "total", "percent", "basis", "trials_per_task"])
     for result in results:
         writer.writerow(
             [
                 result.label,
-                result.count,
+                fmt_count(result.expected),
                 total,
-                f"{100 * result.count / total:.1f}",
+                f"{100 * result.expected / total:.1f}",
                 "carried" if result.carried else "measured",
+                result.trials,
             ]
         )
     return out.getvalue()
+
+
+def _matrix_cell(result: GenerationResult, task_id: str) -> str:
+    """`0`/`1` at one trial (the original format); `c/n` at num_trials > 1."""
+    passed_trials, trials = result.stats[task_id]
+    return str(passed_trials) if trials == 1 else f"{passed_trials}/{trials}"
 
 
 def task_generation_matrix_csv(results: list[GenerationResult], task_ids: list[str]) -> str:
@@ -334,7 +400,7 @@ def task_generation_matrix_csv(results: list[GenerationResult], task_ids: list[s
     writer = csv.writer(out)
     writer.writerow(["task_id", *(result.label for result in results)])
     for task_id in task_ids:
-        writer.writerow([task_id, *(int(result.passed[task_id]) for result in results)])
+        writer.writerow([task_id, *(_matrix_cell(result, task_id) for result in results)])
     return out.getvalue()
 
 
@@ -362,40 +428,50 @@ def transitions_csv(results: list[GenerationResult]) -> str:
 def retention_csv(results: list[GenerationResult], total: int) -> str:
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["generation", "currently_solved", "ever_solved", "total"])
+    writer.writerow(["generation", "currently_solved", "partially_solved", "ever_solved", "total"])
     for row in retention(results):
-        writer.writerow([row["generation"], row["currently"], row["ever"], total])
+        writer.writerow([row["generation"], row["currently"], row["partial"], row["ever"], total])
     return out.getvalue()
 
 
 def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) -> str:
     protocol = lock.protocol
     total = protocol.held_out_tasks
-    band = noise_band_pp(total)
+    trials = results[0].trials if results else lock.num_trials
+    band = noise_band_pp(total, trials)
     first, last = results[0], results[-1]
-    delta = last.count - first.count
+    delta = last.expected - first.expected
     delta_pp = 100 * delta / total
-    verdict = f"R_T(H{last.generation}) - R_T(H0) = {delta:+d} task(s) ({delta_pp:+.1f} pp) — " + (
-        "outside the noise band"
-        if abs(delta_pp) > band
-        else "inside the noise band; directional only"
+    delta_text = f"{'+' if delta >= 0 else '-'}{fmt_count(abs(delta))}"
+    verdict = (
+        f"R_T(H{last.generation}) - R_T(H0) = {delta_text} task(s) ({delta_pp:+.1f} pp) — "
+        + (
+            "outside the noise band"
+            if abs(delta_pp) > band
+            else "inside the noise band; directional only"
+        )
+    )
+    trials_text = (
+        "one trial per task (D2)"
+        if trials == 1
+        else f"{trials} trials per task — per-task cells are pass RATES, not flips (D18)"
     )
     lines = [
         f"# Experiment {lock.experiment_id} — held-out reveal",
         "",
         f"Revealed {revealed_on}. G={protocol.generations} generations x "
         f"B={protocol.improvement_tasks_per_generation} improvement tasks; held-out "
-        f"T={total}, one trial per task (D2). Noise band: ±{band} pp (one binomial "
-        f"standard error at p=0.5, T={total}) — deltas inside it are noise, and pass^k "
-        "is never used for generations.",
+        f"T={total}, {trials_text}. Noise band: ±{band} pp (one standard error of the "
+        f"mean per-task rate at p=0.5, T={total}, n={trials}) — deltas inside it are "
+        "noise, and pass^k is never used for generations.",
         "",
         "## Progression",
         "",
-        "| generation | passed | of | % | basis |",
+        "| generation | passed (expected) | of | % | basis |",
         "|---|---|---|---|---|",
     ]
     lines += [
-        f"| {r.label} | {r.count} | {total} | {100 * r.count / total:.1f}% "
+        f"| {r.label} | {fmt_count(r.expected)} | {total} | {100 * r.expected / total:.1f}% "
         f"| {'carried (identity)' if r.carried else 'measured'} |"
         for r in results
     ]
@@ -422,11 +498,12 @@ def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) ->
         "",
         "## Retention",
         "",
-        "| generation | currently solved | ever solved |",
-        "|---|---|---|",
+        "| generation | fully solved | partially solved | ever solved |",
+        "|---|---|---|---|",
     ]
     lines += [
-        f"| {row['generation']} | {row['currently']}/{total} | {row['ever']}/{total} |"
+        f"| {row['generation']} | {row['currently']}/{total} | {row['partial']}/{total} "
+        f"| {row['ever']}/{total} |"
         for row in retention(results)
     ]
     lines += [
@@ -527,8 +604,9 @@ def _fill_record_result(path: Path, result: GenerationResult, total: int) -> Non
     """Stamp held_out_result into a record, preserving the rest of the file byte for byte."""
     filled = (
         "held_out_result:\n"
-        f"  passed: {result.count}\n"
+        f"  passed: {fmt_count(result.expected)}\n"
         f"  total: {total}\n"
+        f"  trials_per_task: {result.trials}\n"
         f"  carried: {str(result.carried).lower()}\n"
     )
     text = path.read_text(encoding="utf-8")

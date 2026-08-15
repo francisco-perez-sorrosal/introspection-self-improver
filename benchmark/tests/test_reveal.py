@@ -34,6 +34,7 @@ def _lock() -> Lock:
     return Lock(
         raw={
             "experiment": {"seq": 2, "name": "exp-b"},
+            "frozen": {"num_trials": 1},
             "protocol": {
                 "generations": 3,
                 "improvement_tasks_per_generation": 3,
@@ -170,13 +171,18 @@ def test_reveal_writes_the_known_matrix(experiment):
     assert by_task["task_105"] == ("0", "0", "0", "0")
 
 
+def _stats(passed: dict) -> dict[str, tuple[int, int]]:
+    """Single-trial stats from a {task: bool-ish} mapping — the original binary fixtures."""
+    return {t: (int(bool(v)), 1) for t, v in passed.items()}
+
+
 def test_transitions_and_retention_match_hand_computation(experiment):
     _reveal(experiment)
     results = [
-        reveal.GenerationResult(0, {t: bool(v) for t, v in MEASURED[0].items()}, False),
-        reveal.GenerationResult(1, {t: bool(v) for t, v in MEASURED[1].items()}, False),
-        reveal.GenerationResult(2, {t: bool(v) for t, v in MEASURED[1].items()}, True),
-        reveal.GenerationResult(3, {t: bool(v) for t, v in MEASURED[3].items()}, False),
+        reveal.GenerationResult(0, _stats(MEASURED[0]), False),
+        reveal.GenerationResult(1, _stats(MEASURED[1]), False),
+        reveal.GenerationResult(2, _stats(MEASURED[1]), True),
+        reveal.GenerationResult(3, _stats(MEASURED[3]), False),
     ]
     moves = reveal.transitions(results)
     assert moves[0] == {
@@ -199,7 +205,12 @@ def test_transitions_and_retention_match_hand_computation(experiment):
         "identity": False,
     }
     kept = reveal.retention(results)
-    assert [(row["currently"], row["ever"]) for row in kept] == [(2, 2), (2, 3), (2, 3), (4, 4)]
+    assert [(row["currently"], row["partial"], row["ever"]) for row in kept] == [
+        (2, 0, 2),
+        (2, 0, 3),
+        (2, 0, 3),
+        (4, 0, 4),
+    ]
 
 
 def test_reveal_writes_transitions_and_retention_csvs(experiment):
@@ -244,11 +255,21 @@ def test_reveal_copies_measured_rounds_and_stamps_records(experiment):
     )
     assert "# scaffold header comment" in stamped  # the rest of the file is untouched
     parsed = yaml.safe_load(stamped)
-    assert parsed["held_out_result"] == {"passed": 2, "total": 5, "carried": True}
+    assert parsed["held_out_result"] == {
+        "passed": 2,
+        "total": 5,
+        "trials_per_task": 1,
+        "carried": True,
+    }
     first = yaml.safe_load(
         (experiment_dir / records.RECORDS_DIRNAME / records.record_name(0)).read_text()
     )
-    assert first["held_out_result"] == {"passed": 2, "total": 5, "carried": False}
+    assert first["held_out_result"] == {
+        "passed": 2,
+        "total": 5,
+        "trials_per_task": 1,
+        "carried": False,
+    }
 
 
 def test_reveal_refuses_before_the_final_tag(experiment):
@@ -331,8 +352,8 @@ def test_two_trials_for_one_task_are_refused(tmp_path):
         ]
     }
     (graded / heldout.GRADED_RESULTS).write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(reveal.RevealError, match="single-trial"):
-        reveal.load_measured(tmp_path)
+    with pytest.raises(reveal.RevealError, match="trial count other than"):
+        reveal.load_measured(tmp_path, 1)
 
 
 def test_partial_reward_is_not_a_pass(tmp_path):
@@ -340,7 +361,7 @@ def test_partial_reward_is_not_a_pass(tmp_path):
     graded.mkdir()
     payload = _graded_payload({"task_101": 0.5, "task_102": 1.0})
     (graded / heldout.GRADED_RESULTS).write_text(json.dumps(payload), encoding="utf-8")
-    assert reveal.load_measured(tmp_path) == {"task_101": False, "task_102": True}
+    assert reveal.load_measured(tmp_path, 1) == {"task_101": (0, 1), "task_102": (1, 1)}
 
 
 # ------------------------------------------------ the pre-registered trend test (D11)
@@ -349,10 +370,10 @@ def test_partial_reward_is_not_a_pass(tmp_path):
 def _fixture_results() -> list[reveal.GenerationResult]:
     """The experiment fixture's curve as GenerationResults, H2 carrying H1's draws."""
     return [
-        reveal.GenerationResult(0, {t: bool(v) for t, v in MEASURED[0].items()}, False),
-        reveal.GenerationResult(1, {t: bool(v) for t, v in MEASURED[1].items()}, False),
-        reveal.GenerationResult(2, {t: bool(v) for t, v in MEASURED[1].items()}, True),
-        reveal.GenerationResult(3, {t: bool(v) for t, v in MEASURED[3].items()}, False),
+        reveal.GenerationResult(0, _stats(MEASURED[0]), False),
+        reveal.GenerationResult(1, _stats(MEASURED[1]), False),
+        reveal.GenerationResult(2, _stats(MEASURED[1]), True),
+        reveal.GenerationResult(3, _stats(MEASURED[3]), False),
     ]
 
 
@@ -376,8 +397,8 @@ def test_trend_excludes_identity_generations():
 def test_trend_single_flip_over_two_generations():
     # One task 0 -> 1 across two measured generations: z = 1 exactly, p = Phi(-1).
     results = [
-        reveal.GenerationResult(0, {"task_a": False}, False),
-        reveal.GenerationResult(1, {"task_a": True}, False),
+        reveal.GenerationResult(0, _stats({"task_a": False}), False),
+        reveal.GenerationResult(1, _stats({"task_a": True}), False),
     ]
     trend = reveal.trend_test(results)
     assert trend["z"] == pytest.approx(1.0)
@@ -387,8 +408,8 @@ def test_trend_single_flip_over_two_generations():
 
 def test_trend_is_one_sided_so_decline_yields_high_p():
     results = [
-        reveal.GenerationResult(0, {"task_a": True}, False),
-        reveal.GenerationResult(1, {"task_a": False}, False),
+        reveal.GenerationResult(0, _stats({"task_a": True}), False),
+        reveal.GenerationResult(1, _stats({"task_a": False}), False),
     ]
     trend = reveal.trend_test(results)
     assert trend["z"] == pytest.approx(-1.0)
@@ -399,7 +420,7 @@ def test_trend_is_one_sided_so_decline_yields_high_p():
 def test_trend_without_discordance_reports_no_evidence():
     constant = {"task_a": True, "task_b": False}
     results = [
-        reveal.GenerationResult(generation, dict(constant), False) for generation in range(4)
+        reveal.GenerationResult(generation, _stats(constant), False) for generation in range(4)
     ]
     trend = reveal.trend_test(results)
     assert trend["statistic"] == 0.0
@@ -409,8 +430,8 @@ def test_trend_without_discordance_reports_no_evidence():
 
 def test_trend_with_a_single_measured_generation_is_no_evidence():
     results = [
-        reveal.GenerationResult(0, {"task_a": True}, False),
-        reveal.GenerationResult(1, {"task_a": True}, True),
+        reveal.GenerationResult(0, _stats({"task_a": True}), False),
+        reveal.GenerationResult(1, _stats({"task_a": True}), True),
     ]
     trend = reveal.trend_test(results)
     assert trend["p_value"] == 1.0
@@ -435,3 +456,91 @@ def test_reveal_writes_the_trend_verdict_json(experiment):
     assert verdict["excluded_identity"] == ["H2"]
     assert verdict["significant"] is False
     assert verdict["p_value"] == pytest.approx(0.0614, abs=1e-4)
+
+
+# ------------------------------------------------ multi-trial (rate-native) behavior
+
+
+def test_multi_trial_round_loads_as_rates(tmp_path):
+    graded = tmp_path / heldout.GRADED_DIR
+    graded.mkdir()
+    payload = {
+        "simulations": [
+            {"task_id": "task_101", "trial": 0, "reward_info": {"reward": 1.0}},
+            {"task_id": "task_101", "trial": 1, "reward_info": {"reward": 0.0}},
+            {"task_id": "task_101", "trial": 2, "reward_info": {"reward": 1.0}},
+            {"task_id": "task_102", "trial": 0, "reward_info": {"reward": 0.0}},
+            {"task_id": "task_102", "trial": 1, "reward_info": {"reward": 0.0}},
+            {"task_id": "task_102", "trial": 2, "reward_info": {"reward": 0.0}},
+        ]
+    }
+    (graded / heldout.GRADED_RESULTS).write_text(json.dumps(payload), encoding="utf-8")
+    assert reveal.load_measured(tmp_path, 3) == {"task_101": (2, 3), "task_102": (0, 3)}
+
+
+def test_short_trial_count_is_refused(tmp_path):
+    graded = tmp_path / heldout.GRADED_DIR
+    graded.mkdir()
+    payload = {
+        "simulations": [
+            {"task_id": "task_101", "trial": 0, "reward_info": {"reward": 1.0}},
+            {"task_id": "task_101", "trial": 1, "reward_info": {"reward": 1.0}},
+            {"task_id": "task_102", "trial": 0, "reward_info": {"reward": 1.0}},
+        ]
+    }
+    (graded / heldout.GRADED_RESULTS).write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(reveal.RevealError, match="task_102"):
+        reveal.load_measured(tmp_path, 2)
+
+
+def test_rate_native_expected_count_and_trials():
+    result = reveal.GenerationResult(0, {"a": (2, 3), "b": (0, 3), "c": (3, 3)}, False)
+    assert result.expected == pytest.approx(2 / 3 + 0 + 1)
+    assert result.trials == 3
+    assert result.rate("a") == pytest.approx(2 / 3)
+
+
+def test_rate_transitions_reduce_to_deltas():
+    before = reveal.GenerationResult(0, {"a": (1, 3), "b": (3, 3), "c": (0, 3), "d": (2, 3)}, False)
+    after = reveal.GenerationResult(1, {"a": (2, 3), "b": (1, 3), "c": (0, 3), "d": (2, 3)}, False)
+    row = reveal.transitions([before, after])[0]
+    # a rose, b fell, d equal-above-zero, c equal-at-zero.
+    assert (row["gains"], row["regressions"], row["retained"], row["unresolved"]) == (1, 1, 1, 1)
+
+
+def test_rate_retention_counts_full_and_partial():
+    results = [
+        reveal.GenerationResult(0, {"a": (3, 3), "b": (1, 3), "c": (0, 3)}, False),
+        reveal.GenerationResult(1, {"a": (2, 3), "b": (0, 3), "c": (0, 3)}, False),
+    ]
+    rows = reveal.retention(results)
+    assert (rows[0]["currently"], rows[0]["partial"], rows[0]["ever"]) == (1, 1, 2)
+    assert (rows[1]["currently"], rows[1]["partial"], rows[1]["ever"]) == (0, 1, 2)
+
+
+def test_trend_on_rates_matches_hand_computation():
+    # One task, rates 0/3, 3/3 across two measured generations: identical to the binary
+    # single-flip case — z = 1 exactly. A half-rate flip (0 -> 1/2... using thirds) scales
+    # S and sqrt(Var) together, so z is invariant to the rate magnitude for one task.
+    results = [
+        reveal.GenerationResult(0, {"a": (0, 3)}, False),
+        reveal.GenerationResult(1, {"a": (2, 3)}, False),
+    ]
+    trend = reveal.trend_test(results)
+    assert trend["z"] == pytest.approx(1.0)
+
+
+def test_matrix_cells_render_rates_at_multi_trial():
+    results = [
+        reveal.GenerationResult(0, {"a": (2, 3)}, False),
+        reveal.GenerationResult(1, {"a": (3, 3)}, False),
+    ]
+    text = reveal.task_generation_matrix_csv(results, ["a"])
+    assert "a,2/3,3/3" in text
+
+
+def test_noise_band_narrows_with_trials():
+    assert reveal.noise_band_pp(28, 1) == 9
+    assert reveal.noise_band_pp(28, 3) == 5
+    assert reveal.noise_band_pp(47, 1) == 7
+
