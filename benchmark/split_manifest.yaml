@@ -19,7 +19,8 @@
 # excluded from the pool before proposal: task_003, task_008, task_017, task_027, task_034,
 # task_035, task_036, task_041, task_045, task_048, task_051, task_058, task_061, task_067,
 # task_071, task_081, task_087, task_089, task_091, task_099, task_101
-# (benchmark/data/user_sim_screen.json has the evidence). seq 3 powered (plan D11): fresh pool -
+# (benchmark/data/user_sim_screen.json has the evidence). seq 4 powered (plan D11; prepared
+# as seq 3, renumbered by the D15 parity convention — lists untouched): fresh pool -
 # task_034 (user-sim crash, seq-2 screening) plus all 20 seq-2 tasks (8 revealed held-out + 12
 # diagnosed batch) excluded, so nothing the g1-g3 mutations were tuned on, and nothing the
 # reveal exposed, reappears anywhere in this experiment

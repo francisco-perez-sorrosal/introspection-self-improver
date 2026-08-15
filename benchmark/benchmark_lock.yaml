@@ -22,14 +22,22 @@
 # (D10 sizes) and was VOIDED the same day at H0: task_034 deterministically crashes τ's
 # text-mode user simulator under real agents, a frozen-surface defect — see
 # results/experiment_001_bm25-sonnet46/README.md. Seq 2 ran the debug experiment to
-# completion and is REVEALED (results/experiment_002_bm25-sonnet46/). Seq 3 is the
-# POWERED experiment — the tier between debug and full, sized from seq-2 actuals by
+# completion and is REVEALED (results/experiment_002_bm25-sonnet46/). Seq 3 held the
+# powered experiment's bring-up — the D12/D13/D14 model-pair detours, calibration
+# pilots and seam validations archived under results/experiment_003_powered-bm25-*/
+# — and stays theirs. Seq 4 IS the powered experiment — the tier between debug and
+# full, sized from seq-2 actuals by
 # results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md (plan D11): G=5/B=8/T=28 on
-# a fresh 76-task pool; the full T=47 run is deferred to seq 4. Reused ids are
-# unambiguous mechanically: each freeze is identified by its own results/ snapshot
-# fingerprint.
+# a fresh 76-task pool; the full T=47 run is deferred to seq 6.
+#
+# PARITY CONVENTION (plan D15, 2026-08-15): EVEN seqs are stable, reportable
+# experiments; ODD seqs are experimentation — bring-up, detours, voided freezes
+# (1 = voided debug, 3 = powered bring-up). Parity layers on the freeze discipline
+# and never replaces it: a re-decide still bumps seq, to the next number of the
+# right parity. Reused ids are unambiguous mechanically: each freeze is identified
+# by its own results/ snapshot fingerprint.
 experiment:
-  seq: 3
+  seq: 4
   name: powered-bm25-luna56
 
 benchmark:
@@ -64,7 +72,7 @@ benchmark:
 # self_improving_agent_evaluation_protocol.md §26). Frozen with everything else in this
 # file: the partition manifest is proposed from these sizes and verified against them,
 # and (G*B)+T must fit the eligible pool — 97 domain tasks minus the manifest's
-# header-documented exclusions (seq 3: 68 of 76). Powered scale per D11 (2026-08-14,
+# header-documented exclusions (seq 4: 68 of 76). Powered scale per D11 (2026-08-14,
 # sized from seq-2 actuals by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md:
 # powered for a ~+4-5 pp/generation loop — ~97% direction, ~82% trend-significance at
 # α=.05 — where the debug T=8 could resolve nothing smaller than ~45 pp. T=28 gives a
@@ -72,7 +80,7 @@ benchmark:
 # tightens the noise band ±17 → ±9 pp; B=8 turns batch prevalence quotes from quarters
 # into eighths — the cheapest lever on mutation quality; G=5 is the strongest power
 # lever, compounding mutations AND adding curve points to the pre-registered trend
-# test). The full G=5/B=10/T=47 experiment is deferred to seq 4: at measured per-episode
+# test). The full G=5/B=10/T=47 experiment is deferred to seq 6: at measured per-episode
 # costs it adds ~10 pp of trend power for ~$80.
 protocol:
   generations: 5
@@ -99,7 +107,7 @@ protocol:
   require_human_approval: true
 
 frozen:
-  # PROVISIONAL while seq 3 (the powered experiment) is prepared: the values are cut and
+  # PROVISIONAL while seq 4 (the powered experiment) is prepared: the values are cut and
   # the partition is proposed, but no freeze snapshot is written or enforced until the
   # experiment's start gate flips this to FROZEN — after `make reset_h0` (H0 back to the
   # `h0-baseline` tag; seq-2 mutations are evidence, not inheritance) and the A.0a gate
@@ -109,7 +117,7 @@ frozen:
   # blocked every openai/* model), and D14 (2026-08-14: LUNA RESTORED per D13's return
   # clause after the platform team shipped the serializer fix; verified against a
   # freshly built runtime image — .ai-state/UPSTREAM_ISSUES.md); the protocol block
-  # above is the D11 re-decision. Re-cutting seq 3 in place is sanctioned only
+  # above is the D11 re-decision. Re-cutting seq 4 in place is sanctioned only
   # because it is PROVISIONAL with zero episodes and no freeze snapshot — the moment a
   # snapshot exists, any change means a seq bump.
   # Once FROZEN: the first run writes the freeze snapshot into the results directory,

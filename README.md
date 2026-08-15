@@ -18,7 +18,7 @@ The debug-scale experiment has run to completion and is revealed —
 `results/experiment_002_bm25-sonnet46/` holds the record (summary, guardrail walk,
 improvement records, per-generation evidence). Its endpoint sits inside the noise band,
 so it demonstrates the loop, not a capability claim. Next is the **powered**
-experiment — seq 3, G=5 generations / 8-task batches / 28 held-out tasks, the tier
+experiment — seq 4, G=5 generations / 8-task batches / 28 held-out tasks, the tier
 between debug and full, sized from the debug run's own data
 (`results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`, plan D11) so a working
 loop has a real chance to show on the curve at ~63% of full-experiment cost; the
@@ -199,7 +199,7 @@ batch 3 graded 2/4 — the experiment's first batch passes — diagnosis
 
 The whole run recorded ≈ $32 and ≈ 3.5 h including review latency, with zero mid-run
 mechanics patching. At the debug scale that curve demonstrates the loop, not a
-capability claim — carrying a claim is what the powered experiment (seq 3) is sized
+capability claim — carrying a claim is what the powered experiment (seq 4) is sized
 for. The voided first freeze that preceded this run is its own record,
 `results/experiment_001_bm25-sonnet46/README.md`.
 
@@ -488,10 +488,13 @@ closed without a graded round and lives only in git history. In the working tree
 `results/experiment_001_bm25-sonnet46/README.md` is a different record — seq 1 froze the
 debug experiment and was **voided at H0** the same day on a τ-side user-simulator defect
 no harness mutation can reach (tau2-bench#470). Seq 2 re-froze with the poisoned task
-excluded, ran the debug experiment to completion, and is revealed; seq 3 is the
-powered run (`003_powered-bm25-luna56`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
+excluded, ran the debug experiment to completion, and is revealed; seq 4 is the
+powered run (`004_powered-bm25-luna56`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
 over a fresh 76-task pool — no task the seq-2 loop was tuned on, or whose result the
-reveal exposed, appears anywhere in it; the full-scale run defers to seq 4. Reused
+reveal exposed, appears anywhere in it; the full-scale run defers to seq 6. Under the
+parity convention (plan D15) even seqs are stable, reportable experiments and odd seqs
+are experimentation — seq 3 keeps the powered bring-up (model-pair detours, pilots,
+seam validations) it already holds. Reused
 ids are disambiguated by freeze fingerprints. Two values were
 decided the hard way and the decisions carry forward:
 

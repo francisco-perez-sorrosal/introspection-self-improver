@@ -20,7 +20,7 @@ file and the code disagree, the code wins and this file gets fixed.
    proposal, then freeze with `WRITE=1`); `--verify` must pass. Exclusions are
    documented in the manifest header, evidence committed beside it
    (`benchmark/data/user_sim_screen.json`). Exclusions carry the crashers AND the
-   experiment's decision-row pool discipline: seq 3 (plan D11) additionally excludes
+   experiment's decision-row pool discipline: seq 4 (plan D11) additionally excludes
    all 20 seq-2 tasks, so nothing a prior loop was tuned on — and nothing a prior
    reveal exposed — reappears anywhere in the new partition.
 3. **Freeze**: set `experiment.seq`, protocol block (G/B/T), flip `frozen.status` to
@@ -110,7 +110,7 @@ screens/probes; an earlier "≈ $11" note here undercounted by omitting the loca
 lane's manifests). The endpoint at T=8 was
 directional-negative (−1 task, inside ±18 pp): the debug scale demonstrates the
 loop, not the claim. The claim path was re-staged from this run's own data (plan
-D11, `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`): seq 3 runs the
+D11, `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`): seq 4 runs the
 POWERED scale — G=5, B=8, T=28, powered for a ~+4–5 pp/generation loop, with a
 pre-registered one-sided trend test over H0…H5 at α=0.05 as the primary
-instrument — and the full T=47 run defers to seq 4.
+instrument — and the full T=47 run defers to seq 6 (parity convention, plan D15).

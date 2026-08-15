@@ -107,14 +107,20 @@ close.
   pool screened pre-partition for that crash class — ran to completion and REVEALED
   2026-08-14: three accepted generations, held-out curve 3/8 → 3/8 → 2/8 → 2/8,
   endpoint inside the ±18 pp band — the loop is demonstrated, no capability claim is
-  made. Seq 3 is the **powered** experiment — the tier between debug and full, cut
-  PROVISIONAL 2026-08-14 as `003_powered-bm25-luna56`: G=5, B=8, T=28 per plan D11,
+  made. Seq 4 is the **powered** experiment — the tier between debug and full, cut
+  PROVISIONAL 2026-08-14 (as seq 3) and renumbered 2026-08-15 under the **parity
+  convention** (plan D15: even seqs = stable, reportable experiments; odd seqs =
+  experimentation — 1 is the voided debug freeze, 3 keeps the powered bring-up it
+  already holds: the D12–D14 detours, pilots and seam validations under
+  `results/experiment_003_powered-bm25-*/`; parity layers on the freeze discipline —
+  a re-decide still bumps seq, to the next number of the right parity):
+  `004_powered-bm25-luna56`, G=5, B=8, T=28 per plan D11,
   sized from seq-2 actuals by `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`
   (powered for a ~+4–5 pp/generation loop; anything smaller reads directional at any
   affordable T), on a fresh 76-task pool (nothing seq 2 tuned on or revealed), with a
   pre-registered one-sided trend test over H0…H5 at α=0.05 as the primary instrument.
-  The full T=47 run defers to seq 4: at measured costs (~$210–230) it buys ~10 pp of
-  trend power for ~$80 more. Freeze fingerprints disambiguate the reused id
+  The full T=47 run defers to seq 6: at measured costs (~$210–230) it buys ~10 pp of
+  trend power for ~$80 more. Freeze fingerprints disambiguate any reused id
   mechanically. The model pair settled 2026-08-15 after three re-decisions (D12
   luna for cost → D13 haiku interim while a platform sandbox defect 400'd every
   openai/* model → D14 luna restored when the fix shipped): BOTH halves run

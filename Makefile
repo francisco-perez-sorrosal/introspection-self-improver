@@ -85,16 +85,16 @@ policy:
 
 # Propose — and with WRITE=1 freeze — the current experiment's task partition, sizes from
 # the lock's protocol block. The default EXCLUDE list belongs to the POWERED experiment
-# (seq 3, plan D11, sized by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md):
+# (seq 4, plan D11, sized by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md):
 # task_034 (τ user-sim crash, seq-2 screening) plus all 20 seq-2 tasks — 8 revealed
 # held-out, 12 diagnosed batch — the fresh-pool discipline, so nothing the g1-g3
-# mutations were tuned on, and nothing the reveal exposed, reappears anywhere in seq 3.
+# mutations were tuned on, and nothing the reveal exposed, reappears anywhere in seq 4.
 # Review the printed proposal, then freeze it with `make propose_split WRITE=1`; check a
 # frozen manifest any time with `scripts/propose_split.py --verify`. A later experiment
 # re-decides EXCLUDE through its own decision row and a seq bump, never by editing a
 # frozen manifest.
 EXCLUDE ?= task_003,task_008,task_017,task_027,task_034,task_035,task_036,task_041,task_045,task_048,task_051,task_058,task_061,task_067,task_071,task_081,task_087,task_089,task_091,task_099,task_101
-NOTE ?= seq 3 powered (plan D11): fresh pool - task_034 (user-sim crash, seq-2 screening) plus all 20 seq-2 tasks (8 revealed held-out + 12 diagnosed batch) excluded, so nothing the g1-g3 mutations were tuned on, and nothing the reveal exposed, reappears anywhere in this experiment
+NOTE ?= seq 4 powered (plan D11): fresh pool - task_034 (user-sim crash, seq-2 screening) plus all 20 seq-2 tasks (8 revealed held-out + 12 diagnosed batch) excluded, so nothing the g1-g3 mutations were tuned on, and nothing the reveal exposed, reappears anywhere in this experiment
 propose_split:
 	@$(RUN) python scripts/propose_split.py --exclude "$(EXCLUDE)" \
 		$(if $(WRITE),--write --force --note "$(NOTE)",)

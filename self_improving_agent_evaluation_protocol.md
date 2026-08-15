@@ -15,10 +15,11 @@ learning from small, disjoint batches of execution experience.
 > of `SIA_EVALUATION_PLAN.md`; refinements were adopted through that plan's decisions
 > D1–D11, never by rewriting a section here. Three experiment tiers now exist where
 > §3–§4 sketched two: **debug** G=3/B=4/T=8 (plan D10 — ran as seq 2), **powered**
-> G=5/B=8/T=28 (plan D11 — seq 3, sized by a power analysis on the debug run's own
+> G=5/B=8/T=28 (plan D11 — seq 4, sized by a power analysis on the debug run's own
 > data, with a pre-registered trend test as the primary significance instrument), and
-> the **full** default below, G=5/B=10/T=47 (deferred to seq 4). What the execution
-> taught about the design itself is §31.
+> the **full** default below, G=5/B=10/T=47 (deferred to seq 6; plan D15's parity
+> convention reserves even seqs for stable experiments, odd for experimentation).
+> What the execution taught about the design itself is §31.
 
 ------------------------------------------------------------------------
 
