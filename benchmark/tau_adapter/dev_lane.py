@@ -19,6 +19,7 @@ both are load-bearing:
 
 from __future__ import annotations
 
+import atexit
 import contextlib
 import json
 import os
@@ -246,6 +247,13 @@ class DevAttachment:
             bufsize=1,
             start_new_session=True,
         )
+        # The attachment holds the Runtime's single dev slot (dev_slot_conflict), and its
+        # own session means it survives this process unless someone reclaims it — a caller
+        # that crashes between here and its finally would block the next run's attach for
+        # minutes. Reclamation therefore cannot depend on the caller: register the backstop
+        # the moment the child exists. stop() is idempotent, so the normal-path stop and
+        # this exit-time one never conflict.
+        atexit.register(self.stop)
         threading.Thread(target=self._read, daemon=True).start()
 
         for _ in range(int(timeout * 4)):

@@ -123,3 +123,28 @@ def test_attachment_names_are_nonced_and_distinct() -> None:
     names = {dev_lane.attachment_name() for _ in range(8)}
     assert all(name.startswith("tau-") for name in names)
     assert len(names) > 1
+
+
+def test_start_registers_exit_time_reclamation_before_waiting(monkeypatch) -> None:
+    """The attachment holds the Runtime's single dev slot, and its own session means it
+    survives a crashed caller. A run that dies between start() and its finally must still
+    give the slot back — otherwise the next run's attach spins on dev_slot_conflict —
+    so the exit-time backstop is registered the moment the child exists, covering even
+    a failure inside start()'s own ready-wait."""
+    registered: list = []
+    monkeypatch.setattr(dev_lane.atexit, "register", registered.append)
+
+    class FakeProc:
+        def __init__(self) -> None:
+            self.stdout = [
+                "╭─ Development ready\n",
+                "│    For your app: INTROSPECTION_DEV_TARGET=fperez\n",
+            ]
+
+        def poll(self) -> None:
+            return None
+
+    monkeypatch.setattr(dev_lane.subprocess, "Popen", lambda *a, **k: FakeProc())
+    attachment = dev_lane.DevAttachment(mcp_url="http://127.0.0.1:1/mcp/t", repo_root=".")
+    attachment.start(timeout=5)
+    assert registered == [attachment.stop]
