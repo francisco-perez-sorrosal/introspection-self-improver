@@ -1,0 +1,24 @@
+{
+  "gate": "A.0a",
+  "passed": true,
+  "generated": "2026-08-15T03:47:18Z",
+  "adapter_sha": "53f4be9a7fa9480e5d7267b988cad25df5ca6621",
+  "suite": {
+    "returncode": 0,
+    "summary": "283 passed in 6.59s"
+  },
+  "smoke": {
+    "returncode": 0,
+    "episodes": [
+      {
+        "task_id": "create_task_1",
+        "trial": 0,
+        "termination": "TerminationReason.USER_STOP",
+        "reward": 1.0,
+        "completed": true,
+        "failure": null
+      }
+    ],
+    "completed": true
+  }
+}

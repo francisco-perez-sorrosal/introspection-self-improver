@@ -1,63 +1,59 @@
 {
-  "generated_at": "2026-08-14T06:01:16+00:00",
+  "generated_at": "2026-08-15T03:46:03+00:00",
   "mechanism": "tau orchestrator + scripted LLM-free agent, real user-sim and user tools",
   "domain": "banking_knowledge",
   "task_set": "banking_knowledge",
   "task_split": "base",
-  "user_llm": "anthropic/claude-sonnet-4-5",
+  "user_llm": "openai/gpt-5.6-luna",
   "user_llm_args": {
-    "temperature": 0.0,
+    "reasoning_effort": "medium",
     "timeout": 60
   },
   "max_steps": 16,
   "screened": 97,
   "crashers": [],
   "tasks": {
+    "task_004": {
+      "ok": true,
+      "termination": "TerminationReason.USER_STOP"
+    },
+    "task_003": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
     "task_005": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_004": {
+    "task_001": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_003": {
+    "task_006": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_001": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_008": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_007": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
     "task_002": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_006": {
+    "task_007": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_010": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_017": {
+    "task_012": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
     "task_018": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_015": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -69,11 +65,15 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_012": {
+    "task_019": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_019": {
+    "task_015": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_017": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -81,23 +81,19 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_023": {
+    "task_021": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
     "task_024": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_023": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_025": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_022": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_021": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -105,19 +101,11 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
+    "task_022": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
     "task_027": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_028": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_034": {
-      "ok": true,
-      "termination": "TerminationReason.INFRASTRUCTURE_ERROR"
-    },
-    "task_031": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -125,15 +113,19 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
+    "task_028": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
     "task_032": {
       "ok": true,
       "termination": "TerminationReason.USER_STOP"
     },
-    "task_033": {
+    "task_034": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_037": {
+    "task_031": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -141,15 +133,19 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
+    "task_033": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
     "task_035": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_038": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_043": {
+    "task_037": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -157,13 +153,13 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_040": {
+    "task_043": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_045": {
+    "task_040": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_041": {
       "ok": true,
@@ -173,43 +169,43 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_047": {
+    "task_045": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_046": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
     },
     "task_048": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
+    "task_046": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
     "task_050": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_047": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_051": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_052": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_049": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_054": {
+    "task_052": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_053": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_057": {
+    "task_054": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -217,47 +213,47 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_055": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_058": {
+    "task_057": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_060": {
+    "task_055": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_059": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_062": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_065": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_061": {
+    "task_060": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_067": {
+    "task_058": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_062": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_063": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_066": {
+    "task_065": {
       "ok": true,
-      "termination": "TerminationReason.USER_STOP"
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_061": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
     },
     "task_068": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_066": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -265,11 +261,7 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_070": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_071": {
+    "task_067": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -277,43 +269,47 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_073": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_072": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_075": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_074": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_076": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_078": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_077": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_079": {
-      "ok": true,
-      "termination": "TerminationReason.USER_STOP"
-    },
-    "task_081": {
+    "task_070": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_084": {
+    "task_072": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_073": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_074": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_076": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_071": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_075": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_077": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_079": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_078": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_081": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -321,7 +317,11 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_085": {
+    "task_082": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_084": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -329,19 +329,7 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_082": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_086": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_088": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
-    "task_089": {
+    "task_085": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -349,11 +337,19 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_090": {
+    "task_086": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_092": {
+    "task_089": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_088": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_090": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -365,7 +361,7 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_094": {
+    "task_092": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -373,15 +369,15 @@
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_097": {
-      "ok": true,
-      "termination": "TerminationReason.MAX_STEPS"
-    },
     "task_096": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
-    "task_100": {
+    "task_094": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_097": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },
@@ -390,6 +386,10 @@
       "termination": "TerminationReason.MAX_STEPS"
     },
     "task_099": {
+      "ok": true,
+      "termination": "TerminationReason.MAX_STEPS"
+    },
+    "task_100": {
       "ok": true,
       "termination": "TerminationReason.MAX_STEPS"
     },

@@ -107,23 +107,32 @@ protocol:
   require_human_approval: true
 
 frozen:
-  # PROVISIONAL while seq 4 (the powered experiment) is prepared: the values are cut and
-  # the partition is proposed, but no freeze snapshot is written or enforced until the
-  # experiment's start gate flips this to FROZEN — after `make reset_h0` (H0 back to the
-  # `h0-baseline` tag; seq-2 mutations are evidence, not inheritance) and the A.0a gate
-  # (SIA_EVALUATION_PLAN.md Phase 5). Values below this status line are carried from the
-  # seq-2 freeze except the model pair and its args — re-decided as D12 (luna, for
-  # inference cost), D13 (haiku interim while the platform's OpenAI serializer defect
-  # blocked every openai/* model), and D14 (2026-08-14: LUNA RESTORED per D13's return
-  # clause after the platform team shipped the serializer fix; verified against a
-  # freshly built runtime image — .ai-state/UPSTREAM_ISSUES.md); the protocol block
-  # above is the D11 re-decision. Re-cutting seq 4 in place is sanctioned only
-  # because it is PROVISIONAL with zero episodes and no freeze snapshot — the moment a
-  # snapshot exists, any change means a seq bump.
-  # Once FROZEN: the first run writes the freeze snapshot into the results directory,
-  # every later run must match it, and changing a value means a NEW experiment (bump
-  # seq), never a new value under this one.
-  status: PROVISIONAL
+  # FROZEN 2026-08-15 at the seq-4 start gate (SIA_EVALUATION_PLAN.md Phase 5). Every
+  # gate item passed before this line was flipped, and each is citable rather than
+  # asserted: `make reset_h0` — recipe byte-identical to the D16-CORRECTED `h0-baseline`
+  # (seq-2 mutations are evidence, not inheritance; the reset staged nothing because the
+  # recipe already was H0); partition `--verify` — names, sizes, disjointness, task
+  # budget, ACTION spread all hold; user-sim screen RE-RUN under the active pair, whose
+  # evidence is model-conditioned (D12/D13) — 97/97 survive, zero crashers, report at
+  # benchmark/data/user_sim_screen.json (it overwrites the Sonnet-conditioned seq-2
+  # screen, which git history keeps; note task_034's crash class does NOT reproduce
+  # under luna — its exclusion stands anyway, frozen manifest, attributed there to
+  # seq-2 screening); platform-lane luna check closed 2026-08-15 (graded episode,
+  # reward 1.0, zero seam incidents); A.0a PASS recorded under the generation's gates/.
+  #
+  # Values below this status line are carried from the seq-2 freeze except the model
+  # pair and its args — re-decided as D12 (luna, for inference cost), D13 (haiku interim
+  # while the platform's OpenAI serializer defect blocked every openai/* model), and D14
+  # (2026-08-14: LUNA RESTORED per D13's return clause after the platform team shipped
+  # the serializer fix; verified against a freshly built runtime image —
+  # .ai-state/UPSTREAM_ISSUES.md); the protocol block above is the D11 re-decision.
+  #
+  # The re-cut-in-place licence is now SPENT. It was sanctioned only while this said
+  # PROVISIONAL with zero episodes and no freeze snapshot; from the first run under this
+  # freeze, the snapshot exists in the results directory, every later run must match it,
+  # and changing any value means a NEW experiment (bump seq — to the next EVEN number
+  # per the D15 parity convention), never a new value under this one.
+  status: FROZEN
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which

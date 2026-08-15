@@ -1,0 +1,15 @@
+# Written by the runner on this experiment's first non-PROVISIONAL run. It pins
+# the freeze every result in this directory was produced under; a later run whose
+# parsed lock or split manifest differs is refused. The summary is for humans —
+# the fingerprint is what is compared.
+id: 004_powered-bm25-luna56
+created: '2026-08-15T03:47:02Z'
+fingerprint: sha256:1c3a301e14f4ae202c70ded63cfe8009d18bc554e9ab5a953afc5cf55585ca74
+summary:
+  domain: banking_knowledge
+  retrieval_config: bm25
+  agent_model: openai/gpt-5.6-luna
+  user_llm: openai/gpt-5.6-luna
+  num_trials: 1
+  seed: 300
+  benchmark_commit: fc0055dc4e0a316c3f83133267fbd6faaa770992
