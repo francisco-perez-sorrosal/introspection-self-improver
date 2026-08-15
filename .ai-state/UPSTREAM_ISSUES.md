@@ -57,6 +57,12 @@ Grep here before recommending a new filing (`upstream-stewardship` skill).
   the same path (verified: conversation `01a002ac-996e-732a-ab50-e20c94e2a050`, request
   body identical with the field absent). The defect therefore breaks EVERY `openai/*`
   model on the platform unconditionally; no recipe-side workaround exists.
+- **Update 2026-08-14 (Anthropic control):** the same recipe/runtime with
+  `anthropic/claude-haiku-4-5` + `thinking_level: medium` completes a platform episode
+  cleanly — graded, `evidence_complete`, `arm_sha_ok`, zero seam incidents, $0.218
+  conversation billing (task `01a002d9-68a6-765c-acbd-f6eb3795440e`). The defect is
+  therefore isolated to the sandbox Pi's OpenAI request path; everything else in the
+  platform lane is healthy.
 - **Unblock condition:** a sandbox Pi (or gateway request-shaping) release mapping
   `thinking_level` → `reasoning.effort` for OpenAI models; re-verify with
   `make single_task TRANSPORT=platform TASK=task_001`.
