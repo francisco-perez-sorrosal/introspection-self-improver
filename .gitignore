@@ -36,3 +36,7 @@ node_modules/
 # Local Claude Code settings
 .claude/settings.local.json
 .claude/praxion-rules.yaml.example
+
+# Session-telemetry WAL (machine-local, never project record)
+.ai-state/observations.jsonl
+.ai-state/observations.lock
