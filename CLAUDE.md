@@ -130,8 +130,14 @@ close.
   default (medium) is the effective level. The user simulator runs
   `reasoning_effort: medium` with no temperature (luna rejects 0.0; D2's pooling
   absorbs the stochasticity). Verified end to end 2026-08-15: local smoke and pilot
-  green (baseline 25%, $0.038/local episode), platform episode graded reward 1.0 at
-  $0.0157/episode with zero seam incidents. Calibration: the luna pilot; the haiku
+  green, platform episode graded reward 1.0 at
+  $0.0157/episode with zero seam incidents. **H0 anchor corrected 2026-08-15 (D16)**:
+  the h0-baseline tag had drifted onto seq-2-mutated recipes, so it was re-tagged at
+  the restore commit — SYSTEM.md byte-identical to `h0-baseline-sonnet46`'s, only the
+  sanctioned `ai:` block current — and `make reset_h0` verifies that identity.
+  Calibration of record: the corrected-H0 luna pilot (baseline 6/28 = 21.4%,
+  $0.022/local episode — results/experiment_004_powered-bm25-luna56/CALIBRATION_PILOT.md);
+  the earlier 003 pilot measured the contaminated harness (25%, superseded). The haiku
   detour (baseline 10.7%, its own pilot + 20M-prompt-bytes/hour org-cap caveat) is
   archived at results/experiment_003_powered-bm25-haiku45/.
 

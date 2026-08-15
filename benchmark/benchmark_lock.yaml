@@ -137,9 +137,12 @@ frozen:
   # inference-cost rationale and the sensitivity trade are D12's, unchanged: if luna
   # performs the harness behaviours natively, mutations move the score less; the B1
   # read (D8) guards both failure modes (0/B = strengthen H0, B/B = the model choice
-  # re-opens). Calibration is the D12 luna pilot (baseline 25%, $0.038/episode,
-  # G=5/B=8/T=28 verified at that baseline —
-  # results/experiment_003_powered-bm25-luna56/CALIBRATION_PILOT.md); the D13 haiku
+  # re-opens). Calibration of record is the CORRECTED-H0 luna pilot (D16, 2026-08-15:
+  # baseline 6/28 = 21.4%, $0.022/local episode —
+  # results/experiment_004_powered-bm25-luna56/CALIBRATION_PILOT.md). The earlier 003
+  # pilot measured a seq-2-contaminated harness (its arm carried the g1-g3 SYSTEM.md
+  # mutations; the h0-baseline tag has since been corrected and reset_h0 verifies
+  # byte-identity); the D13 haiku
   # detour is archived at results/experiment_003_powered-bm25-haiku45/.
   agent_model: openai/gpt-5.6-luna
   # null = the ai:-spelled recipe omits thinking_level (user decision at the merge of
