@@ -6,7 +6,7 @@ transition:
   from_generation: 3
   to_generation: 4
 experiment: 004_powered-bm25-luna56
-outcome: 'TODO: accepted | rejected | identity'
+outcome: accepted
 batch:
   name: batch_04
   task_ids:
@@ -103,7 +103,7 @@ mutation:
   branch: gen-004/hand-over-tools-by-name
   pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/7
   source_commit: b6300372bdbabdb249fc3b44712f4f46c629c710
-  candidate_commit: null
+  candidate_commit: 3e7a0e38551a46163909dd728396f72aa4569d76
 expected_effect: >-
   Episodes whose procedure requires the user to act should produce a matching
   give_discoverable_user_tool call carrying the tool name alone, so the user-side
@@ -113,6 +113,8 @@ expected_effect: >-
   (1/8, task_046) rather than the omission this fixes. The instruction is conditioned on "when
   the knowledge base says the user performs an action themselves" precisely to bound that.
 human_approval:
-  approved_by: TODO
+  # PR #7 merged on the user's explicit instruction ("merge it and continue") — protocol
+  # step 7's human gate. Recorded with provenance: the decision is the user's.
+  approved_by: fperezsorrosal
   date: '2026-08-15'
 held_out_result: null
