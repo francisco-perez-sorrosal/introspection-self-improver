@@ -19,15 +19,15 @@ taken from `generation_NNN/batch_NN/episode_manifest.jsonl`, never from memory.
 | T3 | Declares "no discrepancy" without performing the required comparison | 1/8 (B₁) | **retired** (see B₃) |
 | T4 | Over-caution: the grounding check blocks a determinate action | 2/8 (B₂) | **consumed-by-gen-002** |
 | T5 | Performs an unrequested extra write | 1/8 (B₂) | pending |
-| T6 | Never hands over the discoverable tool the procedure requires | **4 witnesses / 3 batches** | pending — **TOP RANK** |
+| T6 | Botches the discoverable-tool handover (omits it, or passes arguments) | **6 witnesses / 4 batches** | **consumed-by-gen-004** |
 | T7 | Prohibition misreading: refuses a policy-required transfer | 1/8 (B₃) | **consumed-by-gen-003** |
-| T8 | Unbounded re-search exhausts the step budget | 1/8 (B₃) | pending |
+| T8 | Unbounded re-search exhausts the step budget | 1/8 (B₃) + 1/8 (B₄) | pending |
+| T9 | Paraphrases a KB value instead of transcribing it verbatim | 1/8 (B₄) | pending |
 
-**Slot accounting.** G = 5. Three generations are spent (gen-001 → T1, gen-002 → T4,
-gen-003 → T7), leaving **2 slots** against **4 pending targets** (T2, T5, T6, T8). Two
-approved targets will go unconsumed in this experiment. T6 is ranked first for the
-remaining slots on the strength of its evidence; the second slot is decided at the
-gen-004 boundary against whatever B₄ shows.
+**Slot accounting.** G = 5. Four generations are spent (gen-001 → T1, gen-002 → T4,
+gen-003 → T7, gen-004 → T6), leaving **1 slot** against **4 pending targets** (T2, T5, T8,
+T9). Three approved targets will go unconsumed. The last slot is decided at the gen-005
+boundary against B₅.
 
 **Three of five generations have now been spent on the same clause** — T1 installed the
 grounding check, T4 bounded its consequence, T7 repairs how that bound reads. That is a
@@ -212,6 +212,57 @@ contradicted item is never silently dropped. T3 (declares "no discrepancy" witho
 the comparison) narrowed to a single witness once T6 split out of it, and neither B₂ nor B₃
 produced a second. It is retired for lack of evidence, not because it was disproved — a
 witness in B₄ or B₅ would reopen it.
+
+---
+
+## Batch B₄ (generation_003, H₃) — 2/8
+
+Disjoint from B₁–B₃; no cross-batch comparison drawn. Arm sha `ae28005` is the gate commit,
+whose `target-agent/` tree was **verified** byte-identical to the `exp4-g003` tag.
+
+### The first positive evidence in this experiment
+
+`task_032` is a `reward_basis: ['ACTION']` task requiring a transfer, and it **passed**, with
+one `transfer_to_human_agents` call. Gen-003 repaired the prohibition misreading it was
+written for. One episode, on a different task from the one that motivated the fix — evidence
+that the mechanism works, **not** a measurement of gain.
+
+### Two mutations did not achieve what they were written for
+
+`task_070` used **only `KB_search` — 20 calls, no other tool whatsoever** — and closed with
+"No application has been started. You will need Brightwave Digital's formation date to
+determine whether it qualifies." It abandoned the entire procedure over one unconfirmed value
+without even logging verification. That is what gen-002 was written to prevent and gen-003 to
+clarify, still present at H₃. Recorded as plainly as the success above.
+
+**T1 returned under the loosened stop**, exactly as gen-002's record predicted it might:
+`task_065` opened Green as *checking* and Gold as *savings* (gold: Green savings, Evergreen
+checking), writing `account_class: "Green Account (checking)"` — a paraphrase, not a product
+name. `task_066` applied with wrong arguments.
+
+### The pair that reframes three generations of work
+
+B₂'s `task_069` and B₄'s `task_065` are **different tasks that share customer `rp65a7b3c4`** —
+not one scenario under two regimes; an assumption made mid-diagnosis and corrected here. The
+comparison still holds: under the strict stop the agent **refused to act**; under the loosened
+one it **acted and chose wrong**. The constant across both is that it cannot resolve the
+correct product from bm25 retrieval. **Three generations tuned *when to stop* around a
+resolution failure none of them addressed** — which is why T9 is now on the backlog.
+
+### T6 — consumed by gen-004, and it is not what its old name said
+
+The mode is not "never hands the tool over". `task_029` called `give_discoverable_user_tool`
+for the **right** tool **four times**, each carrying a pre-filled `arguments` payload that gold
+does not have, so no handover matched. Renamed accordingly. Six witnesses across four batches:
+`task_026` (B₁), `task_020` (B₂), `task_028` + `task_038` (B₃), `task_029` + `task_037` (B₄) —
+four of them the same `submit_cash_back_dispute_0589` tool.
+
+### T9 — Paraphrases KB values instead of using them verbatim (new, pending)
+
+`task_065`'s `"Green Account (checking)"` is the clearest instance: the agent has the right
+word but emits its own construction rather than the exact product name from the retrieved doc.
+Distinct from T1, which is about *whether* the value was confirmed; T9 is about *fidelity of
+transcription* once it has been. Unconsumed, and with one slot left it will probably stay so.
 
 ---
 
