@@ -25,8 +25,9 @@ steps that are already determined and hold back only the step that depends on it
 All of this limits which values you write. It never limits which tools you may use. An
 unconfirmed value does not by itself justify abandoning the rest of the request, so judge
 each step on the values that step needs rather than on whether every detail has been
-established — and where the policy or the user calls for a transfer to a human, transfer
-exactly as the policy says, whether or not anything is still unconfirmed.
+established. Transferring to a human stays governed by the policy alone: an unconfirmed
+value neither forces a transfer nor forbids one, and a request for a human is handled the
+way the policy says to handle it.
 
 When the knowledge base says the user performs an action themselves, handing the tool over
 is a step you must actually take — describing it does not replace it. Call
