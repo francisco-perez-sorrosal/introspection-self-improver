@@ -39,6 +39,37 @@ def test_env_override_wins_without_calling_the_cli(monkeypatch, tmp_path) -> Non
     assert dev_lane.resolve_runtime_id("target-agent", tmp_path) == "pinned-id"
 
 
+def test_resolution_skips_a_version_whose_image_is_still_building(monkeypatch, tmp_path) -> None:
+    """The platform mints a version per push to main, so a run racing a push sees the newest
+    row before its image exists. Resolving it would create a task no sandbox can serve."""
+    monkeypatch.delenv("TAU_RUNTIME_ID", raising=False)
+    monkeypatch.setattr(
+        dev_lane,
+        "_cli_json",
+        lambda *a, **k: [
+            {"name": "target-agent", "id": "newest-unbuilt", "image_build_status": "queued"},
+            {"name": "target-agent", "id": "newest-ready", "image_build_status": "ready"},
+            {"name": "target-agent", "id": "older-ready", "image_build_status": "ready"},
+        ],
+    )
+    assert dev_lane.resolve_runtime_id("target-agent", tmp_path) == "newest-ready"
+
+
+def test_a_runtime_with_no_ready_image_still_resolves(monkeypatch, tmp_path) -> None:
+    """Build status is transient, so a fleet of unbuilt versions degrades to the newest with
+    a warning rather than refusing — the same failure surface as before, now with a name."""
+    monkeypatch.delenv("TAU_RUNTIME_ID", raising=False)
+    monkeypatch.setattr(
+        dev_lane,
+        "_cli_json",
+        lambda *a, **k: [
+            {"name": "target-agent", "id": "newest-unbuilt", "image_build_status": "queued"},
+            {"name": "target-agent", "id": "older-unbuilt", "image_build_status": "failed"},
+        ],
+    )
+    assert dev_lane.resolve_runtime_id("target-agent", tmp_path) == "newest-unbuilt"
+
+
 def test_missing_runtime_names_what_exists_and_how_to_fix_it(monkeypatch, tmp_path) -> None:
     monkeypatch.delenv("TAU_RUNTIME_ID", raising=False)
     monkeypatch.setattr(

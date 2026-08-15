@@ -70,6 +70,11 @@ def resolve_runtime_id(runtime_name: str, repo_root: Path) -> str:
     A Runtime id is per-project and changes when the first version is re-created, so committing
     one would be a value that silently goes stale. `TAU_RUNTIME_ID` overrides for the case where
     several versions share a name and a specific one is wanted.
+
+    The platform mints a version per push to main, so many versions sharing the name is the
+    steady state, not ambiguity — the list is newest-first and the newest is what staging and
+    production follow. Preferred is the newest whose image is actually built: a run racing a
+    push would otherwise resolve a version that cannot provision a sandbox yet.
     """
     override = os.environ.get("TAU_RUNTIME_ID")
     if override:
@@ -87,12 +92,25 @@ def resolve_runtime_id(runtime_name: str, repo_root: Path) -> str:
             f"no Runtime named {runtime_name!r} in this project (have: {available}). "
             "Create one with `introspection runtimes create` from a clean, pushed main branch."
         )
-    if len(matches) > 1:
+    ready = [r for r in matches if r.get("image_build_status") == "ready"]
+    chosen = (ready or matches)[0]
+    if not ready and any("image_build_status" in r for r in matches):
         logger.warning(
-            f"{len(matches)} Runtime versions named {runtime_name!r}; using the first. "
-            "Set TAU_RUNTIME_ID to pin one."
+            f"no version of Runtime {runtime_name!r} reports a ready image; using the newest "
+            f"({chosen['id']}) — sandbox provisioning may fail until its build completes"
         )
-    return str(matches[0]["id"])
+    elif chosen is not matches[0]:
+        logger.info(
+            f"newest version of Runtime {runtime_name!r} is still building "
+            f"(image_build_status={matches[0].get('image_build_status')!r}); "
+            f"using {chosen['id']}, the newest ready version"
+        )
+    if len(matches) > 1:
+        logger.info(
+            f"{len(matches)} versions of Runtime {runtime_name!r} — one per push to main, the "
+            "expected steady state; using the newest servable one (TAU_RUNTIME_ID pins one)"
+        )
+    return str(chosen["id"])
 
 
 def assert_no_connected_binding(runtime_id: str, environment: str, repo_root: Path) -> None:
