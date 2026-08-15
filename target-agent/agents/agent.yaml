@@ -9,8 +9,8 @@ description: Banking support agent evaluated by tau2-bench; the harness under im
 # The `model:` block is the legacy spelling of `ai.model`. It is used deliberately: the
 # vendored checker behind `introspection check` does not yet accept `ai:`, and a recipe that
 # fails validation fails the pre-commit hook and CI. Revisit when the checker catches up.
-ai:
-  model: openai/gpt-5.6-luna
+model:
+  name: openai/gpt-5.6-luna
   thinking_level: medium
 
 # Empty on purpose, and load-bearing twice over. The baseline gets only the tools tau hands
