@@ -707,10 +707,11 @@ instrument: `benchmark/scripts/power_sim.py`.
       PROVISIONAL → FROZEN; A.0a PASS recorded beside the freeze snapshot; partition
       `--verify` re-run; user-sim screen re-run under the active pair
       (`screen_user_sim.py` — screening evidence is model-conditioned, D12/D13).
-      Under D13's haiku pair the platform lane is verified working (graded control
-      episode, zero incidents). Haiku rounds must respect the measured org cap of
-      20M prompt-bytes/HOUR on claude-haiku-4-5 (the pilot saturated it in 9 min at
-      10-wide; overflow becomes τ infra retries) — pace concurrency or raise the cap. The OpenAI serializer defect
+      **Platform-lane luna check CLOSED 2026-08-15**: graded episode, reward 1.0,
+      evidence_complete, arm_sha_ok, $0.0157/episode, zero incidents — the sandbox
+      OpenAI defect is fixed platform-side and the ai:-spelled template validates on
+      both toolchains (CLI 0.27.1). If the pair ever reverts to haiku (D13), respect
+      the measured 20M prompt-bytes/HOUR org cap on claude-haiku-4-5. The OpenAI serializer defect
       (`.ai-state/UPSTREAM_ISSUES.md`) now gates only the RETURN to D12's luna pair —
       that return is a fresh re-cut + pilot, never a mid-experiment swap.
 - [ ] Run: 6 held-out rounds × 28 (local, sealed) interleaved with 5 batches × 8

@@ -79,6 +79,15 @@ Grep here before recommending a new filing (`upstream-stewardship` skill).
   sandbox Pi build. Side-finding: platform tooling accepts `ai:` (dev serves it with
   an advisory local-check warning) — only the pinned Recipes checker (0.19.3) refuses
   it locally, so the repo stays on the legacy `model:` spelling to remain runnable.
+- **RESOLVED 2026-08-15 — fix live, verified end to end.** Platform episode
+  `01a00339-4786-755e-bdc3-949f4334da89` (runtime `target-agent`, dev, recipe commit
+  `bdd08bf`): completed, graded **reward 1.0**, `evidence_complete`, `arm_sha_ok`,
+  zero seam incidents, **$0.0157 conversation billing**. Spans still *display*
+  `reasoning: {"level": ...}` but calls succeed (finish_reasons tool_call/stop), so
+  the remedy appears to be in-transit rewriting or upstream aliasing rather than a
+  serializer change. Same evening, CLI 0.27.1 closed the local checker gap — the
+  `ai:` spelling now validates locally and in the cloud, local smoke green
+  (reward 1.0). Both halves of this entry's ask are done.
 - **Unblock condition:** a sandbox Pi (or gateway request-shaping) release mapping
   `thinking_level` → `reasoning.effort` for OpenAI models; re-verify with
   `make single_task TRANSPORT=platform TASK=task_001`.

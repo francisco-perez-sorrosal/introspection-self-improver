@@ -1,0 +1,100 @@
+{
+  "mode": "locked",
+  "experiment": "003_powered-bm25-luna56",
+  "freeze_fingerprint": "sha256:7c8df493679752ca89896613f2f24298742b9d392cf7907c3152f0ded34a872e",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 1,
+  "max_concurrency": 10,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a00335-33d2-7458-a193-769437e3ad74"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "bdd08bf76503248c219d8a2e9c98de1b8d8b0243",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 0,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 1,
+      "settle_timeouts": 0
+    },
+    "unattributed": [],
+    "bridge": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a00335-33d2-7458-a193-769437e3ad74",
+    "environment": "development",
+    "dev_target": "tau-8126",
+    "task_ids": [
+      "01a00339-4786-755e-bdc3-949f4334da89"
+    ],
+    "tasks_created": [
+      "01a00339-4786-755e-bdc3-949f4334da89"
+    ],
+    "orphaned_task_ids": [],
+    "accounting": {
+      "01a00339-4786-755e-bdc3-949f4334da89": {
+        "cost": {
+          "usd": 0.01574549
+        },
+        "usage": {
+          "input_tokens": 375909,
+          "output_tokens": 1704,
+          "total_tokens": 377613
+        },
+        "metrics": {
+          "duration_ms": 29526.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 7,
+          "span_count": 39,
+          "tool_use_count": 12,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "bdd08bf76503248c219d8a2e9c98de1b8d8b0243",
+        "evidence_complete": true,
+        "item_count": 51
+      }
+    },
+    "retitles": {
+      "applied": 1,
+      "failed": 0
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.27.1",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 51.4
+}
