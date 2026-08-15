@@ -1,0 +1,113 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 4
+  to_generation: 5
+experiment: 004_powered-bm25-luna56
+outcome: 'TODO: accepted | rejected | identity'
+batch:
+  name: batch_05
+  task_ids:
+  - task_006
+  - task_040
+  - task_054
+  - task_056
+  - task_063
+  - task_082
+  - task_083
+  - task_102
+evidence:
+  conversation_ids:
+  - 01a0040d-2152-725e-9a7f-ed0885d940b9
+  - 01a0040c-5c1e-73f1-b570-a8c74efb5bdd
+  - 01a0040c-5854-7058-8159-b4f5696b4133
+  - 01a0040c-5759-7769-a5e4-06d9bb53c8b8
+  - 01a0040d-7c28-763b-8966-ab3d01a6eaf2
+  - 01a0040d-81c3-72f9-a679-99b8612bb085
+  - 01a0040d-c3ea-7333-aca4-a0b767c7b2fc
+  - 01a0040d-de8d-71fd-b2b1-187f696ca439
+  summary: >-
+    Full-population read of all 8 batch_05 episodes against H4. Batch health: 8/8
+    evidence_complete, 8/8 arm_sha_ok, all user_stop, zero incidents; arm 3434466 verified
+    byte-identical to the exp4-g004 tag before diagnosis. Graded read with the
+    nested-JSON-aware comparison: 20 of 50 action-check misses formatting-only, none
+    entering the counts. task_082 and task_102 were read in FULL rather than by tail —
+    task_082 because two tool calls against 20 gold actions is a shape a tail cannot
+    explain, task_102 because it is the experiment's only reward_basis ['DB',
+    'NL_ASSERTION'] task. Batch reward 3/8, labelled with set and N, not compared across
+    disjoint batches.
+signals:
+- description: >-
+    Gen-003's transfer clause over-permits, in the exact mirror image of gen-002's
+    over-restriction. task_082 (01a0040d-81c3) opened with the user saying "I need to speak
+    to a human agent" while describing four disputes; the agent ran ONE KB_search and
+    transferred immediately, on the user's FIRST request — two tool calls in total against
+    twenty gold actions. The FROZEN policy forbids this: guideline 6 requires informing the
+    user you can help and trying first, and permits the transfer tool only after four
+    requests. Gen-003 wrote "where the policy OR THE USER calls for a transfer, transfer
+    exactly as the policy says", and the middle phrase reads as "the user asked, so
+    transfer". Consumed by this generation.
+  prevalence: 1/8
+- description: >-
+    Never unlocks and calls the agent tool the procedure requires — the best-evidenced defect
+    in this final batch, and it will go UNCONSUMED because no slot remains. task_040
+    (01a0040c-5c1e), task_054 (01a0040c-5854) and task_083 (01a0040d-c3ea); task_054 misses
+    get_user_dispute_history_7291, the same tool task_050 missed in B4. Recorded so the
+    experiment's close states what it did not get to, rather than implying the backlog was
+    exhausted.
+  prevalence: 3/8
+- description: >-
+    Acts on the customer's own estimate instead of the record. task_102 (01a0040d-de8d), the
+    experiment's only reward_basis ['DB', 'NL_ASSERTION'] task, advised on referral headroom
+    "assuming your estimates are accurate", let four referrals be submitted, and only then
+    verified identity and read the referral history — discovering the Gold Years annual
+    maximum was already reached. A T1-family failure moved up a level: the unverified value
+    governs ADVICE that precedes the writes, not the write arguments themselves.
+  prevalence: 1/8
+counterevidence: >-
+  Direct positive evidence for the PREVIOUS generation, which cuts against reading this loop
+  as uniformly self-defeating: task_040 (01a0040c-5c1e) called give_discoverable_user_tool
+  with {"discoverable_tool_name": "get_card_last_4_digits"} — the name alone, no pre-filled
+  arguments payload. That is exactly the malformation gen-004 was written to remove, and it
+  is gone. Second mutation in this run with direct positive evidence behind it.
+  And one story that did NOT survive contact with the data: task_063 (01a0040d-7c28) PASSED
+  with 22 KB searches, so search volume alone does not predict failure and T8's ranking was
+  overstated — recorded here rather than left standing in the backlog. Finally, against this
+  generation's own choice: at 1/8 it is the weakest-evidenced target consumed in the whole
+  experiment, and it is taken over a 3/8 defect on the same grounds gen-003 was taken over
+  T6 — that a harness instruction contradicting the frozen policy should not ride into the
+  endpoint harness. That is a consistent principle, but it has now cost two slots, and the
+  3/8 unlock-and-call defect is the price.
+hypothesis: >-
+  Every attempt to state WHEN to transfer has produced an error in one direction or the
+  other, because any rule the instructions add competes with a policy that already covers the
+  case completely. Removing the rule — deferring to the policy and saying only that
+  unconfirmedness is orthogonal to it — should close both failure directions at once.
+owning_layer: >-
+  The target agent's system prompt — target-agent/SYSTEM.md <instructions>. The remedy is to
+  REMOVE harness guidance and let the frozen policy govern, rather than to add more.
+proposed_change: >-
+  target-agent/SYSTEM.md <instructions>, +3/-2. Replaces gen-003's transfer sentence with:
+  transferring stays governed by the policy alone; an unconfirmed value neither forces a
+  transfer nor forbids one; a request for a human is handled the way the policy says. The
+  phrasing is deliberately symmetric so it closes gen-002's direction and gen-003's direction
+  together, instead of correcting the latest error and leaving room for its mirror image.
+mutation:
+  branch: gen-005/transfers-governed-by-policy-alone
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/8
+  source_commit: f1f916975b9fe1ee55a62523c48ab7bd51e6c403
+  candidate_commit: null
+expected_effect: >-
+  Transfers should track the frozen policy in both directions: not refused when the policy
+  requires one, not granted on a first request when the policy says to try first. Measured on
+  the held-out set at H5 — the endpoint of the experiment. No further batch exists to check a
+  risk against, so the risk is stated without a follow-up: removing the sentence could let
+  the abandonment behaviour of T4 return, since nothing now explicitly tells the agent that
+  unconfirmedness is not grounds for giving up beyond "does not by itself justify abandoning
+  the rest of the request", which survives in the preceding sentence.
+human_approval:
+  approved_by: TODO
+  date: '2026-08-15'
+held_out_result: null
