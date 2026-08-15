@@ -346,3 +346,25 @@ def test_a_bind_arriving_after_close_cannot_resurrect_the_channel() -> None:
     channel.close()
     channel.bind("sess-late-after-close")
     assert bridge.channel_for_request("sess-late-after-close", channel.token, grace=0.0) is None
+
+
+def test_executor_is_sized_for_the_round_not_the_host() -> None:
+    """The seam's thread pool scales with episode concurrency and never falls below the floor.
+
+    Regression guard for a silent capacity ceiling: the two `asyncio.to_thread` hops in
+    `_on_call_tool` used to draw from asyncio's DEFAULT executor, sized
+    `min(32, os.cpu_count() + 4)`. At two parked threads per in-flight call that capped the
+    bridge at roughly `cpu_count / 2` concurrent episodes on any host — a limit nothing
+    declared and no round recorded, which surfaced only as rendezvous stalls. Sizing is now
+    a property of the round.
+    """
+    floor = tool_bridge.ToolBridge(tau_tools=[], max_concurrency=1)
+    assert floor.executor_workers == tool_bridge.MIN_BRIDGE_WORKERS
+
+    # Above the floor it tracks concurrency, with room for both hops of every episode.
+    wide = tool_bridge.ToolBridge(tau_tools=[], max_concurrency=16)
+    assert wide.executor_workers == 16 * tool_bridge.BRIDGE_THREADS_PER_EPISODE
+    assert wide.executor_workers >= 2 * 16, "two threads per in-flight call is the worst case"
+
+    # The default must not silently reintroduce a host-derived cap.
+    assert tool_bridge.ToolBridge(tau_tools=[]).executor_workers >= tool_bridge.MIN_BRIDGE_WORKERS

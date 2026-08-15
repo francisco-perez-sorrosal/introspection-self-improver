@@ -612,7 +612,11 @@ def main() -> int:
     # per episode (the local lane by URL, the platform by sandbox-session routing).
     # Built from the probe environment's tools because the schemas are what it advertises,
     # and the tool surface is asserted identical to the lock.
-    bridge = ToolBridge(tau_tools=probe_env.get_tools(), port=args.bridge_port)
+    bridge = ToolBridge(
+        tau_tools=probe_env.get_tools(),
+        port=args.bridge_port,
+        max_concurrency=max_concurrency,
+    )
     bridge.start()
 
     dev: DevAttachment | None = None
@@ -933,6 +937,10 @@ def main() -> int:
                 "split": spec.split,
                 "num_trials": num_trials,
                 "max_concurrency": max_concurrency,
+                # The seam's own capacity for this round. Recorded beside max_concurrency
+                # because the two together are what decides whether a rendezvous stall was
+                # the agent or the bridge running out of threads.
+                "bridge_executor_workers": bridge.executor_workers,
                 "max_concurrent_starts": max_concurrent_starts,
                 "transport": spec.transport,
                 "launcher": args.launcher if spec.transport == TRANSPORT_LOCAL else None,

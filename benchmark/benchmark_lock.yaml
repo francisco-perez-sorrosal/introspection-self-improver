@@ -275,7 +275,25 @@ operational:
   # round shows that churn. Caveat, documented not gated: high N contends on
   # provider rate limits (2N provider streams), which can convert throttling into infra
   # retries.
-  max_concurrency: 10
+  #
+  # 10 -> 8 (2026-08-15, seq-5 restart). Not a response to a local-lane incident — the
+  # discarded H0 held-out round ran 84 episodes 10-wide with ZERO incidents, so the local
+  # lane's own evidence says 10 was fine. It is margin, taken deliberately after the seam's
+  # real ceiling was found and removed: every MCP tools/call parks TWO threads (channel
+  # resolution, then the rendezvous), and until this date they drew from asyncio's DEFAULT
+  # executor at min(32, cpu_count + 4) — 16 on the 12-core host, i.e. a hidden ~8-episode cap
+  # that belonged to the machine rather than to any recorded value. tool_bridge.py now sizes
+  # its own pool from the round's concurrency (BRIDGE_THREADS_PER_EPISODE), and each round
+  # records `bridge_executor_workers` in run_metadata.json beside max_concurrency, so a future
+  # stall can be attributed to the agent or to the seam instead of guessed at.
+  # The binding constraint at 8 is provider streams (2N = 16), not the bridge (32 workers).
+  #
+  # Platform BATCH rounds still take --max-concurrency 4 from the `make batch` target, and
+  # that number now carries evidence in both directions: 4-wide validated clean 2026-08-15,
+  # while 8-wide produced one 300s rendezvous stall in a 24-episode round (task_028, τ
+  # retried, succeeded) — consistent with the thread ceiling above, since a sandbox round-trip
+  # parks a bridge thread far longer than a local call does.
+  max_concurrency: 8
 
 # Written by `make policy`. The pre-commit hook and CI compare sha256 against the
 # <policy> block of target-agent/SYSTEM.md; the adapter additionally compares the block

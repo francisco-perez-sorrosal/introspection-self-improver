@@ -255,10 +255,26 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
 
     graded = [s for s in sims if s["graded"]]
     task_stats_map: dict[str, list[int]] = {}
+    # Per-trial outcomes, not just the c/n roll-up: under num_trials > 1 a task at 1/3 hands
+    # diagnosis a passing AND a failing transcript of the same harness on the same task, and
+    # WHICH trial differed is the thing that makes the pair findable. The roll-up alone
+    # cannot answer it, so the view carries the individual outcomes through.
+    task_trials_map: dict[str, list[dict]] = {}
     for sim in graded:
         entry = task_stats_map.setdefault(sim["task_id"], [0, 0])
         entry[0] += 1 if sim["success"] else 0
         entry[1] += 1
+        task_trials_map.setdefault(sim["task_id"], []).append(
+            {
+                "trial": sim.get("trial"),
+                "passed": bool(sim["success"]),
+                "sim_id": sim.get("sim_id") or "",
+            }
+        )
+    for outcomes in task_trials_map.values():
+        # Trial order, so a cell's pips read left-to-right as trial 1..n. τ writes the index;
+        # a missing one sorts last rather than crashing the view.
+        outcomes.sort(key=lambda o: (o["trial"] is None, o["trial"]))
     task_stats = [(c, n) for c, n in task_stats_map.values()]
 
     def _avg(values):
@@ -343,7 +359,10 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         "retrieval_config": info.get("retrieval_config"),
         "seed": info.get("seed"),
         "num_trials": info.get("num_trials"),
-        "tasks": {task: {"c": c, "n": n} for task, (c, n) in task_stats_map.items()},
+        "tasks": {
+            task: {"c": c, "n": n, "trials": task_trials_map.get(task, [])}
+            for task, (c, n) in task_stats_map.items()
+        },
         "task_descriptions": {
             str(t.get("id")): task_description(t) for t in results.get("tasks") or []
         },
@@ -507,7 +526,9 @@ def read_held_out(experiment_dir: Path) -> dict | None:
         "retention": retention,
         # Mirror of tau_adapter.reveal.noise_band_pp: one SE of the mean per-task rate
         # at p=0.5, in pp (D2/D18) — narrows with trials per task.
-        "noise_band_pp": round(100 * 0.5 / math.sqrt(total * trials)) if total else None,
+        "noise_band_pp": round(100 * 0.5 / math.sqrt(total * trials))
+        if total
+        else None,
         "process": (
             {"by_generation": process_by_generation, "by_task": process_by_task}
             if process_by_generation

@@ -96,10 +96,13 @@ function mergeRounds(rounds) {
     shas: new Set(), diagnostic: false, noSentinel: false, elapsed: 0,
   };
   for (const round of rounds) {
-    for (const [task, { c, n }] of Object.entries(round.tasks)) {
-      const entry = (tasks[task] ||= { c: 0, n: 0 });
+    for (const [task, { c, n, trials }] of Object.entries(round.tasks)) {
+      const entry = (tasks[task] ||= { c: 0, n: 0, trials: [] });
       entry.c += c;
       entry.n += n;
+      // Concatenated, not summed: which individual trials passed is the point (a task at
+      // 1/3 is a passing and a failing transcript of the same harness on the same task).
+      if (trials) entry.trials.push(...trials);
     }
     agg.episodes += round.episodes;
     agg.graded += round.graded;
@@ -946,6 +949,40 @@ function renderRibbon() {
 
 /* ---------------------------------------------------------------- heatmap */
 
+/* Trial pips: `c/n` plus one mark per trial, in trial order, filled when that trial passed.
+   The label flips to a light ink over the dark end of the ramp so the count stays readable
+   at every rate. Falls back to the count alone when a round predates per-trial data. */
+function trialMarks(cell, frac) {
+  const wrap = el("div", "trial-marks");
+  if (frac > 0.55) wrap.classList.add("on-dark");
+  wrap.appendChild(el("span", "trial-count", `${cell.c}/${cell.n}`));
+  const trials = cell.trials || [];
+  if (!trials.length) return wrap;
+  const pips = el("span", "trial-pips");
+  for (const outcome of trials) {
+    const pip = el("span", `trial-pip ${outcome.passed ? "passed" : "failed"}`);
+    const which = outcome.trial == null ? "?" : outcome.trial + 1;
+    pip.title = `trial ${which}: ${outcome.passed ? "passed" : "failed"}`;
+    pips.appendChild(pip);
+  }
+  wrap.appendChild(pips);
+  return wrap;
+}
+
+/* Names the trials rather than only counting them, so a mixed cell can be opened straight
+   to the pair worth reading — the passing and the failing transcript of one harness. */
+function trialTooltipRows(cell) {
+  const trials = cell.trials || [];
+  if (trials.length < 2) return [];
+  const label = (o) => (o.trial == null ? "?" : `#${o.trial + 1}`);
+  const passed = trials.filter((o) => o.passed).map(label);
+  const failed = trials.filter((o) => !o.passed).map(label);
+  return [
+    { value: passed.length ? passed.join(", ") : "none", label: "passed on trial" },
+    { value: failed.length ? failed.join(", ") : "none", label: "failed on trial" },
+  ];
+}
+
 function heatmapData(exp) {
   const perGen = exp.generations.map((g) => mergeRounds(statsRoundsOf(g)).tasks);
   const tasks = [...new Set(perGen.flatMap((t) => Object.keys(t)))];
@@ -991,12 +1028,23 @@ function renderHeatmap() {
       } else {
         const frac = cell.c / cell.n;
         div.style.background = rampColor(frac);
-        if (cell.c > 0 && cell.c < cell.n) div.appendChild(el("span", "unstable-dot"));
+        // Under num_trials > 1 the colour alone answers "how much", never "which". The cell
+        // carries the count and one pip per trial in trial order — filled = passed — so both
+        // questions are answered without hovering. Single-trial rounds keep the bare cell.
+        if (cell.n > 1) {
+          div.classList.add("has-trials");
+          div.appendChild(trialMarks(cell, frac));
+        } else if (cell.c > 0 && cell.c < cell.n) {
+          // Only reachable without per-trial marks; with pips the mixed case is already
+          // legible and a centred dot would sit on top of the count.
+          div.appendChild(el("span", "unstable-dot"));
+        }
         div.tabIndex = 0;
         const showTip = (evt) => {
           const point = evt.clientX != null ? evt : { clientX: div.getBoundingClientRect().x, clientY: div.getBoundingClientRect().y };
           tooltip.show(point.clientX, point.clientY, `${row.task} · ${gens[gi].name}`, [
             { color: rampColor(frac), value: `${cell.c}/${cell.n} (${pct(frac)})`, label: "trials passed" },
+            ...trialTooltipRows(cell),
             ...(cell.c > 0 && cell.c < cell.n
               ? [{ value: "unstable", label: "passes and fails under one config" }]
               : []),
@@ -1026,13 +1074,28 @@ function renderHeatmap() {
   const emptySwatch = el("span", "heat-swatch empty");
   empty.append(emptySwatch, el("span", null, "not run"));
   legend.appendChild(empty);
-  const unstable = el("span", "heat-scale");
-  const dotWrap = el("span", "heat-swatch");
-  dotWrap.style.background = rampColor(0.5);
-  dotWrap.style.position = "relative";
-  dotWrap.appendChild(el("span", "unstable-dot"));
-  unstable.append(dotWrap, el("span", null, "· unstable (0 < c < n)"));
-  legend.appendChild(unstable);
+  // With more than one trial per task the cells carry pips, so the legend explains those
+  // instead of the centred unstable dot they replace.
+  const multiTrial = rows.some((row) => row.cells.some((cell) => cell && cell.n > 1));
+  if (multiTrial) {
+    const pipLegend = el("span", "heat-scale");
+    const sample = el("span", "trial-pips");
+    sample.appendChild(el("span", "trial-pip passed"));
+    sample.appendChild(el("span", "trial-pip failed"));
+    pipLegend.append(
+      sample,
+      el("span", null, "one pip per trial, in order — filled = passed")
+    );
+    legend.appendChild(pipLegend);
+  } else {
+    const unstable = el("span", "heat-scale");
+    const dotWrap = el("span", "heat-swatch");
+    dotWrap.style.background = rampColor(0.5);
+    dotWrap.style.position = "relative";
+    dotWrap.appendChild(el("span", "unstable-dot"));
+    unstable.append(dotWrap, el("span", null, "· unstable (0 < c < n)"));
+    legend.appendChild(unstable);
+  }
 }
 
 /* ------------------------------------------------------------- detail card */

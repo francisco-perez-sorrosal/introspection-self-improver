@@ -337,3 +337,27 @@ details.raw pre {
   position: absolute; inset: 25%; border-radius: 50%;
   border: 2px solid var(--surface-1); pointer-events: none;
 }
+
+/* ---------- per-trial detail inside a heat cell (num_trials > 1) ---------- */
+/* The ramp colour answers "how many"; these answer "which". One pip per trial in trial
+   order, filled when that trial passed, beside the c/n count — so a mixed cell names the
+   pair of transcripts worth reading without needing a hover. */
+.heat-cell.has-trials { min-height: 26px; }
+.trial-marks {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  gap: 8px; font-size: 11px; font-variant-numeric: tabular-nums;
+  color: var(--ink); pointer-events: none;
+}
+/* Past the middle of the ramp the background is dark enough that ink-on-dark loses; the
+   marks flip to the surface colour so the count stays readable at every rate. */
+.trial-marks.on-dark { color: var(--surface-1); }
+.trial-count { opacity: 0.9; letter-spacing: 0.2px; }
+.trial-pips { display: inline-flex; align-items: center; gap: 4px; }
+.trial-pip { width: 8px; height: 8px; border-radius: 50%; }
+/* Value contrast, not just shape: a solid disc against a dimmed thin ring survives being
+   read at 8px and in a screenshot, where a filled-vs-hollow ring of equal weight does not. */
+.trial-pip.passed { background: currentColor; opacity: 1; }
+.trial-pip.failed {
+  background: transparent; box-shadow: inset 0 0 0 1.25px currentColor; opacity: 0.5;
+}
+.heat-legend .trial-pips { color: var(--ink-2); }

@@ -44,6 +44,7 @@ import sys
 import threading
 import time
 from collections.abc import Callable, Iterable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
 
@@ -80,6 +81,28 @@ STALL_WARN_SECONDS = 25.0
 # the grace exists so the loser of a pathological race parks briefly instead of failing
 # the call.
 UNBOUND_SESSION_GRACE_SECONDS = 30.0
+
+# How many worker threads the bridge's OWN executor gets per concurrent episode.
+#
+# Every `tools/call` parks TWO threads in sequence — `channel_for_request` (up to
+# UNBOUND_SESSION_GRACE_SECONDS) and then `channel.wait` (up to RESULT_WAIT_SECONDS) — and
+# the bridge is run-scoped, so every concurrent episode draws from the same pool. Two per
+# episode is the worst case; four is that with headroom for the overlap while one call
+# resolves its channel and another is still parked.
+#
+# This exists because the pool was previously asyncio's DEFAULT executor, sized
+# `min(32, os.cpu_count() + 4)` — 16 on a 12-core machine. That is an accident of the host,
+# not a designed capacity, and at 2 threads per episode it silently capped the seam at ~8
+# concurrent episodes: past that, new MCP calls queued behind parked ones and surfaced as
+# rendezvous stalls indistinguishable from a hung agent. Observed 2026-08-15 at
+# --max-concurrency 8 (one 300s stall on a 24-episode batch round). Sizing the pool
+# explicitly puts the ceiling back where it belongs — on max_concurrency, provider rate
+# limits and sandbox provisioning — instead of on the CPU count of whoever runs it.
+BRIDGE_THREADS_PER_EPISODE = 4
+
+# Floor for that pool. A serial run still wants room for a retry's late call arriving while
+# the replacement episode is already talking.
+MIN_BRIDGE_WORKERS = 32
 
 #: Refused-call counter keys. A refusal means a request resolved to no live channel, so
 #: there is no episode to attribute it to — the counters are run-level, and the runner
@@ -277,8 +300,16 @@ class ToolBridge:
         server_id: str = DEFAULT_SERVER_ID,
         token: str | None = None,
         port: int = 0,
+        max_concurrency: int = 1,
     ) -> None:
         self._tau_tools = list(tau_tools)
+        # Sizes the bridge's own thread pool (see BRIDGE_THREADS_PER_EPISODE). Passed by the
+        # runner from the round's effective concurrency so the seam is never the binding
+        # constraint; the value is recorded in run_metadata.json alongside max_concurrency.
+        self.executor_workers = max(
+            MIN_BRIDGE_WORKERS, BRIDGE_THREADS_PER_EPISODE * max(1, int(max_concurrency))
+        )
+        self._executor: ThreadPoolExecutor | None = None
         self.server_id = server_id
         self.token = token or secrets.token_urlsafe(24)
         # 0 asks the OS for an ephemeral port, which is right for the local lane: the URL reaches
@@ -330,9 +361,7 @@ class ToolBridge:
         config = uvicorn.Config(app, log_level="warning", lifespan="on", access_log=False)
         self._server = uvicorn.Server(config)
 
-        self._thread = threading.Thread(
-            target=self._server.run, kwargs={"sockets": [self._socket]}, daemon=True
-        )
+        self._thread = threading.Thread(target=self._serve, daemon=True)
         self._thread.start()
 
         for _ in range(600):  # up to ~30s
@@ -342,6 +371,49 @@ class ToolBridge:
         if not self._server.started:
             raise RuntimeError("tool bridge failed to start")
         return self.url
+
+    def _serve(self) -> None:
+        """uvicorn's own `Server.run`, with one addition: this loop's default executor.
+
+        `Server.run` builds a loop from the config's loop factory and runs `serve()` on it, so
+        the loop it builds carries asyncio's default executor — the host-sized pool the two
+        `asyncio.to_thread` hops in `_on_call_tool` draw from. Building the loop here instead
+        lets the pool be sized for the round (see BRIDGE_THREADS_PER_EPISODE) before a single
+        request lands. `set_default_executor` keeps both call sites untouched, so
+        `to_thread`'s contextvar propagation and error semantics are exactly as before — only
+        the capacity changes. The loop is this thread's alone, so nothing else in the process
+        (τ's runner included) sees a different executor.
+
+        The factory is uvicorn's own (`get_loop_factory`, which replaced `setup_event_loop` in
+        uvicorn 0.36) so a configured uvloop is still honoured; `None` means the stdlib loop.
+        """
+        factory = self._server.config.get_loop_factory()
+        loop = factory() if factory is not None else asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        self._executor = ThreadPoolExecutor(
+            max_workers=self.executor_workers, thread_name_prefix="tau-bridge"
+        )
+        loop.set_default_executor(self._executor)
+        try:
+            loop.run_until_complete(self._server.serve(sockets=[self._socket]))
+        finally:
+            # The teardown `asyncio.run` would have done, since this builds the loop by hand:
+            # cancel what the ASGI stack left pending (sse_starlette parks a shutdown watcher)
+            # and close async generators, or closing the loop warns and leaks them.
+            try:
+                pending = [task for task in asyncio.all_tasks(loop) if not task.done()]
+                for task in pending:
+                    task.cancel()
+                if pending:
+                    loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                loop.run_until_complete(loop.shutdown_asyncgens())
+            finally:
+                # wait=False, and deliberately NOT loop.shutdown_default_executor(): a handler
+                # parked in `channel.wait` returns on its own bounded timeout, and a run's
+                # teardown must not block for RESULT_WAIT_SECONDS behind one of them.
+                self._executor.shutdown(wait=False, cancel_futures=True)
+                asyncio.set_event_loop(None)
+                loop.close()
 
     def stop(self) -> None:
         if self._server is not None:

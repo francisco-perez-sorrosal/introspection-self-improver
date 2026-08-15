@@ -191,6 +191,38 @@ The lock's value is the recorded default, any run may override it with
 streams; throttling surfaces as infra retries) and heavy-tailed sandbox provisioning
 latency under concurrent starts (next section).
 
+### The seam's own thread ceiling (found and removed 2026-08-15)
+
+For a while there was a third ceiling, and it was invisible because nothing declared it.
+Every `tools/call` parks **two** threads in sequence — `channel_for_request` (up to
+`UNBOUND_SESSION_GRACE_SECONDS`) and then `channel.wait` (up to `RESULT_WAIT_SECONDS`) —
+and until this date both drew from **asyncio's default executor**, sized
+`min(32, os.cpu_count() + 4)`. On the 12-core host that is 16 threads for the whole
+run-scoped bridge, i.e. a hidden ceiling near **8 concurrent episodes** that belonged to
+the machine rather than to any recorded value. Past it, new MCP calls queue behind parked
+ones and surface as rendezvous stalls — indistinguishable, from the outside, from a hung
+agent.
+
+Observed at `--max-concurrency 8` on a 24-episode batch round: one 300s stall
+(`task_028` trial 0; τ retried and it succeeded). The same round's local-lane sibling ran
+84 episodes 10-wide with zero incidents, which is consistent rather than contradictory — a
+sandbox round-trip parks a bridge thread for far longer than a local call does, so the
+platform lane reaches the ceiling first.
+
+`tool_bridge.py` now builds the serving loop itself and installs a **dedicated executor**
+sized from the round's concurrency (`BRIDGE_THREADS_PER_EPISODE`, floor
+`MIN_BRIDGE_WORKERS`), so capacity is a property of the round instead of the host. The two
+`to_thread` call sites are untouched — `set_default_executor` on that loop changes capacity
+and nothing else, and the loop is the bridge thread's alone, so τ's runner never sees a
+different executor. Each round records `bridge_executor_workers` beside `max_concurrency` in
+`run_metadata.json`, so a future stall is attributable instead of guessed at. The uvicorn
+loop factory is still uvicorn's own (`get_loop_factory`, which replaced `setup_event_loop`
+in 0.36), so a configured uvloop is honoured.
+
+The lesson generalises past this bug: a seam limit that no value names will be rediscovered
+as a mystery. If concurrency is raised again, the binding constraints are the two above —
+provider streams and provisioning latency — and they should stay that way.
+
 ### The sandbox-quota misdiagnosis (corrected 2026-08-14)
 
 What was believed (from one incident at the 3.5c minitest): the org runs ~2 sandboxes
