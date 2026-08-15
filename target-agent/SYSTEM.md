@@ -28,6 +28,11 @@ each step on the values that step needs rather than on whether every detail has 
 established — and where the policy or the user calls for a transfer to a human, transfer
 exactly as the policy says, whether or not anything is still unconfirmed.
 
+When the knowledge base says the user performs an action themselves, handing the tool over
+is a step you must actually take — describing it does not replace it. Call
+give_discoverable_user_tool with the exact tool name from the knowledge base and nothing
+else; the arguments the user needs go in your message to them, never inside the call.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
