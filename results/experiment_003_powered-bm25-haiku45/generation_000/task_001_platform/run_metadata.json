@@ -1,0 +1,66 @@
+{
+  "mode": "locked",
+  "experiment": "003_powered-bm25-haiku45",
+  "freeze_fingerprint": "sha256:0602057dc6eadedbe75a0dec309ab86f649ccfc406e03b61d33053c61bdb926f",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 1,
+  "max_concurrency": 10,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a002e9-d0c4-77c3-be81-94e0a95be0fa"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "6cd7ce74cf578360bad3b55f9071b0a4b084d0fd",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "trial": 0,
+      "termination": "TerminationReason.INFRASTRUCTURE_ERROR",
+      "reward": null,
+      "completed": false,
+      "failure": {
+        "error_type": "RateLimitError",
+        "error": "litellm.RateLimitError: AnthropicException - {\"type\":\"error\",\"error\":{\"type\":\"rate_limit_error\",\"message\":\"This request would exceed your organization's rate limit of 20,000,000 prompt bytes per hour (org: 9abe345c-7ebd-4e96-a228-ced8575dcca8, model: claude-haiku-4-5-20251001). For details, refer to: https://docs.claude.com/en/api/rate-limits. You can see the response headers for current usage. Reduce the prompt length or the maximum tokens requested, or try again later. View your current limits",
+        "failed_after_attempts": 4
+      }
+    }
+  ],
+  "incidents": {
+    "totals": {},
+    "unattributed": [],
+    "bridge": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a002e9-d0c4-77c3-be81-94e0a95be0fa",
+    "environment": "development",
+    "dev_target": "tau-241a",
+    "task_ids": [],
+    "tasks_created": [],
+    "orphaned_task_ids": [],
+    "accounting": {},
+    "retitles": {
+      "applied": 0,
+      "failed": 0
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.27.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 7.4
+}

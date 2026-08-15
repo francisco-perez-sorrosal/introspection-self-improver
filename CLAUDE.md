@@ -108,24 +108,28 @@ close.
   2026-08-14: three accepted generations, held-out curve 3/8 → 3/8 → 2/8 → 2/8,
   endpoint inside the ±18 pp band — the loop is demonstrated, no capability claim is
   made. Seq 3 is the **powered** experiment — the tier between debug and full, cut
-  PROVISIONAL 2026-08-14 as `003_powered-bm25-luna56`: G=5, B=8, T=28 per plan D11,
+  PROVISIONAL 2026-08-14 as `003_powered-bm25-haiku45`: G=5, B=8, T=28 per plan D11,
   sized from seq-2 actuals by `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`
   (powered for a ~+4–5 pp/generation loop; anything smaller reads directional at any
   affordable T), on a fresh 76-task pool (nothing seq 2 tuned on or revealed), with a
   pre-registered one-sided trend test over H0…H5 at α=0.05 as the primary instrument.
   The full T=47 run defers to seq 4: at measured costs (~$210–230) it buys ~10 pp of
   trend power for ~$80 more. Freeze fingerprints disambiguate the reused id
-  mechanically. The model pair was re-decided for seq 3 (plan D12, 2026-08-14,
-  inference cost): BOTH halves run `openai/gpt-5.6-luna` at medium effort — agent via
-  the recipe (`thinking_level: medium`), user simulator via τ (`reasoning_effort:
-  medium`), verified live on a mock smoke. Two consequences are accepted knowingly:
-  the seq-1/2 sensitivity rationale (a weaker agent model keeps the harness the
-  binding constraint) is traded for cost — the B1 read (D8) guards both failure modes
-  (0/B = H0 too weak; B/B = saturated, model choice re-opens) — and the user-sim
-  determinism knob is gone (luna rejects `temperature: 0.0` exactly as Sonnet 5 did;
-  the simulator samples at provider default, absorbed by D2's pooling). The D11
-  sizing carries over as a prior; its calibration facts are Sonnet-pair measurements
-  and re-price at H0/B1.
+  mechanically. The model pair has been re-decided twice, both on 2026-08-14: D12
+  chose `openai/gpt-5.6-luna` both halves for inference cost, then a platform defect
+  blocked it — the Introspection sandbox Pi serializes any thinking level (explicit
+  OR Pi's default) as `reasoning.level`, which OpenAI's `/v1/responses` rejects, so
+  every `openai/*` model 400s platform-side with no recipe-side workaround
+  (`.ai-state/UPSTREAM_ISSUES.md`; local lane unaffected). D13 is the interim pair:
+  BOTH halves `anthropic/claude-haiku-4-5` — agent `thinking_level: medium`, user
+  simulator back on τ's own doctrine `temperature: 0.0` (haiku accepts it; the
+  determinism knob luna surrendered is restored; Anthropic rejects temp 0 with
+  thinking enabled, so the simulator deliberately carries none). Haiku pilot on the
+  28 non-partition tasks: baseline 3/28 = 10.7% — weak-H0 regime (no saturation;
+  ~40% of batches will read 0/8, D8 is the guard; diagnoses lean on near-miss
+  profiles), G=5/B=8/T=28 re-confirmed with slightly better power at the lower
+  baseline; ≈$0.28/local episode, ≈$0.22/platform episode. D12's luna returns via
+  its own re-cut + pilot when the platform fix ships — never a mid-experiment swap.
 
 ## Invariants
 

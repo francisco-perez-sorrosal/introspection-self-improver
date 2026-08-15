@@ -489,7 +489,7 @@ closed without a graded round and lives only in git history. In the working tree
 debug experiment and was **voided at H0** the same day on a τ-side user-simulator defect
 no harness mutation can reach (tau2-bench#470). Seq 2 re-froze with the poisoned task
 excluded, ran the debug experiment to completion, and is revealed; seq 3 is the
-powered run (`003_powered-bm25-luna56`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
+powered run (`003_powered-bm25-haiku45`, G=5/B=8/T=28 per plan D11), cut PROVISIONAL
 over a fresh 76-task pool — no task the seq-2 loop was tuned on, or whose result the
 reveal exposed, appears anywhere in it; the full-scale run defers to seq 4. Reused
 ids are disambiguated by freeze fingerprints. Two values were
@@ -510,20 +510,26 @@ decided the hard way and the decisions carry forward:
   debug T=8; ±9 pp at the powered T=28; ±7 pp at T=47) as noise (`SIA_EVALUATION_PLAN.md`
   D2, bands per D11).
 
-The model pair was re-decided for seq 3 (`SIA_EVALUATION_PLAN.md` D12, 2026-08-14):
-**both halves run `openai/gpt-5.6-luna` at medium effort** — the agent through the recipe
-(`thinking_level: medium`; Pi owns its sampling), the user simulator through τ
-(`user_llm_args: reasoning_effort: medium`; the args reach litellm verbatim). The
-substitution was verified live before freezing: the key serves the model, and a mock
-smoke ran the full seam clean with luna on both halves.
+The model pair was re-decided twice on 2026-08-14 (`SIA_EVALUATION_PLAN.md` D12, D13).
+D12 chose `openai/gpt-5.6-luna` both halves for inference cost — then a platform defect
+blocked it: the Introspection sandbox Pi serializes any thinking level (explicit or
+Pi's own default) as `reasoning.level`, which OpenAI's `/v1/responses` rejects, so
+every `openai/*` model 400s on the platform lane with no recipe-side workaround
+(evidence chain: `.ai-state/UPSTREAM_ISSUES.md`; the local lane is unaffected — luna
+ran 29 clean local episodes). **D13 is the interim pair: both halves
+`anthropic/claude-haiku-4-5`** — the agent at `thinking_level: medium`, the user
+simulator back on τ's own doctrine, `temperature: 0.0` (haiku accepts it, verified;
+the determinism knob Sonnet 5 and luna both rejected is restored — and since Anthropic
+rejects temp 0 with extended thinking enabled, the simulator deliberately carries no
+thinking argument: a deterministic environment, a thinking agent under test).
 
-The re-decision trades two things, knowingly. The seq-1/2 agent choice (Sonnet 4.6) was
-made for experimental sensitivity — a model that does not already perform the harness
-behaviours under study (search discipline, verification, plan-before-write) leaves the
-harness as the binding constraint. Luna is chosen for inference cost against that
-rationale; if it performs those behaviours natively, harness mutations move the score
-less, and if H0 saturates the batches, headroom dies — the B1 viability read (plan D8)
-guards both directions. And the user-simulator determinism knob is gone: luna rejects
-`temperature: 0.0` (HTTP 400, verified) exactly as Sonnet 5 did, so the simulator now
-samples at the provider default — added episode stochasticity the single-trial-pooled
-design (D2) already absorbs.
+The seq-1/2 sensitivity rationale (a model that does not already perform the harness
+behaviours under study leaves the harness as the binding constraint) carries through
+both re-decisions, guarded at the B1 viability read (plan D8) in both directions:
+0/B = H0 too weak, B/B = saturated and the model choice re-opens. The haiku pilot
+measured the weak direction as the live one — baseline 3/28 = 10.7% on the
+non-partition calibration set, so ~40% of batches will read 0/8 and diagnoses lean on
+near-miss action-match profiles. G=5/B=8/T=28 was re-verified at the measured
+baseline (slightly better-powered — lower baseline, smaller binomial variance).
+D12's luna pair returns via its own re-cut and pilot when the platform fix ships,
+never as a mid-experiment swap.
