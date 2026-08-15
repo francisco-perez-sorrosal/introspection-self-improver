@@ -617,8 +617,9 @@ def _silent_session() -> _StreamSession:
 def test_a_silent_stream_over_a_queued_sandbox_reattaches_instead_of_failing(
     monkeypatch,
 ) -> None:
-    """The org's concurrency limit queues sandboxes beyond its cap (observed: 2m49s for
-    a third concurrent task, whose abandoned attempt still burned real tokens). A silent
+    """Sandbox provisioning is heavy-tailed under concurrent starts (observed: 2m49s for
+    a burst task whose abandoned attempt still burned real tokens; once misread as an
+    org concurrency cap — corrected 2026-08-14, no cap exists). A silent
     stream while the task has not started is patience territory: re-attach within the
     queue budget and let τ's own turn timeout arbitrate."""
     import time as time_module

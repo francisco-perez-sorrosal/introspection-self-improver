@@ -36,7 +36,8 @@ file and the code disagree, the code wins and this file gets fixed.
    replaces `infrastructure_error` placeholders; completed episodes are never re-spent.
    The round refuses a dirty recipe tree and verifies byte-identity to H_g's tag.
 2. **Improvement batch**: `make batch B=<g+1> GEN=generation_00g` (platform lane,
-   `--max-concurrency 2` for sandbox-quota cleanliness). Check the manifest: every row
+   `--max-concurrency 2` to keep sandbox-provisioning contention out of the evidence).
+   Check the manifest: every row
    should be `evidence_complete`, `arm_sha_ok`, with only benign `stream_reattaches`.
    The graded read is visible by design; state it as n/B. On B1 it doubles as the D8
    viability read: 0/B or B/B → surface to the user before proceeding.

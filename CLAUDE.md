@@ -160,9 +160,14 @@ manifest (improvement batches + held-out set) · the experiment's `protocol:` co
 `max_concurrency` is deliberately NOT on this list (re-decided 2026-08-13): parallelism moves
 wall-clock, never what the agent can do inside an episode, so the lock's value is an
 operational default that any run may override with `--max-concurrency` (1 = serial); the
-effective value is recorded per run in `run_metadata.json`. `make batch` pins 2 to match the
-org's observed ~2-sandbox quota. The documented caveat is provider
-contention at high N, which shows up as infra retries, not as graded capability.
+effective value is recorded per run in `run_metadata.json`. `make batch` pins 2 to bound
+concurrent-start provisioning contention — the "~2-sandbox org quota" was a misdiagnosis,
+corrected 2026-08-14: three concurrent sandboxes are proven in the org's task history and
+no admission cap was ever observed; what bites is heavy-tailed sandbox start latency
+(40–650s) against the transport's 240s queue budget
+(`contract/constraints.md` § Platform-lane concurrency has the evidence). The documented
+caveat is provider contention at high N, which shows up as infra retries, not as graded
+capability.
 
 Three of these are the ones that actually get missed:
 - `--retrieval-config` rewrites the tool set **and** the policy text the agent is graded

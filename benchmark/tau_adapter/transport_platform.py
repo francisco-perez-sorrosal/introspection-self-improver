@@ -66,10 +66,12 @@ SETTLE_GRACE_SECONDS = 300.0
 BIND_POLL_SECONDS = 2.0
 BIND_POLL_CEILING_SECONDS = 120.0
 
-# How long a created-but-unstarted sandbox may sit in the org's queue before a silent
+# How long a created-but-unstarted sandbox may sit in provisioning before a silent
 # stream is treated as a failure rather than patience. 240s leaves boot-plus-first-turn
-# room inside τ's 300s per-turn ceiling; the observed queue wait that motivated this was
-# 2m49s (contract/constraints.md § Platform-lane concurrency).
+# room inside τ's 300s per-turn ceiling; the observed start delay that motivated this was
+# 2m49s, and starts up to ~650s have been observed under 3-wide bursts — provisioning
+# latency, not an org queue; no admission cap exists (corrected 2026-08-14,
+# contract/constraints.md § Platform-lane concurrency).
 QUEUE_WAIT_CEILING_SECONDS = 240.0
 QUEUE_POLL_SECONDS = 5.0
 
@@ -708,11 +710,12 @@ class PlatformTransport:
                     )
                 return
         if session.emitted == 0 and self._sandbox_still_queued():
-            # The sandbox never started: the org's concurrency limit queues tasks beyond
-            # its plan cap (observed live 2026-08-13: a third concurrent sandbox sat
-            # queued 2m49s, our stream gave up, τ retried, and the orphaned attempt still
-            # burned $0.69 of real tokens after finally starting). A silent stream over a
-            # queued run is patience territory, not a failure — keep re-attaching within
+            # The sandbox never started: provisioning is heavy-tailed under concurrent
+            # starts (observed live: a burst task took 2m49s to start — first misread as
+            # an org quota; corrected 2026-08-14, no admission cap exists — our stream
+            # gave up, τ retried, and the orphaned attempt still burned $0.69 of real
+            # tokens after finally starting). A silent stream over an unstarted run is
+            # patience territory, not a failure — keep re-attaching within
             # the queue budget and let τ's own turn timeout stay the real arbiter.
             # Replay-safe because nothing was emitted.
             time.sleep(self._queue_poll_delay)

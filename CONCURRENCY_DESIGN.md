@@ -218,7 +218,7 @@ User-directed 2026-08-13: lift the platform pin. Design:
 | Retitle/archive CLI failure swallows the release | transport close test: release fires despite CLI errors |
 | Name collision with another session's attachment | nonce suffix, construction test |
 | N=1 regression | slot-0-token equivalence test + existing 222-suite |
-| Org sandbox limit < N | queueing observed at live proof; documented, not built around |
+| Org sandbox limit < N | queueing observed at live proof; documented, not built around *(later corrected — no org limit exists; see third-pass correction)* |
 | Evidence mis-join at N | live proof: distinct task ids, each row's attachment named in run_metadata |
 
 ---
@@ -280,16 +280,30 @@ change; suite ended at 235.
 
 ## Second-pass findings (from the one failed attempt in the minitest)
 
-- **Sandbox queueing, not a seam bug**: the org runs ~2 sandboxes concurrently; a
-  third queued 2m49s, our stream read the silence as death, τ retried, and the
+- **Slow sandbox start, not a seam bug** *(diagnosis superseded — see third-pass
+  correction below)*: a burst task took 2m49s to start (then read as an org ~2-sandbox
+  queue), our stream read the silence as death, τ retried, and the
   abandoned attempt still burned $0.69 after finally starting. Fixed: a silent stream
   over a task with no `started_at` re-attaches within a 240s queue budget (inside τ's
   300s turn ceiling), counted as `sandbox_queue_waits`; real stream deaths after start
   fail exactly as before.
 - One task = one conversation = one sandbox is the platform's model AND the evidence
   contract — sandbox reuse across episodes would contaminate the agent's context and
-  break the 1:1 evidence join, and would not increase parallelism anyway (the quota is
-  on concurrent sandboxes).
+  break the 1:1 evidence join, and would not increase parallelism anyway (start latency
+  scales with concurrent sandbox starts, not with task creation).
+
+## Third-pass correction (2026-08-14): there is no sandbox quota
+
+The second pass's "org runs ~2 sandboxes; a third queues" was a misdiagnosis from a
+single incident. The org's full task history shows three sandboxes running concurrently
+on 2026-08-13 (02:05:31Z and 02:09:06Z), no task ever in `queued` status, and
+created→started gaps that are heavy-tailed **provisioning latency**: 40–90s serial
+baseline, 100–650s under concurrent starts — the 2m49s incident was mid-distribution
+for its burst (a sibling took 457s) and was the second-created task, not the third. The
+vendor confirms no plan-derived cap. The binding constraint for wide platform rounds is
+that provisioning tail against `QUEUE_WAIT_CEILING_SECONDS` (240s, inside τ's frozen
+300s turn ceiling); going wider needs staggered starts, not a bigger budget. Evidence
+and task ids: `contract/constraints.md` § Platform-lane concurrency.
 
 ## Operational doctrine (the knob, final form)
 
@@ -298,8 +312,9 @@ parallelism moves wall-clock, never what the agent can do inside an episode. Loc
 default **10** (a round self-caps at its episode count, so "10" means "as wide as the
 round allows"); `--max-concurrency` overrides per run, `1` = serial; effective value
 recorded in `run_metadata.json`. The one carve-out: **`make batch` passes
-`--max-concurrency 2`** to match the observed ~2-sandbox quota — batch rounds are
-diagnosis evidence, and queue-driven τ-retry churn is pollution there. Held-out rounds
+`--max-concurrency 2`** to bound concurrent-start provisioning contention (no org quota
+exists — see the third-pass correction) — batch rounds are
+diagnosis evidence, and start-latency-driven τ-retry churn is pollution there. Held-out rounds
 run T-wide on the local lane (no sandbox constraint; 2N provider streams is the real
 ceiling, τ/litellm own retries).
 

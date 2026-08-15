@@ -188,8 +188,41 @@ Two hard-won facts bound this design and are worth not relearning:
 The lock's value is the recorded default, any run may override it with
 `--max-concurrency` (1 = serial), and the effective value is recorded in
 `run_metadata.json`. The practical ceilings are provider rate limits (2N Anthropic
-streams; throttling surfaces as infra retries) and the org's plan-derived sandbox limit,
-which queues rather than refuses.
+streams; throttling surfaces as infra retries) and heavy-tailed sandbox provisioning
+latency under concurrent starts (next section).
+
+### The sandbox-quota misdiagnosis (corrected 2026-08-14)
+
+What was believed (from one incident at the 3.5c minitest): the org runs ~2 sandboxes
+concurrently and a third queues — a plan-derived admission cap. The 2026-08-14
+investigation read the org's full task history (200 task rows, 2026-08-12 →
+2026-08-14T23:00Z, via `tasks list`) and refuted it:
+
+- **Three sandboxes ran concurrently, twice**, on 2026-08-13 (02:05:31Z and 02:09:06Z UTC)
+  — real graded episodes, all completed. No cap of 2 can produce that, and the vendor
+  confirms no such plan limitation exists.
+- The delays are **provisioning latency, not admission queueing**: created→`started_at`
+  gaps run 40–90s at zero concurrency and 100–650s under concurrent starts (the two
+  minitest bursts: 126/371/479s and 75/168/457/265s). The famous "2m49s queue wait"
+  (168s, task created 2026-08-14T01:52:55Z) was mid-distribution for its burst — its
+  sibling took 457s — and it was the *second*-created task of the burst, not the third.
+- **No task was ever observed in `queued` status** (the platform's org-admission state).
+  The one anomaly sat in `scheduled` (provisioning) — wedged 2h+ with `updated_at` frozen
+  at creation, and uncancellable (`tasks cancel` → 409 "Run is not cancellable"): task
+  `01a00219-068b-702f-bfff-32b324d5285e`, left in place as upstream bug evidence.
+- Separately, 2026-08-14 21:06–22:10Z, a **platform ingress outage** ("Failed to reach
+  Restate ingress: All connection attempts failed") failed 48 consecutive tasks
+  pre-sandbox at every concurrency, serial preflights included; it recovered by ~22:53Z.
+  An outage wears the quota theory as a disguise — read `metadata.error` on the task rows
+  before inferring capacity.
+
+Operational consequence: the binding constraint for wide platform rounds is the
+provisioning tail against the transport's `QUEUE_WAIT_CEILING_SECONDS` (240s, sized to
+fit inside τ's frozen 300s per-turn ceiling) — a start slower than the budget reads as
+stream death and re-triggers exactly the τ-retry churn the budget was built to absorb.
+`make batch` keeps `--max-concurrency 2` for that reason — bounding concurrent-start
+provisioning contention in diagnosis rounds — not because of any quota. Going wider
+needs staggered episode starts (ramp-up), not a larger budget: the τ ceiling is frozen.
 
 ## Why `pi` launches the recipe locally rather than `introspection local`
 
