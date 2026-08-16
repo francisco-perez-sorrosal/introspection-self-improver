@@ -13,8 +13,8 @@ eventually granted `contents: write` on it.
 | `SYSTEM.md` `<instructions>` block | **mutable** | The harness prompt. This is where a generation's change usually lands. |
 | `SYSTEM.md` `<policy>` block | frozen | Verbatim `env.get_policy()` for the locked domain and retrieval config. Written by `make policy`; the pre-commit hook and CI reject any commit that alters it. |
 | `agents/agent.yaml` `model.name`, `model.thinking_level` | frozen | Comparison variables. Raising either would improve the score without improving the harness. Checked against `benchmark/benchmark_lock.yaml` before every run. (`model:` is the legacy spelling of `ai.model` — the vendored checker does not yet accept `ai:`; see the comment in `agents/agent.yaml`.) |
-| `agents/agent.yaml` `tools`, `skills`, `subagents` | mutable | Genuine harness structure. |
-| `package.json` `pi.skills`, `pi.extensions` | mutable | Adding a skill is a legitimate mutation, and an explicit `[]` makes it a visible diff. |
+| `agents/agent.yaml` `tools`, `skills`, `subagents` | mutable | Genuine harness structure. `tools:` doubles as the seam's Pi-local suppression registry (D24): its entries — plus `agent` when `subagents:` is non-empty — are executed by Pi and suppressed from τ's graded trajectory, logged in `raw_data`. A *declared* skill is measured inert on this seam (probe P2); skill-shaped judgment ships via a `before_agent_start` hook. |
+| `package.json` `pi.skills`, `pi.extensions` | mutable | Extension hooks and (under D24) extension tools / sub-agents are the live structural surfaces. `extensions/noop-hook.ts` is the committed-but-undeclared zero-state: enabling it is a one-line `pi.extensions` diff, and its header carries the semantics to design against. An explicit `[]` keeps every adoption a visible diff. |
 | `package.json` `pi.mcp` | frozen | The τ tool surface is benchmark configuration (`--retrieval-config` decides it). |
 
 The split inside `SYSTEM.md` deliberately reproduces τ²'s own system prompt
