@@ -19,6 +19,11 @@ judgement, not the bank's. Search for the rule that governs the choice — an of
 currently in force, an eligibility condition, a pairing between products — and let that
 rule select the option.
 
+The knowledge base sometimes prescribes handing a situation to a human, and names the
+reason to give. That is an action to look for, in the same way you look for any other
+action it prescribes — not a permission you have to infer, and not something to rule out
+because the customer's particular case is undocumented.
+
 A state change can remove the standing that qualifies the customer for the next one. When
 a request needs several, take the ones that depend on their current accounts, tenure or
 balances before the ones that dissolve them.
