@@ -1,0 +1,961 @@
+{
+  "mode": "locked",
+  "experiment": "005_fixedb-bm25-luna56",
+  "freeze_fingerprint": "sha256:7ea86d87d0d2031801babfe3fca860c11b462a12aefeea91411de9db0ff15e9b",
+  "domain": "banking_knowledge",
+  "generation": "generation_001",
+  "split": "batch_02",
+  "num_trials": 3,
+  "max_concurrency": 4,
+  "bridge_executor_workers": 16,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a00882-6c5d-7080-9940-8d40c81945ac"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_014",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_065",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_070",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_028",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_072",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_014",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_096",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_026",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_028",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_026",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_065",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_082",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_072",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_070",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_096",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_026",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_028",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_082",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_065",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_070",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_082",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_072",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_096",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_014",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 1,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 89,
+      "settle_timeouts": 0
+    },
+    "unattributed": [],
+    "bridge": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a00882-6c5d-7080-9940-8d40c81945ac",
+    "environment": "development",
+    "dev_target": "tau-c1e4",
+    "task_ids": [
+      "01a00896-ea3a-7694-a4e5-8b118d843001",
+      "01a00896-ea8b-748e-8767-f4dd4bed75e2",
+      "01a00896-eea2-741f-8a63-78b5e6bbfdab",
+      "01a00896-ef07-73cf-862c-6ffea2015f1c",
+      "01a00897-794f-73cf-8eb5-a0cb1286c2c4",
+      "01a00898-dc37-72dc-902b-bb59eaf98dea",
+      "01a00899-890a-753a-9145-e964a6e17d2a",
+      "01a00899-ae91-7121-9001-251af9a18bcb",
+      "01a0089a-1132-728c-b732-a0024fd067ad",
+      "01a0089a-5f05-77c6-a10a-09bc797ec8d0",
+      "01a0089a-8dd5-7563-99eb-eda710a0488a",
+      "01a0089b-8e67-77df-9214-00b2d1d42b39",
+      "01a0089b-bcf1-71ea-9a41-7cc79721ab12",
+      "01a0089b-e473-7313-b690-a5f416b26e75",
+      "01a0089c-23ef-7537-a00e-e47a123a6869",
+      "01a0089d-31af-75c5-9af9-48772c4ad917",
+      "01a0089d-5b39-7599-b4db-8975baf997cd",
+      "01a0089e-4ea3-7797-8219-6e0fec9a586f",
+      "01a0089e-f58b-778e-bf9e-f7697fa6c34b",
+      "01a0089f-34c0-7361-9dc8-c0ca7cc2781b",
+      "01a0089f-90e8-711e-9699-e61f24b7caf8",
+      "01a008a0-422e-7654-af65-eeb1ec0afdbc",
+      "01a008a0-5fc8-7347-ae38-18f4f1a6e621",
+      "01a008a1-9f02-7663-8fb2-fc8a58b79f88"
+    ],
+    "tasks_created": [
+      "01a00896-ea3a-7694-a4e5-8b118d843001",
+      "01a00896-ea8b-748e-8767-f4dd4bed75e2",
+      "01a00896-eea2-741f-8a63-78b5e6bbfdab",
+      "01a00896-ef07-73cf-862c-6ffea2015f1c",
+      "01a00897-794f-73cf-8eb5-a0cb1286c2c4",
+      "01a00898-dc37-72dc-902b-bb59eaf98dea",
+      "01a00899-85e3-765a-aca7-07468bddff79",
+      "01a00899-890a-753a-9145-e964a6e17d2a",
+      "01a00899-ae91-7121-9001-251af9a18bcb",
+      "01a0089a-1132-728c-b732-a0024fd067ad",
+      "01a0089a-5f05-77c6-a10a-09bc797ec8d0",
+      "01a0089a-8dd5-7563-99eb-eda710a0488a",
+      "01a0089b-8e67-77df-9214-00b2d1d42b39",
+      "01a0089b-bcf1-71ea-9a41-7cc79721ab12",
+      "01a0089b-e473-7313-b690-a5f416b26e75",
+      "01a0089c-23ef-7537-a00e-e47a123a6869",
+      "01a0089c-a6b2-742c-b0eb-66ffae4ca46c",
+      "01a0089d-31af-75c5-9af9-48772c4ad917",
+      "01a0089d-5b39-7599-b4db-8975baf997cd",
+      "01a0089e-4ea3-7797-8219-6e0fec9a586f",
+      "01a0089e-f58b-778e-bf9e-f7697fa6c34b",
+      "01a0089f-34c0-7361-9dc8-c0ca7cc2781b",
+      "01a0089f-90e8-711e-9699-e61f24b7caf8",
+      "01a008a0-422e-7654-af65-eeb1ec0afdbc",
+      "01a008a0-5fc8-7347-ae38-18f4f1a6e621",
+      "01a008a1-9f02-7663-8fb2-fc8a58b79f88"
+    ],
+    "orphaned_task_ids": [
+      "01a00899-85e3-765a-aca7-07468bddff79",
+      "01a0089c-a6b2-742c-b0eb-66ffae4ca46c"
+    ],
+    "accounting": {
+      "01a00896-ea3a-7694-a4e5-8b118d843001": {
+        "cost": {
+          "usd": 0.00407602
+        },
+        "usage": {
+          "input_tokens": 96350,
+          "output_tokens": 588,
+          "total_tokens": 96938
+        },
+        "metrics": {
+          "duration_ms": 24728.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 6,
+          "span_count": 27,
+          "tool_use_count": 3,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 30,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a00896-ea8b-748e-8767-f4dd4bed75e2": {
+        "cost": {
+          "usd": 0.032856039999999996
+        },
+        "usage": {
+          "input_tokens": 1468668,
+          "output_tokens": 8450,
+          "total_tokens": 1477118
+        },
+        "metrics": {
+          "duration_ms": 227605.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 2,
+          "has_errors": false,
+          "llm_call_count": 34,
+          "span_count": 182,
+          "tool_use_count": 40,
+          "trace_count": 20
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 221,
+        "sandbox_tool_errors": 3,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 2,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a00896-eea2-741f-8a63-78b5e6bbfdab": {
+        "cost": {
+          "usd": 0.033564909999999996
+        },
+        "usage": {
+          "input_tokens": 1749727,
+          "output_tokens": 3948,
+          "total_tokens": 1753675
+        },
+        "metrics": {
+          "duration_ms": 115867.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 1,
+          "has_errors": false,
+          "llm_call_count": 21,
+          "span_count": 103,
+          "tool_use_count": 20,
+          "trace_count": 10
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 123,
+        "sandbox_tool_errors": 2,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 2,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a00896-ef07-73cf-862c-6ffea2015f1c": {
+        "cost": {
+          "usd": 0.040767790000000005
+        },
+        "usage": {
+          "input_tokens": 2122628,
+          "output_tokens": 4502,
+          "total_tokens": 2127130
+        },
+        "metrics": {
+          "duration_ms": 160597.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 2,
+          "has_errors": false,
+          "llm_call_count": 28,
+          "span_count": 129,
+          "tool_use_count": 27,
+          "trace_count": 9
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 155,
+        "sandbox_tool_errors": 3,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 2,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a00897-794f-73cf-8eb5-a0cb1286c2c4": {
+        "cost": {
+          "usd": 0.02617517
+        },
+        "usage": {
+          "input_tokens": 1338785,
+          "output_tokens": 2314,
+          "total_tokens": 1341099
+        },
+        "metrics": {
+          "duration_ms": 124522.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 1,
+          "has_errors": false,
+          "llm_call_count": 23,
+          "span_count": 98,
+          "tool_use_count": 17,
+          "trace_count": 6
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 115,
+        "sandbox_tool_errors": 1,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a00898-dc37-72dc-902b-bb59eaf98dea": {
+        "cost": {
+          "usd": 0.01421088
+        },
+        "usage": {
+          "input_tokens": 482199,
+          "output_tokens": 2581,
+          "total_tokens": 484780
+        },
+        "metrics": {
+          "duration_ms": 44348.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 15,
+          "span_count": 69,
+          "tool_use_count": 16,
+          "trace_count": 4
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 85,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a00899-890a-753a-9145-e964a6e17d2a": {
+        "cost": {
+          "usd": 0.01240822
+        },
+        "usage": {
+          "input_tokens": 381925,
+          "output_tokens": 2678,
+          "total_tokens": 384603
+        },
+        "metrics": {
+          "duration_ms": 44475.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 15,
+          "span_count": 68,
+          "tool_use_count": 19,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 87,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a00899-ae91-7121-9001-251af9a18bcb": {
+        "cost": {
+          "usd": 0.00427755
+        },
+        "usage": {
+          "input_tokens": 101250,
+          "output_tokens": 621,
+          "total_tokens": 101871
+        },
+        "metrics": {
+          "duration_ms": 15530.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 6,
+          "span_count": 27,
+          "tool_use_count": 3,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 30,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089a-1132-728c-b732-a0024fd067ad": {
+        "cost": {
+          "usd": 0.01907606
+        },
+        "usage": {
+          "input_tokens": 644842,
+          "output_tokens": 4555,
+          "total_tokens": 649397
+        },
+        "metrics": {
+          "duration_ms": 99642.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 20,
+          "span_count": 100,
+          "tool_use_count": 26,
+          "trace_count": 7
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 126,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089a-5f05-77c6-a10a-09bc797ec8d0": {
+        "cost": {
+          "usd": 0.02043124
+        },
+        "usage": {
+          "input_tokens": 698498,
+          "output_tokens": 3599,
+          "total_tokens": 702097
+        },
+        "metrics": {
+          "duration_ms": 67091.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 18,
+          "span_count": 78,
+          "tool_use_count": 14,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 92,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089a-8dd5-7563-99eb-eda710a0488a": {
+        "cost": {
+          "usd": 0.03635505
+        },
+        "usage": {
+          "input_tokens": 1761302,
+          "output_tokens": 3821,
+          "total_tokens": 1765123
+        },
+        "metrics": {
+          "duration_ms": 77175.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 26,
+          "span_count": 111,
+          "tool_use_count": 27,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 138,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089b-8e67-77df-9214-00b2d1d42b39": {
+        "cost": {
+          "usd": 0.05116731
+        },
+        "usage": {
+          "input_tokens": 2823880,
+          "output_tokens": 4654,
+          "total_tokens": 2828534
+        },
+        "metrics": {
+          "duration_ms": 96012.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 26,
+          "span_count": 121,
+          "tool_use_count": 23,
+          "trace_count": 10
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 144,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089b-bcf1-71ea-9a41-7cc79721ab12": {
+        "cost": {
+          "usd": 0.01220232
+        },
+        "usage": {
+          "input_tokens": 392485,
+          "output_tokens": 2543,
+          "total_tokens": 395028
+        },
+        "metrics": {
+          "duration_ms": 50510.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 15,
+          "span_count": 65,
+          "tool_use_count": 14,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 79,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089b-e473-7313-b690-a5f416b26e75": {
+        "cost": {
+          "usd": 0.0034681200000000003
+        },
+        "usage": {
+          "input_tokens": 50567,
+          "output_tokens": 321,
+          "total_tokens": 50888
+        },
+        "metrics": {
+          "duration_ms": 6369.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 3,
+          "span_count": 13,
+          "tool_use_count": 2,
+          "trace_count": 1
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 15,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089c-23ef-7537-a00e-e47a123a6869": {
+        "cost": {
+          "usd": 0.02095402
+        },
+        "usage": {
+          "input_tokens": 816404,
+          "output_tokens": 3786,
+          "total_tokens": 820190
+        },
+        "metrics": {
+          "duration_ms": 69522.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 20,
+          "span_count": 86,
+          "tool_use_count": 16,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 102,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089d-31af-75c5-9af9-48772c4ad917": {
+        "cost": {
+          "usd": 0.0234015
+        },
+        "usage": {
+          "input_tokens": 1063981,
+          "output_tokens": 5045,
+          "total_tokens": 1069026
+        },
+        "metrics": {
+          "duration_ms": 105097.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 29,
+          "span_count": 132,
+          "tool_use_count": 23,
+          "trace_count": 11
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 155,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089d-5b39-7599-b4db-8975baf997cd": {
+        "cost": {
+          "usd": 0.03172503
+        },
+        "usage": {
+          "input_tokens": 1690435,
+          "output_tokens": 4319,
+          "total_tokens": 1694754
+        },
+        "metrics": {
+          "duration_ms": 110096.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 31,
+          "span_count": 139,
+          "tool_use_count": 24,
+          "trace_count": 11
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 163,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089e-4ea3-7797-8219-6e0fec9a586f": {
+        "cost": {
+          "usd": 0.02384941
+        },
+        "usage": {
+          "input_tokens": 912781,
+          "output_tokens": 4650,
+          "total_tokens": 917431
+        },
+        "metrics": {
+          "duration_ms": 72515.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 19,
+          "span_count": 90,
+          "tool_use_count": 25,
+          "trace_count": 4
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 115,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089e-f58b-778e-bf9e-f7697fa6c34b": {
+        "cost": {
+          "usd": 0.03533936
+        },
+        "usage": {
+          "input_tokens": 1787562,
+          "output_tokens": 3532,
+          "total_tokens": 1791094
+        },
+        "metrics": {
+          "duration_ms": 74491.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 24,
+          "span_count": 103,
+          "tool_use_count": 23,
+          "trace_count": 4
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 126,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089f-34c0-7361-9dc8-c0ca7cc2781b": {
+        "cost": {
+          "usd": 0.02600719
+        },
+        "usage": {
+          "input_tokens": 1242388,
+          "output_tokens": 2904,
+          "total_tokens": 1245292
+        },
+        "metrics": {
+          "duration_ms": 66652.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 20,
+          "span_count": 85,
+          "tool_use_count": 15,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 100,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a0089f-90e8-711e-9699-e61f24b7caf8": {
+        "cost": {
+          "usd": 0.027984759999999997
+        },
+        "usage": {
+          "input_tokens": 1120250,
+          "output_tokens": 4912,
+          "total_tokens": 1125162
+        },
+        "metrics": {
+          "duration_ms": 85936.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 22,
+          "span_count": 97,
+          "tool_use_count": 21,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 118,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a008a0-422e-7654-af65-eeb1ec0afdbc": {
+        "cost": {
+          "usd": 0.0031707299999999996
+        },
+        "usage": {
+          "input_tokens": 47127,
+          "output_tokens": 273,
+          "total_tokens": 47400
+        },
+        "metrics": {
+          "duration_ms": 6298.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 3,
+          "span_count": 13,
+          "tool_use_count": 2,
+          "trace_count": 1
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 15,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a008a0-5fc8-7347-ae38-18f4f1a6e621": {
+        "cost": {
+          "usd": 0.03351883
+        },
+        "usage": {
+          "input_tokens": 1368566,
+          "output_tokens": 4313,
+          "total_tokens": 1372879
+        },
+        "metrics": {
+          "duration_ms": 81605.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 20,
+          "span_count": 94,
+          "tool_use_count": 22,
+          "trace_count": 6
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 116,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      },
+      "01a008a1-9f02-7663-8fb2-fc8a58b79f88": {
+        "cost": {
+          "usd": 0.006255040000000001
+        },
+        "usage": {
+          "input_tokens": 146247,
+          "output_tokens": 777,
+          "total_tokens": 147024
+        },
+        "metrics": {
+          "duration_ms": 19490.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 7,
+          "span_count": 31,
+          "tool_use_count": 4,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "c669207aad53a86a9dedb00eba89fe2e298459b9",
+        "evidence_complete": true,
+        "item_count": 35,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0
+      }
+    },
+    "retitles": {
+      "applied": 6,
+      "failed": 18
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 732.3
+}
