@@ -7,7 +7,7 @@
   "split": null,
   "num_trials": 3,
   "max_concurrency": 8,
-  "bridge_executor_workers": 32,
+  "bridge_executor_workers": 16,
   "max_concurrent_starts": null,
   "transport": "local",
   "launcher": "pi",
@@ -31,7 +31,7 @@
   "episodes": [
     {
       "task_id": "create_task_1",
-      "trial": 1,
+      "trial": 2,
       "termination": "TerminationReason.USER_STOP",
       "reward": 1.0,
       "completed": true,
@@ -39,9 +39,9 @@
     },
     {
       "task_id": "create_task_1",
-      "trial": 2,
+      "trial": 1,
       "termination": "TerminationReason.USER_STOP",
-      "reward": 1.0,
+      "reward": 0.0,
       "completed": true,
       "failure": null
     },
@@ -75,5 +75,5 @@
     "introspection": "introspection 0.28.0",
     "pi": "0.84.1"
   },
-  "elapsed_seconds": 9.7
+  "elapsed_seconds": 9.9
 }

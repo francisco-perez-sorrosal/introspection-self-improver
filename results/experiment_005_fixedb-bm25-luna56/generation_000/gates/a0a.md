@@ -1,7 +1,7 @@
 # A.0a — pipe semantics: PASS
 
-- recorded 2026-08-15T23:25:19Z, adapter at `c4368814d029`
-- adapter suite: 309 passed in 7.82s
+- recorded 2026-08-16T01:31:15Z, adapter at `cce234ab1e3f`
+- adapter suite: 323 passed, 1 warning in 8.62s
 - mock smoke: rc=0, all episodes completed
 
 A.0a claims the bridge and transports preserve tool calls, arguments, results and
