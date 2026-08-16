@@ -154,23 +154,32 @@ close.
   policy). Two mutations carry direct positive batch evidence (gen-003's task_032,
   gen-004's task_040). Value-resolution from bm25 (T9) — the mode the batches kept
   pointing at — never got a slot.
-- **Seq 5 is the loop-reliability experiment (plan D17/D18/D19), cut PROVISIONAL
-  2026-08-15 as `005_fixedb-bm25-luna56`** — deliberately ODD per D15: it studies the
-  loop, not the capability claim. `protocol.batch_mode: fixed` measures ONE hand-chosen
-  batch of 8 known-fail tasks under every generation (the last batch round is the
-  endpoint round, consumed by no transition) — deliberate intervention verification,
-  asking "can the loop fix what it stares at?"; `num_trials: 3` on every round turns
-  per-task cells into pass rates (band ±9 → ±5 pp at T=28; one knob, both lanes, D2's
-  structure kept). **G reduced 5 → 2 (plan D20, user-authorized 2026-08-15)**: two
-  mutation slots plus `batch_03` as H2's endpoint round; B and T unchanged. The
-  held-out trend test therefore runs over 3 points and is underpowered by construction
-  — G is the strongest power lever (D11) — which the batch primary does not depend on.
-  Held-out reuses seq-4's T=28 verbatim — the pool has zero virgin tasks — with the D19
-  caveat recorded: the orchestrator has seen seq-4's revealed per-task results, so the
-  firewall is weaker and the BATCH curve is the primary (batch_curve.py's exact paired
-  sign-flip endpoint test, H2 vs H0, α=0.05; `make batch_curve`). Pre-registered
-  reading key: B↑T↑ loop works; B↑T→ overfits; B→ the meta-agent is the problem.
-  Batch reads from B2 on measure a tuned-on set and every diagnosis must say so.
+- **Seq 5 is the loop-reliability experiment (plan D17/D18/D19), `005_fixedb-bm25-luna56`,
+  REVEALED 2026-08-16 — and the loop did NOT improve the harness.** Deliberately ODD per
+  D15: it studies the loop, not the capability claim. `protocol.batch_mode: fixed`
+  measured ONE hand-chosen batch of 8 known-fail tasks under every generation (the last
+  batch round is the endpoint round, consumed by no transition), asking "can the loop fix
+  what it stares at?"; `num_trials: 3` turned per-task cells into pass rates (band ±5 pp
+  at T=28). G was 2 (plan D20). **Result:** the pre-registered primary — the paired batch
+  endpoint test, H2 vs H0 — gave Σ rate deltas −0.333, exact one-sided p = 1.0000, with
+  the batch curve 4.2% → 8.3% → **0.0%**; held-out ran 19.0% → 15.5% → 19.0%, endpoint
+  +0.0 pp, trend z = 0.00, p = 0.500. Against the frozen reading key (B↑T↑ works; B↑T→
+  overfits; **B flat → the meta-agent is the problem**) the answer is the third line.
+  **The finding that outlives the number:** gen-002 repeated seq 4's transfer-guidance
+  failure *with that history in hand and two structural guards built against it* — the
+  threshold delegated to the policy, the scope limited to "when the customer asks" — and
+  neither held: transfers on DB tasks went 9/21 → 8/21 → 0/21, and `task_014`, whose gold
+  IS a transfer, went 1/3 → 0/3 with zero transfers. **An instruction added to a prompt
+  does not inherit the scope its author reasoned about.** Four of seven mutations across
+  seq 4 and seq 5 have now failed that way, all in the same `SYSTEM.md` paragraph, while
+  the recipe's three growth surfaces (Pi skill, extension tool, sub-agent) remain unused —
+  that is the live hypothesis for a next experiment. Two genuine wins are on the record,
+  both from gen-001 and both visible only because `batch_mode: fixed` measures the same
+  tasks twice: retrieval of the defining document began to determine the argument
+  (`task_014`, passing tracks retrieval instead of luck), and volunteering an unsourced
+  optional argument stopped (`task_065` flipped on that alone). Closure:
+  `results/experiment_005_fixedb-bm25-luna56/README.md`; §29 walk has nineteen HELD and
+  **one WAIVED — human approval, waived by explicit user instruction, not held**.
 
 ## Invariants
 
