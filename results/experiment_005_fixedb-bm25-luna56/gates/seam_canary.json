@@ -1,0 +1,46 @@
+{
+  "gate": "seam-canary",
+  "passed": true,
+  "generated": "2026-08-16T06:04:51Z",
+  "adapter_sha": "5e72ef9de46b8e730a88e07feee502d9caa7a163",
+  "task": "task_001",
+  "findings": [],
+  "infra_failures": {
+    "ValueError": 1
+  },
+  "episodes": [
+    {
+      "trial": 0,
+      "completed": false,
+      "evidence_complete": null,
+      "sandbox_seam_disconnects": null,
+      "sandbox_seam_timeouts": null,
+      "sandbox_seam_unclassified": null,
+      "sandbox_tool_errors": null,
+      "bridge_calls": null,
+      "bridge_park_max_seconds": null
+    },
+    {
+      "trial": 1,
+      "completed": true,
+      "evidence_complete": true,
+      "sandbox_seam_disconnects": 0,
+      "sandbox_seam_timeouts": 0,
+      "sandbox_seam_unclassified": 0,
+      "sandbox_tool_errors": 0,
+      "bridge_calls": 6,
+      "bridge_park_max_seconds": 0.018
+    },
+    {
+      "trial": 2,
+      "completed": true,
+      "evidence_complete": true,
+      "sandbox_seam_disconnects": 0,
+      "sandbox_seam_timeouts": 0,
+      "sandbox_seam_unclassified": 0,
+      "sandbox_tool_errors": 0,
+      "bridge_calls": 3,
+      "bridge_park_max_seconds": 0.001
+    }
+  ]
+}
