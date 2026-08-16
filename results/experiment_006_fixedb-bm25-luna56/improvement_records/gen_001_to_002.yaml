@@ -1,0 +1,278 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 1
+  to_generation: 2
+experiment: 006_fixedb-bm25-luna56
+outcome: accepted
+schema_version: 2
+batch:
+  name: batch_02
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a009c4-a685-7183-a72c-9656c202ab1c   # task_014 t0 reward 1.0
+  - 01a009c7-63d2-722a-9493-9a4761390e70   # task_014 t1 reward 0.0
+  - 01a009cf-6e24-77c0-9d4a-500fdf63b3b0   # task_014 t2 reward 0.0
+  - 01a009c4-a318-7205-9a8e-6950d653f580   # task_026 t0 reward 0.0
+  - 01a009c7-90a3-75d2-a176-16c4fa20322e   # task_026 t1 reward 0.0
+  - 01a009ca-896f-75b6-88a0-ddeff759f11f   # task_026 t2 reward 0.0
+  - 01a009c4-a244-74e0-bbca-ea1b3446463d   # task_028 t0 reward 0.0
+  - 01a009c7-da10-7182-8273-79f83651ad69   # task_028 t1 reward 0.0
+  - 01a009cb-e377-770e-a1ee-bafd465a2835   # task_028 t2 reward 0.0
+  - 01a009c5-300d-7703-8f10-08a0515cff90   # task_065 t0 reward 0.0
+  - 01a009c8-9653-7680-ae5a-43a8f5599bb6   # task_065 t1 reward 0.0
+  - 01a009cc-33ff-7684-9531-d5dfb1a2b51c   # task_065 t2 reward 0.0
+  - 01a009c5-e51d-715a-b443-e2688716e3c6   # task_070 t0 reward 0.0
+  - 01a009c9-46b4-716a-805b-23ffe8b3d4fe   # task_070 t1 reward 0.0
+  - 01a009cc-c6de-7004-8a0b-5fc487f3dba1   # task_070 t2 reward 0.0
+  - 01a009c6-0f9f-7213-834d-5fea1ab8b8d6   # task_072 t0 reward 0.0
+  - 01a009c9-488b-77fb-8de4-a42fd439d1c1   # task_072 t1 reward 0.0
+  - 01a009cd-7777-759f-9d28-704fbda2aa58   # task_072 t2 reward 0.0
+  - 01a009c6-1c77-77ad-b3f7-fb830e35663c   # task_082 t0 reward 0.0
+  - 01a009c9-ffba-722f-b4c3-52245861aaf4   # task_082 t1 reward 0.0
+  - 01a009ce-12ed-74fb-956c-d3e04c8276f1   # task_082 t2 reward 0.0
+  - 01a009c7-2628-745d-84bc-4779a226d40e   # task_096 t0 reward 0.0
+  - 01a009ca-1560-76f3-aad0-fb81e94e60a8   # task_096 t1 reward 0.0
+  - 01a009ce-6959-73dc-8c1c-739b6a0bc5f8   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_02: all 24 episodes from
+    generation_001/batch_02/graded/updated_results.json — reward, reward_basis, db_check,
+    every gold action_check with its arguments and match flag, and the complete agent
+    tool-call and query trace — joined to episode_manifest.jsonl. Read cell by cell against
+    batch_01 under H0, which batch_mode fixed makes a paired comparison over the SAME eight
+    tasks; the controlled pairs it yields are the strongest evidence in this record.
+
+    Round health: 24/24 completed, arm sha ea96b48d on every episode, no dirty paths, zero
+    arm_sha_mismatches, all 24 evidence_complete, zero seam timeouts, disconnects and
+    unclassified, and ONE sandbox_tool_error counter across the round. 0.5628 USD platform,
+    mean 48.2 messages and 17.1 tool calls per episode at --max-concurrency 3. No cell is
+    excluded from diagnosis.
+
+    Graded read, labelled: 1/24 episodes and 1/8 tasks with any pass (task_014 1/3), against
+    batch_01's 2/24 and 1/8. batch_02 measures a set gen-001 was tuned on, so it is NOT an
+    independent read, and no batch number from here on is.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any
+    point in this transition. The standing triple-exposure caveat recorded at freeze (D23)
+    applies to T-based numbers only, of which this record contains none.
+signals:
+- description: >-
+    gen-001 C1 scored: BEHAVIOUR CONFIRMED, OUTCOME DENIED, and the pair is the most
+    informative result of this transition. C1 predicted task_070 would enumerate the
+    business-checking class list and open Sky Blue. The enumeration arrived — "Sky Blue"
+    appears in task_070's queries in t1 ("business checking overdraft fees no overdraft fee
+    Navy Blue Cobalt Blue Sky Blue Lime Green business acco...") and again in t2, after ZERO
+    of batch_01's 22 queries mentioned it. The gold option entered the candidate set for the
+    first time in this experiment. The agent then opened Hunter Green anyway, 3/3, exactly as
+    before. task_065 t2 pushed the same behaviour further: sixteen queries, five of them
+    enumerating one savings class each (Green, Bronze, Silver, Gold Plus, Platinum Plus), and
+    it still opened Blue Account and Silver Plus Account rather than gold's Evergreen and
+    Green. Enumeration is therefore not the binding constraint.
+  prevalence: 6/6 episodes on task_070 and task_065 enumerated; 0/6 chose gold
+- description: >-
+    What the agent does instead, and it is a single coherent mechanism: it treats the choice
+    as its own optimisation over published features against the customer's stated wants.
+    task_070's queries in both rounds are a feature search — overdraft fees, ATM rebates of
+    at least 15 dollars a month, APY at or above one percent — and across six episodes and
+    roughly 65 queries in two rounds NOT ONE asks which offer, rate or promotion is currently
+    in force. task_065's gold pairs Evergreen checking with Green savings, a relation between
+    two products that no ranking of either one reaches; the agent's queries rank savings
+    classes by APY and checking classes by perks, separately. This is the signal D1 targets.
+  prevalence: 6/6 episodes on task_070 and task_065; 0 in-force or pairing queries
+- description: >-
+    gen-001 C2's escape clause was taken as an exit rather than a duty, and it is the clearest
+    harm this transition measured. C2 required every named item to be "either acted on or
+    explained to them". task_096 t2 satisfied the check on the second account by filing
+    submit_interest_discrepancy_report_7294 with expected_apy 6.55, actual_apy 6.55 and
+    amount_difference 0 — a null report that covers the item without acting on it. task_096 t0
+    transferred having taken no action at all, where batch_01's t0 had acted. task_082 lost its
+    only full-effort trial: batch_01 t1 ran 76 messages and filed all four disputes, closed
+    both cards and ordered a replacement, while batch_02 has no such trial — t0 does the reads
+    then transfers, t1 and t2 transfer at the first turn. Round-wide, transfer-carrying
+    episodes rose from 9/24 to 11/24 on a mode gen-001 did not target.
+  prevalence: 11/24 episodes carried a transfer, against 9/24 in batch_01
+- description: >-
+    gen-001 C2 also CONFIRMED on its own witness, so the change is not simply bad. task_065
+    opened both accounts in t0 and t2 — 2/3 — against 1/3 in batch_01. And its pre-registered
+    over-reach falsifier is strongly NOT triggered: task_026's update_transaction_rewards calls
+    fell from batch_01 t1's fourteen (where four were in scope) to two, two and one across the
+    three trials. The bound in C2's second sentence held.
+  prevalence: 2/3 task_065 trials opened both accounts, against 1/3
+- description: >-
+    UNPREDICTED POSITIVE, and it resolves a backlog target nobody targeted.
+    give_discoverable_user_tool was called in ZERO of six task_026 and task_028 episodes under
+    H0; under H1 it was called in ALL SIX. Backlog T5 — deferred at g=0 precisely because the
+    frozen policy already specifies the procedure and restating policy text is the shape of
+    mutation that failed four times historically — moved without a mutation aimed at it. The
+    most likely cause is C2's completion check, since the handover is one of the items the
+    customer asked for. It is not yet a pass: the agent supplies an extra arguments payload the
+    gold call does not carry, and repeats the call once per transaction where gold calls it
+    once.
+  prevalence: 6/6 episodes, against 0/6
+- description: >-
+    gen-001 C3 CONFIRMED above its prediction. task_065's close_bank_account_7392 carried
+    account_id ALONE in all three trials, against all three volunteering a self-composed reason
+    in batch_01; the prediction asked for at least one. C3's falsifier — a REQUIRED argument
+    disappearing — was not observed, with one watch item recorded rather than scored: task_072
+    t1 emitted one malformed call keyed agent_name instead of agent_tool_name, then reissued it
+    correctly. One occurrence, no pattern; if a second appears in batch_03 it becomes C3's
+    falsifier firing.
+  prevalence: 3/3 trials, prediction was at least 1
+counterevidence: >-
+  Four arguments against this set.
+
+  (1) D2 narrows an instruction that half-worked, which is exactly the operation that failed
+  four times across seq 4 and seq 5 (prior-experiment context, prose only). The defence is that
+  the harm is MEASURED rather than anticipated — a null report with amount_difference 0, a lost
+  full-effort trial, transfers up 9/24 to 11/24 — and that the half being kept carries its own
+  falsifier (task_065 must stay at 2 of 3 or better on opening both accounts). If it regresses,
+  D2 is itself the revert candidate for gen-003, and the honest reading will be that C2 could
+  not be separated into halves at all.
+
+  (2) The batch number went DOWN, 2/24 to 1/24, and the set that produced it is being extended
+  rather than reverted wholesale. The case for extending is that every per-change prediction
+  scored informatively — one behaviour confirmed with its outcome denied, one confirmed, one
+  confirmed with a measured side effect, one unpredicted positive — and that a single cell
+  moving by one episode on a task that has been 1-2/3 throughout is inside this design's noise.
+  The case against is that a loop which keeps building on a falling curve is exactly the failure
+  mode the frozen reading key calls "the meta-agent is the problem". Recorded so the closure can
+  judge it rather than discover it.
+
+  (3) task_014's regression is NOT attributed. It fell 2/3 to 1/3: t1 took no action in 14
+  messages, and t2 transferred with reason kb_search_unsuccessful_customer_requests_transfer
+  where gold is unconfirmed_external_communication. The wrong reason code is C1 territory and C1
+  did not help there; the no-action trial resembles batch_01's own t2. With three trials on a
+  task that has never exceeded 2/3, this is not separable from sampling, and no change in this
+  set is aimed at it.
+
+  (4) The transfer mode is now 11/24 episodes — the largest single failure mode in the batch,
+  larger than when it was declined a slot at g=0 — and it still gets no direct mutation. The
+  reasoning is unchanged and is now testable: D2 removes a clause this transition MEASURED to
+  license transferring, so batch_03 says whether the rise was caused by the harness's own
+  previous generation. Attacking transfer directly before that question is answered would
+  confound the two.
+hypothesis: >-
+  Two distinct hypotheses, one per change.
+
+  The agent can now assemble the right candidate set and still cannot choose from it, because it
+  is answering a different question than the bank asks. Given a list of products it ranks them
+  against the customer's stated preferences; the gold answers are fixed by something the bank
+  holds — an offer currently in force, an eligibility condition, a pairing between two products
+  — which no amount of feature comparison surfaces. If the harness names the RULE as the object
+  to retrieve, rather than the option list, the search should reach it.
+
+  Separately: an instruction that offers an alternative to acting will have its alternative
+  taken. C2's "or explained to them" was written to excuse items that genuinely need no action,
+  and the model used it to convert action into explanation and, in the limit, into transfer.
+  Tying the alternative to a retrieved finding — the knowledge base gives no action — removes
+  the agent's own narration as a way to satisfy the check.
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — one paragraph revised
+  and one paragraph narrowed. The frozen <policy> region is untouched and make check asserts it
+  byte-for-byte (5733 chars) on every commit; agents/agent.yaml, package.json, the lock and the
+  partition are unchanged.
+
+  Prompt-only again, and the justification recorded at g=0 still binds: the seam probe committed
+  at generation_000/seam_probe/ measured that a Pi-local extension-tool call reaches tau as an
+  invalid tool call, costing a tau step and one of ten max_errors, so extension tools and
+  sub-agents are unavailable in this seam and only the no-tool-call hooks remain. Neither of this
+  set's mechanisms fits those hooks — both are decisions taken BEFORE a call, where a
+  result-transforming hook has nothing to work on. D1's pre-registered denial condition is
+  written precisely to force that question: if two successive rewordings fail to make task_070
+  ask an in-force question, prose is the wrong surface and gen-003 must find another one rather
+  than reword a third time.
+proposed_change: >-
+  An improvement SET of two changes, one commit each on branch
+  gen-002/deciding-rule-and-no-escape, landed as one PR. D1 revises gen-001's C1 in place; D2 is
+  a partial REVERT of gen-001's C2, which plan D22 makes a first-class change and which
+  gen-001's per-change commits made mechanically possible. They compose because D1 acts on
+  retrieval before a write and D2 on the check at the end of an episode.
+
+  Deliberately not in this set: any direct transfer mutation (backlog T4, now 11/24 episodes)
+  until D2 answers whether the harness's own previous generation caused the rise; any
+  restatement of the discoverable-tool handover (backlog T5), which moved 0/6 to 6/6 on its own
+  and should be left to settle before being touched; and arithmetic support for computed amounts
+  (backlog T6 — task_072's amounts got worse, 12/8, 14/16 and 12/16 against gold 14.00 and
+  3.50), which is still not separable from D1's mechanism.
+changes:
+- mechanism: >-
+    Retrieve the rule that governs which option applies — an offer or rate currently in force,
+    an eligibility condition, a pairing between products — rather than retrieving the option
+    list and ranking it against the customer's stated wants.
+  surface: instructions
+  evidence: >-
+    6/6 episodes across task_070 and task_065 in batch_02, read against their batch_01 pairs.
+    task_070 conversations 01a009c5-e51d-715a-b443-e2688716e3c6,
+    01a009c9-46b4-716a-805b-23ffe8b3d4fe and 01a009cc-c6de-7004-8a0b-5fc487f3dba1: "Sky Blue"
+    now appears in the queries and Hunter Green is still opened 3/3; across two rounds no query
+    asks which offer is in force. task_065 conversation 01a009cc-33ff-7684-9531-d5dfb1a2b51c
+    enumerates five savings classes across sixteen queries and still opens Blue and Silver Plus.
+    Revises gen-001 C1 (5bce8ac). Backlog target T1.
+  expected_effect: >-
+    In batch_03, at least one task_070 trial issues a query naming a current or active offer,
+    promotion or eligibility condition for business checking, AND opens account_class
+    "Sky Blue"; at least one task_065 trial opens "Evergreen Account" or "Green Account".
+    Denied if task_070's batch_03 queries still contain no in-force or eligibility question —
+    two successive rewordings failing to reach one behaviour is evidence that the mechanism
+    needs a surface other than prose, and gen-003 should say so rather than reword a third time.
+  risk: >-
+    More searching again: C1 already pushed task_070 t0 from 8 queries to 22, and longer
+    episodes cost money and run nearer tau's frozen budgets. Inertness is the other failure
+    mode — if this knowledge base does not organise rules as in-force conditions, the
+    instruction has nothing to retrieve and the agent falls back to ranking features.
+  commit: 440beb8
+- mechanism: >-
+    Remove the agent's own explanation as a way to satisfy the completion check; the only
+    alternative to acting is that the knowledge base gives no action to take.
+  surface: revert
+  evidence: >-
+    task_096 t2 (01a009ce-6959-73dc-8c1c-739b6a0bc5f8) filed a discrepancy report with
+    expected_apy 6.55, actual_apy 6.55 and amount_difference 0 — coverage satisfied by a null
+    action. task_096 t0 (01a009c7-2628-745d-84bc-4779a226d40e) transferred having acted on
+    nothing, where batch_01's t0 acted. task_082 lost its only full-effort trial: batch_02's
+    01a009c6-1c77-77ad-b3f7-fb830e35663c does the reads then transfers, and
+    01a009c9-ffba-722f-b4c3-52245861aaf4 and 01a009ce-12ed-74fb-956c-d3e04c8276f1 transfer at
+    the first turn. Round-wide, transfer-carrying episodes rose 9/24 to 11/24. Partial revert of
+    gen-001 C2 (bd243c5).
+  expected_effect: >-
+    In batch_03, transfer-carrying episodes fall below 11/24, and task_096 files no report whose
+    amount_difference is 0. Pre-registered falsifier for the half being KEPT: task_065 must
+    still open both accounts in at least 2 of 3 trials — if that falls back to 1/3, the revert
+    removed the working half along with the harmful one and D2 is itself gen-003's revert
+    candidate.
+  risk: >-
+    Narrowing an instruction that half-worked is the operation that failed four times across the
+    two prior experiments. The mitigation is that both halves now carry falsifiers pointing in
+    opposite directions, so batch_03 can distinguish "the escape clause caused the harm" from
+    "C2 was one indivisible mechanism".
+  commit: 3a64da7
+mutation:
+  branch: gen-002/deciding-rule-and-no-escape
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/12
+  source_commit: 18d2203d7005d8098fde4d6795245e89c2b01443
+  candidate_commit: 54be774edc75f9442f704ea81abec70b26001da9
+expected_effect: >-
+  SET level, stated as behaviour. D1 should make an in-force or eligibility question appear in
+  task_070's and task_065's query streams, where none has appeared in two rounds; D2 should
+  reduce transfer-carrying episodes below 11/24 and eliminate null-action coverage. A reward
+  improvement is again NOT confidently predicted: five of the eight tasks fail on more than one
+  coded mode at once, and the two largest modes in the batch — premature transfer and the
+  incompletely-performed user-tool handover — are addressed only indirectly, if at all. The
+  generation-level statistical read is H2's sealed held-out round and the paired batch curve
+  whose endpoint test is H6's batch_07 against H0's batch_01.
+human_approval:
+  approved_by: >-
+    orchestrator — autonomous per D23 (user-delegated)
+  date: '2026-08-16'
+held_out_result: null

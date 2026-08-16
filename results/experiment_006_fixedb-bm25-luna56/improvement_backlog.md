@@ -184,13 +184,87 @@ appends an exact computation), not another sentence.
 
 ---
 
+---
+
+## Re-ranking against `batch_02` (H1, 2026-08-16)
+
+`batch_02` measures a set gen-001 was tuned on. Round health clean: 24/24, one stray
+`sandbox_tool_error` counter, no cell excluded. Graded read **1/24 episodes, 1/8 tasks**,
+down from `batch_01`'s 2/24.
+
+**gen-001's three predictions, scored.**
+
+- **C1 — behaviour confirmed, outcome denied, and the pair is the transition's best finding.**
+  `"Sky Blue"` appears in `task_070`'s queries (t1, t2) after **zero of 22** in `batch_01` —
+  the gold option entered the candidate set for the first time — and the agent opened
+  `Hunter Green` anyway, 3/3. `task_065` t2 enumerated five savings classes across sixteen
+  queries and still opened `Blue`/`Silver Plus`. **Enumeration is not the binding constraint**,
+  so T1 is re-specified below and gen-002's D1 targets the re-specification.
+- **C2 — confirmed on `task_065` (both accounts 2/3, was 1/3), denied on `task_096`,
+  over-reach falsifier strongly not triggered** (`task_026` writes 14 → 2/2/1) — **and it
+  caused a measured harm through its escape clause.** See T7.
+- **C3 — confirmed above prediction, 3/3** (`task_065` closes with `account_id` alone; the
+  prediction asked for ≥1). Watch item, not yet a falsifier: `task_072` t1 emitted one call
+  keyed `agent_name` instead of `agent_tool_name`, then reissued correctly. A second
+  occurrence in `batch_03` makes it C3's falsifier firing.
+
+**T1 is RE-SPECIFIED, not retired.** The mode is not "the candidate set is incomplete" but
+"the agent ranks published features against the customer's stated wants, where the bank's
+answer turns on a rule in force". Across six `task_070` episodes and ~65 queries in two rounds,
+**no query asks which offer or rate is currently active**; `task_065`'s gold pairs `Evergreen`
+checking with `Green` savings, a relation no single-product ranking reaches. Consumed by
+gen-002 D1.
+
+**T5 moved without being targeted, and it is the round's largest behavioural change.**
+`give_discoverable_user_tool` went **0/6 → 6/6** episodes on `task_026` and `task_028`, almost
+certainly from C2's completion check. Not yet a pass — the agent adds an `arguments` payload
+gold does not carry and repeats the call per transaction where gold calls it once. **Left to
+settle**: touching it now would confound a change that is already moving.
+
+**T6 held again.** `task_072`'s amounts got *worse* (12/8, 14/16, 12/16 against gold 14.00 and
+3.50) while its query count fell to 4/2/3. Still not separable from T1's mechanism — the fee
+schedule is itself a bank-defined rule. Re-rank against `batch_03`.
+
+**T4 (transfer) held again, and the reasoning is now testable rather than only historical.**
+It rose to **11/24 episodes** from 9/24 — but gen-001's own C2 escape clause is a measured
+cause of part of that rise, so gen-002's D2 removes the clause and `batch_03` says how much of
+the mode was self-inflicted. Attacking transfer directly before that answer would confound the
+two. This is the last generation that reasoning holds for: if `batch_03` still shows transfer
+at or above `batch_01`'s 9/24 after the clause is gone, the mode is native and earns a slot.
+
+---
+
+## T7 — An instruction that offers an alternative to acting will have its alternative taken
+
+**Status:** consumed-by-gen-002 (as a revert) · **Owning layer:** harness (the harness's own
+prior generation) · **Prevalence:** 3 witnesses plus a round-wide shift
+
+Not a property of the target agent — a property of **this loop's own output**, which makes it
+the most transferable finding so far. gen-001's C2 required every named item to be *"either
+acted on or explained to them."* The disjunction was meant to excuse items that legitimately
+need no action. The model used it to convert action into explanation:
+
+- `task_096` t2 covered the second account by filing a report with `expected_apy ==
+  actual_apy == 6.55` and `amount_difference 0` — a null action that satisfies the check.
+- `task_096` t0 transferred having acted on nothing, where `batch_01`'s t0 acted.
+- `task_082` lost its only full-effort trial (`batch_01` t1: 76 messages, all four disputes
+  filed, both cards closed, replacement ordered). `batch_02` has none.
+- Round-wide, transfer-carrying episodes rose 9/24 → 11/24.
+
+Generalised: seq 4 and seq 5 recorded that *an instruction does not inherit the scope its
+author reasoned about*. This is the sharper form — **an instruction's escape clause is the part
+the model optimises against.** gen-002's D2 ties the alternative to a retrieved finding rather
+than to the agent's own narration.
+
+---
+
 ## Slot accounting
 
 | Slot | Generation | Target(s) | Status |
 |---|---|---|---|
-| 1 | gen-001 | T1 + T2 + T3 (composite set, plan D22) | in flight |
-| 2–6 | — | T4, T5, T6 re-ranked against each new batch | open |
+| 1 | gen-001 | T1 + T2 + T3 (first composite set, D22) | consumed — C1 behaviour-only, C2 mixed + harmful, C3 confirmed; resolved T5 as a side effect |
+| 2 | gen-002 | T1 re-specified (D1) + T7 revert (D2) | in flight |
+| 3–6 | — | T4, T5, T6 re-ranked against each new batch | open |
 
-Six targets opened, three consumed by the first set. T4 is the highest-prevalence mode in the
-batch and is deliberately left standing — recorded here so that a later slot consuming it must
-first say what makes its mechanism different from the four that failed.
+Seven targets opened, four consumed. T4 remains the highest-prevalence mode and is held for one
+more round on a stated, falsifiable condition.
