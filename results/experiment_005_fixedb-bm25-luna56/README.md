@@ -130,11 +130,26 @@ Two things went wrong and were corrected rather than absorbed, both in
    was taught to render the `sandbox_*` counters. No contaminated cell touches `task_014`,
    `task_065` or `task_082`, so no finding above rests on one.
 
-Also worth carrying forward: **halving batch concurrency 4 → 2 did not reduce seam
-contamination** (4 affected cells either way). Episode length is the better explanation —
-the mutations made episodes up to 9× longer, so per-round tool-call volume rose regardless
-of how many episodes run at once. The bridge's known, unfixed thread ceiling is the
-suspect, and it is now *more* likely to bite as the harness gets more thorough.
+**The seam-timeout cause, corrected after close.** This README first attributed the
+contamination to the bridge's thread ceiling, with episode length as the aggravator. A
+span-by-span investigation (`34be610`, and `contract/constraints.md`) refuted that: every
+failed `execute_tool` span is exactly 30.1s — the sandbox daemon's hard per-call timeout —
+the bridge saw none of them (zero 25s stall warnings, zero refusals, no saturation possible
+at 4-wide), and `batch_02`'s three failures began inside a single 15-second window across
+three concurrent episodes. The cause is **in-flight POST loss on a network interruption**,
+not saturation. My one correct observation — that halving concurrency 4 → 2 changed nothing
+(4 affected cells either way) — supports the network explanation; I drew the wrong
+inference from it. The same weather hit the local lane that evening and produced the H2
+held-out round's `TransportError` resumes, which the retry discipline absorbed to clean
+final manifests.
+
+**A sharper consequence, and it bounds the evidence rather than the result.** τ *received
+and executed* the killed calls: the tool call rides the reattach-capable event stream while
+the result rides the unrecoverable POST. So `task_028` t0 ran `transfer_to_human_agents`
+three times while the agent believed the first had failed — agent and grader histories
+diverged. Grade impact is bounded: all five affected episodes sit on tasks that scored 0.0
+across every trial of every round regardless, so **the batch curve and every finding above
+stand**; the caveat is per-episode and the counters carry it.
 
 ## Caveats that bound every number here
 

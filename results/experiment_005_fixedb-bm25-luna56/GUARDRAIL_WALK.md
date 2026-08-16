@@ -144,6 +144,26 @@ The freeze fingerprint `sha256:7ea86d87…f15e9b` is asserted by the runner befo
 round against `experiment.yaml`; no round ran under a different one. The frozen `<policy>`
 region (5733 chars) is asserted by `make check`, the pre-commit hook and CI on every
 commit, and by the adapter against the live `env.get_policy()` at episode start. Both
-mutations touched only the `<instructions>` block. `make gate_a0a` PASSed before the first
-episode was spent (323 tests + mock smoke) and its verdict attests the adapter sha that
-actually ran.
+mutations touched only the `<instructions>` block.
+
+**A.0a, and a caveat about where its verdict now lives.** The gate that attested seq 5's
+adapter PASSed before the first episode was spent: **adapter sha `a4abf65`, 323 tests +
+mock smoke, generated 2026-08-16T01:33:44Z**. The `benchmark/` tree was byte-identical from
+that gate through every round.
+
+That verdict is **no longer the file at `generation_000/gates/a0a.json`.** Post-closure
+seam-hardening work re-ran the gate in place, so the path now holds a *later* PASS
+(adapter sha `5e72ef9`, 335 tests, 2026-08-16T06:01:56Z) attesting an adapter that no seq-5
+episode ever ran on. The experiment's own verdict is preserved in git history at closure
+commit `ef0c5a2` and is recoverable with:
+
+```
+git show ef0c5a2:results/experiment_005_fixedb-bm25-luna56/generation_000/gates/a0a.json
+```
+
+Recorded rather than repaired: no graded artifact was touched by that work — `batch_01`,
+`batch_02`, `batch_03`, `held_out/`, both improvement records, `summary.md` and
+`batch_curve.json` are all byte-identical to their state at reveal — so the result is
+unaffected. But a gate file that silently comes to attest a different adapter than the one
+it certified is exactly the drift this walk exists to name, and a future reader must not
+read the file at HEAD as seq 5's gate.
