@@ -40,7 +40,24 @@ _HOLDOUT_VISIBILITY_KEYS = (
 )
 _PROTOCOL_INT_KEYS = ("generations", "improvement_tasks_per_generation", "held_out_tasks")
 _PROTOCOL_BOOL_KEYS = ("allow_within_batch_verification", "require_human_approval")
-_PROTOCOL_KEYS = (*_PROTOCOL_INT_KEYS, *_PROTOCOL_BOOL_KEYS, "holdout_visibility", "batch_mode")
+_PROTOCOL_KEYS = (
+    *_PROTOCOL_INT_KEYS,
+    *_PROTOCOL_BOOL_KEYS,
+    "holdout_visibility",
+    "batch_mode",
+    "reading_key",
+)
+
+#: The nine cells a mechanical reading key must name (plan D25): primary direction ×
+#: secondary direction. Seq 6 observed a combination (primary down, secondary up) its
+#: prose key had no language for, and the closure had to adjudicate off-key — a key that
+#: does not name every cell is a key that gets rewritten after the data exists. A cell's
+#: prose may declare the combination run-voiding; it may not be absent.
+READING_KEY_CELLS = tuple(
+    f"primary_{primary}_secondary_{secondary}"
+    for primary in ("up", "flat", "down")
+    for secondary in ("up", "flat", "down")
+)
 
 #: How improvement batches relate across generations. `fresh` is the original design —
 #: G disjoint batches, each spent exactly once, so every diagnosis reads tasks the harness
@@ -82,6 +99,10 @@ class ProtocolConfig:
     #: `fresh` (default): G disjoint batches, each spent once. `fixed`: one batch task
     #: set measured under every generation — see _BATCH_MODES for the design rationale.
     batch_mode: str = BATCH_MODE_FRESH
+    #: The full-quadrant reading key (plan D25): all nine primary × secondary cells named
+    #: at freeze, validated by READING_KEY_CELLS. Optional in code so pre-D25 value
+    #: snapshots keep parsing; protocol.md § 0 makes it mandatory for new freezes.
+    reading_key: dict[str, str] | None = None
 
 
 def _protocol_positive_int(section: dict, key: str) -> int:
@@ -96,6 +117,33 @@ def _protocol_bool(section: dict, key: str, parent: str = "protocol") -> bool:
     if not isinstance(value, bool):
         raise LockError(f"{parent}.{key} {value!r} must be a bool")
     return value
+
+
+def _parse_reading_key(section: dict) -> dict[str, str] | None:
+    reading_key = section.get("reading_key")
+    if reading_key is None:
+        return None
+    if not isinstance(reading_key, dict):
+        raise LockError("protocol.reading_key must be a mapping of the nine direction cells")
+    missing = sorted(set(READING_KEY_CELLS) - set(reading_key))
+    unknown = sorted(set(reading_key) - set(READING_KEY_CELLS))
+    if missing or unknown:
+        raise LockError(
+            "protocol.reading_key must name exactly the nine primary × secondary cells"
+            + (f"; missing: {', '.join(missing)}" if missing else "")
+            + (f"; unknown: {', '.join(unknown)}" if unknown else "")
+        )
+    empty = sorted(
+        cell
+        for cell, prose in reading_key.items()
+        if not isinstance(prose, str) or not prose.strip()
+    )
+    if empty:
+        raise LockError(
+            f"protocol.reading_key cells must be non-empty prose (a cell may declare the "
+            f"combination run-voiding, never be blank): {', '.join(empty)}"
+        )
+    return {cell: str(reading_key[cell]) for cell in READING_KEY_CELLS}
 
 
 def _parse_holdout_visibility(section: dict) -> HoldoutVisibility:
@@ -270,6 +318,7 @@ class Lock:
             **{key: _protocol_bool(section, key) for key in _PROTOCOL_BOOL_KEYS},
             holdout_visibility=_parse_holdout_visibility(section),
             batch_mode=batch_mode,
+            reading_key=_parse_reading_key(section),
         )
         if config.batch_mode == BATCH_MODE_FIXED and not config.allow_within_batch_verification:
             raise LockError(

@@ -1,0 +1,197 @@
+{
+  "note": "sensitivity of the pre-registered trend verdict; advisory context beside the p-value, never a gate and never a replacement test",
+  "base": {
+    "statistic": 8.0,
+    "z": 1.7693034738587654,
+    "p_value": 0.038421622016828194,
+    "significant": true
+  },
+  "leave_one_task_out": [
+    {
+      "task_id": "task_007",
+      "z": 1.3887301496588271,
+      "p_value": 0.08245741127665071,
+      "significant": false
+    },
+    {
+      "task_id": "task_012",
+      "z": 1.877348153706596,
+      "p_value": 0.030235196214221875,
+      "significant": true
+    },
+    {
+      "task_id": "task_016",
+      "z": 1.990210416011332,
+      "p_value": 0.0232838806934327,
+      "significant": true
+    },
+    {
+      "task_id": "task_018",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_019",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_021",
+      "z": 1.3496031162636561,
+      "p_value": 0.08857166202553941,
+      "significant": false
+    },
+    {
+      "task_id": "task_022",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_025",
+      "z": 1.9364916731037085,
+      "p_value": 0.02640375570805681,
+      "significant": true
+    },
+    {
+      "task_id": "task_031",
+      "z": 1.5652475842498528,
+      "p_value": 0.05876243404831961,
+      "significant": false
+    },
+    {
+      "task_id": "task_033",
+      "z": 1.4717336715588183,
+      "p_value": 0.07054640556909975,
+      "significant": false
+    },
+    {
+      "task_id": "task_039",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_044",
+      "z": 1.5652475842498528,
+      "p_value": 0.05876243404831961,
+      "significant": false
+    },
+    {
+      "task_id": "task_049",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_052",
+      "z": 1.936491673103708,
+      "p_value": 0.026403755708056847,
+      "significant": true
+    },
+    {
+      "task_id": "task_059",
+      "z": 1.7336902313221407,
+      "p_value": 0.04148653036220636,
+      "significant": true
+    },
+    {
+      "task_id": "task_068",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_073",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_075",
+      "z": 2.1256987183799856,
+      "p_value": 0.016764176862404934,
+      "significant": true
+    },
+    {
+      "task_id": "task_078",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_084",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_085",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_086",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_092",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_093",
+      "z": 1.774488524564057,
+      "p_value": 0.03799118928858447,
+      "significant": true
+    },
+    {
+      "task_id": "task_095",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_097",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    },
+    {
+      "task_id": "task_098",
+      "z": 1.3887301496588271,
+      "p_value": 0.08245741127665071,
+      "significant": false
+    },
+    {
+      "task_id": "task_100",
+      "z": 1.7693034738587654,
+      "p_value": 0.038421622016828194,
+      "significant": true
+    }
+  ],
+  "load_bearing_tasks": [
+    "task_007",
+    "task_021",
+    "task_031",
+    "task_033",
+    "task_044",
+    "task_098"
+  ],
+  "endpoint_only_first_passes": [
+    "task_044",
+    "task_098"
+  ],
+  "without_endpoint_first_passes": {
+    "statistic": 5.0,
+    "z": 1.1713032141645454,
+    "p_value": 0.12073845996926601,
+    "significant": false
+  }
+}

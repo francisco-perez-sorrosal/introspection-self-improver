@@ -552,3 +552,60 @@ def test_noise_band_narrows_with_trials():
     assert reveal.noise_band_pp(28, 3) == 5
     assert reveal.noise_band_pp(47, 1) == 7
 
+
+
+# ------------------------------------------------------- trend fragility (plan D25)
+
+
+def test_fragility_reproduces_the_seq6_review_numbers():
+    """The independent review of seq 6 is the fixture: its hand-computed sensitivity
+    numbers must fall out of the committed revealed artifacts."""
+    from pathlib import Path
+
+    held_out = (
+        Path(reveal.__file__).resolve().parents[2]
+        / "results"
+        / "experiment_006_fixedb-bm25-luna56"
+        / "held_out"
+    )
+    results = reveal.results_from_revealed(held_out)
+    report = reveal.fragility(results)
+    assert report["base"]["significant"] is True
+    assert abs(report["base"]["z"] - 1.7693) < 1e-3
+    assert report["load_bearing_tasks"] == [
+        "task_007",
+        "task_021",
+        "task_031",
+        "task_033",
+        "task_044",
+        "task_098",
+    ]
+    assert report["endpoint_only_first_passes"] == ["task_044", "task_098"]
+    without = report["without_endpoint_first_passes"]
+    assert abs(without["z"] - 1.17) < 0.01
+    assert abs(without["p_value"] - 0.121) < 0.001
+    assert without["significant"] is False
+
+
+def test_fragility_on_an_insignificant_trend_names_no_load_bearing_tasks():
+    results = [
+        reveal.GenerationResult(0, {"t1": (1, 3), "t2": (0, 3)}, carried=False),
+        reveal.GenerationResult(1, {"t1": (1, 3), "t2": (0, 3)}, carried=False),
+    ]
+    report = reveal.fragility(results)
+    assert report["base"]["significant"] is False
+    assert report["load_bearing_tasks"] == []
+    sentence = reveal.fragility_sentence(report)
+    assert "not significant" in sentence
+
+
+def test_fragility_sentence_names_the_load_bearing_and_endpoint_cells():
+    results = [
+        reveal.GenerationResult(0, {"t1": (0, 3), "t2": (0, 3)}, carried=False),
+        reveal.GenerationResult(1, {"t1": (1, 3), "t2": (0, 3)}, carried=False),
+        reveal.GenerationResult(2, {"t1": (2, 3), "t2": (3, 3)}, carried=False),
+    ]
+    report = reveal.fragility(results)
+    assert report["endpoint_only_first_passes"] == ["t2"]
+    sentence = reveal.fragility_sentence(report)
+    assert "t2" in sentence

@@ -22,11 +22,28 @@ file and the code disagree, the code wins and this file gets fixed.
    (`benchmark/data/user_sim_screen.json`). Exclusions carry the crashers AND the
    experiment's decision-row pool discipline: seq 4 (plan D11) additionally excludes
    all 20 seq-2 tasks, so nothing a prior loop was tuned on — and nothing a prior
-   reveal exposed — reappears anywhere in the new partition.
-3. **Freeze**: set `experiment.seq`, protocol block (G/B/T), flip `frozen.status` to
-   FROZEN; `make reset_h0` (byte-identity to `h0-baseline`); commit; `make gate_a0a`
-   (blocking) and commit the PASS record — the first run writes the freeze snapshot
-   that every later run must match.
+   reveal exposed — reappears anywhere in the new partition. Two composition rules
+   (plan D25) bind here:
+   - **A fixed batch spans empirical strata**, measured under the incumbent H0 —
+     anchors (reliably passing: regression detectors), marginals (the band where
+     `num_trials` resolves movement), and headroom (failing tasks whose modes the
+     mutable surface can plausibly address) — with the chosen ratio and each task's
+     stratum recorded in the manifest header. An all-known-fail batch is by
+     construction a floor: one revealed experiment's primary spent 168 episodes with
+     five of eight tasks contributing zero dynamic range, and its endpoint test
+     reduced to one task's day-to-day variance.
+   - **A capability-claim freeze draws its held-out set from zero-prior-exposure
+     tasks** (the partition-isolation machinery prints every reuse at commit; a
+     declared reuse demotes the experiment's held-out lane to a diagnostic probe, and
+     the freeze decision must say which it is). A set on its third experiment cannot
+     carry a claim, however clean its trend.
+3. **Freeze**: set `experiment.seq`, protocol block (G/B/T, and the full-quadrant
+   `reading_key` — all nine primary × secondary cells, validated by the lock parser;
+   optional in code for old snapshots, mandatory here for new freezes: a key that does
+   not name every cell is a key that gets rewritten after the data exists), flip
+   `frozen.status` to FROZEN; `make reset_h0` (byte-identity to `h0-baseline`);
+   commit; `make gate_a0a` (blocking) and commit the PASS record — the first run
+   writes the freeze snapshot that every later run must match.
 
 ## Per generation g (H_g is current, tagged; g starts at 0)
 

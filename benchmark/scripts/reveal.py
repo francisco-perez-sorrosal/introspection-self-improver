@@ -41,8 +41,18 @@ def main() -> int:
         if not held_out_dir.exists() or not any(held_out_dir.iterdir()):
             print(f"✗ {held_out_dir} is not a revealed experiment", file=sys.stderr)
             return 1
-        for path in process_metrics.write_process_metrics(held_out_dir):
+        for path in process_metrics.write_process_metrics(
+            held_out_dir, process_metrics.tool_classes_from_lock(lock)
+        ):
             print(f"✓ wrote {path}")
+        import json
+
+        results = revealmod.results_from_revealed(held_out_dir)
+        fragility_path = held_out_dir / revealmod.TREND_FRAGILITY_JSON
+        fragility_path.write_text(
+            json.dumps(revealmod.fragility(results), indent=2) + "\n", encoding="utf-8"
+        )
+        print(f"✓ wrote {fragility_path}")
         return 0
     try:
         experiment_dir = revealmod.reveal(lock, results_root=RESULTS_ROOT)

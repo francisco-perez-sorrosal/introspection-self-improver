@@ -278,3 +278,49 @@ def test_batch_mode_fixed_requires_within_batch_verification() -> None:
     with pytest.raises(LockError, match="within-batch verification"):
         _ = Lock(raw={"protocol": _protocol_block(batch_mode="fixed")}).protocol
 
+
+
+# ------------------------------------------------------- reading key (plan D25)
+
+
+def _reading_key(**overrides) -> dict:
+    from tau_adapter.lock import READING_KEY_CELLS
+
+    key = {cell: f"interpretation of {cell}" for cell in READING_KEY_CELLS}
+    key.update(overrides)
+    return key
+
+
+def test_reading_key_is_optional_and_defaults_to_none() -> None:
+    assert Lock(raw={"protocol": _protocol_block()}).protocol.reading_key is None
+
+
+def test_a_full_quadrant_reading_key_parses() -> None:
+    protocol = Lock(raw={"protocol": _protocol_block(reading_key=_reading_key())}).protocol
+    assert protocol.reading_key is not None
+    assert len(protocol.reading_key) == 9
+
+
+def test_reading_key_missing_a_cell_is_refused() -> None:
+    key = _reading_key()
+    del key["primary_down_secondary_up"]
+    with pytest.raises(LockError, match="primary_down_secondary_up"):
+        _ = Lock(raw={"protocol": _protocol_block(reading_key=key)}).protocol
+
+
+def test_reading_key_unknown_cell_is_refused() -> None:
+    with pytest.raises(LockError, match="unknown"):
+        _ = Lock(
+            raw={"protocol": _protocol_block(reading_key=_reading_key(primary_sideways="x"))}
+        ).protocol
+
+
+def test_reading_key_blank_cell_is_refused() -> None:
+    with pytest.raises(LockError, match="non-empty prose"):
+        _ = Lock(
+            raw={
+                "protocol": _protocol_block(
+                    reading_key=_reading_key(primary_flat_secondary_flat="  ")
+                )
+            }
+        ).protocol

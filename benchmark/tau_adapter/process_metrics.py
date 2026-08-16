@@ -1,17 +1,25 @@
-"""Sub-reward process metrics, derived at reveal from the revealed grading records.
+"""Sub-reward process metrics, derived from graded records — held-out at reveal, batch
+rounds any time (batch evidence is observable by design).
 
-The reveal's headline artifacts answer "what did each generation score"; these two CSVs
-answer "what moved underneath" — partial credit (DB match, gold-action match, write
-match, mean action reward) and behavioral signatures (retrieval intensity, discoverable
-tool usage, human transfers, episode length and cost). Everything derives from
-`held_out/generation_NNN/graded/updated_results.json`, the canonical grading record the
-round's console.log renders from — never from logs, and never from the vault: this
-module reads only already-revealed files, so it is safe to re-derive post-reveal
-(`scripts/reveal.py --derive-only`).
+The headline artifacts answer "what did each round score"; these CSVs answer "what moved
+underneath" — partial credit (DB match, gold-action match, write match, mean action
+reward) and behavioral signatures (retrieval intensity, discoverable tool usage, human
+transfers, episode length and cost). Everything derives from a round's
+`graded/updated_results.json`, the canonical grading record — never from logs, and never
+from the vault: on the held-out side this module reads only already-revealed files, so it
+is safe to re-derive post-reveal (`scripts/reveal.py --derive-only`).
 
-These are diagnostic descriptive statistics over the same single-trial episodes as the
-progression curve. No noise band is defined for them; renderers must present direction,
-never significance.
+Under plan D25 the behavioral counters are first-class prediction channels: a change's
+`expected_effect` may name a counter here instead of pass/fail, because these move
+smoothly where the binary rate thrashes (one revealed experiment's
+`partial_action_reward_pct` climbed near-monotonically +4.6 pp while its pass curve
+round-tripped). Diagnostic descriptive statistics; no noise band is defined; renderers
+present direction, never significance.
+
+The domain-specific tool names live in the lock (`operational.process_metric_tools`),
+never in this module: the code is task- and domain-agnostic, the configuration says
+which tools mean "search", "transfer", and "capability discovery" for the frozen domain
+(`tool_classes_from_lock`; the defaults keep pre-D25 experiments derivable).
 """
 
 from __future__ import annotations
@@ -19,30 +27,68 @@ from __future__ import annotations
 import csv
 import io
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 PROCESS_BY_GENERATION_CSV = "process_metrics_by_generation.csv"
 PROCESS_BY_TASK_CSV = "process_metrics_by_task.csv"
+BATCH_PROCESS_BY_ROUND_CSV = "batch_process_metrics_by_round.csv"
+BATCH_PROCESS_BY_TASK_CSV = "batch_process_metrics_by_task.csv"
 GRADED_RELPATH = Path("graded") / "updated_results.json"
 
-#: Tool names counted as behavioral signatures. KB_search is retrieval intensity;
-#: the discoverable set is the agent-side capability surface (the user's own
-#: call_discoverable_user_tool is deliberately excluded — it measures the simulated
-#: user, not the harness).
-KB_TOOL = "KB_search"
-DISCOVERABLE_TOOLS = frozenset(
-    {
-        "unlock_discoverable_agent_tool",
-        "call_discoverable_agent_tool",
-        "give_discoverable_user_tool",
-    }
+
+@dataclass(frozen=True)
+class ToolClasses:
+    """Which tool names count as which behavioral signature, for the frozen domain.
+
+    The user's own discoverable calls are deliberately excluded from `discoverable` —
+    they measure the simulated user, not the harness.
+    """
+
+    search: str | None
+    discoverable: frozenset[str]
+    transfer: str | None
+
+
+#: Pre-D25 defaults (the banking_knowledge freeze's names): keeps every already-graded
+#: experiment derivable without a lock edit. A different domain overrides via the lock.
+DEFAULT_TOOL_CLASSES = ToolClasses(
+    search="KB_search",
+    discoverable=frozenset(
+        {
+            "unlock_discoverable_agent_tool",
+            "call_discoverable_agent_tool",
+            "give_discoverable_user_tool",
+        }
+    ),
+    transfer="transfer_to_human_agents",
 )
-TRANSFER_TOOL = "transfer_to_human_agents"
 
 
-def derive_task_rows(graded_payload: dict[str, Any], generation_label: str) -> list[dict[str, Any]]:
-    """One row per simulation in a revealed graded record."""
+def tool_classes_from_lock(lock: Any) -> ToolClasses:
+    """Read `operational.process_metric_tools` off a Lock; defaults when absent.
+
+    Lives in `operational:` — outside the freeze fingerprint — because these names
+    configure derived diagnostics, never what the agent can do inside an episode.
+    """
+    section = (getattr(lock, "raw", None) or {}).get("operational") or {}
+    tools = section.get("process_metric_tools") or {}
+    if not tools:
+        return DEFAULT_TOOL_CLASSES
+    return ToolClasses(
+        search=tools.get("search"),
+        discoverable=frozenset(str(name) for name in (tools.get("discoverable") or [])),
+        transfer=tools.get("transfer"),
+    )
+
+
+def derive_task_rows(
+    graded_payload: dict[str, Any],
+    generation_label: str,
+    tool_classes: ToolClasses = DEFAULT_TOOL_CLASSES,
+) -> list[dict[str, Any]]:
+    """One row per simulation in a graded record (held-out generation or batch round)."""
     bases = {
         str(task["id"]): list((task.get("evaluation_criteria") or {}).get("reward_basis") or [])
         for task in graded_payload.get("tasks") or []
@@ -56,11 +102,11 @@ def derive_task_rows(graded_payload: dict[str, Any], generation_label: str) -> l
         for message in sim.get("messages") or []:
             for tool_call in message.get("tool_calls") or []:
                 name = str(tool_call.get("name"))
-                if name == KB_TOOL:
+                if name == tool_classes.search:
                     kb += 1
-                elif name in DISCOVERABLE_TOOLS:
+                elif name in tool_classes.discoverable:
                     discoverable += 1
-                elif name == TRANSFER_TOOL:
+                elif name == tool_classes.transfer:
                     transfers += 1
         task_id = str(sim.get("task_id"))
         basis = bases.get(task_id, [])
@@ -137,6 +183,7 @@ def aggregate_generation(task_rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def derive_from_held_out_dir(
     held_out_dir: Path,
+    tool_classes: ToolClasses = DEFAULT_TOOL_CLASSES,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """(task rows, generation rows) over every measured generation directory present.
 
@@ -150,12 +197,38 @@ def derive_from_held_out_dir(
         if not graded_path.exists():
             continue
         payload = json.loads(graded_path.read_text(encoding="utf-8"))
-        rows = derive_task_rows(payload, gen_dir.name)
+        rows = derive_task_rows(payload, gen_dir.name, tool_classes)
         rows.sort(key=lambda r: r["task_id"])
         task_rows.extend(rows)
         if rows:
             generation_rows.append(aggregate_generation(rows))
     return task_rows, generation_rows
+
+
+def derive_from_batch_rounds(
+    experiment_dir: Path,
+    tool_classes: ToolClasses = DEFAULT_TOOL_CLASSES,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """(task rows, round rows) over every graded batch round in an experiment tree.
+
+    Batch evidence is fully observable by design, so this derives at any time — during
+    the experiment (the counters are the D25 prediction channels the next diagnosis
+    scores) as well as at close. Valid under BOTH batch modes: under `fresh` the rounds
+    hold different tasks and the per-round aggregates are read per-round, never as a
+    curve; under `fixed` they are the paired saturation instrument's process view.
+    The row label is the batch round name (`batch_NN`).
+    """
+    task_rows: list[dict[str, Any]] = []
+    round_rows: list[dict[str, Any]] = []
+    for graded_path in sorted(experiment_dir.glob("generation_*/batch_*/" + str(GRADED_RELPATH))):
+        round_name = graded_path.parent.parent.name
+        payload = json.loads(graded_path.read_text(encoding="utf-8"))
+        rows = derive_task_rows(payload, round_name, tool_classes)
+        rows.sort(key=lambda r: r["task_id"])
+        task_rows.extend(rows)
+        if rows:
+            round_rows.append(aggregate_generation(rows))
+    return task_rows, round_rows
 
 
 def _fmt(value: Any) -> Any:
@@ -224,11 +297,27 @@ def by_generation_csv(generation_rows: list[dict[str, Any]]) -> str:
     return out.getvalue()
 
 
-def write_process_metrics(held_out_dir: Path) -> list[Path]:
+def write_process_metrics(
+    held_out_dir: Path,
+    tool_classes: ToolClasses = DEFAULT_TOOL_CLASSES,
+) -> list[Path]:
     """Derive and write both CSVs beside the other revealed artifacts; idempotent."""
-    task_rows, generation_rows = derive_from_held_out_dir(held_out_dir)
+    task_rows, generation_rows = derive_from_held_out_dir(held_out_dir, tool_classes)
     by_task_path = held_out_dir / PROCESS_BY_TASK_CSV
     by_generation_path = held_out_dir / PROCESS_BY_GENERATION_CSV
     by_task_path.write_text(by_task_csv(task_rows), encoding="utf-8")
     by_generation_path.write_text(by_generation_csv(generation_rows), encoding="utf-8")
     return [by_generation_path, by_task_path]
+
+
+def write_batch_process_metrics(
+    experiment_dir: Path,
+    tool_classes: ToolClasses = DEFAULT_TOOL_CLASSES,
+) -> list[Path]:
+    """Derive and write the batch-round CSVs at the experiment root; idempotent."""
+    task_rows, round_rows = derive_from_batch_rounds(experiment_dir, tool_classes)
+    by_task_path = experiment_dir / BATCH_PROCESS_BY_TASK_CSV
+    by_round_path = experiment_dir / BATCH_PROCESS_BY_ROUND_CSV
+    by_task_path.write_text(by_task_csv(task_rows), encoding="utf-8")
+    by_round_path.write_text(by_generation_csv(round_rows), encoding="utf-8")
+    return [by_round_path, by_task_path]

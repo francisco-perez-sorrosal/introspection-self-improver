@@ -45,6 +45,7 @@ TASK_GENERATION_MATRIX_CSV = "task_generation_matrix.csv"
 TRANSITIONS_CSV = "transitions.csv"
 RETENTION_CSV = "retention.csv"
 TREND_TEST_JSON = "trend_test.json"
+TREND_FRAGILITY_JSON = "trend_fragility.json"
 SUMMARY_NAME = "summary.md"
 
 #: Pre-registered before any seq-3 round (SIA_EVALUATION_PLAN.md D11): the one primary
@@ -154,6 +155,161 @@ def trend_test(results: list[GenerationResult]) -> dict[str, Any]:
         "p_value": p_value,
         "significant": p_value < TREND_ALPHA,
     }
+
+
+def fragility(results: list[GenerationResult]) -> dict[str, Any]:
+    """Sensitivity of the trend verdict — reported beside it, never gating it (plan D25).
+
+    Two cheap perturbations, both advisory. Leave-one-task-out: rerun the trend with
+    each task removed; a significance that any single task can flip is resting on that
+    task's cells. Endpoint-cell sensitivity: a task whose only nonzero rates appear in
+    the final measured generation sits on the largest contrast weight, so its cells buy
+    more statistic than any others — zeroing them asks whether the verdict survives
+    without the last round's first-evers. Neither perturbation changes the
+    pre-registered test; they qualify how much of its answer one task or one round
+    carries. (The review of one revealed experiment found p = 0.038 that six different
+    single tasks could each push past 0.05, with two endpoint-only first-passes
+    supplying 3.0 of the statistic's 8.0 — worth knowing next to the p-value.)
+    """
+    base = trend_test(results)
+    base_slice = {key: base[key] for key in ("statistic", "z", "p_value", "significant")}
+    measured = [result for result in results if not result.carried]
+    tasks = sorted(measured[0].stats) if measured else []
+
+    leave_one_out: list[dict[str, Any]] = []
+    for task in tasks:
+        reduced = [
+            GenerationResult(
+                result.generation,
+                {t: cell for t, cell in result.stats.items() if t != task},
+                result.carried,
+            )
+            for result in results
+        ]
+        test = trend_test(reduced)
+        leave_one_out.append(
+            {
+                "task_id": task,
+                "z": test["z"],
+                "p_value": test["p_value"],
+                "significant": test["significant"],
+            }
+        )
+    load_bearing = sorted(
+        entry["task_id"]
+        for entry in leave_one_out
+        if base["significant"] and not entry["significant"]
+    )
+
+    endpoint_only: list[str] = []
+    without_endpoint: dict[str, Any] | None = None
+    if len(measured) >= 2:
+        final = measured[-1]
+        endpoint_only = sorted(
+            task
+            for task in tasks
+            if final.rate(task) > 0 and all(result.rate(task) == 0 for result in measured[:-1])
+        )
+        if endpoint_only:
+            adjusted = [
+                result
+                if result.carried or result.generation != final.generation
+                else GenerationResult(
+                    result.generation,
+                    {
+                        task: ((0, cell[1]) if task in endpoint_only else cell)
+                        for task, cell in result.stats.items()
+                    },
+                    result.carried,
+                )
+                for result in results
+            ]
+            test = trend_test(adjusted)
+            without_endpoint = {
+                key: test[key] for key in ("statistic", "z", "p_value", "significant")
+            }
+
+    return {
+        "note": (
+            "sensitivity of the pre-registered trend verdict; advisory context beside "
+            "the p-value, never a gate and never a replacement test"
+        ),
+        "base": base_slice,
+        "leave_one_task_out": leave_one_out,
+        "load_bearing_tasks": load_bearing,
+        "endpoint_only_first_passes": endpoint_only,
+        "without_endpoint_first_passes": without_endpoint,
+    }
+
+
+def results_from_revealed(held_out_dir: Path) -> list[GenerationResult]:
+    """Reconstruct GenerationResults from an already-revealed held_out/ directory.
+
+    The matrix cells are exact `passed/trials` fractions and the by-generation CSV
+    carries the identity flags, so a revealed experiment's fragility (and any future
+    derived statistic) can be backfilled without touching a vault. Read-only over the
+    revealed artifacts — the one place these numbers are legitimately visible.
+    """
+    matrix_lines = (
+        (held_out_dir / TASK_GENERATION_MATRIX_CSV).read_text(encoding="utf-8").splitlines()
+    )
+    header = matrix_lines[0].split(",")
+    labels = header[1:]
+    stats_by_label: dict[str, dict[str, tuple[int, int]]] = {label: {} for label in labels}
+    for line in matrix_lines[1:]:
+        if not line.strip():
+            continue
+        cells = line.split(",")
+        task_id = cells[0]
+        for label, cell in zip(labels, cells[1:], strict=True):
+            passed, trials = cell.split("/")
+            stats_by_label[label][task_id] = (int(passed), int(trials))
+    carried_by_label: dict[str, bool] = {}
+    by_generation = (
+        (held_out_dir / RESULTS_BY_GENERATION_CSV).read_text(encoding="utf-8").splitlines()
+    )
+    columns = by_generation[0].split(",")
+    for line in by_generation[1:]:
+        if not line.strip():
+            continue
+        row = dict(zip(columns, line.split(","), strict=True))
+        carried_by_label[row["generation"]] = row.get("basis") != "measured"
+    return [
+        GenerationResult(
+            generation=int(label.removeprefix("H")),
+            stats=stats_by_label[label],
+            carried=carried_by_label.get(label, False),
+        )
+        for label in labels
+    ]
+
+
+def fragility_sentence(report: dict[str, Any]) -> str:
+    """The summary.md rendering of the fragility report."""
+    load_bearing = report["load_bearing_tasks"]
+    endpoint_only = report["endpoint_only_first_passes"]
+    parts: list[str] = []
+    if not report["base"]["significant"]:
+        parts.append("the trend is not significant, so no single task's removal can flip it")
+    elif load_bearing:
+        parts.append(
+            f"significance is load-bearing on {len(load_bearing)} task(s) — dropping any "
+            f"one of {', '.join(load_bearing)} pushes p above alpha"
+        )
+    else:
+        parts.append("significance survives leave-one-task-out for every task")
+    if endpoint_only:
+        clause = (
+            f"{len(endpoint_only)} first-ever pass(es) appear only in the final measured "
+            f"generation ({', '.join(endpoint_only)})"
+        )
+        without = report["without_endpoint_first_passes"]
+        if without is not None:
+            clause += (
+                f"; zeroing those cells gives z = {without['z']:.2f}, p = {without['p_value']:.3f}"
+            )
+        parts.append(clause)
+    return "; ".join(parts)
 
 
 def trend_sentence(trend: dict[str, Any]) -> str:
@@ -487,6 +643,8 @@ def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) ->
         "",
         f"**Pre-registered primary (D11):** {trend_sentence(trend_test(results))}.",
         "",
+        f"**Fragility (advisory, D25):** {fragility_sentence(fragility(results))}.",
+        "",
         "## Transitions",
         "",
     ]
@@ -592,7 +750,12 @@ def reveal(
     (held_out_dir / TREND_TEST_JSON).write_text(
         json.dumps(trend_test(results), indent=2) + "\n", encoding="utf-8"
     )
-    process_metrics.write_process_metrics(held_out_dir)
+    (held_out_dir / TREND_FRAGILITY_JSON).write_text(
+        json.dumps(fragility(results), indent=2) + "\n", encoding="utf-8"
+    )
+    process_metrics.write_process_metrics(
+        held_out_dir, process_metrics.tool_classes_from_lock(lock)
+    )
     revealed_on = datetime.now(UTC).strftime("%Y-%m-%d")
     (experiment_dir / SUMMARY_NAME).write_text(
         summary_md(lock, results, revealed_on), encoding="utf-8"

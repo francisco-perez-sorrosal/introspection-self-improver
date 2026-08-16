@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tau_adapter import heldout as heldoutmod
 from tau_adapter import lock as lockmod
+from tau_adapter import process_metrics
 from tau_adapter.lock import BATCH_MODE_FIXED, REPO_ROOT
 from tau_adapter.reveal import PASS_THRESHOLD, fmt_count
 
@@ -95,6 +96,15 @@ def main() -> int:
     args = parser.parse_args()
 
     lock = lockmod.load_lock()
+    # Batch process metrics derive under BOTH batch modes (plan D25: the behavioral
+    # counters are prediction channels), so they are written before the fixed-mode
+    # refusal below — only the cross-round CURVE is fixed-mode-only.
+    metrics_dir = args.results_root / f"experiment_{lock.experiment_id}"
+    if metrics_dir.exists():
+        for path in process_metrics.write_batch_process_metrics(
+            metrics_dir, process_metrics.tool_classes_from_lock(lock)
+        ):
+            print(f"✓ wrote {path}")
     if lock.protocol.batch_mode != BATCH_MODE_FIXED:
         print(
             "✗ batch_curve is a fixed-batch-mode instrument: under batch_mode fresh the "

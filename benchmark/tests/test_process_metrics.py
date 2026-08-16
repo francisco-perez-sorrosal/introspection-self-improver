@@ -127,3 +127,66 @@ def test_csvs_are_reparseable_numbers():
     parsed = next(csv.DictReader(io.StringIO(text)))
     assert float(parsed["action_match_pct"]) == 50.0
     assert int(parsed["kb_search_calls"]) == 3
+
+
+# ----------------------------------------- batch rounds + lock-sourced tool classes (D25)
+
+
+def _graded_payload(tool_name: str) -> dict:
+    return {
+        "tasks": [{"id": "task_x", "evaluation_criteria": {"reward_basis": ["DB"]}}],
+        "simulations": [
+            {
+                "task_id": "task_x",
+                "reward_info": {"reward": 0.0, "action_checks": [], "db_check": {}},
+                "messages": [
+                    {"role": "assistant", "tool_calls": [{"name": tool_name}]},
+                ],
+            }
+        ],
+    }
+
+
+def test_batch_rounds_derive_under_any_mode(tmp_path):
+    import json as jsonmod
+
+    round_dir = tmp_path / "generation_000" / "batch_01" / "graded"
+    round_dir.mkdir(parents=True)
+    (round_dir / "updated_results.json").write_text(
+        jsonmod.dumps(_graded_payload("KB_search")), encoding="utf-8"
+    )
+    task_rows, round_rows = pm.derive_from_batch_rounds(tmp_path)
+    assert [r["generation"] for r in round_rows] == ["batch_01"]
+    assert task_rows[0]["kb_search_calls"] == 1
+    paths = pm.write_batch_process_metrics(tmp_path)
+    assert all(p.exists() for p in paths)
+
+
+def test_tool_classes_come_from_the_lock_operational_block():
+    from tau_adapter.lock import Lock
+
+    lock = Lock(
+        raw={
+            "operational": {
+                "process_metric_tools": {
+                    "search": "find_docs",
+                    "transfer": "escalate",
+                    "discoverable": ["unlock_thing"],
+                }
+            }
+        }
+    )
+    classes = pm.tool_classes_from_lock(lock)
+    assert classes.search == "find_docs"
+    assert classes.transfer == "escalate"
+    assert classes.discoverable == frozenset({"unlock_thing"})
+    rows = pm.derive_task_rows(_graded_payload("escalate"), "batch_01", classes)
+    assert rows[0]["transfers"] == 1
+    assert rows[0]["kb_search_calls"] == 0
+
+
+def test_tool_classes_default_when_lock_has_no_block():
+    from tau_adapter.lock import Lock
+
+    classes = pm.tool_classes_from_lock(Lock(raw={}))
+    assert classes == pm.DEFAULT_TOOL_CLASSES

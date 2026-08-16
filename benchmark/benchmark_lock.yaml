@@ -143,6 +143,12 @@ protocol:
   #   B rises + T rises  -> the loop works and generalizes
   #   B rises + T flat   -> the loop optimizes but overfits (mutations task-shaped)
   #   B flat             -> the meta-agent is the problem
+  # POST-SEQ-6 NOTE (plan D25): seq 6 observed B down + T up — a cell this prose key
+  # never named — and the closure had to adjudicate off-key. The NEXT freeze supplies
+  # the mechanical `reading_key:` block instead (all nine primary × secondary cells,
+  # validated by lock.py READING_KEY_CELLS; a cell may declare its combination
+  # run-voiding, never be absent). This comment is documentation only — adding the
+  # key to a frozen lock would move the fingerprint, so it lands at the seq bump.
   batch_mode: fixed
 
   # True BECAUSE batch_mode is fixed: re-measuring the same batch every generation IS
@@ -345,6 +351,21 @@ operational:
   # retried, succeeded) — consistent with the thread ceiling above, since a sandbox round-trip
   # parks a bridge thread far longer than a local call does.
   max_concurrency: 3
+
+  # Which tool names count as which behavioral signature in the derived process metrics
+  # (plan D25; tau_adapter/process_metrics.py `tool_classes_from_lock`). Operational —
+  # outside the freeze fingerprint — because these names configure derived DIAGNOSTICS,
+  # never what the agent can do inside an episode; the code stays domain-agnostic and
+  # this block says what "search", "transfer", and "capability discovery" mean for the
+  # frozen domain. The user's own discoverable calls are deliberately not listed: they
+  # measure the simulated user, not the harness.
+  process_metric_tools:
+    search: KB_search
+    transfer: transfer_to_human_agents
+    discoverable:
+      - unlock_discoverable_agent_tool
+      - call_discoverable_agent_tool
+      - give_discoverable_user_tool
 
 # Written by `make policy`. The pre-commit hook and CI compare sha256 against the
 # <policy> block of target-agent/SYSTEM.md; the adapter additionally compares the block
