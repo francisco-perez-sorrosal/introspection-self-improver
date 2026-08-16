@@ -15,49 +15,71 @@ improve/capability-set` before choosing — its `agent-design` reference carries
 shape (start narrow; omit never-allowed capabilities entirely; sub-agents only for work
 with a stable contract and independently checkable result) and its
 `agent-security-review` reference carries the untrusted-content review (τ's user messages
-and every `KB_search` result are untrusted content; each added capability widens what
+and every retrieval-tool result are untrusted content; each added capability widens what
 they can reach). This file adds only the mapping and this repo's constraints:
 
 | Diagnosed mechanism shape | Surface |
 |---|---|
-| Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or a **skill** when the judgment is bounded, named, and better loaded near the work |
+| Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or a **skill** when the judgment is bounded and named; in THIS recipe a declared skill's body is unreachable (no `read`) and the declaration itself injects an adverse read-tool instruction (trap 1), so the working delivery is deterministic injection via `before_agent_start` |
 | Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — but see trap 4: in THIS repo's seam every extension-tool call costs a τ step and an error, so prefer a no-tool-call hook (`tool_result`, `context`, `before_agent_start`) |
 | Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline | **extension event interception** — `tool_result` / `context` / `before_agent_start` only. Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
 | A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — but see trap 4: in THIS repo's seam a sub-agent's delegation call reaches τ as an invalid tool call, so the surface is unavailable |
 | External service capability | MCP server — **not** a sanctioned growth surface here without explicit seam work: the tau binding/`--mcp` interplay is fragile (`dev_lane.py`), so surface it as a user decision, never land it as an ordinary mutation |
 
 ## Wiring by surface
-<!-- last-verified: 2026-08-15 note: against docs.introspection.dev/recipes (manifest, agent-yaml, agents, extensions-and-tools) and pi.dev/docs/latest (skills, extensions) -->
+<!-- last-verified: 2026-08-16 note: against CLI-served introspection-docs/pi-recipes-docs (recipe-format, recipe-manifest, agent-composition, recipe-skills, recipe-agents) and the installed Pi 0.84.1 docs/extensions.md + docs/skills.md; corrected the "declared twice" claim for extensions -->
 
-All three land inside `target-agent/` and are declared twice: once in the package
-manifest (what the package ships) and once in `agents/agent.yaml` (what this agent may
-use). `introspection check` validates both (`make check`; also pre-commit, CI, and once
-per run).
+All three land inside `target-agent/`. **Skills and sub-agents are declared twice** —
+package manifest (what the package ships) + `agents/agent.yaml` (what this agent may use).
+**Extensions are declared once, in the manifest only**: package membership means execution
+— the closure loads for every session in the package, and agent YAML cannot select or
+remove extensions (upstream-normative). `introspection check` validates the declarations
+(`make check`; also pre-commit, CI, and once per run), and **every explicitly authored
+path or glob must match something** — a declared glob with no files is a check failure,
+so prefer explicit file paths over globs for single files.
 
 **Skill** — packaged, on-demand judgment:
 
 - `target-agent/skills/<name>/SKILL.md`, Agent Skills standard: frontmatter `name`
-  (≤64 chars, lowercase a–z 0–9 hyphens, keep equal to the directory) + `description`
-  (≤1024 chars; missing description prevents loading). Optional `scripts/`,
-  `references/`, `assets/`.
-- Manifest: `"pi": { "skills": ["skills/**/SKILL.md"] }` (currently `[]`).
+  (≤64 chars, lowercase a–z 0–9 hyphens; Pi relaxes the name-equals-directory rule) +
+  `description` (≤1024 chars). Limit violations warn but load; a **missing description
+  prevents loading**. Optional `scripts/`, `references/`, `assets/`.
+- Manifest: `"pi": { "skills": [...] }` (currently `[]`); a declared glob must match.
 - Agent: `skills:` list, referenced **by frontmatter name, not path**.
+- **What actually reaches the model** (Pi `formatSkillsForPrompt`): an
+  `<available_skills>` block with each skill's name, description, **and absolute
+  SKILL.md path**, preceded by a standing instruction to "use the read tool to load a
+  skill's file when the task matches its description". The body loads only via `read`.
+  `disable-model-invocation: true` removes the skill from the prompt entirely —
+  description included. See trap 1 for what this means in this recipe.
 - Local exemplar of the spelling: `.pi/skills/share-to-traces-pi/SKILL.md`.
 
 **Extension tool** — deterministic TypeScript the model can call:
 
 - A `.ts` file in the recipe package (e.g. `target-agent/extensions/<name>.ts`); Pi loads
-  the TypeScript directly, no build step. Default-export factory receiving the
+  the TypeScript directly (jiti), no build step. Default-export factory receiving the
   `ExtensionAPI`; register with `pi.registerTool({ name, description, parameters:
   Type.Object(...), async execute(toolCallId, params, signal, onUpdate, ctx) {...} })`
-  (TypeBox schemas; `StringEnum` from the pi-ai package for enums). Local exemplar:
-  `.pi/extensions/traces.ts`.
-- Manifest: `"pi": { "extensions": ["extensions/*.ts"] }` — **explicit declaration only;
-  no convention discovery**. Node runtime deps go in `dependencies` with a committed
-  lockfile (never `devDependencies`).
-- Agent: a registered tool is accessible **only if allowlisted in `tools:`** — the
-  manifest loads the extension into every agent session in the package (delegated
-  children included), but `tools: []` keeps every registered tool unreachable.
+  (TypeBox schemas; `StringEnum` from the pi-ai package for enums). Import types from
+  `@earendil-works/pi-coding-agent` — the docs' and the recipe peer-dependency's name
+  (the ambient `.pi/extensions/traces.ts` exemplar imports an older package name; do not
+  copy it). Type-only imports erase at runtime and create no `dependencies`/lockfile
+  obligation; runtime deps do (committed lockfile, never `devDependencies`).
+- Manifest: `"pi": { "extensions": ["extensions/<name>.ts"] }` — **explicit declaration
+  only; no convention discovery; prefer the explicit path over a glob** (an unmatched
+  glob fails `introspection check`). Declared once — no `agent.yaml` counterpart exists.
+- Agent: a registered tool is model-callable **only if allowlisted in `tools:`** — but
+  `tools:` limits model-callable tools, not hook execution: **extension code retains its
+  non-tool behavior (all lifecycle hooks) even under `tools: []`** (upstream-normative).
+- Loading and failure semantics (upstream-verified): extensions load sequentially in
+  declaration order and hooks run in load order, middleware-chained; an extension **load**
+  failure is fatal before any model call (the session aborts — a broken extension cannot
+  silently degrade an episode); a handler **runtime** error is logged and swallowed
+  (`tool_call` excepted — its errors block the tool). A probe therefore cannot signal
+  through an exception; log a marker instead.
+- Recipes' own host extension applies `SYSTEM.md` through an earlier-registered
+  `before_agent_start`, so a recipe-owned `before_agent_start` runs after it and sees the
+  fully composed prompt.
 - Extensions receive `PI_RECIPE_DIR` and `PI_AGENT_NAME`; locate package files through
   them, never hardcoded paths.
 - Beyond `registerTool`, an extension can intercept lifecycle events — modify tool
@@ -80,7 +102,7 @@ per run).
   not finished" explicitly.
 
 ## Recipe semantics that bite
-<!-- last-verified: 2026-08-15 note: against docs.introspection.dev/recipes/agent-yaml -->
+<!-- last-verified: 2026-08-16 note: against CLI-served pi-recipes-docs/agent-composition + recipe-format -->
 
 - **Arrays never merge.** A declared `tools:`, `skills:`, or `subagents:` list replaces
   the inherited one entirely; `[]` clears it. A `from:`-derived agent declaring
@@ -92,18 +114,23 @@ per run).
   `prompts` have directory-convention defaults. Typos inside the `pi` block are errors.
 - `session` (retry, compaction, tool_execution, provider timeouts) is a closed, validated
   schema — recipe-side and within the mutable list ("retry, context management"), but a
-  `session` change is its own coherent mutation, never a rider.
+  `session` change is its own coherent mutation, never a rider. Unlike the arrays it
+  **merges recursively**; a declared `mcp` block **replaces the complete inherited
+  policy**; `system_instructions: replace` discards `SYSTEM.md` too.
 
 ## Pi discovery paths — know them to avoid them
-<!-- last-verified: 2026-08-15 note: against pi.dev/docs/latest/skills and pi.dev/docs/latest/extensions -->
+<!-- last-verified: 2026-08-16 note: against Pi 0.84.1 docs + recipes 0.19.3 embedded-session defaults; lane asymmetry noted, platform-host behavior unverified -->
 
 Beyond package declaration, Pi discovers ambient content from the working tree: skills
 from `.pi/skills/` and `.agents/skills/` in ancestor directories up to git root (plus
 global dirs, settings, `--skill`), and extensions from `.pi/extensions/*.ts`
-project-local (plus global, `-e`, settings) once the project is trusted. Both lanes
-launch Pi with its working directory inside this repo, so repo-root `.pi/skills/` and
-`.pi/extensions/` (which holds `traces.ts` today) sit inside the target agent's potential
-discovery scope. Consequences:
+project-local (plus global, `-e`, settings) once the project is trusted. **The two lanes
+do not have the same ambient exposure** (corrected 2026-08-16): the local lane launches
+`pi --recipe` from the repo root with no `--no-skills`/`--no-extensions` flags, so
+repo-root `.pi/skills/` and `.pi/extensions/` (which holds `traces.ts` today) sit inside
+its potential discovery scope once trusted — while embedded Recipe sessions disable
+ambient extensions, skills, prompt templates, and context files by default (whether the
+platform sandbox uses that host is unverified; measure, don't assume). Consequences:
 
 - An intended mutation goes through the recipe's explicit declaration, never an ambient
   path: the audited surface is the recipe tree — the held-out round verifies
@@ -118,19 +145,27 @@ discovery scope. Consequences:
 
 ## Experiment constraints — the traps
 
-1. **`tools: []` × read-on-demand skill loading.** Pi surfaces skill names and
-   descriptions in the system prompt and loads a skill's full body on demand via the
-   `read` tool. This agent has no `read` — deliberately and load-bearingly (see the
+1. **`tools: []` × read-on-demand skill loading — a declared skill is NOT inert here; it
+   is adverse.** Pi's skill block does not merely surface names and descriptions: it
+   injects a standing instruction to *"use the read tool to load a skill's file"* plus
+   each skill's absolute path (upstream-verified against Pi 0.84.1
+   `formatSkillsForPrompt`; corrected 2026-08-16 — this item previously said "inert as
+   designed"). This agent has no `read` — deliberately and load-bearingly (see the
    `tools: []` comment in `target-agent/agents/agent.yaml`: withholding `read`/`bash`
    denies a locally-hosted agent any path to the task definitions and gold state in
-   `benchmark/vendor/`). Granting `read` is not a legal enabler. Before proposing a skill
-   mutation, verify in the dev lane what a declared `skills:` entry actually does for a
-   read-less agent — run a dev-lane episode (`make single_task TRANSPORT=platform`; read
+   `benchmark/vendor/`). A model that complies with the injected instruction emits a
+   `read` call that no one registered — which this seam forwards to τ as an invalid tool
+   call (trap 4). `disable-model-invocation: true` silences the skill entirely, removing
+   the description too — leaving nothing. Granting `read` is not a legal enabler. So a
+   skill can reach a graded episode only as (a) its description string — a weaker
+   `SYSTEM.md` edit with an adverse rider — or (b) its body injected deterministically by
+   a `before_agent_start` hook that reads the file itself (extension code has host
+   authority; keep its reach inside the recipe dir via `PI_RECIPE_DIR`). Before proposing
+   any skill mutation, verify in the dev lane what the declaration actually does — run a
+   dev-lane episode (`make single_task TRANSPORT=platform`; read
    `benchmark/tau_adapter/dev_lane.py` before touching anything there — three of its
    constraints are invisible in the docs) and inspect the effective system prompt and
-   behavior. If only the description surfaces, the mutation is inert as designed and the
-   mechanism belongs in `SYSTEM.md` instead. Record the verifying conversation id in the
-   improvement record's evidence.
+   behavior. Record the verifying conversation id in the improvement record's evidence.
 2. **The gold-state leak generalizes to every surface.** No `read`/`bash`-class
    capability for the agent **or any sub-agent** (the upstream sub-agent example shows
    `tools: [read, bash]` — exactly what is forbidden here). Extension code runs in the Pi
@@ -179,7 +214,11 @@ discovery scope. Consequences:
 7. **Verify in both lanes before the PR.** The platform sandbox must resolve the same
    surface the local lane does (deps from the committed lockfile, extension loading,
    sub-agent delegation); a dev-lane episode plus a local smoke is the floor, and the
-   record cites the verifying conversation ids.
+   record cites the verifying conversation ids. Budget the dev-lane iteration correctly
+   (upstream `development-lifecycle`): a skill **body** edit takes effect on the next
+   turn of the same chat, but `SYSTEM.md`, agent YAML, prompts, **extensions**, and MCP
+   declarations need a **new chat**, and `.introspection/*.yaml` a new runtime version —
+   one fresh task per extension revision.
 
 ## Checklist before the PR
 
