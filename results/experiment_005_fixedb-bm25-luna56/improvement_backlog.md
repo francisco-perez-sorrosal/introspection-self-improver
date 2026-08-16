@@ -51,8 +51,10 @@ pointing at that never got a slot.
 
 ## T2 — Transfers to a human while actionable work remains
 
-**Status:** pending (slot-2 candidate) · **Owning layer:** harness, contested — see counterevidence
-**Prevalence:** 4/8 tasks, 9/24 episodes (`task_082` 3/3, `task_026` 2/3, `task_028` 2/3, `task_096` 2/3)
+**Status:** consumed-by-gen-002, narrowed to the turn-one sub-case (see the `batch_02` re-rank below)
+**Owning layer:** harness, contested — see counterevidence
+**Prevalence:** B₁ 4/8 tasks, 9/24 episodes (`task_082` 3/3, `task_026` 2/3, `task_028` 2/3, `task_096` 2/3);
+B₂ 3/8 tasks, 8/21 DB episodes — essentially unchanged, and `task_026` stopped transferring
 
 `transfer_to_human_agents` appears in **no** DB-basis task's gold. `task_082` is the extreme
 and the most reproducible cell in the batch: the user's opening line is "I need to speak to a
@@ -102,13 +104,53 @@ recorded prior rather than diagnosed fresh.
 
 ---
 
+---
+
+## Re-ranking against `batch_02` (H1, 2026-08-16)
+
+`batch_02` measures a set the loop has now been tuned on. Round health was clean except three
+trial-0 cells (`task_026`, `task_028`, `task_065`) carrying `sandbox_seam_timeouts: 2` each,
+invisible in τ's trajectory; kept by user decision and excluded from causal diagnosis.
+
+**T1's predictions, checked explicitly.**
+
+- **Confirmed, causally clean — `task_014`.** t2 retrieved `doc_..._042`, supplied
+  `unconfirmed_external_communication`, scored 1.0; t0/t1 did not retrieve it, supplied the
+  adjacent wrong code, scored 0.0. At H0 the *passing* trial had guessed without retrieving.
+  Passing now tracks retrieval. Task score unchanged at 1/3 — the mutation changed *how* it
+  passed, not *whether*.
+- **Confirmed at the argument, task still fails — `task_072`.** Correct `credit_type` in 2/3
+  (was 1/3). But the amounts destabilised: `batch_01` t2 had both amounts right with one wrong
+  enum; `batch_02` t1 has both enums right with one wrong amount. Recorded as a cost of T1.
+- **Denied — `task_070`.** Still **zero** promotion-directed queries across all three trials,
+  still 0/3. The instruction did not reach this case.
+- **Unpredicted, and it produced the only new pass — T4 resolved as a side effect.** See below.
+
+**T4 is RESOLVED, without ever being targeted.** In `batch_01` all three `task_065` trials passed
+a `reason` to `close_bank_account_7392`; in `batch_02` all three dropped it. The controlled pair:
+`batch_01` t2 (right classes + `reason="customer requested closure"`) → 0.0, and `batch_02` t1
+(right classes, `account_id` only) → **1.0**. Same three calls, same classes, one argument
+different. T1 incidentally stopped the agent volunteering unsourced optional arguments — which is
+coherent with its mechanism, and is the cause of `task_065`'s 0/3 → 1/3 flip. The decision not to
+target T4 directly (grader-gaming risk) stands and was not needed.
+
+**T2 narrowed for slot 2.** Total transfer prevalence barely moved (9 → 8 episodes), but its
+composition did. The mid-conversation transfers (`task_096`, `task_028`) now follow genuine effort
+and are hard to call wrong. What remains indefensible is the **turn-one** sub-case: `task_082` t1
+and t2 transfer at the *first* user turn after a single KB search (8 messages, against 20 gold
+actions), while t0 — spontaneously, under the same harness — worked for 62 messages and 5 searches
+before transferring. Slot 2 targets that sub-case only.
+
+---
+
 ## Slot accounting
 
 | Slot | Generation | Target | Status |
 |---|---|---|---|
-| 1 | gen-001 | T1 | consumed |
-| 2 | gen-002 | T2 (candidate, re-rank against `batch_02`) | open |
-| — | — | T3, T4 | carried / retired |
+| 1 | gen-001 | T1 | consumed — mechanism confirmed on `task_014`, denied on `task_070`; resolved T4 as a side effect |
+| 2 | gen-002 | T2, narrowed to the turn-one sub-case | consumed |
+| — | — | T3 | carried, never reachable under `generations: 2` |
+| — | — | T4 | resolved as a side effect of gen-001; never targeted |
 
-Two slots, four targets opened. T3 and T4 cannot be reached under `generations: 2` and are
-recorded rather than dropped.
+Two slots, four targets opened. T3 cannot be reached under `generations: 2` and is recorded
+rather than dropped. `batch_03` is H2's endpoint round and consumes no transition.
