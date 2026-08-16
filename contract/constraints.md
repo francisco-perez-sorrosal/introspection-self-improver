@@ -225,13 +225,10 @@ recorded per round as `bridge_executor_workers`, which by contract always report
 in use, never an intent. `_serve` survives only as the bisect arm for the disconnect
 question.
 
-Note what this fix does **not** explain: `batch_02`/`batch_03` counted 6 and 4
-`mcp upstream timed out` at 4-wide, where the default executor could not saturate. Those
-timeouts are the sandbox daemon's own per-call patience expiring while τ's side is slow to
-rendezvous (agent/user-sim LLM latency, not thread starvation). The per-call park
-durations in `bridge_calls.jsonl` are the instrument that attributes them; a protocol-level
-keepalive (MCP progress notifications while parked) is the named candidate fix if the
-class grows.
+Note what this fix does **not** explain: `batch_02`/`batch_03` counted `mcp upstream
+timed out` markers at 4-wide, where the default executor could not saturate. The 2026-08-16
+investigation established the actual mechanism, and it is neither starvation nor slow
+rendezvous — see § The timeout class, diagnosed, below.
 
 The lesson generalises past this bug: a seam limit that no value names will be rediscovered
 as a mystery. If concurrency is raised again, the binding constraints are the two above —
@@ -280,6 +277,47 @@ causality for the original 3/10 remains formally open (the B′ arm — `_serve`
 if the record ever needs settling). The counters earned their keep in the same rounds by
 surfacing the timeout class instead (6 and 4 per 24-episode round) with the attribution
 data to show it is daemon patience, not the executor.
+
+### The timeout class, diagnosed (2026-08-16)
+
+Seq 5's five `mcp upstream timed out` episodes (`batch_02`: task_026 t0, task_028 t0,
+task_065 t0; `batch_03`: task_028 t1, task_070 t2) were investigated span-by-span against
+the platform conversations, and the mechanism is **in-flight POST loss on transient
+network blips**, not anything on τ's or the bridge's side:
+
+- Every failed `execute_tool` span lasted **exactly 30.1s** — the sandbox daemon enforces
+  a hard 30s per-call timeout, then answers the agent itself ("remote outcome is unknown;
+  do not retry automatically", which is accurate).
+- The bridge never saw those calls: zero stall warnings (25s threshold — it would have
+  fired), zero refusals, at a concurrency where the executor could not queue. The POST
+  died between daemon and bridge.
+- The three `batch_02` failures started within one 15-second window (03:22:31–46Z), one
+  per concurrently-running episode — a single interruption killing whatever POST was in
+  flight. `batch_03`'s two were separate blips at 05:15:52Z and 05:26:35Z.
+- **τ received and executed the killed calls anyway.** The tool-call travels to τ on the
+  event stream (a separate, reattach-capable connection — the 83–103 reattaches per round
+  are it recovering from the same churn), so τ ran the tool and posted a result nobody
+  consumed. In task_028 t0 the agent retried and τ executed `transfer_to_human_agents`
+  three times while the agent believed the first failed — **agent and grader histories
+  diverge**, the class `fidelity/seam_integrity.py`'s count-drift finding now catches
+  (bridge-served calls < τ tool messages).
+- Two consequences worth naming: a retried identical call can consume the earlier call's
+  stale mailbox result (benign for idempotent reads, real for writes); and the same
+  evening's weather hit the local lane too — the H2 held-out round's console shows Pi
+  provider connection errors 21:10–21:54 local, 7 tasks through all 4 τ attempts before
+  the resume pass recovered them. Batch tunnel blips (20:22, 22:15, 22:26 local), local
+  provider errors, user-sim empty completions: one instability window, three surfaces,
+  common node the local machine's connectivity.
+- Grade impact, bounded by the record: all five affected episodes sat on tasks scoring
+  0.0 on every trial of every round regardless (task_065's single 1.0 was an unaffected
+  trial), so the closure's batch curve stands; the caveat is per-episode and the counters
+  carry it.
+
+Nothing local fixes lost POSTs. What exists now is detection (the counters, the call log,
+the integrity audit, `zero_bridge_calls`); the upstream avenue, if the class grows, is an
+Introspection report — in-flight MCP calls through the dev tunnel are not recovered on
+reconnect the way the event stream is, and an idempotent retry keyed by request id could
+close the asymmetry.
 
 The lesson is now mechanical in three more places. `make gate_seam` runs a platform canary
 judged on these counters and records the verdict under the experiment's `gates/`;
