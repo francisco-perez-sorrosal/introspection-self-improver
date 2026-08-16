@@ -1,0 +1,239 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 4
+  to_generation: 5
+experiment: 006_fixedb-bm25-luna56
+outcome: accepted
+schema_version: 2
+batch:
+  name: batch_05
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a00a67-4ccb-737d-bd48-fde03c2ebca3   # task_014 t0 reward 0.0
+  - 01a00a6a-2e88-7428-b400-b15f0bb7bd53   # task_014 t1 reward 0.0
+  - 01a00a6d-905e-732c-a20d-ea3f63d8aa8e   # task_014 t2 reward 0.0
+  - 01a00a67-4944-7088-8695-3f0603858425   # task_026 t0 reward 0.0
+  - 01a00a6a-bbe4-7519-87f3-793b89b98c96   # task_026 t1 reward 0.0
+  - 01a00a6d-e252-7798-b77a-2a24f1b50274   # task_026 t2 reward 0.0
+  - 01a00a67-48f3-71e4-ab84-84369da420e4   # task_028 t0 reward 0.0
+  - 01a00a6a-e8da-71b3-9b2a-26012c3dedc9   # task_028 t1 reward 0.0
+  - 01a00a6e-082e-75b4-94de-ff6c9c86a16b   # task_028 t2 reward 0.0
+  - 01a00a67-d174-7744-9690-9888641a2b79   # task_065 t0 reward 0.0
+  - 01a00a6b-78bc-76f1-8952-2049a97b940b   # task_065 t1 reward 0.0
+  - 01a00a6e-93fc-7448-b31d-dc40ef7bdaac   # task_065 t2 reward 1.0
+  - 01a00a68-95f5-7658-834e-faf7174c1e48   # task_070 t0 reward 0.0
+  - 01a00a6c-626c-708d-8d96-1817a6e0d0f5   # task_070 t1 reward 0.0
+  - 01a00a6f-9c48-702c-8894-6b519669815b   # task_070 t2 reward 0.0
+  - 01a00a68-e580-76a7-b3ba-bdbf194e3bfd   # task_072 t0 reward 0.0
+  - 01a00a6c-8943-7328-93fb-89e92054de3a   # task_072 t1 reward 0.0
+  - 01a00a6f-b3cc-7202-8494-45068285a461   # task_072 t2 reward 0.0
+  - 01a00a68-e9b3-755e-9b83-df8129826ac1   # task_082 t0 reward 0.0
+  - 01a00a6c-99db-74c4-a3b8-dcfdbd779f43   # task_082 t1 reward 0.0
+  - 01a00a70-5564-72a3-b1fc-084c9336ea14   # task_082 t2 reward 0.0
+  - 01a00a69-e197-7504-a611-e93dbc8dc562   # task_096 t0 reward 0.0
+  - 01a00a6d-0b12-7571-8d7d-db05bfeb0596   # task_096 t1 reward 0.0
+  - 01a00a70-9d79-738e-84b3-6c8d0cde7a6a   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_05: all 24 episodes from
+    generation_004/batch_05/graded/updated_results.json, joined to episode_manifest.jsonl and
+    read cell by cell against batch_01 through batch_04 over the same eight tasks.
+
+    Round health: 24/24 completed, arm sha 19438520 on every episode, no dirty paths, zero
+    arm_sha_mismatches, all evidence_complete, ZERO seam counters of any kind. 0.6034 USD
+    platform. No cell excluded.
+
+    Graded read, labelled: 1/24 episodes and 1/8 tasks. Curve 8.3, 4.2, 12.5, 16.7, 4.2
+    percent. batch_05 measures a set four generations were tuned on and is not independent.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any point
+    in this transition, and no vault path was opened. Recorded operational note: H4's held-out
+    round refused to start twice before the gen_003_to_004 record was committed — the
+    protocol's cadence gate (b), which refuses to measure H_N until batch_N is graded AND its
+    transition record exists with outcome accepted. The gate fired correctly against an
+    orchestrator that had run the round before writing the record; the console was not read,
+    and the round was then run and resumed to 84/84 (one infrastructure_error placeholder
+    replaced on resume).
+signals:
+- description: >-
+    gen-004 F1 CONFIRMED beyond its prediction. Transfer-carrying episodes fell 15/24 to 6/24,
+    against a predicted at-or-below 10/24, and below batch_01's untuned floor of 9/24. Its
+    falsifier — staying at or above 15/24, which would have made the entire gen-003 set a
+    revert candidate — did not fire. E2 was the cause of the batch_04 rise, and E1's ordering
+    rule is vindicated: task_065 held its pass at 1/3.
+  prevalence: 6/24 episodes, from 15/24
+- description: >-
+    THE FINDING, and it cost the round to buy. task_014 is the one task in this batch whose
+    gold IS a transfer, and it fell 2/3 to 0/3. The transcripts give the mechanism in the
+    agent's own words rather than by inference: t2 ends "I can't transfer this request because
+    the offer is not documented in our available records, and the referral-link guidance
+    specifically says not to escalate undocumented or mismatched offers through this channel";
+    t0 reports being "unable to submit the mailing for targeted-offer review or escalate it
+    through the available support process"; t1 "unable to create an escalation or internal note
+    for an unverified referral offer". The agent is not misjudging the case. It believes
+    escalation is not permitted to it.
+
+    Put beside batch_04 this is a controlled pair over one instruction: with E2 present,
+    transfers 15/24 and task_014 2/3; with E2 gone, transfers 6/24 and task_014 0/3. Transfer
+    behaviour is a single DIAL, and this batch holds tasks on both sides of it. Six mutations
+    across three experiments have now moved that dial — three in seq 4, one in seq 5, this
+    experiment's E2 and its revert — and not one has moved the DISCRIMINATION. That is a
+    property of the mutation surface, not of the batch.
+  prevalence: 3/3 trials declined a transfer their gold requires
+- description: >-
+    Backlog T6's pre-registered un-hold condition has fired. It was held for three generations
+    on the ground that computed amounts were not separable from D1's mechanism; the stated
+    condition was "if the rates come right and the amounts stay wrong, this is a distinct
+    target". In batch_05 the fee-policy retrieval that produced task_072's first pass is
+    present in ALL THREE trials — t0 "Light Green Account foreign ATM fee international ATM
+    withdrawals free out-of-network four mont", t1 "Light Green Account domestic ATM fee non-Rho
+    ATM withdrawal fee rebate policy", t2 "Light Green Account ATM fee out-of-network foreign
+    ATM fee policy rebates November" — and the amounts still drift: 14.0 and 10.0, 12.0 and 6.5,
+    11.5 and 4.5, against gold's 14.00 and 3.50. One amount is right in some trial and never
+    both in one, across five rounds. The deciding rule is retrieved; the arithmetic over it is
+    not stable.
+  prevalence: 3/3 trials retrieved the rule; 0/15 episodes across five rounds paired both amounts
+- description: >-
+    Zero-write episodes fell to 4/24, their lowest of the experiment, from 7/24 in batch_04 and
+    6/24 in batch_01. The agent is acting more and escalating less; what it is not doing is
+    acting CORRECTLY more often. Recorded because it separates two readings of the round's
+    fall: this is not a harness that stopped working, it is one whose transfer dial moved to a
+    setting that costs task_014 and buys nothing on the DB tasks.
+  prevalence: 4/24 episodes, lowest of five rounds
+counterevidence: >-
+  Three arguments against this set.
+
+  (1) G1 is the SIXTH mutation on transfer behaviour across three experiments and the fifth in
+  this one's blast radius. Five predecessors failed. The claim that this one differs — that it
+  names a retrievable prescription rather than a condition for appropriateness — is a claim
+  about wording, and this experiment's own most repeated lesson is that wording does not carry
+  the scope its author intends. The mitigation is the falsifier, which is a rate test rather
+  than a task test: if transfers exceed batch_04's 15/24 it became a rate lever like the others.
+
+  (2) G2 asks prose to fix arithmetic. The honest surface for "sum these specific charges" is
+  deterministic, and this seam does not have one — the g=0 seam probe measured that an
+  extension tool's call reaches tau as an invalid tool call costing a step and an error. G2 is
+  therefore the best available instrument rather than the right one, and its falsifier says so
+  explicitly: if the enumeration appears in the narration while the amounts stay unpaired, prose
+  reached the explanation and not the computation.
+
+  (3) The curve fell to 1/24 and two changes are being added rather than one reverted. The
+  defence is that the fall is attributable — task_014 minus two, task_072 minus one, both
+  explained by the F1 revert whose prediction was confirmed — and that neither loss argues for
+  restoring E2, which was itself refuted. Reverting a confirmed revert to recover a task would
+  be optimising the batch number against the mechanism, which is the failure the reading key
+  calls overfitting.
+hypothesis: >-
+  Two hypotheses, one per change.
+
+  The agent's escalation behaviour is governed by whether it believes escalation is permitted,
+  not by whether the situation warrants it — which is why every instruction that adjusted the
+  warrant moved the rate wholesale. If the knowledge base's own prescriptions are named as
+  something to RETRIEVE, the decision moves from the agent's sense of permission to the
+  document, and the two sides of the dial stop being coupled.
+
+  Separately: the agent retrieves the fee rule and then produces a figure that is not the sum
+  of the charges the rule selects. Requiring it to name the addends turns an estimate into an
+  enumeration, which is the same procedural move that worked for ordering (E1) and for
+  retrieval (D1).
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — two paragraphs added.
+  Frozen <policy> untouched, asserted byte-for-byte at 5733 chars on every commit; agent.yaml,
+  package.json, lock and partition unchanged.
+
+  Prompt-only, and the g=0 seam-probe justification still binds. Worth restating at this point
+  because it is now load-bearing for G2 specifically: an extension tool would be the correct
+  home for "sum these charges exactly", and the probe committed at generation_000/seam_probe/
+  measured that such a tool's call reaches tau as an invalid tool call, costing a tau step and
+  one of ten max_errors. The right surface does not exist here, and G2 is landed as the best
+  available rather than the right one.
+
+  The composition rule this set follows, which is itself a result: of the nine changes landed
+  before it, every change that told the agent what to RETRIEVE or in what ORDER to act confirmed
+  (D1 produced task_072's first pass, E1 produced task_065's, C3 confirmed 3/3), and every
+  change that told it what NOT to do or offered it an ALTERNATIVE failed or backfired (C1 inert,
+  C2's escape clause and E2 both produced the behaviour they named). Both changes here are in
+  the first class by construction.
+proposed_change: >-
+  An improvement SET of two changes, one commit each on branch
+  gen-005/prescribed-handover-and-addends. G1 acts on where the escalation decision comes from;
+  G2 acts on how a monetary figure is produced. They touch different tasks primarily (task_014
+  and task_072) and different behaviours; the residual coupling is that task_072 lost trials to
+  transfers in batch_04 and to amounts in batch_05, so a batch_06 movement there is jointly
+  attributable and the record says so.
+
+  Deliberately not in this set: task_070 (T1 retired at g=2 — nine episodes, behaviour confirmed
+  twice, outcome denied three times, and the agent now retrieves Sky Blue's own specification
+  and rejects it; the live reading is that bm25, a frozen surface, does not carry what the gold
+  answer needs); task_026's write-count regression to 27, entangled with its transfers; and T5's
+  handover, still performed but never in gold's shape.
+changes:
+- mechanism: >-
+    Move the escalation decision from the agent's sense of what it is permitted to do to the
+    knowledge base's own prescriptions, by naming those prescriptions as something to retrieve.
+    States no condition for when transfer is appropriate and no threshold.
+  surface: instructions
+  evidence: >-
+    task_014 3/3 in batch_05 declined a transfer its gold requires, each trial saying so
+    explicitly — conversations for t0, t1 and t2 end with the agent reporting it cannot
+    escalate, t2 citing referral-link guidance it read as forbidding escalation of undocumented
+    offers. Controlled against batch_04, where the same task scored 2/3 with gold's reason code
+    while E2 was present and transfers ran 15/24. Backlog target T4, sixth attempt.
+  expected_effect: >-
+    In batch_06, task_014 recovers to at least 1/3 with reason unconfirmed_external_communication.
+    PRE-REGISTERED FALSIFIER, deliberately a RATE test rather than a task test: if
+    transfer-carrying episodes rise above batch_04's 15/24, this change became a rate lever like
+    its five predecessors and is gen-006's revert candidate.
+  risk: >-
+    The highest-prior-risk change in the experiment: five of five previous mutations on this
+    behaviour failed, and three of them created the mirror-image error. It is landed on the
+    strength of a mechanism the transcripts state in the agent's own words, not on a fresh
+    theory of when transfer is appropriate.
+  commit: c16d3e1
+- mechanism: >-
+    Turn a computed monetary total into an enumeration: name the specific charges being summed
+    and add those.
+  surface: instructions
+  evidence: >-
+    task_072 all three batch_05 trials retrieved the ATM fee policy and still produced 14.0 and
+    10.0, 12.0 and 6.5, 11.5 and 4.5 against gold's 14.00 and 3.50 — one amount right in some
+    trial, never both in one, across five rounds and fifteen episodes. task_096's credits show
+    the same shape. Backlog target T6, un-held on the condition pre-registered at g=2.
+  expected_effect: >-
+    In batch_06, at least one task_072 trial supplies BOTH gold amounts in the same episode —
+    something no trial has done in five rounds. Falsifier: if the enumeration appears in the
+    narration while the amounts stay unpaired, the instruction reached the explanation and not
+    the computation, and the conclusion is that prose is the wrong surface for arithmetic.
+  risk: >-
+    Asking prose to do a deterministic job, because the seam denies the deterministic surface.
+    Recorded as a known compromise rather than a design choice.
+  commit: bf339c4
+mutation:
+  branch: gen-005/prescribed-handover-and-addends
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/15
+  source_commit: 1477ca04cf1af9d61fa6607f6732046c7fbd5f93
+  candidate_commit: cbe23e9a1e436685ee54a6f127a5087f91819e7c
+expected_effect: >-
+  SET level: task_014 recovers without transfers returning to batch_04's level, and task_072
+  pairs its amounts. If both hold, the batch should return to at least batch_04's 4/24 with the
+  gains resting on different mechanisms than before. No stronger claim is made — five of the
+  eight tasks have never passed under any harness in this experiment, and two of those
+  (task_070, task_026) have live readings that point outside the mutable surface. The
+  generation-level statistical read is H5's sealed held-out round and the paired batch curve
+  whose endpoint test is H6's batch_07 against H0's batch_01.
+human_approval:
+  approved_by: >-
+    orchestrator — autonomous per D23 (user-delegated)
+  date: '2026-08-16'
+held_out_result: null
