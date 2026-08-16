@@ -96,9 +96,14 @@ generation's measurement, and a measurement cannot run before its generation's b
    present every mode with prevalence and conversation ids as a **multi-select**, and
    the user opts into any subset — or all — as approved mutation targets. Approved
    targets land in `results/experiment_<id>/improvement_backlog.md` (mechanism,
-   evidence pointers, approval date, status: pending / consumed-by-gen / retired).
-   Targets carry forward re-ranked against each new batch's evidence; an item later
-   contradicted is retired with the reason recorded, never silently dropped.
+   evidence pointers, approval date, status: pending / consumed-by-gen / retired, and
+   `surfaces_considered` — which surface classes could carry the mechanism, decided at
+   open time, one line each with its blocker or enabler; the surface decision belongs
+   upstream of set composition).
+   Targets carry forward re-ranked against each new batch's evidence — each re-ranking
+   appends its `<!-- transition: gen_NNN_to_MMM -->` marker, which the record validator
+   and the next round's gate both require (plan D26) — and an item later contradicted
+   is retired with the reason recorded, never silently dropped.
 
    Then **compose the improvement set** (plan D22, from seq 6; decided ahead of its
    first run by user direction, to be trued up against what actually runs): the next

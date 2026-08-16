@@ -19,6 +19,7 @@ the whole evidence-to-outcome arc is visible.
 | `hypothesis` + `proposed_change` | the semantic history of each touched surface. Re-read every prior change to a sentence before touching that sentence again — an entire observed generation existed only to repair how the previous generation's wording was read |
 | `owning_layer` | concentration accounting: mutations per surface; ≥3 on one surface is a recall-digest flag |
 | `expected_effect` | pre-registered predictions and named risks — check each against the new batch and report confirmed / denied / unobservable in the recall digest |
+| `changes[].clauses` (v3) | per-clause falsifiers of landed instruction text — score each clause's falsifier alongside the change's prediction; a firing clause falsifier makes the CLAUSE (not necessarily the whole change) the revert candidate |
 | `human_approval` | provenance only; who decided, when |
 
 ## Batch modes and trials
@@ -65,15 +66,29 @@ Field craft — what the exemplar does that the schema cannot require:
 - **`expected_effect`**: falsifiable, scoped ("measured on the held-out set at H<g+1> and
   nowhere else"), with named risks for the next batch — these become the predictions the
   next recall checks. Also record what the change deliberately does not target.
-- **`changes[]`** (schema v2, plan D22): one item per change of the set, and the item's
+- **`changes[]`** (schema v2+, plan D22): one item per change of the set, and the item's
   `expected_effect` is that change's ONLY attribution channel — write it so the next
-  batch can score it per task (name the tasks or the behavior counter it should move,
-  e.g. "task_014's write-call cites the defining doc in ≥2/3 trials"). `surface` says
-  where it landed (instructions | pi-skill | extension-tool | sub-agent |
+  batch can score it mechanically, and **prefer a behavioral process counter over a bare
+  pass/fail** (plan D25): the derived counters (`partial_action_reward_pct`,
+  write-match, the lock-named search/transfer/discovery counts — batch rounds emit them
+  too) move smoothly where the binary rate flips coins, e.g. "the named write-action
+  counter reaches ≥2/3 trials on the tasks this targets". `surface` says where it
+  landed (instructions | extension-hook | extension-tool | sub-agent | pi-skill |
   retrieval-usage | revert | other); `commit` names the per-change commit so a refuted
-  change can be reverted alone; a prompt-only set after a concentration flag states in
-  `proposed_change` why no structural surface fits. The set-level `expected_effect`
-  stays: it is what the generation curve measures.
+  change can be reverted alone; a prompt-only set after a concentration flag satisfies
+  the positive obligation (protocol step 4: a structural change, or a probe-backed
+  `surface_exhausted` finding — a paragraph alone no longer discharges it). The
+  set-level `expected_effect` stays: it is what the generation curve measures.
+- **`changes[].clauses[]`** (schema v3, plan D26) — the **adversarial wording review**,
+  required for every `surface: instructions` change: before landing the text, enumerate
+  its disjunctions, preconditions, and licensed alternatives; each becomes
+  `{clause, adversarial_reading, falsifier}` with `clause` quoted **verbatim from the
+  landed diff** (`git show`, never memory — a misquoted verdict propagated through
+  three documents of one closed experiment) and its own falsifier the next batch scores.
+  The lesson this operationalizes: the escape clause is what the model optimises
+  against — one observed record falsified over-reach and left its "or explained"
+  disjunction unwatched, and the harm arrived through the unwatched clause one round
+  later.
 - **Outcome discipline**: `accepted` names a `candidate_commit` distinct from
   `source_commit` (the merge commit, tagged `exp<seq>-g<NNN>`); `rejected`/`identity` pin
   H_(g+1) = H_g. `held_out_result` is never written by hand.
@@ -85,6 +100,18 @@ Protocol step 4 owns approval (multi-select with the user); sia keeps the ledger
 - One row per approved mechanism: id `T<n>`, prevalence n/B with its batch, status
   `pending` / `consumed-by-gen-NNN` / `retired`. Retirement always carries the
   contradicting evidence — never silently dropped.
+- **`surfaces_considered`, written when the target OPENS** (plan D26): which surface
+  classes could carry this mechanism — one line each from {instructions,
+  extension-hook, extension-tool, sub-agent, none-available}, with the blocker or
+  enabler named. The surface decision belongs upstream of set composition: one closed
+  experiment pre-registered a hook-shaped home for a target twice and still landed
+  prose when the slot came, because nothing carried the commitment forward to the
+  moment of composition.
+- **The per-transition stamp** (plan D26, mechanically enforced): every transition's
+  re-ranking appends `<!-- transition: gen_NNN_to_MMM -->`; a v3 record refuses to
+  validate — and the next round refuses to start — without its marker. The backlog of
+  one closed experiment silently froze halfway while its gated records stayed
+  impeccable; only gated artifacts stay alive.
 - Accounting under composite sets (plan D22): G bounds generations, not changes — a
   generation may consume any number of pending targets, and each consumed target's row
   names the change (and commit) that consumed it. What still goes unstated nowhere:

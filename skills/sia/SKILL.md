@@ -101,15 +101,20 @@ four highest-value extractions:
   candidate for the next set.
 - **Standing counterevidence**: objections recorded in earlier transitions that still
   apply (disjoint-batch caveats, severity-over-prevalence overrides awaiting judgment).
-- **Surface concentration**: count mutations per `owning_layer` target. Flag ≥3 on one
-  surface in the digest — one observed loop spent four of five generations on a single
-  instruction paragraph, two of them repairing defects the paragraph itself introduced,
-  and noticed the pattern only at close.
+- **Surface concentration AND availability**: count mutations per `owning_layer` target;
+  flag ≥3 on one surface in the digest — one observed loop spent four of five generations
+  on a single instruction paragraph, two of them repairing defects the paragraph itself
+  introduced, and noticed the pattern only at close. The flag is a positive obligation
+  (protocol step 4): the next set includes a non-`instructions` change or records a
+  probe-backed `surface_exhausted` finding. Concentration looks backward; pair it with
+  the forward look — which surfaces this experiment has not yet exercised, and what
+  currently blocks each (the activation paths in Mutation classes below).
 
 Then state a **recall digest** (≤10 lines) to the user before diagnosis begins, so the
 memory is visibly applied: generation chain so far, batch about to be read, predictions to
-check, top pending targets with witness counts, concentration flags, slots remaining —
-and, under `batch_mode: fixed`, the per-task batch matrix as it forms.
+check, top pending targets with witness counts, concentration flags **plus surfaces still
+untried with each one's activation blocker**, slots remaining — and, under
+`batch_mode: fixed`, the per-task batch matrix as it forms.
 
 ## Write-through — during the transition, never after
 
@@ -152,27 +157,44 @@ Authority: root `CLAUDE.md` Invariants (enforced here, not restated). At the sia
 A generation lands one improvement **set** — any number of changes, composed per
 `contract/protocol.md` step 4 (plan D22): each change one coherent mechanism with its own
 evidence and falsifiable prediction, no two changes interacting on one behavior, reverts
-of refuted changes first-class. The recipe offers four surfaces, choosing among them is
-part of each change's diagnosis, and the choice is where two closed experiments say the
-loop previously failed — read `introspection skills improve/capability-set` (its
-`agent-design` and `agent-security-review` references own the design methodology) before
-choosing:
+of refuted changes first-class. **The surface is part of each change's diagnosis, and it
+is where closed instruction-only loops failed**: three experiments measured that *an
+instruction added to a prompt does not inherit the scope its author reasoned about*, and
+its sharper form — *the escape clause is what the model optimises against* — so when a
+mechanism is judgment, scope, verification, or arithmetic, prefer a structural surface;
+prose-only sets after the concentration flag carry the positive obligation above. Read
+`introspection skills improve/capability-set` (its `agent-design` and
+`agent-security-review` references own the design methodology) before choosing. Each
+surface with its **activation path** — what must be true for it to reach a graded
+episode:
 
-- **`SYSTEM.md` instructions** — the historical default, where instruction-only loops
-  spend every slot. Seq 4 + seq 5 measured the failure mode: six of seven mutations were
-  prompt text, four failed because *an instruction does not inherit the scope its author
-  reasoned about*. When a change's mechanism is judgment, scope, or verification, prefer
-  a structural surface below; a set that stays prompt-only after the concentration flag
-  fires (≥3 prompt mutations on one surface) must state why no structural surface fits.
-- A **Pi skill** in the recipe — packaged, named judgment loaded near the work.
-- A **Pi extension tool** — a deterministic TypeScript capability the model calls.
-- A **sub-agent** — a delegatable recipe agent with its own tools, skills, instructions.
+- **Instructions** (`SYSTEM.md` `<instructions>`) — always live; the historical default
+  where instruction-only loops spend every slot. Under record schema v3, every landed
+  instructions change carries per-clause falsifiers (the adversarial wording review).
+- An **extension hook** (`before_agent_start` / `tool_result` / `context`) — no tool
+  call, deterministic; live in every seam configuration and measured functional on the
+  real domain. The delivery surface for injected judgment, result transformation, and
+  computed context.
+- An **extension tool** — a deterministic capability the model calls; live where the
+  seam suppresses Pi-local calls from the evaluator (this repo: D24) — the call must be
+  registered by a recipe extension AND allowlisted in the agent's `tools:`, which
+  doubles as the suppression registry. Where no suppression exists, the call leaks to
+  the evaluator as an invalid action: verify the seam before choosing this surface.
+- A **sub-agent** — delegation through the auto-generated `agent` tool; same
+  availability condition as extension tools (the `agent` call is Pi-local under
+  suppression), plus the frozen model pair binds the child (`from:` the parent, no
+  `ai:` override).
+- A **declared skill** — measured inert on this seam's local lane (nothing reaches the
+  prompt, with or without `read`); skill-shaped judgment ships via a
+  `before_agent_start` hook that reads the body itself. Re-verify per host before
+  relying on either behavior.
 
-For the three growth surfaces, load
-[references/recipe-growth.md](references/recipe-growth.md) first — verified wiring for
-each, the recipe semantics that bite (array replacement, `ai.model` fresh-config, the
-auto-generated `agent` tool), and this experiment's traps, chief among them the
-load-bearing `tools: []` and the frozen model pair binding sub-agents.
+Before landing any structural change, load
+[references/recipe-growth.md](references/recipe-growth.md) — verified wiring per
+surface, the recipe semantics that bite (array replacement, `ai.model` fresh-config, the
+auto-generated `agent` tool), and the measured traps: the load-bearing `tools: []`, the
+frozen model pair binding sub-agents, and lane-serving asymmetries (the platform lane
+pins the recipe to pushed main; the local lane is the work-tree-faithful probe lane).
 
 Justified diagnostic evals and judges are also mutable surface, routed wholly to
 `improve` (read `improve/measure` first): they inform diagnosis and never redefine the
