@@ -272,7 +272,12 @@ dashboard, browser automation, or direct API calls for an operator action the CL
   mutation per generation — read their records under that rule.
 - Every generation is measured once against the same fixed held-out set. A rejected or failed
   mutation yields an identity generation — H_(g+1) = H_g, result carried forward, recorded —
-  and there are no paired baseline/candidate arms.
+  and there are no paired baseline/candidate arms. The cadence — baseline measured first,
+  every batch preceded by its generation's held-out round, the experiment always ending on
+  the final harness's measurement — is MECHANICAL: `run.py` refuses a batch whose
+  generation is unmeasured or whose recipe is not that generation's tag (identity chains
+  resolved), and `make reveal` refuses to close while any non-identity generation lacks
+  its round (protocol.md § Per generation has the full guarantee).
 - **Label every number with its set (batch B_g or held-out) and its N**; report the count
   with the percentage. Never describe generations with `pass^k`; state the scale-aware
   binomial noise band (±17 pp at T=8; ±9 pp at the powered T=28; ±7 pp at T=47)

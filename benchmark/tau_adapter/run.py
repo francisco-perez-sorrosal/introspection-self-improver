@@ -51,6 +51,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tau_adapter import generations as gensmod
+from tau_adapter import heldout as heldoutmod
 from tau_adapter import lock as lockmod
 from tau_adapter import manifest as manifestmod
 from tau_adapter import rounds as roundsmod
@@ -341,6 +342,65 @@ def _infra_failure_classes(rows: list[dict[str, Any]]) -> dict[str, int]:
         else:
             counts["infra_other"] = counts.get("infra_other", 0) + 1
     return counts
+
+
+def _batch_cadence_problem(lock: lockmod.Lock, batch_number: int) -> str | None:
+    """Why this batch would break the generation cadence, or None when it holds.
+
+    The cadence (protocol, user-ratified 2026-08-16): every harness is MEASURED on the
+    held-out set before its batch is spent — H0's baseline before batch_01, H_g's round
+    before batch_(g+1) — so learning never runs ahead of measurement, and together with
+    reveal's completeness refusal the curve is guaranteed a point for every harness that
+    learned, ending on the final one. Two facts are checked, both resolved through the
+    identity chain (an identity/rejected transition carries its predecessor's tag and
+    measurement forward, D5):
+
+      recipe   the anchored surface is byte-identical to the generation's tag — a batch
+               run after an early merge would otherwise attribute H_(g+1) behaviour to
+               H_g's round directory with no refusal.
+      vault    the generation's held-out round is graded in the vault. EXISTENCE ONLY:
+               the gate tests the graded artifact's path and never opens anything in the
+               vault — completeness is the operator's signal, rewards stay sealed.
+    """
+    runner_generation = batch_number - 1
+    records_dir = RESULTS_ROOT / f"experiment_{lock.experiment_id}" / "improvement_records"
+    effective = gensmod.effective_generation_index(runner_generation, records_dir)
+    generation_name = f"generation_{effective:03d}"
+    carried = (
+        f" (H{runner_generation} carries forward to H{effective} via identity transitions)"
+        if effective != runner_generation
+        else ""
+    )
+    tag = gensmod.heldout_generation_tag(lock.experiment_seq, generation_name)
+    if not gensmod.tag_exists(tag):
+        return (
+            f"batch_{batch_number:02d} is run by H{runner_generation}, whose recipe is the "
+            f"tag {tag!r}{carried} — and that tag does not exist. The loop order is "
+            "merge → tag → held-out → batch."
+        )
+    problems = gensmod.verify_against_tag(tag)
+    if problems:
+        return (
+            f"the recipe surface is not byte-identical to {tag!r}, so "
+            f"batch_{batch_number:02d} would run something other than "
+            f"H{runner_generation}{carried}:\n  ✗ " + "\n  ✗ ".join(problems)
+        )
+    graded = (
+        heldoutmod.vault_root()
+        / f"experiment_{lock.experiment_id}"
+        / generation_name
+        / heldoutmod.GRADED_DIR
+        / heldoutmod.GRADED_RESULTS
+    )
+    if not graded.exists():
+        return (
+            f"H{runner_generation} has no graded held-out measurement in the vault"
+            f"{carried}. The cadence is measure-then-learn: run "
+            f"`make heldout GEN={generation_name}` to completion before spending "
+            f"batch_{batch_number:02d} — a baseline skipped now becomes unmeasurable "
+            "once the next merge moves the recipe."
+        )
+    return None
 
 
 def _seam_canary_problem(experiment_id: str) -> str | None:
@@ -806,6 +866,12 @@ def main() -> int:
                 f"{generation_of(out_dir) or 'no generation directory'}. "
                 f"Use GEN={expected_generation}."
             )
+        # The generation cadence: measure, then learn. Bypassed only by --allow-dirty,
+        # whose rows are already marked non-citable — a debugging escape, never a round.
+        if not args.allow_dirty:
+            cadence_problem = _batch_cadence_problem(lock, args.batch)
+            if cadence_problem:
+                raise SystemExit(cadence_problem)
         # A batch round spends real evidence on the platform seam, and the local gate
         # cannot exercise the tunnel — the 2026-08-15 disconnect regression passed 309
         # tests and a mock smoke while denying agents their tools. So a batch refuses to

@@ -176,3 +176,32 @@ def test_a_heldout_round_refuses_a_drifted_recipe(repo):
     _git(repo, "commit", "-q", "-m", "drift")
     with pytest.raises(GenerationError, match="byte-identical"):
         assert_heldout_measures_a_generation(2, "generation_001", repo)
+
+
+def _write_record(records_dir, source, outcome):
+    records_dir.mkdir(parents=True, exist_ok=True)
+    (records_dir / f"gen_{source:03d}_to_{source + 1:03d}.yaml").write_text(
+        f"outcome: {outcome}\n", encoding="utf-8"
+    )
+
+
+def test_effective_generation_resolves_identity_chains(tmp_path):
+    """An identity/rejected transition pins H_g to its predecessor (D5): no tag, no
+    held-out round of its own. Anything needing H_g's concrete identity walks the record
+    chain to the nearest generation that actually landed."""
+    from tau_adapter.generations import effective_generation_index
+
+    records_dir = tmp_path / "improvement_records"
+
+    # No records at all: a generation is its own harness until a record says otherwise.
+    assert effective_generation_index(0, records_dir) == 0
+    assert effective_generation_index(2, records_dir) == 2
+
+    # accepted → H2 is its own harness; identity → H2 carries to H1; a chain of
+    # identity + rejected walks all the way to the baseline.
+    _write_record(records_dir, 1, "accepted")
+    assert effective_generation_index(2, records_dir) == 2
+    _write_record(records_dir, 1, "identity")
+    assert effective_generation_index(2, records_dir) == 1
+    _write_record(records_dir, 0, "rejected")
+    assert effective_generation_index(2, records_dir) == 0

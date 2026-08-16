@@ -30,6 +30,22 @@ file and the code disagree, the code wins and this file gets fixed.
 
 ## Per generation g (H_g is current, tagged; g starts at 0)
 
+**The cadence is a guarantee, not a habit** (user-ratified 2026-08-16). An experiment of
+G generations is exactly: *measure H0 on the held-out set → [batch → diagnose → improve →
+merge+tag → measure H_(g+1) on the held-out set] × G → reveal* — the baseline is measured
+before any learning, every harness that learned is measured, and the sequence always ends
+with the latest harness's held-out measurement. Three mechanisms enforce it, so the order
+cannot be lost to forgetting: **(a)** `run.py` refuses `--batch N` until H_(N-1)'s
+held-out round is graded in the vault (existence of the graded artifact by path — nothing
+in the vault is opened) and the recipe surface is byte-identical to H_(N-1)'s tag, both
+resolved through the identity chain (an identity/rejected transition carries its
+predecessor's tag and measurement forward, D5); **(b)** the held-out runner refuses a
+recipe that is not byte-identical to the generation it claims to measure; **(c)**
+`make reveal` refuses to close the experiment while any non-identity generation H0…H_G
+lacks its measurement — the final harness cannot go unmeasured, because without its round
+there is no reveal. A skipped baseline is not merely late: once the next merge moves the
+recipe, (b) makes the missed measurement unrunnable — which is why (a) exists.
+
 1. **Hidden measurement of H_g**: `make heldout GEN=generation_00g`. Local lane only,
    sealed vault, completeness-only terminal (counts, seam incidents, failure classes —
    never rewards). If INCOMPLETE, rerun the same target: τ resumes missing pairs and

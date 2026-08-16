@@ -104,6 +104,32 @@ def heldout_generation_tag(seq: int, generation_name: str) -> str:
     return H0_TAG if index == 0 else generation_tag(seq, index)
 
 
+def effective_generation_index(generation: int, records_dir: Path) -> int:
+    """The nearest ancestor of H_<generation> that is its own harness.
+
+    An identity or rejected transition pins H_g to H_(g-1) (decision D5): no tag is cut,
+    no held-out round runs, and the generation exists only as a carried-forward record.
+    Any round that needs H_g's concrete identity — the tag its recipe must match, the
+    vault measurement that stands for it — therefore resolves through the record chain to
+    the nearest generation that actually landed. Terminates at 0 (H0 is always its own
+    harness); a missing record breaks the walk conservatively (the named generation is
+    treated as its own), so an incomplete chain surfaces downstream as a missing tag or
+    measurement rather than being silently papered over.
+    """
+    from tau_adapter import records as recordsmod
+
+    index = generation
+    while index > 0:
+        record_path = records_dir / recordsmod.record_name(index - 1)
+        if not record_path.exists():
+            break
+        outcome = recordsmod.load_record(record_path).get("outcome")
+        if outcome == recordsmod.OUTCOME_ACCEPTED:
+            break
+        index -= 1
+    return index
+
+
 def assert_heldout_measures_a_generation(
     seq: int, generation_name: str, repo_root: Path = REPO_ROOT
 ) -> str:
