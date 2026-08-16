@@ -153,3 +153,14 @@ local rounds hit a single `infrastructure_error` each and both resumed to 84/84.
 
 Six PRs, six merges, six tags, six verified records, one freeze fingerprint, one policy hash.
 The instrument held. What it measured is in `README.md`.
+
+---
+
+## Errata (2026-08-16, from the independent review)
+
+Two figures above are corrected by [`INDEPENDENT_REVIEW.md`](INDEPENDENT_REVIEW.md) § 6, text
+preserved as written: platform batch spend is **$4.08** ($4.0846; the $4.06 figure subtracted
+the seam-canary cost with the wrong sign), and §16's "ten changes" counts eleven table rows
+(H1 excluded, F1 included — both pure reverts). The "zero seam incidents" sentence in the
+loop-mechanics verdict is accurate as qualified here (the one `sandbox_tool_error` counter is
+disclosed in the same sentence); the README's copy of that sentence lacks the qualifier.

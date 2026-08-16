@@ -18,7 +18,7 @@ loop demonstrated end to end, no claim made (Phase 4, closed 2026-08-14). Phase 
 powered experiment, seq 4: G=5, B=8, T=28 per D11) is sized to carry the claim; Phase 6
 (full, T=47, seq 6) stays deferred unless the powered outcome argues for it.
 
-**Where the path stands (2026-08-14):**
+**Where the path stands (2026-08-16):**
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -29,10 +29,11 @@ powered experiment, seq 4: G=5, B=8, T=28 per D11) is sized to carry the claim; 
 | 3.5–3.5c | Episode concurrency, both lanes | ✅ closed |
 | 4 | Debug experiment (seq 1 voided at H0 → seq 2 ran and REVEALED) | ✅ closed 2026-08-14 — loop demonstrated; endpoint −1 task, inside ±18 pp; no claim |
 | 5 | Powered experiment (seq 4, D11: G=5/B=8/T=28; renumbered from seq 3 by D15) | ✅ closed 2026-08-15 — REVEALED: endpoint −2 tasks inside ±9 pp, trend p=0.802; no improvement demonstrated; machinery held (208 episodes, zero seam incidents, all twenty §29 guardrails) |
-| 5.5 | **Loop-reliability experiment (seq 5, D17/D18/D19: fixed batch × 3 trials)** | ⏳ prepared — lock cut PROVISIONAL, fixed partition frozen, batch_curve instrument + rate-native reveal landed; awaiting the start gate |
-| 6 | Full experiment (seq 6, T=47) | deferred — contingent on Phase 5.5 |
+| 5.5 | Loop-reliability experiment (seq 5, D17/D18/D19: fixed batch × 3 trials, G=2 per D20) | ✅ closed 2026-08-16 — REVEALED: paired batch endpoint p=1.0000 (batch curve 4.2→8.3→0.0%), held-out endpoint +0.0 pp; against the frozen key: the meta-agent is the problem; one §29 guardrail waived (human approval, by user instruction) |
+| 5.6 | **Fixed batch at depth (seq 6, D23: G=6, composite sets D22, fully autonomous)** | ✅ closed 2026-08-16 — REVEALED: primary null (p=1.0000, curve ends below baseline), secondary held-out trend z=1.77 p=0.038 on a triple-exposed set — no capability claim; machinery held (756 episodes, twenty §29 guardrails HELD or N/A, none waived); independent review + § 8 groundwork follow |
+| 6 | Full experiment (the next even seq per D15) | deferred — sizing per D11 and the seq-6 independent review's instrument rules |
 
-Fast orientation: every decision with its rationale is a §2 row (D1–D13); what each
+Fast orientation: every decision with its rationale is a §2 row (the D-ledger); what each
 protocol concept became in code is the §3 table; per-phase history with landing dates
 is §5; the measured budget basis is §6; distilled learnings are §9.
 
@@ -117,13 +118,13 @@ the rest are recorded here as the working defaults.
 
 | Protocol concept | Repo realization |
 |---|---|
-| Experiment config (§26) | `protocol:` block in `benchmark_lock.yaml` (`generations`, `improvement_tasks_per_generation`, `held_out_tasks`, `allow_within_batch_verification: false`, `holdout_visibility` flags, `require_human_approval: true`). Inside the freeze fingerprint automatically via `lock.raw`. `held_out_trials_per_task` ≡ `frozen.num_trials` (one knob). |
+| Experiment config (§26) | `protocol:` block in `benchmark_lock.yaml` (`generations`, `improvement_tasks_per_generation`, `held_out_tasks`, `allow_within_batch_verification: false`, `holdout_visibility` flags, `require_human_approval` — a per-experiment value: `true` through seq 5, frozen `false` for seq 6 per D23). Inside the freeze fingerprint automatically via `lock.raw`. `held_out_trials_per_task` ≡ `frozen.num_trials` (one knob). |
 | Partition (§3, §16) | `benchmark/split_manifest.yaml` rewritten: `batches: {batch_01: […], …}` + `held_out: […]`, sizes derived from the lock's `protocol:` block. Same stratification machinery (reward_basis 88 DB / 9 ACTION, dominant doc category, doc count; stride scheduler), disjointness verified dynamically across G+1 partitions, (G×B)+T ≤ 97 enforced, ACTION spread re-expressed (held-out gets its proportional share ≥4 at T=47; batches jointly cover the rest). |
 | Improvement batch run (§7) | `make batch B=1 GEN=generation_000` — platform lane forced, resume-friendly (no `--overwrite`), round dir `generation_NNN/batch_NN/`, manifest `split: batch_NN`, labels `[exp_00N:…] τ²-bench banking_knowledge task_X trial 0 gen_NNN bNN - …`. Convention enforced by the runner (2026-08-13): batch_NN is *run by* H\_(NN−1), so it lives under `generation_(NN-1)/` — the wrong GEN is refused pre-spend. Graded output persists to `batch_NN/graded/`. |
 | Held-out evaluation (§6, §11) | `make heldout GEN=generation_001` → `scripts/run_heldout.py`: local lane forced, all child stdout/stderr redirected into the vault's `console.log`, grading persisted to the vault (never printed), prints **completeness only** (episodes expected/completed, manifest joined, zero reward tokens — asserted by test). |
 | Firewall (§12) | D1 + D9. Platform: structural (no evidence exists). Local artifacts: procedural + out-of-tree + muted output. |
 | Diagnosis (§8) | `operate` skill over the batch's platform conversations: task rows → conversations → tool calls/spans; prevalence via `metrics query`; observations/patterns after the ~40-min window (fallback: metrics-over-spans + manual clustering, evidence tier stated). |
-| Proposal (§9) | `improve` skill: one coherent mechanism inside the mutable table → branch `gen-NNN/<slug>` → PR citing conversation ids + prevalence + predicted effect. |
+| Proposal (§9) | `improve` skill: one improvement **set** per generation (D22) — any number of changes, each one coherent mechanism inside the mutable table with its own falsifiable prediction — branch `gen-NNN/<slug>`, one commit per change, one PR citing conversation ids + prevalence + per-change predictions. |
 | Approval → generation (§10) | Human reviews/merges the PR on `main`; merge commit tagged `exp<seq>-g<NNN>`; `improvement_records/gen_<g>_to_<g+1>.yaml` written (schema: `contract/improvement_record.schema.yaml`, §24 fields; `held_out_result` filled at reveal only). |
 | Metrics & artifacts (§18–§21, §27) | `make reveal` → `results/experiment_<id>/held_out/{results_by_generation.csv, task_generation_matrix.csv, transitions.csv, retention.csv}` (gains/regressions/retained/unresolved per transition and currently- vs ever-solved are machine-readable, not summary-only), plus `summary.md` with counts + percentages + the D2 noise band. §27's `config.yaml` is satisfied by `experiment.yaml` (lock+manifest fingerprint snapshot) plus value-copies of `benchmark_lock.yaml` and `split_manifest.yaml` written beside it at snapshot creation, so a results directory describes its own configuration. The dashboard renders the progression view from exactly these revealed artifacts (curve with noise-band whiskers + carried markers, retention line, transitions table, binary matrix) and shows a sealed notice pre-reveal. |
 | Guardrail 10 (§29) | Unchanged from today: the adapter never repairs the agent (`contract/constraints.md`), integration code stays task-agnostic, `introspection check` in pre-commit/CI/runner. |
@@ -789,11 +790,13 @@ the transfer probe (D19). ~120 platform + ~504 local episodes ≈ $20–25 at me
 interpretation; every number labelled with set, N and trials; the D19 firewall caveat
 stated wherever a T number renders.
 
-### Phase 6 — Full experiment + reporting (deferred; contingent on Phase 5's outcome)
+### Phase 6 — Full experiment + reporting (deferred; contingent on the § 8 groundwork)
 
-- [ ] Freeze seq 6 (or the next even, per D15): G=5, B=10, T=47; `reset_h0`; A.0a PASS; partition
-      frozen. Note the fresh-pool discipline cannot fully hold at this size
-      (47 + 50 > 76 unused tasks) — the freeze decision must state which reuse it
+- [ ] Freeze the next even seq (per D15; seq 6 was consumed by the fixed-batch-at-depth run,
+      D23): sizes per D11 revisited against the seq-6 independent review's instrument rules
+      (stratified batch, fresh holdout, full-quadrant reading key); `reset_h0`; A.0a PASS;
+      partition frozen. Note the fresh-pool discipline cannot fully hold at T=47
+      (47 + 50 > ~61 never-used tasks) — the freeze decision must state which reuse it
       accepts.
 - [ ] Run the six held-out evaluations and five generations (~282 local + 50 platform
       episodes ≈ $210–230 at measured seq-2 rates — supersedes the pre-run $75–90
@@ -824,7 +827,7 @@ statement — all present and internally consistent.
 | Luna calibration pilot (D12) — **recorded** | 28 local | **$1.06** ($0.038 mean / $0.026 median per episode) | — | ≈ 7 min at 10-wide (recorded) |
 | Haiku calibration pilot (D13) — **recorded** | 28 local | **$6.22** ($0.283 mean / $0.252 median per episode) | — | ≈ 9 min at 10-wide (recorded) |
 | Powered experiment (now seq 4; D11 sizes, D13 haiku pair) | 168 local + 40 platform | ≈ **$55–65 at haiku pilot rates** (local $0.283/ep; platform $0.218/ep measured). If D12's luna returns: ≈ $10–20. Sonnet basis ($132–165) superseded | ~7–9 h | ≈ 3–5 h compute, ~2–3 days elapsed with review gates |
-| Full experiment (seq 6, deferred) | 282 local + 50 platform | local side ≈ $11 at luna rates — cost no longer separates the tiers; what still decides T=28 for the powered run is the fresh-pool discipline (47+50 > 76) and wall-clock | ~9–12 h | ≈ 3–5 h compute, ~2–3 days elapsed |
+| Full experiment (next even seq, deferred) | 282 local + 50 platform | local side ≈ $11 at luna rates — cost no longer separates the tiers; what still decides T=28 for the powered run is the fresh-pool discipline (47+50 > 76) and wall-clock | ~9–12 h | ≈ 3–5 h compute, ~2–3 days elapsed |
 | Endpoint reliability addendum (conditional, D11) | 112 local (+2 trials × H0/H5 × 28) | ≈ $70 (scales with trial count) | ~5 h | ≈ 1–2 h |
 
 Basis (pre-run estimates replaced by seq-2 recorded actuals, 2026-08-14, per the

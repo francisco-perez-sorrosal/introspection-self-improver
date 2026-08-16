@@ -208,3 +208,36 @@ batch rounds + gates) · `experiment.yaml` + value-copies of the lock and partit
 3. **Making Pi-local tool calls invisible to τ is seam work worth costing.** It is the single
    change that would unlock the growth surfaces both prior closures asked for, and it is a
    freeze-level decision, not a mutation.
+
+## Errata (2026-08-16, from the independent review)
+
+Corrections established by [`INDEPENDENT_REVIEW.md`](INDEPENDENT_REVIEW.md) § 6 after this
+closure was written. The text above is preserved as written; these entries supersede it where
+they conflict.
+
+1. **The E2 quote is wrong.** "E2 said 'apply what the knowledge base provides first'" — the
+   landed E2 text (commit `3b1bf58`) contains no such clause; that wording is D2's,
+   co-resident in the same prompt. The escape-clause lesson keeps C2 as its clean witness;
+   E2's honest reading is "an instruction targeting the escalation motive moved the rate the
+   wrong way". The same misquote appears in `improvement_records/gen_003_to_004.yaml` (sealed,
+   left as written) and was corrected in `CLAUDE.md`.
+2. **"Ten changes landed" vs the table's eleven rows.** The count excludes H1 but includes F1
+   — both are pure reverts. Eleven changes landed; two slots were spent purely on reverts.
+3. **Platform batch spend is $4.08, not $4.06** ($4.0846 over the 168 episodes; the $4.06
+   figure equals the total minus the seam-canary cost, subtracted with the wrong sign — the
+   canary was additional spend, $4.1085 platform total). Local held-out spend, unreported
+   above: $12.67 over 588 episodes; whole experiment ≈ $16.75.
+4. **"Zero seam incidents across all 168 platform episodes" is under-qualified here** — one
+   `sandbox_tool_errors: 1` counter exists (batch_02, task_072 t1). `GUARDRAIL_WALK.md`
+   discloses it precisely; seam disconnect/timeout/unclassified counters are genuinely zero.
+5. **The seam probe is cited beyond its coverage.** One tool, mock domain, local lane, three
+   trials. The sub-agent verdict is same-mechanism inference; the `tool_call`-blocking verdict
+   is inferred and deliberately not run; the Pi-skill row restates pre-existing trap #1 and
+   was never measured.
+6. **The improvement backlog is stale from gen-003 onward** — F1, G1/G2, H1, T6's consumption,
+   and T7's second witness never reached it; `gen_003_to_004.yaml` cites a backlog update that
+   does not exist. The "eight targets: six consumed, one retired, one held" end-state above is
+   correct but is reconstructed, not recorded in the artifact.
+7. `summary.md` labels the trend test "(D11)"; this experiment's primary designation is D23's.
+8. The endpoint round's behavioral profile went unmeasured at close; the review measured H6's
+   transfer rate at 9/24 — exactly H0's value.

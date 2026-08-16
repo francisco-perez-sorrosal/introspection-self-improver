@@ -7,8 +7,8 @@ operational and improvement primitives, with τ²-bench `banking_knowledge` supp
 The evaluation specification is `self_improving_agent_evaluation_protocol.md` — G disjoint
 improvement batches drive generations H_0 → H_G, every generation is measured once against the
 same fixed held-out set whose results stay hidden until the experiment closes, and the endpoint
-question is R_T(H_G) > R_T(H_0). `SIA_EVALUATION_PLAN.md` is the forward tracker (decisions
-D1–D10, incrementally validated phases); consult it to see where the path stands. The MVP
+question is R_T(H_G) > R_T(H_0). `SIA_EVALUATION_PLAN.md` is the forward tracker (the
+decisions ledger, incrementally validated phases); consult it to see where the path stands. The MVP
 design guides and the old milestone tracker were removed 2026-08-13 (git history keeps them);
 their evaluation design — pass^k, discovery/validation/test splits, checkpoints — is obsolete,
 and what survives of them is the built machinery itself, documented by `README.md` and
@@ -196,11 +196,15 @@ close.
   exposure on the held-out set — cannot be separated by this run.
 - **What seq 6 established that outlives the number.** (a) **Every change that told the agent
   what to RETRIEVE or in what ORDER to act confirmed; every change that told it what NOT to do
-  or offered an ALTERNATIVE failed** — ten changes, three reverted after refutation, one
-  superseded. (b) The sharper form of the standing lesson: *an instruction's escape clause is
-  what the model optimises against, and one naming a precondition teaches the model to satisfy
-  the precondition, not to drop the behaviour* — C2's "or explained" produced a
-  zero-difference report; E2's "apply the KB first" produced 27 writes then a transfer anyway.
+  or offered an ALTERNATIVE failed** — eleven changes (two slots spent purely on reverts),
+  three reverted after refutation, one superseded. (b) The sharper form of the standing
+  lesson: *an instruction's escape clause is what the model optimises against, and one naming
+  a precondition teaches the model to satisfy the precondition, not to drop the behaviour* —
+  C2's "or explained" produced a zero-difference report, the lesson's clean witness. (E2's
+  failure was long misquoted as this mode; its two landed sentences carry no precondition —
+  the "apply the KB first" wording was D2's, co-resident in the prompt. E2 targeted the
+  escalation motive and moved the rate the wrong way: 27 writes, then a transfer anyway.
+  Errata: the seq-6 independent review § 6.)
   (c) **Transfer is a single dial** and this batch holds tasks on both sides of it (E2 present:
   15/24 transfers, `task_014` 2/3; reverted: 6/24, `task_014` 0/3) — six mutations across three
   experiments have moved the rate, none the discrimination. (d) **Two of the three "unused
@@ -211,7 +215,9 @@ close.
   designed: fixing `task_065`'s class choice exposed an ordering/eligibility constraint that
   had been masked, and fixing that produced its first pass. Closure:
   `results/experiment_006_fixedb-bm25-luna56/README.md`; §29 walk has **all twenty HELD or
-  N/A-by-design, none waived**; 756 episodes, zero seam incidents across 168 platform episodes.
+  N/A-by-design, none waived**; 756 episodes, zero seam disconnect/timeout counters across
+  168 platform episodes (one benign `sandbox_tool_error`; platform spend $4.08, ≈$16.75
+  total).
 
 ## Invariants
 
