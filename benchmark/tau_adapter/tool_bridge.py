@@ -361,7 +361,14 @@ class ToolBridge:
         config = uvicorn.Config(app, log_level="warning", lifespan="on", access_log=False)
         self._server = uvicorn.Server(config)
 
-        self._thread = threading.Thread(target=self._serve, daemon=True)
+        # REVERTED to uvicorn's own run path 2026-08-15 while a seam regression is bisected:
+        # a hand-built loop (see _serve, retained but unused) coincided with sandbox-side
+        # "local MCP 'tau' is disconnected" tool failures on 3 of 10 platform episodes, where
+        # the immediately preceding commit showed 0 of 10. Capacity sizing is inert until the
+        # cause is settled — correctness of the seam outranks the thread ceiling it fixed.
+        self._thread = threading.Thread(
+            target=self._server.run, kwargs={"sockets": [self._socket]}, daemon=True
+        )
         self._thread.start()
 
         for _ in range(600):  # up to ~30s

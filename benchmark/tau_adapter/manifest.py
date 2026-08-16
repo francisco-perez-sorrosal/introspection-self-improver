@@ -201,6 +201,12 @@ def build_rows(results_payload: dict[str, Any], context: RoundContext) -> list[d
                 "total_tokens": usage.get("total_tokens"),
                 "span_counts": account.get("metrics"),
                 "evidence_complete": account.get("evidence_complete"),
+                # Sandbox-side tool failures, which exist only in the platform conversation:
+                # a seam refusal never reaches the bridge, so no other field on this row can
+                # show it (see run.py::_sandbox_tool_failures).
+                "sandbox_tool_errors": account.get("sandbox_tool_errors"),
+                "sandbox_seam_disconnects": account.get("sandbox_seam_disconnects"),
+                "sandbox_seam_timeouts": account.get("sandbox_seam_timeouts"),
                 "stall_warnings": (incidents or {}).get("stall_warnings", 0),
                 "incidents": incidents,
                 "messages": len(sim.get("messages") or []),
