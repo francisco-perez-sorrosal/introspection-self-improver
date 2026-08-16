@@ -1,0 +1,221 @@
+{
+  "mode": "locked",
+  "experiment": "006_fixedb-bm25-luna56",
+  "freeze_fingerprint": "sha256:890db4b5b44dc8935fc39bd9c814fcce6bac1186d66ed81cb1a7f7a1dca02b89",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 3,
+  "max_concurrency": 3,
+  "bridge_executor_workers": 32,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a00bb1-e4c5-7573-aef7-c68757e9b119"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "602732403ff2a29641b484fc7450de0d4dc3609c",
+    "dirty_paths": [],
+    "allow_dirty": true
+  },
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 1,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 4,
+      "settle_timeouts": 0,
+      "zero_bridge_calls": 0
+    },
+    "unattributed": [],
+    "bridge": {},
+    "infra_failure_classes": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a00bb1-e4c5-7573-aef7-c68757e9b119",
+    "environment": "development",
+    "dev_target": "tau-7dd2",
+    "task_ids": [
+      "01a00bf3-3ee4-76d4-8c9e-85ccb884ad80",
+      "01a00bf3-ce3d-7560-803c-b2dd1233dc91",
+      "01a00bf4-8705-713f-ae8b-63c8c6fe6adf"
+    ],
+    "tasks_created": [
+      "01a00bf3-3ee2-7196-a9e3-0d542fe1eda5",
+      "01a00bf3-3ee4-76d4-8c9e-85ccb884ad80",
+      "01a00bf3-43ae-70c5-8c18-e48b7d23ecb9",
+      "01a00bf3-9864-740b-b3c8-5899bed1e176",
+      "01a00bf3-ce3d-7560-803c-b2dd1233dc91",
+      "01a00bf4-254c-7222-ae09-b92a7a247a4f",
+      "01a00bf4-8705-713f-ae8b-63c8c6fe6adf"
+    ],
+    "orphaned_task_ids": [
+      "01a00bf3-3ee2-7196-a9e3-0d542fe1eda5",
+      "01a00bf3-43ae-70c5-8c18-e48b7d23ecb9",
+      "01a00bf3-9864-740b-b3c8-5899bed1e176",
+      "01a00bf4-254c-7222-ae09-b92a7a247a4f"
+    ],
+    "accounting": {
+      "01a00bf3-3ee4-76d4-8c9e-85ccb884ad80": {
+        "cost": {
+          "usd": 0.00643306
+        },
+        "usage": {
+          "input_tokens": 116301,
+          "output_tokens": 832,
+          "total_tokens": 117133
+        },
+        "metrics": {
+          "duration_ms": 17485.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 5,
+          "span_count": 24,
+          "tool_use_count": 5,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "4c36b1d6935054119d7e5a9703ee8e88fa8b2346",
+        "evidence_complete": true,
+        "item_count": 29,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00bf3-ce3d-7560-803c-b2dd1233dc91": {
+        "cost": {
+          "usd": 0.00689519
+        },
+        "usage": {
+          "input_tokens": 176968,
+          "output_tokens": 828,
+          "total_tokens": 177796
+        },
+        "metrics": {
+          "duration_ms": 25153.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 8,
+          "span_count": 35,
+          "tool_use_count": 5,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "4c36b1d6935054119d7e5a9703ee8e88fa8b2346",
+        "evidence_complete": true,
+        "item_count": 40,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00bf4-8705-713f-ae8b-63c8c6fe6adf": {
+        "cost": {
+          "usd": 0.0047430499999999995
+        },
+        "usage": {
+          "input_tokens": 48549,
+          "output_tokens": 638,
+          "total_tokens": 49187
+        },
+        "metrics": {
+          "duration_ms": 9943.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 3,
+          "span_count": 15,
+          "tool_use_count": 4,
+          "trace_count": 1
+        },
+        "recipe_git_commit_sha": "4c36b1d6935054119d7e5a9703ee8e88fa8b2346",
+        "evidence_complete": true,
+        "item_count": 19,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      }
+    },
+    "retitles": {
+      "applied": 2,
+      "failed": 1
+    },
+    "arm_sha_mismatches": [
+      "01a00bf3-3ee4-76d4-8c9e-85ccb884ad80",
+      "01a00bf3-ce3d-7560-803c-b2dd1233dc91",
+      "01a00bf4-8705-713f-ae8b-63c8c6fe6adf"
+    ]
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 105.9
+}

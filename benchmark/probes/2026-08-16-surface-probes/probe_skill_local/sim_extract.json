@@ -1,0 +1,16 @@
+{
+ "sim0": {
+  "reward": 1.0,
+  "messages": 12,
+  "tool_calls": [
+   "KB_search",
+   "KB_search",
+   "KB_search",
+   "apply_for_credit_card"
+  ]
+ },
+ "sim1_termination": "infrastructure_error",
+ "sim1_error": "UserMessage must have either content or tool_calls. Got UserMessage\nis_final_chunk: True",
+ "sim2_termination": "infrastructure_error",
+ "sim2_error": "UserMessage must have either content or tool_calls. Got UserMessage\nis_final_chunk: True"
+}

@@ -20,7 +20,7 @@ they can reach). This file adds only the mapping and this repo's constraints:
 
 | Diagnosed mechanism shape | Surface |
 |---|---|
-| Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or a **skill** when the judgment is bounded and named; in THIS recipe a declared skill's body is unreachable (no `read`) and the declaration itself injects an adverse read-tool instruction (trap 1), so the working delivery is deterministic injection via `before_agent_start` |
+| Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or skill-shaped content delivered by a `before_agent_start` hook: a **declared** skill measurably reaches nothing on this seam's local lane (trap 1), so hook injection is the only working delivery |
 | Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — but see trap 4: in THIS repo's seam every extension-tool call costs a τ step and an error, so prefer a no-tool-call hook (`tool_result`, `context`, `before_agent_start`) |
 | Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline | **extension event interception** — `tool_result` / `context` / `before_agent_start` only. Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
 | A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — but see trap 4: in THIS repo's seam a sub-agent's delegation call reaches τ as an invalid tool call, so the surface is unavailable |
@@ -46,12 +46,15 @@ so prefer explicit file paths over globs for single files.
   prevents loading**. Optional `scripts/`, `references/`, `assets/`.
 - Manifest: `"pi": { "skills": [...] }` (currently `[]`); a declared glob must match.
 - Agent: `skills:` list, referenced **by frontmatter name, not path**.
-- **What actually reaches the model** (Pi `formatSkillsForPrompt`): an
-  `<available_skills>` block with each skill's name, description, **and absolute
-  SKILL.md path**, preceded by a standing instruction to "use the read tool to load a
-  skill's file when the task matches its description". The body loads only via `read`.
-  `disable-model-invocation: true` removes the skill from the prompt entirely —
-  description included. See trap 1 for what this means in this recipe.
+- **What actually reaches the model — measured on this seam (2026-08-16,
+  `benchmark/probes/2026-08-16-surface-probes/`): NOTHING.** On the local lane
+  (`pi --recipe` rpc, recipes 0.19.3 host) a declared skill left the effective prompt
+  byte-identical to `SYSTEM.md` and the full Pi session free of any skill trace — with
+  `tools: []` **and** with `read` granted. Pi-core sessions document the opposite
+  (`formatSkillsForPrompt`: an `<available_skills>` block with name, description,
+  absolute path, and a standing "use the read tool" instruction, body via `read`;
+  `disable-model-invocation: true` removes it all) — that behavior does not manifest
+  through this host path. Platform-host behavior unverified. See trap 1.
 - Local exemplar of the spelling: `.pi/skills/share-to-traces-pi/SKILL.md`.
 
 **Extension tool** — deterministic TypeScript the model can call:
@@ -145,27 +148,26 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
 
 ## Experiment constraints — the traps
 
-1. **`tools: []` × read-on-demand skill loading — a declared skill is NOT inert here; it
-   is adverse.** Pi's skill block does not merely surface names and descriptions: it
-   injects a standing instruction to *"use the read tool to load a skill's file"* plus
-   each skill's absolute path (upstream-verified against Pi 0.84.1
-   `formatSkillsForPrompt`; corrected 2026-08-16 — this item previously said "inert as
-   designed"). This agent has no `read` — deliberately and load-bearingly (see the
-   `tools: []` comment in `target-agent/agents/agent.yaml`: withholding `read`/`bash`
-   denies a locally-hosted agent any path to the task definitions and gold state in
-   `benchmark/vendor/`). A model that complies with the injected instruction emits a
-   `read` call that no one registered — which this seam forwards to τ as an invalid tool
-   call (trap 4). `disable-model-invocation: true` silences the skill entirely, removing
-   the description too — leaving nothing. Granting `read` is not a legal enabler. So a
-   skill can reach a graded episode only as (a) its description string — a weaker
-   `SYSTEM.md` edit with an adverse rider — or (b) its body injected deterministically by
-   a `before_agent_start` hook that reads the file itself (extension code has host
-   authority; keep its reach inside the recipe dir via `PI_RECIPE_DIR`). Before proposing
-   any skill mutation, verify in the dev lane what the declaration actually does — run a
-   dev-lane episode (`make single_task TRANSPORT=platform`; read
-   `benchmark/tau_adapter/dev_lane.py` before touching anything there — three of its
-   constraints are invisible in the docs) and inspect the effective system prompt and
-   behavior. Record the verifying conversation id in the improvement record's evidence.
+1. **A declared skill reaches NOTHING on this seam's local lane — measured 2026-08-16**
+   (`benchmark/probes/2026-08-16-surface-probes/`, probe P2; this item has now been
+   corrected twice — "inert, description surfaces" pre-2026-08-16, "adverse read-tool
+   injection" earlier the same day — both against the measurement). A valid declared
+   skill (`check` green, `pi.skills` + `agent.yaml skills:`) left the effective prompt
+   byte-identical to `SYSTEM.md` and the Pi session free of any skill trace, with
+   `tools: []` and with `read` granted on a mock-only discriminator. Two consequences:
+   (a) skill-shaped judgment reaches a graded episode **only** as deterministic
+   `before_agent_start` injection — extension code reads the body itself (host
+   authority; keep reach inside the recipe dir via `PI_RECIPE_DIR`); (b) on any OTHER
+   host, Pi-core sessions document an `<available_skills>` block that instructs the
+   model to *use the `read` tool* — for a read-less agent that instruction would be
+   adverse (an unregistered `read` call forwards to τ as an invalid call, trap 4), so
+   re-verify per host before relying on either behavior. `read` itself stays withheld —
+   deliberately and load-bearingly (the `tools: []` comment in
+   `target-agent/agents/agent.yaml`: it denies a locally-hosted agent any path to the
+   task definitions and gold state in `benchmark/vendor/`); granting it is not a legal
+   enabler. Before proposing any skill-shaped mutation, verify its delivery in the lane
+   that serves the work-tree (trap 7) and record the verifying run/conversation id in
+   the improvement record's evidence.
 2. **The gold-state leak generalizes to every surface.** No `read`/`bash`-class
    capability for the agent **or any sub-agent** (the upstream sub-agent example shows
    `tools: [read, bash]` — exactly what is forbidden here). Extension code runs in the Pi
@@ -196,9 +198,12 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
      agent and grader histories diverge.
 
    What stays legal is every extension hook that introduces **no tool call** —
-   `before_agent_start` (replace/augment the system prompt), `tool_result` (transform what
-   the model sees after a τ tool returns), `context` (inject messages) — plus `SYSTEM.md`
-   and a skill's name/description. Changing the forwarding itself is **seam work**, not an
+   `before_agent_start` (replace/augment the system prompt; **measured functional on the
+   banking domain, local lane, 2026-08-16** — probe P1: fires every session, sees the
+   fully composed prompt, `undefined` leaves it unchanged, zero τ-side visibility),
+   `tool_result` (transform what the model sees after a τ tool returns), `context`
+   (inject messages) — plus `SYSTEM.md` (a declared skill's name/description measurably
+   does NOT arrive here; trap 1). Changing the forwarding itself is **seam work**, not an
    ordinary mutation, and hiding agent tool calls from the graded trajectory is the kind of
    adapter helpfulness that makes a harness unmeasurable. The counterpart still holds:
    Pi-local work spends **wall-clock and tokens**, and τ's frozen `timeout_seconds` bounds
@@ -211,14 +216,18 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
 6. **One coherent mutation.** The whole addition — content file(s) + manifest
    declaration + `agent.yaml` allowlist/reference (+ sub-agent YAML) — is one mechanism:
    one branch, one PR, one record, `make check` green. No riders.
-7. **Verify in both lanes before the PR.** The platform sandbox must resolve the same
-   surface the local lane does (deps from the committed lockfile, extension loading,
-   sub-agent delegation); a dev-lane episode plus a local smoke is the floor, and the
-   record cites the verifying conversation ids. Budget the dev-lane iteration correctly
-   (upstream `development-lifecycle`): a skill **body** edit takes effect on the next
-   turn of the same chat, but `SYSTEM.md`, agent YAML, prompts, **extensions**, and MCP
-   declarations need a **new chat**, and `.introspection/*.yaml` a new runtime version —
-   one fresh task per extension revision.
+7. **Verify in both lanes — but know what each lane serves (measured 2026-08-16, probe
+   P3).** The **platform lane pins the recipe to pushed `main`**: with unpushed commits
+   the runner refuses, and `--allow-dirty` runs pushed main's recipe anyway, marking
+   every row `arm_sha_ok=false` — it does NOT serve your branch. So pre-merge
+   verification of a recipe change runs on the **local lane** (work-tree-faithful:
+   `make single_task TRANSPORT=local` / `make smoke`), and the platform-side check
+   happens post-push (seam canary or a dev-lane episode on the landed commit), with the
+   record citing the verifying run/conversation ids. Budget the dev-lane iteration
+   correctly (upstream `development-lifecycle`): a skill **body** edit takes effect on
+   the next turn of the same chat, but `SYSTEM.md`, agent YAML, prompts, **extensions**,
+   and MCP declarations need a **new chat**, and `.introspection/*.yaml` a new runtime
+   version — one fresh task per extension revision.
 
 ## Checklist before the PR
 
