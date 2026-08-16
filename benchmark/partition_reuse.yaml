@@ -32,6 +32,42 @@
 version: 1
 
 declarations:
+  # Seq 6 reuses seq 5's partition VERBATIM in both halves, which means it inherits
+  # seq 5's reuse of seq 4's — two prior experiments deep, and both have REVEALED. Two
+  # declarations, one per source, because the check ranks severity per prior experiment
+  # and collapsing them would understate what the orchestrator has seen.
+  - experiment: 006_fixedb-bm25-luna56
+    reuses_from: 005_fixedb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D23. Seq 6 is seq 5's design re-run at G=6 with composite improvement sets
+      (D22), and holding the instrument constant is the whole point — same fixed 8 batch
+      tasks, same 28 held-out tasks, same model pair, same budgets — so the two curves
+      compare directly. The pool cannot supply an alternative in any case: it holds zero
+      virgin tasks (97 − 1 user-sim crasher − 20 seq-2 − 68 seq-4 − 8 pilot), a
+      structural limit no re-draw escapes. The consequence is stated rather than hidden,
+      and it is WORSE than seq 5's: seq 5 revealed on 2026-08-16, so the orchestrator
+      has now seen the per-task held-out results for these 28 tasks under TWO revealed
+      experiments (seq 4 and seq 5) plus seq 6 itself makes a third pass over them. The
+      held-out lane is therefore a transfer probe carrying a TRIPLE-EXPOSURE caveat that
+      every T-based number in this experiment must state, and no capability claim may
+      rest on it. The pre-registered PRIMARY is the paired batch curve (H6's batch_07 vs
+      H0's batch_01), whose evidence is fully observable by design and therefore
+      unharmed by exposure.
+  - experiment: 006_fixedb-bm25-luna56
+    reuses_from: 004_powered-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D23, transitively. The 28 held-out tasks seq 6 inherits from seq 5 are the
+      same 28 seq 5 inherited from seq 4 under D19 — the set has not moved since the
+      powered experiment. Seq 4 REVEALED on 2026-08-15, so its per-task results are
+      known to the orchestrator; this row exists so that exposure is declared against
+      its own source rather than being absorbed into the seq-5 row and reading as one
+      generation of distance when it is two. Same reason and same accepted consequence
+      as the row above: the pool has no virgin tasks, the batch curve is the primary,
+      and the held-out lane is a caveated transfer probe.
   - experiment: 005_fixedb-bm25-luna56
     reuses_from: 004_powered-bm25-luna56
     kinds: [held_out_from_held_out]

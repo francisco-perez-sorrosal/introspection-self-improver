@@ -181,6 +181,20 @@ close.
   optional argument stopped (`task_065` flipped on that alone). Closure:
   `results/experiment_005_fixedb-bm25-luna56/README.md`; §29 walk has nineteen HELD and
   **one WAIVED — human approval, waived by explicit user instruction, not held**.
+- **Seq 6 is IN FLIGHT (plan D23, frozen 2026-08-16): `006_fixedb-bm25-luna56` — seq 5's
+  design at depth.** G=6, B=8 (the SAME fixed eight tasks every round), T=28,
+  `num_trials: 3`, everything measured carried from seq 5 unchanged, so the two curves
+  compare directly. Two things move: six mutation slots instead of two, and each lands a
+  composite improvement **set** (D22) with the growth surfaces — Pi skill, extension
+  tool, sub-agent — first-class, because the mutation *surface* is what both prior
+  closures name as the live hypothesis. It also runs **fully autonomously**: the user
+  delegated every in-loop decision, including merging, so `require_human_approval` is
+  frozen **false** rather than waived at the walk. The delegation is decision authority,
+  never access — the firewall, the frozen surfaces, the partition and the `<policy>`
+  block bind exactly as always, and a freeze defect is a halt-and-report. Primary
+  instrument: the paired batch endpoint test, H6's `batch_07` vs H0's `batch_01`. The
+  held-out set is on its third experiment, so every T-based number carries a
+  **triple-exposure** caveat and no capability claim may rest on it.
 
 ## Invariants
 

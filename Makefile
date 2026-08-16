@@ -146,17 +146,18 @@ bench:
 B ?= 1
 BATCH_DIR = batch_$(shell printf '%02d' $(B))
 batch: TRANSPORT = platform
-# --max-concurrency 4: no sandbox quota exists (the "~2 concurrent" reading was a
-# misdiagnosis, corrected 2026-08-14 — contract/constraints.md § Platform-lane
-# concurrency), and 4-wide ran clean on 2026-08-15: four sandboxes provisioning
-# concurrently at 35-65s each, zero stall/409/stream incidents
-# (results/experiment_003_powered-bm25-luna56/generation_000/concurrency_smoke).
-# A batch is still diagnosis evidence: if a round shows start-latency churn (the
-# 100-650s provisioning tail returning), drop --max-concurrency per run rather than
-# editing this default, so the record `operate` reads stays clean.
+# --max-concurrency 3 (4 -> 3, 2026-08-16, seq-6 freeze, user-directed): no sandbox
+# quota exists (the "~2 concurrent" reading was a misdiagnosis, corrected 2026-08-14 —
+# contract/constraints.md § Platform-lane concurrency), and 4-wide ran clean on
+# 2026-08-15. 3 is margin taken deliberately for an unattended seven-round run, not a
+# response to an incident: batch rounds ARE the diagnosis evidence, and a seam-timeout
+# cell costs a diagnosis, while the extra wall-clock costs only wall-clock. Operational,
+# outside the freeze fingerprint. If a round shows start-latency churn (the 100-650s
+# provisioning tail returning), drop it further per run rather than editing this
+# default, so the record `operate` reads stays clean.
 batch:
 	@$(RUN) python tau_adapter/run.py --batch $(B) --transport $(TRANSPORT) \
-		--max-concurrency 4 \
+		--max-concurrency 3 \
 		--out ../$(RESULTS)/$(BATCH_DIR)
 	@$(RUN) python scripts/grade.py $(CURDIR)/$(RESULTS)/$(BATCH_DIR)/results.json \
 		--output-dir $(CURDIR)/$(RESULTS)/$(BATCH_DIR)/graded

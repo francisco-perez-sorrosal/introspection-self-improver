@@ -18,19 +18,20 @@
 # experiment.seq in benchmark_lock.yaml), never new lists under the old one. Verify
 # with scripts/propose_split.py --verify.
 #
-# seq 5 loop-reliability (plan D17/D19). FIXED BATCH, hand-chosen: 8 tasks that FAILED under
-# recent harnesses in seq-4 batches, covering the recurring modes — value resolution (task_065,
-# task_072, task_096), discoverable-tool handover (task_026, task_028), transfer discipline in
-# both directions (task_014 refused a required transfer; task_082 transferred on first request),
-# wholesale abandonment/unbounded search (task_070). Known-fail composition is deliberate:
-# saturation headroom is the point, and batch knowledge is fully observable so using seq-4
-# diagnosis to choose is sanctioned. HELD-OUT reuses seq 4's T=28 EXACTLY: the pool holds zero
-# virgin tasks (97 - 1 crasher - 20 seq-2 - 68 seq-4 - 8 pilot), every alternative is equally
-# exposed, and identity buys direct comparability — seq-5 H0 x 3 trials doubles as the
-# reliability study's H0 arm against seq-4's single-trial 6/28. Recorded caveat (D19): the
-# orchestrator has SEEN seq-4's revealed per-task results for these tasks; seq-5's own results
-# stay sealed until reveal, but the firewall is weaker than seq 4's and the batch curve is the
-# primary for exactly that reason.
+# seq 6 loop-reliability at depth (plan D23/D22). The partition is seq 5's, REUSED VERBATIM in
+# both halves — same fixed 8 batch tasks, same T=28 held-out set — because holding the
+# instrument constant is the point: seq 6 changes G (2 -> 6) and the mutation shape (composite
+# improvement SETS, D22, growth surfaces first-class), and nothing else, so its curve compares
+# directly against seq 5's. FIXED BATCH, hand-chosen originally for seq 5: 8 tasks that FAILED
+# under recent harnesses in seq-4 batches, covering the recurring modes — value resolution
+# (task_065, task_072, task_096), discoverable-tool handover (task_026, task_028), transfer
+# discipline in both directions (task_014 refused a required transfer; task_082 transferred on
+# first request), wholesale abandonment/unbounded search (task_070). Under fixed mode G does not
+# enter the distinct-task budget (B+T = 36 of 97), which is why six slots cost no extra tasks.
+# HELD-OUT: the pool holds zero virgin tasks and the orchestrator has now seen TWO revealed per-
+# task result sets for these 28 (seq 4 and seq 5), so the held-out lane is a transfer probe
+# carrying a triple-exposure caveat that every T-based number must state; the BATCH curve is the
+# primary instrument. Declared in benchmark/partition_reuse.yaml.
 
 version: 2
 domain: banking_knowledge
@@ -57,6 +58,42 @@ batches:
     - task_082
     - task_096
   batch_03:
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
+  batch_04:
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
+  batch_05:
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
+  batch_06:
+    - task_014
+    - task_026
+    - task_028
+    - task_065
+    - task_070
+    - task_072
+    - task_082
+    - task_096
+  batch_07:
     - task_014
     - task_026
     - task_028
