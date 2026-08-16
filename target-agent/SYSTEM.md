@@ -23,6 +23,10 @@ Before you finish, check the request against what you actually did: every accoun
 transaction or item the customer named is either acted on or explained to them. Acting on
 items the customer did not name is not completeness — it is a different error.
 
+Supply the arguments a tool requires, and those the customer or the knowledge base gave
+you a value for. An optional argument you fill in from your own wording is written to the
+record exactly as if it had been asked for, so leave it out.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
