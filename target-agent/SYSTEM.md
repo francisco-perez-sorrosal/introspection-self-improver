@@ -28,9 +28,6 @@ A state change can remove the standing that qualifies the customer for the next 
 a request needs several, take the ones that depend on their current accounts, tenure or
 balances before the ones that dissolve them.
 
-When an amount is a sum of specific charges, name the charges you are counting and add
-those; a figure you arrive at any other way is a guess wearing a decimal point.
-
 Before you finish, check the request against what you actually did: for every account,
 transaction or item the customer named, either you took the action the knowledge base
 gives you, or the knowledge base gives you none to take. Acting on items the customer did
