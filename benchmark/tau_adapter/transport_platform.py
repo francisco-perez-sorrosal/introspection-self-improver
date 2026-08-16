@@ -420,6 +420,14 @@ class PlatformTransport:
             if self._closed:
                 return
             self._closed = True
+        # An episode that ran a task and ended with zero tool calls reaching the bridge is
+        # either a degenerate agent or a dead tunnel (the sandbox daemon answering calls
+        # itself — invisible to every bridge counter, and once worth 16 silently-burned
+        # episodes). Counted, never judged: the round report says it loudly and a human
+        # reads the conversation. Guarded on a created task so a pre-start teardown from a
+        # tau retry does not false-positive.
+        if self._task_id is not None and getattr(self._channel, "calls_received", None) == 0:
+            self.incidents.zero_bridge_calls += 1
         self._stop_stream()
         # The backstop for every path that never streamed an event: an episode torn down
         # mid-provisioning gives its start slot back here.
@@ -569,6 +577,11 @@ class PlatformTransport:
 
     def request_session_ref(self) -> None:
         """No-op: the task id is known at creation, unlike Pi's session id."""
+
+    @property
+    def channel_token(self) -> str | None:
+        """This episode's bridge-channel token — the runner's join key into the call log."""
+        return getattr(self._channel, "token", None)
 
     def adopt_channel(self, channel: Any) -> None:
         """Take this episode's bridge channel, to bind once the sandbox session is known."""

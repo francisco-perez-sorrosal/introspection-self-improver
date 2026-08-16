@@ -55,6 +55,11 @@ class EpisodeIncidents:
     start_gate_timeouts: int = 0
     stream_reattaches: int = 0
     settle_timeouts: int = 0
+    #: Episodes that ended without ONE tool call reaching the bridge. Every locked-domain
+    #: task requires tools, so zero arrivals means either a degenerate agent or a dead
+    #: tunnel with the sandbox daemon answering calls itself — the class that once burned a
+    #: 16-episode round invisibly. Either way a human must read the conversation.
+    zero_bridge_calls: int = 0
 
     def count_stall(self) -> None:
         self.stall_warnings += 1
@@ -80,6 +85,10 @@ class RoundContext:
     accounting: dict[str, dict[str, Any]] = field(default_factory=dict)
     incidents_by_ref: dict[str, dict[str, int]] = field(default_factory=dict)
     labels_by_ref: dict[str, str] = field(default_factory=dict)
+    # Per-episode bridge observations (call count, park durations), joined by the runner
+    # from the bridge's call log. The park duration is the only latency the sandbox daemon
+    # actually experiences, so it is the number that explains a seam timeout.
+    bridge_stats_by_ref: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 def episode_summary(sim: Any) -> dict[str, Any]:
@@ -208,9 +217,20 @@ def build_rows(results_payload: dict[str, Any], context: RoundContext) -> list[d
                 "sandbox_seam_disconnects": account.get("sandbox_seam_disconnects"),
                 "sandbox_seam_timeouts": account.get("sandbox_seam_timeouts"),
                 "sandbox_seam_unclassified": account.get("sandbox_seam_unclassified"),
+                # The configuration the sandbox EFFECTIVELY ran, echoed from the
+                # conversation's chat spans — injected defaults (the thinking-level class)
+                # drift platform-side with no repo change, and this is the record that
+                # catches it. None on the local lane and on unfetched conversations.
+                "effective_models": account.get("effective_models"),
+                "effective_reasoning": account.get("effective_reasoning"),
+                "effective_providers": account.get("effective_providers"),
                 "stall_warnings": (incidents or {}).get("stall_warnings", 0),
                 "incidents": incidents,
                 "messages": len(sim.get("messages") or []),
+                "tool_messages": sum(
+                    1 for m in (sim.get("messages") or []) if m.get("role") == "tool"
+                ),
+                **(context.bridge_stats_by_ref.get(ref or "") or {}),
                 "duration_seconds": _finite(sim.get("duration")),
             }
         )

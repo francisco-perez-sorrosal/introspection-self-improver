@@ -156,6 +156,74 @@ def test_incident_sink_counts_and_reports():
     assert sink.any()
     assert sink.as_dict()["stall_warnings"] == 1
     assert sink.as_dict()["prompt_409"] == 1
+    # An episode that ended without one tool call reaching the bridge must be reportable:
+    # it is the dead-tunnel signature, and it once cost 16 silently-burned episodes.
+    sink.zero_bridge_calls += 1
+    assert sink.as_dict()["zero_bridge_calls"] == 1
+
+
+def test_infra_failures_are_classified_into_named_storms():
+    """Provider weather on frozen surfaces accumulates as a ledger, not as log greps.
+
+    The classes are grounded in observed incidents: luna's empty completions to τ's user
+    simulator (killed 3/6 canary trials; deterministically voided seq 1) and the provider
+    transport-error burst (24 retries across 13 tasks in one held-out round).
+    """
+    from tau_adapter.run import _infra_failure_classes
+
+    rows = [
+        {
+            "termination": "infrastructure_error",
+            "failure": {
+                "error_type": "ValueError",
+                "error": "UserMessage must have either content or tool_calls. Got UserMessage",
+            },
+        },
+        {
+            "termination": "infrastructure_error",
+            "failure": {"error_type": "APIConnectionError", "error": "Connection error."},
+        },
+        {
+            "termination": "infrastructure_error",
+            "failure": {"error_type": "RuntimeError", "error": "something new entirely"},
+        },
+        {"termination": "user_stop", "failure": None},
+    ]
+    classes = _infra_failure_classes(rows)
+    assert classes == {
+        "user_sim_empty_completions": 1,
+        "provider_connection_errors": 1,
+        "infra_other": 1,
+    }
+    assert _infra_failure_classes([{"termination": "user_stop", "failure": None}]) == {}
+
+
+def test_bridge_call_stats_join_by_channel_token():
+    """The bridge's park durations reach the manifest through the transport's token."""
+    from types import SimpleNamespace
+
+    from tau_adapter.run import _bridge_call_stats
+
+    transports = [
+        SimpleNamespace(session_ref="task-A", channel_token="tok-a"),
+        SimpleNamespace(session_ref=None, channel_token="tok-orphan"),
+    ]
+    log = [
+        {"token": "tok-a", "duration_seconds": 1.0, "outcome": "ok"},
+        {"token": "tok-a", "duration_seconds": 3.0, "outcome": "ok"},
+        {"token": "tok-unknown", "duration_seconds": 9.0, "outcome": "timeout"},
+    ]
+    stats, enriched = _bridge_call_stats(log, transports)
+    assert stats == {
+        "task-A": {
+            "bridge_calls": 2,
+            "bridge_park_max_seconds": 3.0,
+            "bridge_park_mean_seconds": 2.0,
+        }
+    }
+    # Every entry survives into the persisted log, joined where possible — an unjoinable
+    # call is data (a token no transport owns), never silently dropped.
+    assert [e["episode"] for e in enriched] == ["task-A", "task-A", None]
 
 
 def test_sandbox_tool_failures_counts_what_only_the_conversation_shows():

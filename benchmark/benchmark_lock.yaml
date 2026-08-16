@@ -284,15 +284,15 @@ operational:
   # — 16 on the 12-core host, i.e. a hidden ~8-episode cap that belonged to the machine
   # rather than to any recorded value.
   #
-  # CEILING STATUS (amended 2026-08-15, same day): the dedicated-pool fix was REVERTED
-  # while the disconnect regression it coincided with is bisected (contract/constraints.md
-  # § The disconnect regression), so the default-executor ceiling is LIVE again. Each round
-  # records `bridge_executor_workers` in run_metadata.json as the EFFECTIVE pool (the host
-  # default while the revert stands), so a stall still attributes to agent or seam without
-  # guessing. At this value the ceiling is tight on the local lane only in theory (2N = 16
-  # parked threads worst-case, but local calls park too briefly to jam); the platform lane,
-  # where parks are long, runs batches at 4 and MUST NOT be raised to ≥8 until the
-  # fix-forward lands. Provider streams (2N = 16) remain the other practical constraint.
+  # CEILING STATUS (final, post-seq-5): REMOVED by the call-site executor —
+  # ToolBridge._in_bridge_pool gives the two parking hops their own pool sized from the
+  # round's concurrency, with no event-loop surgery (the same-day set_default_executor
+  # attempt was reverted during the disconnect scare; contract/constraints.md § The seam's
+  # own thread ceiling has the full arc). `bridge_executor_workers` in run_metadata.json
+  # records the pool in use. The remaining practical constraints at any width are provider
+  # streams (2N) and sandbox provisioning latency — and note the seam timeouts seen at
+  # 4-wide in seq 5's batches were daemon patience against slow rendezvous, which no
+  # thread count fixes; bridge_calls.jsonl carries the park durations that attribute them.
   #
   # Platform BATCH rounds still take --max-concurrency 4 from the `make batch` target, and
   # that number now carries evidence in both directions: 4-wide validated clean 2026-08-15,

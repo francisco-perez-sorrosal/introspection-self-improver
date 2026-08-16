@@ -35,6 +35,9 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import contextvars
+import functools
+import hashlib
 import json
 import os
 import queue
@@ -230,6 +233,11 @@ class EpisodeChannel:
     def __init__(self, bridge: ToolBridge, token: str, on_stall: Callable[[], None] | None) -> None:
         self._bridge = bridge
         self.token = token
+        #: Calls that resolved to this channel, incremented on arrival. Zero after the
+        #: episode has been running for a while is the signature of a dead tunnel — the
+        #: sandbox daemon answering calls itself, invisible to every bridge-side counter —
+        #: so the transport reads this to tell "agent thinking" apart from "agent unreachable".
+        self.calls_received = 0
         #: The sandbox session this channel answers for, once bound; see `bind`.
         self.bound_key: str | None = None
         #: Set at close, under the bridge lock. A closed channel refuses new bindings —
@@ -305,13 +313,20 @@ class ToolBridge:
         self._tau_tools = list(tau_tools)
         # Sizes the bridge's own thread pool (see BRIDGE_THREADS_PER_EPISODE). Passed by the
         # runner from the round's effective concurrency so the seam is never the binding
-        # constraint. This is the DESIGNED sizing, installed only by `_serve`; while `start()`
-        # runs uvicorn's own path it is inert — run_metadata.json records
-        # `effective_executor_workers`, the pool actually in use, never this intent.
+        # constraint. Since the post-seq-5 fix-forward, `start()` creates this pool and the
+        # two parking hops in `_on_call_tool` draw from it explicitly — no event-loop
+        # surgery involved, so uvicorn's own run path stays untouched.
         self.executor_workers = max(
             MIN_BRIDGE_WORKERS, BRIDGE_THREADS_PER_EPISODE * max(1, int(max_concurrency))
         )
         self._executor: ThreadPoolExecutor | None = None
+        # Per-call observations, appended by `_on_call_tool` and drained by the runner into
+        # `bridge_calls.jsonl` at round end. Observation only — nothing in the call path
+        # reads it — so the seam's semantics cannot depend on it. It exists because the
+        # bridge is the only vantage that sees every call's arrival, park duration and
+        # outcome, which is what a latency diagnosis or a cross-talk audit needs.
+        self._call_log: list[dict[str, Any]] = []
+        self._call_log_lock = threading.Lock()
         self.server_id = server_id
         self.token = token or secrets.token_urlsafe(24)
         # 0 asks the OS for an ephemeral port, which is right for the local lane: the URL reaches
@@ -363,11 +378,17 @@ class ToolBridge:
         config = uvicorn.Config(app, log_level="warning", lifespan="on", access_log=False)
         self._server = uvicorn.Server(config)
 
-        # REVERTED to uvicorn's own run path 2026-08-15 while a seam regression is bisected:
-        # a hand-built loop (see _serve, retained but unused) coincided with sandbox-side
-        # "local MCP 'tau' is disconnected" tool failures on 3 of 10 platform episodes, where
-        # the immediately preceding commit showed 0 of 10. Capacity sizing is inert until the
-        # cause is settled — correctness of the seam outranks the thread ceiling it fixed.
+        # uvicorn's own run path, kept after the 2026-08-15 regression scare: a hand-built
+        # loop (see _serve, retained for the bisect) coincided with sandbox-side
+        # "local MCP 'tau' is disconnected" failures on 3/10 platform episodes. Causality
+        # was never established (constraints.md § The disconnect regression) and 72
+        # post-revert batch episodes ran with zero disconnects, so the loop stays uvicorn's.
+        # The thread ceiling the hand-built loop tried to fix is solved differently now:
+        # `_in_bridge_pool` gives the two parking hops their own executor, created here —
+        # no loop surgery, sized by `executor_workers`, recorded per round.
+        self._executor = ThreadPoolExecutor(
+            max_workers=self.executor_workers, thread_name_prefix="tau-bridge"
+        )
         self._thread = threading.Thread(
             target=self._server.run, kwargs={"sockets": [self._socket]}, daemon=True
         )
@@ -383,20 +404,39 @@ class ToolBridge:
 
     @property
     def effective_executor_workers(self) -> int:
-        """Workers in the pool the two `to_thread` hops actually draw from this run.
+        """Workers in the pool the two parking hops actually draw from this run.
 
-        While `start()` runs uvicorn's own path (the 2026-08-15 revert above), that pool is
-        asyncio's DEFAULT executor at its stdlib sizing — `min(32, cpu_count + 4)` — and
-        `executor_workers` is the dedicated sizing `_serve` would install, currently inert.
-        run_metadata.json records THIS value: recording the design intent as live capacity
-        would send a future stall diagnosis in exactly the wrong direction (ruling out the
-        thread ceiling that is in fact back). Re-enabling `_serve` must flip this to return
-        `self.executor_workers`.
+        Since the post-seq-5 fix-forward the hops draw from the bridge's OWN pool
+        (`_in_bridge_pool`), so the effective capacity IS the designed sizing — the
+        host-derived `min(32, cpu_count + 4)` ceiling this property existed to report
+        honestly is gone. The property survives because run_metadata.json records it, and
+        the contract stands: it must always report the pool in use, never an intent.
         """
-        return min(32, (os.cpu_count() or 1) + 4)
+        return self.executor_workers
+
+    async def _in_bridge_pool(self, func: Callable[..., Any], /, *args: Any) -> Any:
+        """`asyncio.to_thread`, with the bridge's own executor named instead of the loop's.
+
+        CPython's `to_thread` is exactly these three lines with `None` as the executor —
+        contextvar propagation and error semantics are identical. Naming the pool is what
+        removes the silent host-derived capacity ceiling (`min(32, cpu_count + 4)` shared
+        with whatever else the loop runs) without touching how the serving loop is built —
+        the lesson of the 2026-08-15 regression scare being that the loop lifecycle is
+        uvicorn's to own.
+        """
+        loop = asyncio.get_running_loop()
+        ctx = contextvars.copy_context()
+        return await loop.run_in_executor(self._executor, functools.partial(ctx.run, func, *args))
 
     def _serve(self) -> None:
-        """uvicorn's own `Server.run`, with one addition: this loop's default executor.
+        """SUPERSEDED, retained only as the bisect arm for the 2026-08-15 disconnect question.
+
+        The capacity problem this solved is now solved by `_in_bridge_pool` without owning
+        the loop. Re-enabling this path (point `start()`'s thread at it) reproduces the
+        hand-built-loop configuration for a B-prime discriminator run — nothing else should
+        ever use it, and it must not be combined with `start()`'s executor creation.
+
+        Original intent — uvicorn's own `Server.run`, with one addition: this loop's default executor.
 
         `Server.run` builds a loop from the config's loop factory and runs `serve()` on it, so
         the loop it builds carries asyncio's default executor — the host-sized pool the two
@@ -443,6 +483,10 @@ class ToolBridge:
             self._server.should_exit = True
         if self._thread is not None:
             self._thread.join(timeout=10)
+        if self._executor is not None:
+            # wait=False: a handler still parked in `channel.wait` returns on its own
+            # bounded timeout, and a run's teardown must not block behind one of them.
+            self._executor.shutdown(wait=False, cancel_futures=True)
         if self._socket is not None:
             with contextlib.suppress(OSError):
                 self._socket.close()
@@ -569,7 +613,8 @@ class ToolBridge:
     ) -> mcp_types.CallToolResult:
         _trace_headers(ctx, f"tools/call:{params.name}")
         session_key = _session_of(ctx)
-        channel = await asyncio.to_thread(
+        arrived = time.time()
+        channel = await self._in_bridge_pool(
             self.channel_for_request,
             session_key,
             _token_of(ctx),
@@ -584,6 +629,7 @@ class ToolBridge:
             # healthy (the failure class this bridge exists to make loud).
             reason = self.count_refusal(session_key)
             token = _token_of(ctx) or ""
+            self._log_call(None, params.name, arrived, outcome=f"refused:{reason}")
             logger.warning(
                 f"refused {params.name}: no live episode channel "
                 f"(session={session_key!r}, token={token[:8]}…) — counted as {reason}"
@@ -600,19 +646,61 @@ class ToolBridge:
                 ],
                 is_error=True,
             )
+        channel.calls_received += 1
         try:
-            content, is_error = await asyncio.to_thread(
+            content, is_error = await self._in_bridge_pool(
                 channel.wait, params.name, params.arguments, RESULT_WAIT_SECONDS
             )
         except ToolResultTimeout as exc:
+            self._log_call(channel, params.name, arrived, outcome="timeout")
             # Surfaced to the agent as a failed tool call rather than raised, so the episode
             # ends through τ's own error accounting instead of an adapter traceback.
             return mcp_types.CallToolResult(
                 content=[mcp_types.TextContent(type="text", text=str(exc))], is_error=True
             )
+        self._log_call(
+            channel, params.name, arrived, outcome="error" if is_error else "ok", content=content
+        )
         return mcp_types.CallToolResult(
             content=[mcp_types.TextContent(type="text", text=content)], is_error=is_error
         )
+
+    def _log_call(
+        self,
+        channel: EpisodeChannel | None,
+        tool_name: str,
+        arrived: float,
+        *,
+        outcome: str,
+        content: str | None = None,
+    ) -> None:
+        """One observation per handled call: arrival, park duration, outcome, result digest.
+
+        The digest lets a later integrity audit compare what the bridge returned against
+        what the conversation export says the agent received — payload corruption in
+        transit currently grades as agent behaviour, and this is the bridge-side half of
+        the evidence.
+        """
+        entry = {
+            "token": channel.token if channel is not None else None,
+            "session": channel.bound_key if channel is not None else None,
+            "tool": tool_name,
+            "arrived_unix": round(arrived, 3),
+            "duration_seconds": round(time.time() - arrived, 3),
+            "outcome": outcome,
+            "result_sha256_16": (
+                hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
+                if content is not None
+                else None
+            ),
+        }
+        with self._call_log_lock:
+            self._call_log.append(entry)
+
+    def call_log(self) -> list[dict[str, Any]]:
+        """A copy of every per-call observation so far; the runner persists it per round."""
+        with self._call_log_lock:
+            return list(self._call_log)
 
 
 def _trace_headers(ctx: ServerRequestContext, method: str) -> None:

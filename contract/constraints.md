@@ -191,7 +191,7 @@ The lock's value is the recorded default, any run may override it with
 streams; throttling surfaces as infra retries) and heavy-tailed sandbox provisioning
 latency under concurrent starts (next section).
 
-### The seam's own thread ceiling (found 2026-08-15; the fix reverted the same day — the ceiling is BACK)
+### The seam's own thread ceiling (found 2026-08-15; removed for good post-seq-5 via the call-site executor)
 
 For a while there was a third ceiling, and it was invisible because nothing declared it.
 Every `tools/call` parks **two** threads in sequence — `channel_for_request` (up to
@@ -209,24 +209,29 @@ Observed at `--max-concurrency 8` on a 24-episode batch round: one 300s stall
 sandbox round-trip parks a bridge thread for far longer than a local call does, so the
 platform lane reaches the ceiling first.
 
-The fix (`585ad45`) had `tool_bridge.py` build the serving loop itself and install a
-**dedicated executor** sized from the round's concurrency (`BRIDGE_THREADS_PER_EPISODE`,
-floor `MIN_BRIDGE_WORKERS`). It was **reverted the same day** (`17fa493`): the hand-built
-loop coincided with the disconnect regression described in the next section, and until
-causality is settled the seam runs uvicorn's own path. Consequences that hold as long as
-the revert stands: the two `to_thread` hops draw from **asyncio's default executor again**
-(16 threads on the 12-core host — the ceiling above is live), `_serve` is retained unused
-for the bisect, and `run_metadata.json`'s `bridge_executor_workers` records the
-**effective** default-executor size, never the inert designed sizing — an instrument that
-reported the removed ceiling as still removed would send a stall diagnosis in exactly the
-wrong direction. Operationally the ceiling does not currently bind: platform batches pin
-`--max-concurrency 4` (8 parked threads worst-case against 16), and local calls park
-threads too briefly to jam the pool. Raising platform-lane concurrency to ≥8 before the
-fix returns would re-enter the stall regime. The intended fix-forward is **not** the
-hand-built loop again: replace the two `asyncio.to_thread` call sites with an explicit
-`run_in_executor(self._executor, ctx.run, …)` helper (verbatim `to_thread` semantics,
-CPython's own three lines) — no loop surgery, no uvicorn coupling, validated behind a
-platform canary before it lands.
+The first fix (`585ad45`) had `tool_bridge.py` build the serving loop itself and install a
+dedicated executor via `set_default_executor`. It was **reverted the same day**
+(`17fa493`) when the hand-built loop coincided with the disconnect regression described in
+the next section, and seq 5 ran to completion on uvicorn's own path with the ceiling live
+but non-binding (platform batches at 4-wide park 8 threads worst-case against 16).
+
+The **fix-forward landed after seq 5 closed**: `ToolBridge._in_bridge_pool` replaces the
+two `asyncio.to_thread` call sites with CPython's own three `to_thread` lines, the
+executor named instead of `None` — identical contextvar and error semantics, zero loop
+surgery, the serving loop stays uvicorn's to own. The pool is created in `start()`, sized
+from the round's concurrency (`BRIDGE_THREADS_PER_EPISODE`, floor `MIN_BRIDGE_WORKERS`),
+shut down in `stop()` (wait=False — teardown must not block behind a parked handler), and
+recorded per round as `bridge_executor_workers`, which by contract always reports the pool
+in use, never an intent. `_serve` survives only as the bisect arm for the disconnect
+question.
+
+Note what this fix does **not** explain: `batch_02`/`batch_03` counted 6 and 4
+`mcp upstream timed out` at 4-wide, where the default executor could not saturate. Those
+timeouts are the sandbox daemon's own per-call patience expiring while τ's side is slow to
+rendezvous (agent/user-sim LLM latency, not thread starvation). The per-call park
+durations in `bridge_calls.jsonl` are the instrument that attributes them; a protocol-level
+keepalive (MCP progress notifications while parked) is the named candidate fix if the
+class grows.
 
 The lesson generalises past this bug: a seam limit that no value names will be rediscovered
 as a mystery. If concurrency is raised again, the binding constraints are the two above —
@@ -268,6 +273,27 @@ episodes whose conversation could not be fetched print as `⚠ seam-blind`, beca
 unverified must never read as clean. The markers are substring matches over provider
 text: over-counting via the agent quoting an error back is accepted, and a round that
 flags uniformly after a prompt-touching mutation deserves one human read before belief.
+
+How seq 5 resolved the question in practice: all 72 post-revert batch episodes plus every
+canary ran with **zero disconnects**, so the reverted path is validated under load, while
+causality for the original 3/10 remains formally open (the B′ arm — `_serve` — is retained
+if the record ever needs settling). The counters earned their keep in the same rounds by
+surfacing the timeout class instead (6 and 4 per 24-episode round) with the attribution
+data to show it is daemon patience, not the executor.
+
+The lesson is now mechanical in three more places. `make gate_seam` runs a platform canary
+judged on these counters and records the verdict under the experiment's `gates/`;
+`run.py` **refuses to start a batch round** when that verdict is missing, FAILED, or older
+than the last change under `benchmark/tau_adapter` — the platform failure domain gets a
+blocking gate the way A.0a covers the local one. Every episode that ends without a single
+tool call reaching the bridge counts as `zero_bridge_calls` (the dead-tunnel signature
+that once burned a 16-episode round). And `fidelity/seam_integrity.py` audits a round's
+`bridge_calls.jsonl` against τ's record — count drift, unjoined calls, daemon-patience
+parks — so payload-level seam failures stop grading as agent behaviour by default.
+Provider weather on frozen surfaces is likewise named now: τ's infra placeholders are
+classified per round (`infra_failure_classes` in run_metadata: user-sim empty completions,
+provider connection errors), and `make weather` probes the user-sim surface directly for
+cents before a round is spent.
 
 ### The sandbox-quota misdiagnosis (corrected 2026-08-14)
 

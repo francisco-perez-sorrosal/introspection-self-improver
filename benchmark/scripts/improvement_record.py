@@ -100,6 +100,16 @@ def main() -> int:
     mode.add_argument(
         "--verify", nargs="+", metavar="PATH", help="validate one or more record files"
     )
+    mode.add_argument(
+        "--verify-current",
+        action="store_true",
+        help=(
+            "validate every committed record of the LOCK's experiment (no-op when none "
+            "exist). Run by `make check`, so a record edited after its transition — or one "
+            "whose evidence stopped resolving — fails a commit instead of surviving "
+            "unnoticed. Reveal state is inferred from held_out/ existing."
+        ),
+    )
     parser.add_argument(
         "--write", action="store_true", help="freeze the scaffold into improvement_records/"
     )
@@ -114,6 +124,15 @@ def main() -> int:
     args = parser.parse_args()
     if args.verify:
         return _verify(args.verify, args.revealed)
+    if args.verify_current:
+        lock = lockmod.load_lock()
+        experiment_dir = RESULTS_ROOT / f"experiment_{lock.experiment_id}"
+        paths = sorted(str(p) for p in (experiment_dir / "improvement_records").glob("*.yaml"))
+        if not paths:
+            print(f"✓ no improvement records yet for {lock.experiment_id}; nothing to verify")
+            return 0
+        revealed = args.revealed or (experiment_dir / "held_out").is_dir()
+        return _verify(paths, revealed)
     return _scaffold(args, lockmod.load_lock())
 
 

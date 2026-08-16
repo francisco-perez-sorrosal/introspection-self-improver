@@ -83,11 +83,15 @@ def prior_experiments(
 
     revealed  `held_out/` exists — the one sanctioned unseal, and so the line between "these
               tasks were hidden" and "their per-task results are known".
-    spent     at least one `generation_*/batch_*/` round directory exists — i.e. episodes ran
-              and transcripts were read. A freeze that was voided before any generation (seq 1
-              died at H0 on a τ defect) leaves a partition naming tasks nobody ever looked at;
-              demanding a declaration for those would train the operator to wave the check
-              through, which is worse than not having it.
+    spent     at least one `generation_*/batch_*/` round directory holds results.json — OR a
+              `DISCARDED.md` tombstone where a round was deleted. Episodes that ran were
+              exposure even if their artifacts were later discarded, so a discard must leave
+              the tombstone in place (the reason belongs inside it); deleting a round bare
+              would otherwise un-spend its experiment retroactively. A freeze that was
+              voided before any generation (seq 1 died at H0 on a τ defect) leaves a
+              partition naming tasks nobody ever looked at; demanding a declaration for
+              those would train the operator to wave the check through, which is worse than
+              not having it.
     """
     found = []
     for path in sorted((results_root or RESULTS_ROOT).glob("experiment_*/split_manifest.yaml")):
@@ -98,7 +102,8 @@ def prior_experiments(
                 root.name.removeprefix("experiment_"),
                 manifest,
                 (root / "held_out").is_dir(),
-                any(root.glob("generation_*/batch_*/results.json")),
+                any(root.glob("generation_*/batch_*/results.json"))
+                or any(root.glob("generation_*/batch_*/DISCARDED.md")),
             )
         )
     return found

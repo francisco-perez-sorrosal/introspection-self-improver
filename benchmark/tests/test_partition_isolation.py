@@ -59,6 +59,18 @@ def test_a_spent_and_revealed_partition_is_flagged(tmp_path):
     assert priors[0][2] is True and priors[0][3] is True
 
 
+def test_a_discarded_round_tombstone_still_counts_as_spent(tmp_path):
+    """Episodes that ran were exposure even if their artifacts were later deleted. A bare
+    deletion would un-spend the experiment retroactively; the DISCARDED.md tombstone is
+    what keeps the severity model honest against a mutable results tree."""
+    exp = _write_experiment(tmp_path, "007_discarded", ["t1"], ["t2"])
+    tomb = exp / "generation_000" / "batch_01"
+    tomb.mkdir(parents=True)
+    (tomb / "DISCARDED.md").write_text("contaminated seam; deleted 2026-08-15", encoding="utf-8")
+    priors = iso.prior_experiments(tmp_path)
+    assert priors[0][3] is True, "a tombstoned round is spent"
+
+
 def test_a_declaration_without_a_reason_does_not_silence_the_check(tmp_path):
     """Silencing must cost the same keystrokes as explaining, or it becomes the default."""
     path = tmp_path / "reuse.yaml"

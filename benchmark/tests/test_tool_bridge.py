@@ -370,21 +370,35 @@ def test_executor_is_sized_for_the_round_not_the_host() -> None:
     assert tool_bridge.ToolBridge(tau_tools=[]).executor_workers >= tool_bridge.MIN_BRIDGE_WORKERS
 
 
-def test_effective_executor_reports_the_pool_actually_in_use() -> None:
-    """run_metadata.json must record live capacity, never the inert design intent.
+def test_call_log_records_every_handled_call() -> None:
+    """The bridge is the only vantage that sees arrival, park duration and outcome.
 
-    While `start()` runs uvicorn's own path (the 2026-08-15 revert), the two `to_thread`
-    hops draw from asyncio's default executor at its stdlib sizing — so that is what the
-    round must record. Recording `executor_workers` (the dedicated sizing `_serve` would
-    install) would make a stall diagnostician rule out the exact ceiling that is back.
-    This test flips when `_serve` is re-enabled: at that point the effective value must
-    become `executor_workers`, and updating this assertion is the forcing function.
+    The log is pure observation — nothing in the call path reads it — and each entry
+    carries the result digest so an integrity audit can compare what the bridge returned
+    against what the conversation export says the agent received.
     """
-    import os
+    bridge = tool_bridge.ToolBridge(tau_tools=[])
+    channel = bridge.open_channel(on_stall=None)
+    bridge._log_call(channel, "KB_search", arrived=1000.0, outcome="ok", content="doc text")
+    bridge._log_call(None, "KB_search", arrived=1001.0, outcome="refused:stale_token")
+    log = bridge.call_log()
+    assert [entry["outcome"] for entry in log] == ["ok", "refused:stale_token"]
+    assert log[0]["token"] == channel.token
+    assert log[0]["result_sha256_16"] is not None and len(log[0]["result_sha256_16"]) == 16
+    assert log[1]["token"] is None and log[1]["result_sha256_16"] is None
+    # A copy, not the live list: a consumer must not be able to corrupt the record.
+    log.clear()
+    assert len(bridge.call_log()) == 2
 
+
+def test_effective_executor_reports_the_pool_actually_in_use() -> None:
+    """run_metadata.json must record live capacity, never an intent.
+
+    Since the post-seq-5 fix-forward the parking hops draw from the bridge's own pool
+    (`_in_bridge_pool`), so effective capacity IS the designed sizing and the host-derived
+    `min(32, cpu_count + 4)` ceiling is gone. If these two ever diverge again, whoever
+    changes the executor wiring owns updating this assertion with the new truth.
+    """
     bridge = tool_bridge.ToolBridge(tau_tools=[], max_concurrency=16)
-    assert bridge.effective_executor_workers == min(32, (os.cpu_count() or 1) + 4)
-    assert bridge.effective_executor_workers != bridge.executor_workers, (
-        "the designed sizing is inert while the revert stands; if these are equal the "
-        "host happens to mask the distinction — pick a max_concurrency that separates them"
-    )
+    assert bridge.effective_executor_workers == bridge.executor_workers
+    assert bridge.effective_executor_workers == 16 * tool_bridge.BRIDGE_THREADS_PER_EPISODE

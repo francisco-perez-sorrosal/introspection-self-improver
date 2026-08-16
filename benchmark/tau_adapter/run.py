@@ -207,8 +207,43 @@ def _account_of(item: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
     account["evidence_complete"] = meta.get("complete")
     account["item_count"] = meta.get("item_count")
     account.update(_sandbox_tool_failures(item.get("items") or []))
+    account.update(_effective_config(item.get("items") or []))
     identity = conversation.get("id") or conversation.get("conversation_id")
     return (str(identity) if identity else None), account
+
+
+def _effective_config(items: list[dict[str, Any]]) -> dict[str, list[str]]:
+    """The configuration the sandbox EFFECTIVELY ran, read off the chat spans.
+
+    The lock asserts the recipe; the sandbox injects defaults on top of it (the effective
+    thinking level is one such injection, and a platform-side change to those defaults
+    moves scores with zero repo change and no detector). Chat spans carry
+    `gen_ai.request.model`, `gen_ai.request.reasoning.level` and `gen_ai.provider.name`,
+    so every platform episode can carry its own effective configuration — recorded as
+    sorted sets because one episode makes many calls and drift WITHIN an episode is itself
+    a finding.
+    """
+    models: set[str] = set()
+    reasoning: set[str] = set()
+    providers: set[str] = set()
+    for entry in items:
+        gen_ai = (entry.get("attributes") or {}).get("gen_ai") or {}
+        if ((gen_ai.get("operation") or {}).get("name")) != "chat":
+            continue
+        request = gen_ai.get("request") or {}
+        if request.get("model"):
+            models.add(str(request["model"]))
+        level = (request.get("reasoning") or {}).get("level")
+        if level:
+            reasoning.add(str(level))
+        provider = (gen_ai.get("provider") or {}).get("name")
+        if provider:
+            providers.add(str(provider))
+    return {
+        "effective_models": sorted(models),
+        "effective_reasoning": sorted(reasoning),
+        "effective_providers": sorted(providers),
+    }
 
 
 #: The sandbox daemon reports a failed tool call in the response BODY, not as a typed error,
@@ -276,6 +311,113 @@ def _sandbox_tool_failures(items: list[dict[str, Any]]) -> dict[str, int]:
             # worth a human read, so the bucket exists to keep them from reading as zero.
             counts["sandbox_seam_unclassified"] += 1
     return counts
+
+
+#: Known infrastructure-failure classes, matched against the failure text τ recorded on the
+#: episode. Grounded in observed incidents, not invented: the empty-completion class killed
+#: 3 of 6 canary trials on 2026-08-15 (and, deterministically, voided seq 1); the
+#: connection class produced 24 retries across 13 tasks in the same day's H0 round. Every
+#: class here is provider weather on a FROZEN surface — named so the storm ledger builds
+#: itself in run_metadata.json instead of in log greps and commit messages.
+_INFRA_CLASS_MARKERS = (
+    ("user_sim_empty_completions", "UserMessage must have either content or tool_calls"),
+    ("provider_connection_errors", "APIConnectionError"),
+    ("provider_connection_errors", "Connection error"),
+)
+
+
+def _infra_failure_classes(rows: list[dict[str, Any]]) -> dict[str, int]:
+    """Classify τ's infrastructure-error placeholders by their recorded failure text."""
+    counts: dict[str, int] = {}
+    for row in rows:
+        failure = row.get("failure") or {}
+        if not failure:
+            continue
+        text = f"{failure.get('error_type') or ''}: {failure.get('error') or ''}"
+        for name, marker in _INFRA_CLASS_MARKERS:
+            if marker in text:
+                counts[name] = counts.get(name, 0) + 1
+                break
+        else:
+            counts["infra_other"] = counts.get("infra_other", 0) + 1
+    return counts
+
+
+def _seam_canary_problem(experiment_id: str) -> str | None:
+    """Why a batch round may not start yet, or None when the seam canary is current.
+
+    Current means: a PASS verdict exists for this experiment AND no file under
+    benchmark/tau_adapter changed between the verdict's commit and HEAD. Any doubt (missing
+    verdict, unreadable verdict, git unable to compare) reads as stale — the canary is the
+    cheap side of the asymmetry.
+    """
+    verdict_path = RESULTS_ROOT / f"experiment_{experiment_id}" / "gates" / "seam_canary.json"
+    remedy = "Run `make gate_seam` (one platform canary episode set), then rerun the batch."
+    if not verdict_path.exists():
+        return f"no platform seam-canary verdict for this experiment ({verdict_path}). {remedy}"
+    try:
+        verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return f"unreadable seam-canary verdict ({exc}). {remedy}"
+    if not verdict.get("passed"):
+        return f"the recorded seam canary FAILED ({verdict_path}). {remedy}"
+    canary_sha = str(verdict.get("adapter_sha") or "")
+    if not canary_sha:
+        return f"the seam-canary verdict names no adapter_sha ({verdict_path}). {remedy}"
+    try:
+        diff = subprocess.run(
+            ["git", "diff", "--name-only", f"{canary_sha}..HEAD", "--", "benchmark/tau_adapter"],
+            cwd=lockmod.REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        return f"cannot compare HEAD against the seam canary's commit ({exc}). {remedy}"
+    if diff:
+        changed = ", ".join(diff.splitlines()[:5])
+        return (
+            f"the seam changed since its last platform canary ({canary_sha[:12]}): {changed}. "
+            f"{remedy}"
+        )
+    return None
+
+
+def _bridge_call_stats(
+    call_log: list[dict[str, Any]], episode_transports: list[Any]
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    """Join the bridge's per-call observations to episodes; return (stats by ref, enriched log).
+
+    The park duration in the log is the only latency the sandbox daemon actually
+    experiences while a call is in flight — τ's own timestamps cannot show it — so it is
+    the number that explains a `mcp upstream timed out` (observed at 6 and 4 per 24-episode
+    round in seq 5's batches, at a concurrency where the old thread ceiling could not
+    bind). Joined by channel token and by bound session, both of which the transport knows.
+    """
+    ref_by_key: dict[str, str] = {}
+    for transport in episode_transports:
+        ref = getattr(transport, "session_ref", None)
+        if not ref:
+            continue
+        token = getattr(transport, "channel_token", None)
+        if token:
+            ref_by_key[token] = ref
+    stats: dict[str, dict[str, Any]] = {}
+    grouped: dict[str, list[float]] = {}
+    enriched: list[dict[str, Any]] = []
+    for entry in call_log:
+        ref = ref_by_key.get(entry.get("token") or "")
+        enriched.append({**entry, "episode": ref})
+        if ref:
+            grouped.setdefault(ref, []).append(float(entry.get("duration_seconds") or 0.0))
+    for ref, durations in grouped.items():
+        stats[ref] = {
+            "bridge_calls": len(durations),
+            "bridge_park_max_seconds": round(max(durations), 3),
+            "bridge_park_mean_seconds": round(sum(durations) / len(durations), 3),
+        }
+    return stats, enriched
 
 
 def _platform_accounting(task_ids: list[str]) -> dict[str, Any]:
@@ -664,6 +806,15 @@ def main() -> int:
                 f"{generation_of(out_dir) or 'no generation directory'}. "
                 f"Use GEN={expected_generation}."
             )
+        # A batch round spends real evidence on the platform seam, and the local gate
+        # cannot exercise the tunnel — the 2026-08-15 disconnect regression passed 309
+        # tests and a mock smoke while denying agents their tools. So a batch refuses to
+        # start unless a platform seam canary (make gate_seam) has PASSed for this
+        # experiment with no tau_adapter change since. Fail-closed: a missing or stale
+        # verdict costs one ~$0.02 canary, a broken seam costs the round.
+        canary_problem = _seam_canary_problem(lock.experiment_id)
+        if canary_problem:
+            raise SystemExit(canary_problem)
     if muted:
         # A held-out measurement must be attributable to exactly one generation: the recipe
         # surface is verified byte-identical to that generation's tag before any spend.
@@ -987,6 +1138,16 @@ def main() -> int:
         if account.get("recipe_git_commit_sha") not in (None, arm_sha)
     )
 
+    bridge_stats_by_ref, bridge_call_entries = _bridge_call_stats(
+        bridge.call_log(), episode_transports
+    )
+    # Beside the manifest, one line per handled call: the bridge's own record of arrival,
+    # park duration, outcome and result digest. The only vantage that can time the seam
+    # from the daemon's side, and the ground truth an integrity audit compares against.
+    (out_dir / "bridge_calls.jsonl").write_text(
+        "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in bridge_call_entries),
+        encoding="utf-8",
+    )
     context = manifestmod.RoundContext(
         experiment_id=lock.experiment_id,
         transport=spec.transport,
@@ -997,6 +1158,7 @@ def main() -> int:
         accounting=accounting,
         incidents_by_ref=incidents_by_ref,
         labels_by_ref=labels,
+        bridge_stats_by_ref=bridge_stats_by_ref,
     )
     manifest_rows = manifestmod.build_rows(payload, context)
     manifest_path = manifestmod.write_manifest(out_dir, manifest_rows)
@@ -1041,6 +1203,10 @@ def main() -> int:
                     "totals": incident_totals,
                     "unattributed": unattributed_incidents,
                     "bridge": bridge_refusals,
+                    # τ's infrastructure placeholders classified by failure text — provider
+                    # weather on frozen surfaces, named per class so storms accumulate into
+                    # a ledger instead of into log greps (see _INFRA_CLASS_MARKERS).
+                    "infra_failure_classes": _infra_failure_classes(manifest_rows),
                 },
                 "platform": (
                     {
@@ -1102,6 +1268,48 @@ def main() -> int:
     if incident_totals:
         noted = ", ".join(f"{k}={v}" for k, v in sorted(incident_totals.items()) if v)
         print(f"   incidents     {noted or 'none'}")
+    infra_classes = _infra_failure_classes(manifest_rows)
+    if infra_classes:
+        noted = ", ".join(f"{k}={v}" for k, v in sorted(infra_classes.items()))
+        print(
+            f"   infra classes {noted} — provider weather on frozen surfaces (τ excluded "
+            f"these from grading); resume the round once it clears"
+        )
+    if incident_totals.get("zero_bridge_calls"):
+        print(
+            f"   ⚠ no-tools    {incident_totals['zero_bridge_calls']} episode(s) ended "
+            f"without ONE tool call reaching the bridge. Every locked-domain task needs "
+            f"tools, so this is a degenerate agent or a dead tunnel — read those "
+            f"conversations before trusting this round."
+        )
+    park_rows = [row for row in manifest_rows if row.get("bridge_park_max_seconds") is not None]
+    if park_rows:
+        slowest = max(row["bridge_park_max_seconds"] for row in park_rows)
+        print(
+            f"   bridge park   max {slowest:.1f}s across {len(park_rows)} episode(s) "
+            f"(per-call detail in bridge_calls.jsonl) — the latency the sandbox daemon "
+            f"actually waits, and the number that explains a seam timeout"
+        )
+    effective_models = sorted(
+        {m for row in manifest_rows for m in (row.get("effective_models") or [])}
+    )
+    effective_reasoning = sorted(
+        {r for row in manifest_rows for r in (row.get("effective_reasoning") or [])}
+    )
+    if effective_models:
+        locked_model = lock.agent_model.rsplit("/", 1)[-1]
+        drift = [m for m in effective_models if m != locked_model]
+        print(
+            f"   agent config  effective model={','.join(effective_models)} "
+            f"reasoning={','.join(effective_reasoning) or '?'} (lock: {lock.agent_model}, "
+            f"thinking asserted-absent → sandbox default)"
+        )
+        if drift:
+            print(
+                f"   ⚠ config      effective model(s) {', '.join(drift)} differ from the "
+                f"locked {lock.agent_model} — the sandbox ran something the freeze does not "
+                f"describe. Stop and diagnose before citing this round."
+            )
     # Printed beside the seam counters and never folded into them: these come from the
     # platform conversation, not from the bridge, and they are the only place a call the
     # sandbox refused can appear at all. Loud on purpose — a round carrying these graded
