@@ -1,0 +1,215 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 1
+  to_generation: 2
+experiment: 005_fixedb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_02
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a00896-ea3a-7694-a4e5-8b118d843001   # task_014 t0 reward 0.0
+  - 01a00899-ae91-7121-9001-251af9a18bcb   # task_014 t1 reward 0.0
+  - 01a008a1-9f02-7663-8fb2-fc8a58b79f88   # task_014 t2 reward 1.0
+  - 01a00896-ea8b-748e-8767-f4dd4bed75e2   # task_026 t0 reward 0.0  SEAM-CONTAMINATED
+  - 01a0089a-1132-728c-b732-a0024fd067ad   # task_026 t1 reward 0.0
+  - 01a0089d-31af-75c5-9af9-48772c4ad917   # task_026 t2 reward 0.0
+  - 01a00896-ef07-73cf-862c-6ffea2015f1c   # task_028 t0 reward 0.0  SEAM-CONTAMINATED
+  - 01a0089a-5f05-77c6-a10a-09bc797ec8d0   # task_028 t1 reward 0.0
+  - 01a0089d-5b39-7599-b4db-8975baf997cd   # task_028 t2 reward 0.0
+  - 01a00896-eea2-741f-8a63-78b5e6bbfdab   # task_065 t0 reward 0.0  SEAM-CONTAMINATED
+  - 01a0089a-8dd5-7563-99eb-eda710a0488a   # task_065 t1 reward 1.0
+  - 01a0089e-f58b-778e-bf9e-f7697fa6c34b   # task_065 t2 reward 0.0
+  - 01a00897-794f-73cf-8eb5-a0cb1286c2c4   # task_070 t0 reward 0.0  SEAM-CONTAMINATED
+  - 01a0089b-8e67-77df-9214-00b2d1d42b39   # task_070 t1 reward 0.0
+  - 01a0089f-34c0-7361-9dc8-c0ca7cc2781b   # task_070 t2 reward 0.0
+  - 01a00898-dc37-72dc-902b-bb59eaf98dea   # task_072 t0 reward 0.0
+  - 01a0089b-bcf1-71ea-9a41-7cc79721ab12   # task_072 t1 reward 0.0
+  - 01a0089f-90e8-711e-9699-e61f24b7caf8   # task_072 t2 reward 0.0
+  - 01a0089e-4ea3-7797-8219-6e0fec9a586f   # task_082 t0 reward 0.0
+  - 01a0089b-e473-7313-b690-a5f416b26e75   # task_082 t1 reward 0.0
+  - 01a008a0-422e-7654-af65-eeb1ec0afdbc   # task_082 t2 reward 0.0
+  - 01a00899-890a-753a-9145-e964a6e17d2a   # task_096 t0 reward 0.0
+  - 01a0089c-23ef-7537-a00e-e47a123a6869   # task_096 t1 reward 0.0
+  - 01a008a0-5fc8-7347-ae38-18f4f1a6e621   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_02: all 24 episodes (8 tasks x num_trials 3) from
+    generation_001/batch_02/graded/updated_results.json — per-episode reward, reward_basis,
+    db_check, action_checks and the complete tool-call trace — joined to
+    episode_manifest.jsonl for conversation identity and arm sha, and compared cell by cell
+    against batch_01 under H0. Under batch_mode fixed the two rounds measure the SAME eight
+    tasks, so the comparison is paired and the controlled pairs it yields are the strongest
+    evidence in this record.
+
+    Round health: 24/24 completed, arm sha c669207aad53 on every episode with no dirty paths
+    and no arm_sha_mismatches, all 24 evidence_complete, ZERO sandbox_seam_disconnects.
+    $0.5432 platform, 732s at --max-concurrency 4.
+
+    CONTAMINATION, recorded not hidden. Four trial-0 episodes carry sandbox seam counters
+    that are invisible in tau's trajectory — task_026 t0, task_028 t0 and task_065 t0 with
+    sandbox_seam_timeouts 2 and sandbox_tool_errors 2-3 each, and task_070 t0 with
+    sandbox_tool_errors 1. No tool-failure text appears anywhere in results.json; only the
+    sandbox counters show them, and task_028 t0 transferred citing technical_system_error,
+    i.e. the agent reacting to a broken tool. All four graded 0.0. The literal discard rule
+    names disconnects (zero here) so it did not fire; its rationale did. The USER decided to
+    keep the round, flag the cells and exclude them from causal diagnosis, accepting the
+    stated risk that a contaminated 0.0 may hide a genuine gen-001 effect on tasks this
+    mutation targeted. The fourth cell (task_070 t0) was found only after the dashboard was
+    taught to surface these counters; the by-hand triage that informed the user's decision
+    had named three.
+
+    Probable cause, and it is an interaction with gen-001: batch_02 ran +13% tool calls (426
+    vs 377) and +26% mean episode duration (77s vs 61s) against batch_01 — the extra
+    searching gen-001 predicted as its own cost — which pushed the bridge into its known
+    unfixed thread ceiling. batch_01 had zero of both counters.
+
+    Graded read, labelled: 2/24 episodes on batch_02, 2/8 tasks with any pass (task_014 1/3,
+    task_065 1/3), against 1/24 and 1/8 on batch_01. Under batch_mode fixed this set has now
+    been tuned on by gen-001, so batch_02 is NOT an independent read and no batch number from
+    here on is.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any point
+    in this transition. The two standing exposures recorded in gen_000_to_001 still apply
+    (D19 prior exposure to seq-4's revealed per-task results for the reused held-out set; one
+    per-task held-out datum disclosed by the user in chat during the H0 round, not repeated
+    and not used). No vault console read occurred during this transition.
+signals:
+- description: >-
+    Turn-one capitulation to a request for a human. task_082 t1 and t2 transfer at the FIRST
+    user turn after a single KB search — 8 messages each, reason fraud_or_security_concern,
+    against 20 gold actions — with no identity verification and no attempt. At H0 this was
+    3/3 identical. The discriminating fact is inside the same round: t0, under the same
+    harness on the same task, worked for 62 messages and 5 KB searches before transferring,
+    so the behaviour is not forced by the task or the user simulator. The frozen policy
+    already fixes a countable threshold ("If the user asks for a human agent 4 times, then
+    you may invoke the transfer_to_human_agents tool"); the agent fires at request 1. This is
+    the target of this generation.
+  prevalence: 2/3
+- description: >-
+    gen-001's mechanism CONFIRMED, causally, on task_014 — and this is the cleanest causal
+    evidence the experiment has produced. t2 retrieved doc_bank_accounts_bank_accounts_(general)_042,
+    supplied unconfirmed_external_communication and scored 1.0; t0 and t1 did not retrieve it,
+    supplied the adjacent kb_search_unsuccessful_customer_requests_transfer and scored 0.0.
+    Under H0 the passing trial had NOT retrieved the document — it guessed. Passing now tracks
+    retrieval rather than luck. The task score is unchanged at 1/3: the mutation changed HOW
+    it passed, not WHETHER.
+  prevalence: 3/3
+- description: >-
+    gen-001's side effect, unpredicted, and the cause of the only new pass. In batch_01 all
+    three task_065 trials volunteered a `reason` to close_bank_account_7392; in batch_02 all
+    three dropped it. The controlled pair, identical calls with identical account classes:
+    batch_01 t2 (reason="customer requested closure", against the tool default "Customer
+    requested closure", which the tool writes to account["closure_reason"]) scored 0.0, and
+    batch_02 t1 (account_id only) scored 1.0. This resolves backlog item T4, which was
+    deliberately NOT targeted because its only direct lever — matching a default string —
+    is grader-gaming against a frozen evaluator. It was fixed as a consequence of a
+    principled rule instead.
+  prevalence: 3/3
+- description: >-
+    gen-001 confirmed at the argument but not at the task, and it cost something. task_072's
+    credit_type is now correct in 2/3 (was 1/3), which is the targeted argument moving in the
+    predicted direction. But the amounts destabilised: batch_01 t2 had BOTH amounts right
+    (14.0, 3.5) with one wrong enum, while batch_02 t1 has both enums right with one wrong
+    amount (14.0, 11.5 against gold 3.50). The task was one field from passing before and is
+    one field from passing now, in a different field. Recorded as a cost of gen-001, not as a
+    success.
+  prevalence: 3/3
+- description: >-
+    gen-001's prediction DENIED on task_070. Still zero promotion-directed queries across all
+    three trials, still 0/3, still opening the wrong account class (Hunter Green, Cobalt Blue,
+    Hunter Green). The instruction to search for the deciding rule did not reach the case where
+    the deciding rule is a promotion the agent has no reason to suspect exists. This is the
+    clearest limit on gen-001's mechanism and it remains unaddressed — no slot is left for it.
+  prevalence: 3/3
+counterevidence: >-
+  Four arguments against this mutation, recorded rather than resolved.
+
+  (1) The standing counterevidence against ANY transfer mutation is strong and specific. Seq 4
+  (prior experiment, prose context only) spent three of five generations on transfer guidance
+  and each correction created its mirror image — gen-002 forbade a policy-REQUIRED transfer,
+  gen-003 licensed a policy-FORBIDDEN one, gen-005 deleted the guidance and deferred to the
+  policy. That is the single best-evidenced failure pattern in this project's history, and this
+  mutation is in its blast radius. Two structural guards were chosen against it: the threshold
+  stays the policy's (this rule states no condition of its own, so it cannot contradict the
+  policy), and the rule is scoped to the case where the CUSTOMER asks, saying nothing about
+  agent-initiated transfer on inability. Whether those guards hold is the thing being tested.
+
+  (2) The pre-registered falsifier is a task this experiment currently passes. task_014's gold
+  IS a transfer (reason unconfirmed_external_communication), triggered by an unverifiable
+  customer claim rather than by repeated requests. It should be out of scope by construction —
+  but if task_014 regresses from 1/3 in batch_03, this mutation over-reached in exactly seq 4's
+  way, and that reading is committed to in advance.
+
+  (3) Not transferring is demonstrably not sufficient to pass. task_082 t0 already declined to
+  capitulate, worked for 62 messages and 5 searches, and still scored 0.0 against 20 gold
+  actions. So the honest expected effect on the batch number is small, and the prediction is
+  about behaviour rather than score. A reader who scores this mutation by whether task_082
+  flips will mis-grade it.
+
+  (4) A higher-value target was left unconsumed for want of a slot. task_072 is one field from
+  passing and has been twice, in different fields; task_070's denied prediction is the clearest
+  known limit of gen-001. Both were ranked below this one because neither is as deterministic
+  or as cleanly falsifiable, but with G=2 the choice forecloses them. The backlog records T3
+  as never reachable under this freeze.
+hypothesis: >-
+  The agent treats a customer's stated request for a human as an instruction to execute rather
+  than as one input to a rule the policy already specifies. The evidence for it being a
+  *reading* failure rather than a capability limit is inside the round: the same harness, on
+  the same task, both capitulated at turn one (t1, t2) and worked the task for 62 messages
+  before transferring (t0) — so the behaviour is available, and what is missing is the
+  discipline that decides between them. If the harness names the request as something to be
+  counted, and delegates the threshold to the policy that already fixes it at four, then the
+  first request should stop terminating episodes and the agent should stay on the work.
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — the discipline applied
+  to a policy rule, not the rule itself. The frozen <policy> region is untouched and make check
+  asserts it byte-for-byte (5733 chars). This is deliberately the narrowest possible foothold in
+  contested territory: the mutation supplies counting, and the policy supplies every condition
+  and the threshold.
+proposed_change: >-
+  Add one rule to the <instructions> block: when the customer asks to be handed to a human,
+  treat that as a request to be counted, not as an instruction to follow; the policy states how
+  many such requests change the answer, so apply that count rather than acting on the first one,
+  and keep doing the work the knowledge base gives you until the count is reached. It states no
+  condition of its own and names no threshold of its own.
+mutation:
+  branch: gen-002/count-human-requests
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/10
+  source_commit: 0548f8fe6132bda6a8fe9e7cc94889c8e06473ce
+  candidate_commit: 18351a5fc5ac7844edf0e6c09b83e8b5ee35d183
+expected_effect: >-
+  Direction: task_082's turn-one transfers stop, and the episode continues into the dispute
+  flow as t0 already does unprompted. NO flip is predicted with confidence — t0 shows that not
+  transferring is insufficient to pass a 20-action task — so this prediction is about behaviour,
+  and the check in batch_03 is the transfer turn index, not the reward. Secondary: the
+  mid-conversation transfers on task_096 and task_028 should be LEFT ALONE, since they follow
+  genuine effort and the rule speaks only to the customer's request; if those disappear too,
+  the rule is broader than intended. Pre-registered falsifier: task_014 must not regress from
+  1/3 — its gold is an agent-initiated transfer on inability, which this rule does not address,
+  and a regression there means the mutation over-reached exactly as seq 4's gen-002 did.
+  Measured by batch_03, which is H2's endpoint round and half the pre-registered paired
+  endpoint test, and by the hidden held-out round for H2.
+human_approval:
+  approved_by: >-
+    WAIVED BY EXPLICIT USER INSTRUCTION — not held. protocol.require_human_approval is true,
+    and for this run the user explicitly waived the human review-and-merge gate and delegated
+    both the merge and the step-4 mutation-target selection to the orchestrator ("this is a
+    test so I can delegate to you"). The orchestrator opened PR #10 and merged it on that
+    delegated authority, after CI's three required status checks passed. The user did make the
+    proceed/identity/halt call for this transition, and separately decided to keep the
+    seam-contaminated batch_02 round rather than re-run it. Recorded here, and to be reported
+    at close in GUARDRAIL_WALK.md, as waived rather than HELD.
+  date: '2026-08-16'
+held_out_result: null
