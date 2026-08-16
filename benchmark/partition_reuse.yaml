@@ -1,0 +1,44 @@
+# Cross-experiment task reuse, DECLARED rather than discovered.
+#
+# `propose_split.py --verify` checks a partition against itself. It cannot see whether these
+# tasks were already spent, diagnosed, or revealed under an earlier experiment — the axis that
+# actually decides what a capability claim is worth. That axis lived in prose until 2026-08-15:
+# seq 5 reuses seq 4's entire held-out set, recorded in a manifest comment and a plan decision
+# row, enforced by nothing. A decision recorded only in a comment is one a later experiment
+# repeats by accident.
+#
+# scripts/check_partition_isolation.py compares the frozen partition against every prior
+# experiment's committed snapshot and exits non-zero on undeclared overlap. It is deliberately
+# NOT satisfied by an empty acknowledgement: an entry without a `reason` is ignored, so
+# silencing the check costs the same keystrokes as explaining it.
+#
+# This file sits OUTSIDE the freeze fingerprint on purpose. It describes history — which
+# experiment came before and what it saw — not this experiment's configuration, and a
+# fingerprinted key added mid-experiment would invalidate a running freeze. Git is the audit
+# trail: editing a declaration to silence a check is a visible commit.
+#
+# Kinds, worst first:
+#   held_out_from_held_out  the same hidden set twice — if the prior revealed, its per-task
+#                           results are known and this firewall is weaker than it looks
+#   held_out_from_batch     tasks whose transcripts were read in full as diagnosis evidence,
+#                           now sitting behind the firewall
+#   batch_from_held_out     a previously hidden task becomes observable
+#   batch_from_batch        observable in both — reported, never blocking
+
+version: 1
+
+declarations:
+  - experiment: 005_fixedb-bm25-luna56
+    reuses_from: 004_powered-bm25-luna56
+    kinds: [held_out_from_held_out]
+    reason: >-
+      Plan D19. The eligible pool holds zero virgin tasks (97 − 1 user-sim crasher − 20 seq-2
+      − 68 seq-4 − 8 pilot), so seq 5 CANNOT have a fresh held-out set. Reuse of seq 4's T=28
+      verbatim was chosen over a re-draw because every alternative is equally exposed and
+      identity buys direct comparability: seq-5's H0 arm (28 tasks × 3 trials of the same
+      corrected-H0 commit) doubles as the reliability study's H0 against seq-4's single-trial
+      6/28, at no extra cost. The accepted consequence, stated wherever a T-based number
+      appears: the orchestrator has SEEN seq-4's revealed per-task results for these 28 tasks,
+      so seq 5's firewall is weaker than seq 4's. This is acceptable precisely because seq 5 is
+      an odd-seq loop-mechanics experiment whose PRIMARY instrument is the paired batch curve;
+      the held-out lane is only the transfer probe. A capability claim must not rest on it.

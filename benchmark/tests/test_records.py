@@ -149,3 +149,37 @@ def test_scaffold_round_trips_and_names_its_own_gaps():
 def test_record_name_is_zero_padded():
     assert records.record_name(0) == "gen_000_to_001.yaml"
     assert records.record_name(4) == "gen_004_to_005.yaml"
+
+
+def test_record_evidence_must_come_from_this_experiments_own_rounds(tmp_path, monkeypatch):
+    """Experiments are isolated: a record may not cite another experiment's conversation.
+
+    The failure this prevents is silent — an id borrowed from a prior experiment looks
+    exactly like a real one, and nothing downstream ever resolves it. A prior experiment is
+    legitimate context in prose, never a cited execution.
+    """
+    from tau_adapter import records
+
+    manifest_dir = tmp_path / "results" / "experiment_009_x" / "generation_000" / "batch_01"
+    manifest_dir.mkdir(parents=True)
+    (manifest_dir / "episode_manifest.jsonl").write_text(
+        '{"conversation_id": "conv-own-1"}\n{"conversation_id": "conv-own-2"}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(records, "REPO_ROOT", tmp_path)
+
+    own = {"experiment_id": "009_x", "evidence": {"conversation_ids": ["conv-own-1"]}}
+    assert records._evidence_problems(own) == []
+
+    borrowed = {
+        "experiment_id": "009_x",
+        "evidence": {"conversation_ids": ["conv-own-1", "conv-from-a-prior-experiment"]},
+    }
+    problems = records._evidence_problems(borrowed)
+    assert len(problems) == 1
+    assert "conv-from-a-prior-experiment" in problems[0]
+
+    # A record scaffolded before its round has written manifests must not be refused for
+    # evidence that exists but is not on disk yet.
+    unknown = {"experiment_id": "999_none", "evidence": {"conversation_ids": ["conv-x"]}}
+    assert records._evidence_problems(unknown) == []

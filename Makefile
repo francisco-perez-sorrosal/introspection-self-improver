@@ -40,7 +40,7 @@ RUN     := cd $(BENCH) && $(TAU_ENV) uv run
 
 help:
 	@echo "make bootstrap   reproduce the benchmark lane from benchmark/benchmark_lock.yaml"
-	@echo "make check       validate the recipe and every frozen surface"
+	@echo "make check       validate the recipe, every frozen surface, and partition isolation"
 	@echo "make policy      write tau's domain policy into the recipe's frozen <policy> region"
 	@echo "make propose_split  propose the experiment's task partition from the lock (WRITE=1 freezes it)"
 	@echo "make smoke       one mock-domain task through the seam (diagnostic, not reportable)"
@@ -77,6 +77,7 @@ bootstrap:
 check:
 	@introspection check -o report
 	@python3 $(BENCH)/scripts/check_policy_region.py
+	@$(RUN) python scripts/check_partition_isolation.py
 
 # Regenerates the frozen region and records its hash and tool catalogue in the lock. Run after
 # changing the locked domain or retrieval config, and never to "fix" a failing check without

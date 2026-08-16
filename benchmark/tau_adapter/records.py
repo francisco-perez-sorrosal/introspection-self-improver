@@ -13,6 +13,7 @@ research artifact itself — not paperwork around it.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -149,7 +150,59 @@ def _evidence_problems(record: dict[str, Any]) -> list[str]:
             "evidence.conversation_ids still carries the scaffold's TODO placeholder — "
             "cite the real Introspection conversation ids behind the claim"
         ]
-    return []
+    return _provenance_problems(record, conversations)
+
+
+def _known_conversation_ids(experiment_id: str) -> set[str]:
+    """Every conversation this experiment's own batch rounds actually produced."""
+    experiment_dir = REPO_ROOT / "results" / f"experiment_{experiment_id}"
+    known: set[str] = set()
+    for manifest_path in experiment_dir.glob("generation_*/batch_*/episode_manifest.jsonl"):
+        for line in manifest_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if row.get("conversation_id"):
+                known.add(str(row["conversation_id"]))
+    return known
+
+
+def _provenance_problems(record: dict[str, Any], conversations: list[Any]) -> list[str]:
+    """Every cited conversation must come from THIS experiment's own batch rounds.
+
+    Experiments are isolated: a record for experiment X may not borrow evidence from
+    experiment Y, however revealed Y is. A prior experiment is legitimate *context* in prose
+    ("experiment 004 found …") and never evidence in a record — the distinction being that a
+    record's claims are what a reader re-derives from the cited executions, and those
+    executions must belong to the harness the record is about.
+
+    Enforced against the episode manifests rather than trusted to discipline, because the
+    failure is silent: a plausible-looking id from a prior experiment reads exactly like a
+    real one, and nothing downstream would ever resolve it.
+
+    Skipped when the experiment has no manifests yet (a record scaffolded before its round
+    completes), since the alternative is refusing a record for evidence that exists but has
+    not been written down yet.
+    """
+    experiment_id = str(record.get("experiment_id") or "").strip()
+    if not experiment_id:
+        return []
+    known = _known_conversation_ids(experiment_id)
+    if not known:
+        return []
+    foreign = sorted({str(c) for c in conversations} - known)
+    if not foreign:
+        return []
+    return [
+        "evidence.conversation_ids cites conversation(s) absent from this experiment's own "
+        f"batch manifests: {', '.join(foreign[:5])}"
+        f"{' …' if len(foreign) > 5 else ''}. Record evidence is the current experiment's "
+        "batch conversations, nothing else — a prior experiment belongs in prose as labelled "
+        "context, never as a cited execution."
+    ]
 
 
 def _prose_problems(record: dict[str, Any], outcome: str, schema: dict[str, Any]) -> list[str]:

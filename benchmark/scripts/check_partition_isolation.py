@@ -64,18 +64,33 @@ def partition_of(manifest: dict[str, Any]) -> tuple[set[str], set[str]]:
     return batch, set(manifest.get(splitmod.HELD_OUT) or [])
 
 
-def prior_experiments() -> list[tuple[str, dict[str, Any], bool]]:
-    """Every earlier experiment's committed partition snapshot, with its revealed flag.
+def prior_experiments(
+    results_root: Path | None = None,
+) -> list[tuple[str, dict[str, Any], bool, bool]]:
+    """Every earlier experiment's committed partition, with what was actually spent on it.
 
-    Revealed means `held_out/` exists in its results directory — the one sanctioned unseal,
-    and therefore the line between "these tasks were hidden" and "their results are known".
+    Two flags, because a partition is a plan and a plan is not exposure:
+
+    revealed  `held_out/` exists — the one sanctioned unseal, and so the line between "these
+              tasks were hidden" and "their per-task results are known".
+    spent     at least one `generation_*/batch_*/` round directory exists — i.e. episodes ran
+              and transcripts were read. A freeze that was voided before any generation (seq 1
+              died at H0 on a τ defect) leaves a partition naming tasks nobody ever looked at;
+              demanding a declaration for those would train the operator to wave the check
+              through, which is worse than not having it.
     """
     found = []
-    for path in sorted(RESULTS_ROOT.glob("experiment_*/split_manifest.yaml")):
+    for path in sorted((results_root or RESULTS_ROOT).glob("experiment_*/split_manifest.yaml")):
         manifest = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        experiment_id = path.parent.name.removeprefix("experiment_")
-        revealed = (path.parent / "held_out").is_dir()
-        found.append((experiment_id, manifest, revealed))
+        root = path.parent
+        found.append(
+            (
+                root.name.removeprefix("experiment_"),
+                manifest,
+                (root / "held_out").is_dir(),
+                any(root.glob("generation_*/batch_*/results.json")),
+            )
+        )
     return found
 
 
@@ -131,11 +146,19 @@ def main() -> int:
 
     problems: list[str] = []
     notes: list[str] = []
-    for prior_id, manifest, revealed in prior_experiments():
+    for prior_id, manifest, revealed, spent in prior_experiments():
         if prior_id == experiment_id:
             continue
         found = overlaps(current, partition_of(manifest))
         acknowledged = declared.get(prior_id, set())
+        if not spent and not revealed:
+            total = sum(len(tasks) for tasks in found.values())
+            if total:
+                notes.append(
+                    f"note — {prior_id} names {total} of this partition's task(s) but ran no "
+                    f"batch round and never revealed: planned, never spent, nothing seen"
+                )
+            continue
         for kind in BLOCKING_KINDS:
             tasks = found[kind]
             if not tasks:
