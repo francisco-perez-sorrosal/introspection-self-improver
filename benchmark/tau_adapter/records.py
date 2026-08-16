@@ -57,8 +57,14 @@ def validate(
     filename: str | None = None,
     revealed: bool = False,
     schema: dict[str, Any] | None = None,
+    results_root: Path | None = None,
 ) -> list[str]:
-    """Mechanical checks on one record. Returns problems; empty means it holds."""
+    """Mechanical checks on one record. Returns problems; empty means it holds.
+
+    ``results_root`` scopes the provenance check (default: the repo's results/). Callers
+    operating on an injected tree — reveal, tests — pass their own, so provenance
+    resolves against the same experiment the rest of the validation is looking at.
+    """
     schema = schema or load_schema()
     problems = _field_problems(record, schema)
     outcome = record.get("outcome")
@@ -67,7 +73,8 @@ def validate(
         return problems
     problems += _transition_problems(record, filename)
     problems += _mutation_problems(record, outcome)
-    problems += _evidence_problems(record)
+    problems += _changes_problems(record, outcome)
+    problems += _evidence_problems(record, results_root or REPO_ROOT / "results")
     problems += _prose_problems(record, outcome, schema)
     if not revealed and record.get("held_out_result") is not None:
         problems.append(
@@ -134,11 +141,56 @@ def _mutation_problems(record: dict[str, Any], outcome: str) -> list[str]:
     return []
 
 
+#: What every item of a composite improvement set must state for itself (plan D22).
+#: `mechanism` keeps the CLI improve discipline per change — one coherent mechanism —
+#: while the generation carries any number of them; `expected_effect` is the item's own
+#: falsifiable prediction, the only per-change attribution a composite set has.
+_CHANGE_REQUIRED_KEYS = ("mechanism", "surface", "expected_effect")
+
+
+def _changes_problems(record: dict[str, Any], outcome: str) -> list[str]:
+    """The composite-set rules (plan D22), keyed on schema_version so history validates.
+
+    Seq ≤ 5 records carry no `schema_version` and ran one-mutation-per-generation; they
+    validate untouched. A version-2 record that accepted or rejected a mutation must
+    itemize its set — a set-level prose summary alone cannot be scored per change by the
+    next batch, and unscoreable changes are how a loop stops learning from itself.
+    """
+    problems: list[str] = []
+    changes = record.get("changes")
+    if changes is not None:
+        for index, item in enumerate(changes):
+            if not isinstance(item, dict):
+                problems.append(f"changes[{index}] must be a mapping")
+                continue
+            for key in _CHANGE_REQUIRED_KEYS:
+                value = item.get(key)
+                if not isinstance(value, str) or not value.strip() or _is_placeholder(value):
+                    problems.append(
+                        f"changes[{index}].{key} must be non-empty prose (no TODO): each "
+                        "change states its own mechanism, surface and falsifiable "
+                        "prediction — per-change attribution is mechanistic, and an "
+                        "unstated prediction cannot be scored by the next batch"
+                    )
+    version = record.get("schema_version")
+    if (
+        isinstance(version, int)
+        and version >= 2
+        and outcome in (OUTCOME_ACCEPTED, "rejected")
+        and not changes
+    ):
+        problems.append(
+            "a schema_version 2 record with a landed-or-declined mutation must itemize "
+            "its improvement set in `changes` (plan D22) — one item per coherent change"
+        )
+    return problems
+
+
 def _is_placeholder(value: Any) -> bool:
     return isinstance(value, str) and value.strip().upper().startswith("TODO")
 
 
-def _evidence_problems(record: dict[str, Any]) -> list[str]:
+def _evidence_problems(record: dict[str, Any], results_root: Path) -> list[str]:
     conversations = (record.get("evidence") or {}).get("conversation_ids")
     if not conversations:
         return [
@@ -150,12 +202,12 @@ def _evidence_problems(record: dict[str, Any]) -> list[str]:
             "evidence.conversation_ids still carries the scaffold's TODO placeholder — "
             "cite the real Introspection conversation ids behind the claim"
         ]
-    return _provenance_problems(record, conversations)
+    return _provenance_problems(record, conversations, results_root)
 
 
-def _known_conversation_ids(experiment_id: str) -> set[str]:
+def _known_conversation_ids(experiment_id: str, results_root: Path) -> set[str]:
     """Every conversation this experiment's own batch rounds actually produced."""
-    experiment_dir = REPO_ROOT / "results" / f"experiment_{experiment_id}"
+    experiment_dir = results_root / f"experiment_{experiment_id}"
     known: set[str] = set()
     for manifest_path in experiment_dir.glob("generation_*/batch_*/episode_manifest.jsonl"):
         for line in manifest_path.read_text(encoding="utf-8").splitlines():
@@ -165,12 +217,21 @@ def _known_conversation_ids(experiment_id: str) -> set[str]:
                 row = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if row.get("conversation_id"):
-                known.add(str(row["conversation_id"]))
+            # Manifest rows carry the conversation as `introspection_task_id` — on the
+            # platform lane the task id doubles as the conversation id (manifest.py).
+            # This function briefly grepped a `conversation_id` key no row has ever
+            # carried, which — combined with the old skip-on-empty — made the whole
+            # provenance gate silently inert. Found 2026-08-16 the moment the hard-fail
+            # ran against real records; `conversation_id` stays as a fallback only.
+            identity = row.get("introspection_task_id") or row.get("conversation_id")
+            if identity:
+                known.add(str(identity))
     return known
 
 
-def _provenance_problems(record: dict[str, Any], conversations: list[Any]) -> list[str]:
+def _provenance_problems(
+    record: dict[str, Any], conversations: list[Any], results_root: Path
+) -> list[str]:
     """Every cited conversation must come from THIS experiment's own batch rounds.
 
     Experiments are isolated: a record for experiment X may not borrow evidence from
@@ -189,10 +250,14 @@ def _provenance_problems(record: dict[str, Any], conversations: list[Any]) -> li
     from — only a prior experiment or thin air, which are exactly the two cases this check
     exists to refuse. "Cannot verify" must never validate as "verified".
     """
-    experiment_id = str(record.get("experiment_id") or "").strip()
+    # The schema's field is `experiment`. This function briefly read `experiment_id` — a
+    # key no real record carries — which silently disabled the whole check on every real
+    # record while the unit tests (whose fixtures used the wrong key too) stayed green.
+    # Found 2026-08-16; the fixtures now use the schema name, so a key drift here fails.
+    experiment_id = str(record.get("experiment") or "").strip()
     if not experiment_id:
         return []
-    known = _known_conversation_ids(experiment_id)
+    known = _known_conversation_ids(experiment_id, results_root)
     if not known:
         return [
             f"evidence.conversation_ids cannot be provenance-checked: experiment "
@@ -247,15 +312,35 @@ def scaffold(
         "signals": [{"description": "TODO", "prevalence": "TODO: n/B"}],
         "counterevidence": "TODO: what argued against the hypothesis, or 'none found'",
         "hypothesis": "TODO",
-        "owning_layer": "TODO: the mutable harness layer the change targets",
-        "proposed_change": "TODO",
+        "owning_layer": "TODO: set-level summary of the surfaces targeted",
+        "proposed_change": (
+            "TODO: the SET-level summary — why these changes compose "
+            "(independently justified, non-conflicting)"
+        ),
+        "schema_version": 2,
+        # One item per coherent change (plan D22): any number, each individually
+        # evidenced, each with its own falsifiable prediction the next batch will score.
+        # Duplicate the template item as needed; delete none of its keys.
+        "changes": [
+            {
+                "mechanism": "TODO: the one coherent mechanism this change encodes",
+                "surface": (
+                    "TODO: instructions | pi-skill | extension-tool | sub-agent | "
+                    "retrieval-usage | revert | other"
+                ),
+                "evidence": "TODO: conversation ids / backlog target id behind this change",
+                "expected_effect": "TODO: this change's own falsifiable prediction",
+                "risk": "TODO: how this change could make things worse, or 'none identified'",
+                "commit": None,
+            }
+        ],
         "mutation": {
             "branch": f"gen-{from_generation + 1:03d}/TODO-slug",
             "pr_url": "TODO",
             "source_commit": source_commit,
             "candidate_commit": None,
         },
-        "expected_effect": "TODO: predicted mechanism and direction, not a number",
+        "expected_effect": "TODO: the SET-level predicted direction, not a number",
         "human_approval": {
             "approved_by": "TODO",
             "date": date or datetime.now(UTC).strftime("%Y-%m-%d"),

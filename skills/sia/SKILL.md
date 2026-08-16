@@ -33,7 +33,7 @@ mechanics of one mutation class (Pi skills) — and defers everything else.
 | Concern | Owner | sia's part |
 |---|---|---|
 | Evidence reading — conversations, events, task rows, aggregate metrics | `introspection skills operate` | route there; bring the recall digest and evidence pointers |
-| Evidence→diagnosis→PR methodology — open-coding, owning layer, falsification, one coherent mechanism | `introspection skills improve` | route there; enforce record write-through |
+| Evidence→diagnosis→PR methodology — open-coding, owning layer, falsification, one coherent mechanism **per change** (the set composes many; plan D22) | `introspection skills improve` | route there; enforce record write-through |
 | Executing rounds — batch, held-out, reveal, batch curve | the repo's `Makefile` targets | never reimplement; read only their outputs |
 | Experiment parameters — lock, `protocol:` block, partition manifest, freeze snapshots | the freeze (user-decided; `benchmark_lock.yaml`) | **read-only**; a needed change is a freeze re-decision to surface to the user (it bumps `seq`), never a sia write |
 | Per-generation procedure | `contract/protocol.md` | hook recall/write-through into its steps |
@@ -93,9 +93,12 @@ four highest-value extractions:
 
 - **Backlog state**: pending vs consumed vs retired targets, current ranking, witness
   counts accumulated across batches, slot accounting against G.
-- **Pre-registered predictions**: the last accepted mutation's `expected_effect` and its
-  stated risks. Check each against the new batch explicitly and report confirmed / denied
-  / unobservable.
+- **Pre-registered predictions**: the last accepted generation's predictions — the
+  set-level `expected_effect` AND every `changes[].expected_effect` item (schema v2,
+  plan D22). Check each against the new batch explicitly and report confirmed / denied /
+  unobservable **per change**: this scoring is the only per-change attribution a
+  composite set has, and a denied prediction makes that change a first-class revert
+  candidate for the next set.
 - **Standing counterevidence**: objections recorded in earlier transitions that still
   apply (disjoint-batch caveats, severity-over-prevalence overrides awaiting judgment).
 - **Surface concentration**: count mutations per `owning_layer` target. Flag ≥3 on one
@@ -146,13 +149,21 @@ Authority: root `CLAUDE.md` Invariants (enforced here, not restated). At the sia
 
 ## Mutation classes
 
-Any mutable-surface change follows protocol steps 5–7 unchanged. The recipe offers four
-surfaces, and choosing among them is part of the diagnosis — read `introspection skills
-improve/capability-set` (its `agent-design` and `agent-security-review` references own
-the design methodology) before choosing:
+A generation lands one improvement **set** — any number of changes, composed per
+`contract/protocol.md` step 4 (plan D22): each change one coherent mechanism with its own
+evidence and falsifiable prediction, no two changes interacting on one behavior, reverts
+of refuted changes first-class. The recipe offers four surfaces, choosing among them is
+part of each change's diagnosis, and the choice is where two closed experiments say the
+loop previously failed — read `introspection skills improve/capability-set` (its
+`agent-design` and `agent-security-review` references own the design methodology) before
+choosing:
 
-- **`SYSTEM.md` instructions** — the default surface, where instruction-only loops spend
-  every slot.
+- **`SYSTEM.md` instructions** — the historical default, where instruction-only loops
+  spend every slot. Seq 4 + seq 5 measured the failure mode: six of seven mutations were
+  prompt text, four failed because *an instruction does not inherit the scope its author
+  reasoned about*. When a change's mechanism is judgment, scope, or verification, prefer
+  a structural surface below; a set that stays prompt-only after the concentration flag
+  fires (≥3 prompt mutations on one surface) must state why no structural surface fits.
 - A **Pi skill** in the recipe — packaged, named judgment loaded near the work.
 - A **Pi extension tool** — a deterministic TypeScript capability the model calls.
 - A **sub-agent** — a delegatable recipe agent with its own tools, skills, instructions.
@@ -169,8 +180,8 @@ objective — the reward stays `tau2 evaluate-trajs`, nothing else.
 
 ## Gotchas
 
-- Outcome discipline (`identity`/`rejected` transitions are first-class records), the
-  one-coherent-mechanism rule, and slot accounting are protocol rules
-  (`contract/protocol.md` steps 4 and 7) — sia surfaces them in the digest and the
-  record; it never redefines them. Schema-vs-validator questions:
-  [references/record-craft.md](references/record-craft.md).
+- Outcome discipline (`identity`/`rejected` transitions are first-class records),
+  per-change coherence plus the set-composition rules (plan D22), and generation
+  accounting are protocol rules (`contract/protocol.md` steps 4, 5 and 7) — sia surfaces
+  them in the digest and the record; it never redefines them. Schema-vs-validator
+  questions: [references/record-craft.md](references/record-craft.md).

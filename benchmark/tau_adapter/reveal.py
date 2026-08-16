@@ -212,6 +212,10 @@ def load_measured(
 def load_records(records_path: Path, total_generations: int) -> dict[int, dict[str, Any]]:
     """All G transition records, validated; refuses on any missing or broken link."""
     schema = recordsmod.load_schema()
+    # records_path is <results_root>/experiment_<id>/improvement_records — the provenance
+    # check must resolve against the SAME results tree, not the module default, or an
+    # injected tree (tests, an out-of-tree reveal) validates against the wrong repo.
+    results_root = records_path.parent.parent
     records: dict[int, dict[str, Any]] = {}
     missing, broken = [], []
     for source in range(total_generations):
@@ -220,7 +224,9 @@ def load_records(records_path: Path, total_generations: int) -> dict[int, dict[s
             missing.append(path.name)
             continue
         record = recordsmod.load_record(path)
-        problems = recordsmod.validate(record, filename=path.name, schema=schema)
+        problems = recordsmod.validate(
+            record, filename=path.name, schema=schema, results_root=results_root
+        )
         if problems:
             broken.append(f"{path.name}: " + "; ".join(problems))
         records[source] = record

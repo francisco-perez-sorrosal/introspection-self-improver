@@ -25,7 +25,8 @@ subset an agent must not get wrong.
 | Improvement orchestrator | **Claude Code + the introspection.dev skills, served by the Introspection CLI (`introspection skills`)** | There is no orchestrator agent in this repo, and there must never be one. |
 
 Loop: run an improvement batch → collect Introspection evidence → `operate` (discover signal)
-→ `improve` (hypothesis + one minimal mutation, landed as a PR) → human approval → next
+→ `improve` (hypotheses + one coherent improvement set — any number of individually-evidenced
+changes across the mutable surface, landed as one PR; plan D22) → human approval → next
 generation → hidden held-out evaluation → repeat with a fresh batch. Reveal at experiment
 close.
 
@@ -263,7 +264,12 @@ dashboard, browser automation, or direct API calls for an operator action the CL
   mock-domain smoke — is blocking per experiment. Cross-lane consistency (A.0b) is an
   on-demand diagnostic and the stock-agent anchor (A.0c) is retired (plan D4): the
   progression metric never crosses lanes.
-- One coherent mutation per generation. Multi-change generations are uninterpretable.
+- One coherent **improvement set** per generation (plan D22, from seq 6): any number of
+  changes, each individually evidenced, each one coherent mechanism with its own falsifiable
+  prediction. The generation is the unit of measurement; the change is the unit of diagnosis;
+  per-change attribution is mechanistic (predictions scored against the next batch), never
+  statistical. One branch, one commit per change, one PR, one human gate. Seq ≤5 ran one
+  mutation per generation — read their records under that rule.
 - Every generation is measured once against the same fixed held-out set. A rejected or failed
   mutation yields an identity generation — H_(g+1) = H_g, result carried forward, recorded —
   and there are no paired baseline/candidate arms.

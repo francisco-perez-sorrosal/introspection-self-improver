@@ -65,6 +65,15 @@ Field craft — what the exemplar does that the schema cannot require:
 - **`expected_effect`**: falsifiable, scoped ("measured on the held-out set at H<g+1> and
   nowhere else"), with named risks for the next batch — these become the predictions the
   next recall checks. Also record what the change deliberately does not target.
+- **`changes[]`** (schema v2, plan D22): one item per change of the set, and the item's
+  `expected_effect` is that change's ONLY attribution channel — write it so the next
+  batch can score it per task (name the tasks or the behavior counter it should move,
+  e.g. "task_014's write-call cites the defining doc in ≥2/3 trials"). `surface` says
+  where it landed (instructions | pi-skill | extension-tool | sub-agent |
+  retrieval-usage | revert | other); `commit` names the per-change commit so a refuted
+  change can be reverted alone; a prompt-only set after a concentration flag states in
+  `proposed_change` why no structural surface fits. The set-level `expected_effect`
+  stays: it is what the generation curve measures.
 - **Outcome discipline**: `accepted` names a `candidate_commit` distinct from
   `source_commit` (the merge commit, tagged `exp<seq>-g<NNN>`); `rejected`/`identity` pin
   H_(g+1) = H_g. `held_out_result` is never written by hand.
@@ -76,7 +85,10 @@ Protocol step 4 owns approval (multi-select with the user); sia keeps the ledger
 - One row per approved mechanism: id `T<n>`, prevalence n/B with its batch, status
   `pending` / `consumed-by-gen-NNN` / `retired`. Retirement always carries the
   contradicting evidence — never silently dropped.
-- Update slot accounting after every change: G bounds the mutation slots; approved
-  targets in excess of remaining slots are stated as going unconsumed.
+- Accounting under composite sets (plan D22): G bounds generations, not changes — a
+  generation may consume any number of pending targets, and each consumed target's row
+  names the change (and commit) that consumed it. What still goes unstated nowhere:
+  targets left pending at the final transition are recorded as unconsumed with their
+  witness counts, exactly as before.
 - Record experiment-level findings (e.g., surface concentration) in the backlog prose,
   where the reveal will be read with them in view.

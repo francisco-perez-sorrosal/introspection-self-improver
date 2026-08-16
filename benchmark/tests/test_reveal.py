@@ -124,6 +124,14 @@ def experiment(tmp_path):
     (results_root / "experiment_002_exp-b" / "experiment.yaml").write_text(
         yaml.safe_dump({"id": "002_exp-b", "fingerprint": FINGERPRINT}), encoding="utf-8"
     )
+    # The batch round behind the records' cited evidence: reveal validates provenance
+    # against the experiment's own manifests, and an experiment with records but no batch
+    # rounds is a state reveal can never legitimately see.
+    batch_dir = results_root / "experiment_002_exp-b" / "generation_000" / "batch_01"
+    batch_dir.mkdir(parents=True)
+    (batch_dir / "episode_manifest.jsonl").write_text(
+        '{"introspection_task_id": "conv_x"}\n', encoding="utf-8"
+    )
     records_dir = results_root / "experiment_002_exp-b" / records.RECORDS_DIRNAME
     records_dir.mkdir(parents=True)
     for source, outcome in ((0, "accepted"), (1, "rejected"), (2, "accepted")):

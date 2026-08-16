@@ -16,8 +16,15 @@
 #     record exists precisely so the conclusion can be audited without the measurement.
 #   * every record cites at least one Introspection conversation id: a claim without the
 #     executions behind it is a fabricated signal (CLAUDE.md invariants).
+#   * schema version 2 (plan D22, from seq 6): a generation's mutation is an IMPROVEMENT
+#     SET — any number of individually-coherent changes, itemized in `changes`. A record
+#     carrying `schema_version: 2` with outcome accepted/rejected must itemize at least
+#     one change; each item carries its own mechanism, surface and falsifiable
+#     expected_effect, because per-change attribution is mechanistic (predictions scored
+#     against the next batch), never statistical. Records without `schema_version`
+#     (seq ≤ 5) predate the set discipline and validate under the single-mutation rules.
 
-version: 1
+version: 2
 
 outcomes: [accepted, rejected, identity]
 
@@ -64,11 +71,33 @@ fields:
   owning_layer:
     kind: str
     required: true
-    description: the mutable harness layer the change targets (prompt, retrieval usage, ...)
+    description: >-
+      the mutable harness layer(s) targeted (prompt, retrieval usage, pi-skill, tool,
+      sub-agent, ...); with a `changes` list this is the set-level summary and each item
+      names its own surface
   proposed_change:
     kind: str
     required: true
     prose_required_for: [accepted, rejected]
+    description: >-
+      with a `changes` list this is the SET-level summary — why these changes compose
+      (non-conflicting, independently justified); per-change detail lives in the items
+  schema_version:
+    kind: int
+    required: false
+    description: >-
+      2 = composite improvement sets (plan D22). Absent on seq ≤ 5 records; the validator
+      keys the changes-list requirement on this field so history keeps validating.
+  changes:
+    kind: list
+    required: false
+    description: >-
+      the improvement set, one item per change. Each item is a mapping with mechanism
+      (one coherent mechanism, the CLI improve discipline held per change), surface
+      (instructions | pi-skill | extension-tool | sub-agent | retrieval-usage | revert |
+      other), and expected_effect (its own falsifiable prediction, scored against the
+      next batch); optional evidence (conversation ids / backlog target), risk, and
+      commit (the per-change commit on the generation branch, for selective revert)
   mutation:
     kind: mapping
     required: true

@@ -56,27 +56,45 @@ file and the code disagree, the code wins and this file gets fixed.
    the user opts into any subset — or all — as approved mutation targets. Approved
    targets land in `results/experiment_<id>/improvement_backlog.md` (mechanism,
    evidence pointers, approval date, status: pending / consumed-by-gen / retired).
-   One generation still lands one coherent mechanism (protocol invariant): the next
-   PR takes the highest-priority approved target, composing several only when they
-   genuinely form one mechanism and saying so (seq 2's g2 did exactly this —
-   candidate comparison + record-field grounding unified as source-grounded
-   selection). The rest carry forward, re-ranked against each new batch's evidence;
-   an item later contradicted by evidence is retired with the reason recorded, never
-   silently dropped, and the backlog cannot outrun the freeze — G bounds the mutation
-   slots, so approving more targets than remaining generations is stated, not hidden.
-   Bundling independent mechanisms into one generation is possible only as an
-   explicit user override, recorded in the improvement record as multi-mechanism and
-   per-mechanism uninterpretable.
-5. **Mutate (`improve` skill)**: one coherent mechanism — the backlog's top approved
-   target — on branch
-   `gen-00<g+1>/<slug>`, touching mutable surface only (seq 2: `SYSTEM.md`
-   `<instructions>`; the `<policy>` block is frozen benchmark text). `make check` must
-   pass. Push; open a PR citing conversation ids, prevalence, predicted effect, and
-   what is deliberately not targeted. Return the work tree to `main` (it must keep
-   serving H_g until the merge).
+   Targets carry forward re-ranked against each new batch's evidence; an item later
+   contradicted is retired with the reason recorded, never silently dropped.
+
+   Then **compose the improvement set** (plan D22, from seq 6; decided ahead of its
+   first run by user direction, to be trued up against what actually runs): the next
+   generation lands **any number of changes**, drawn from the approved targets, and the
+   orchestrator proposes the set it judges most likely to generalize — never a
+   pick-one-of-N menu. Present it as a per-change table — mechanism, surface, evidence
+   (n/B + conversation ids), its own falsifiable prediction, its risk — and the user
+   opts individual changes in or out. Composition rules:
+   - Each change is **one coherent mechanism** (the `improve` skill's discipline,
+     held per change, not per generation) and would justify landing on its own.
+   - No two changes in a set may interact on the same behavior; candidates that
+     interact are either genuinely one mechanism, or the weaker-evidenced one waits.
+   - The surface is part of the diagnosis, and the growth surfaces are first-class:
+     seq 4 + seq 5 spent six of seven slots on `SYSTEM.md` text and measured that *an
+     instruction added to a prompt does not inherit the scope its author reasoned
+     about* — when the mechanism is judgment, scope, or verification, prefer a Pi
+     skill, extension tool, or sub-agent (wiring: sia's `recipe-growth` reference +
+     `improve/capability-set`). A set that is prompt-text-only after ≥3 prior prompt
+     mutations on the same surface must say why no structural surface fits.
+   - A **revert** of a prior change whose prediction the batch refuted is a
+     first-class change, enabled by per-change commits (step 5).
+   G bounds generations, not changes; per-change attribution inside a set is
+   **mechanistic** — each prediction is scored against the next batch — while the
+   statistical read stays at the generation level, and every record says so.
+5. **Mutate (`improve` skill)**: the approved set on branch `gen-00<g+1>/<slug>`,
+   **one commit per change** — each message naming the mechanism and its prediction,
+   because the commit is the unit of selective revert — touching mutable surface only
+   (`SYSTEM.md` `<instructions>`; recipe skills/tools/sub-agents per
+   `references/recipe-growth.md`; the `<policy>` block is frozen benchmark text).
+   `make check` must pass, plus `make smoke` when any change is mechanical (tools,
+   sub-agents, wiring). Push; open **one PR carrying the whole set**, citing per-change
+   evidence, predictions, and what is deliberately not targeted. Return the work tree
+   to `main` (it must keep serving H_g until the merge).
 6. **Record as it happens**: `scripts/improvement_record.py --scaffold g --write`,
-   fill evidence/signals/counterevidence/hypothesis/change; verify. Conversation ids
-   come from the manifest — never from memory.
+   fill evidence/signals/counterevidence/hypothesis and the per-change `changes` list
+   (schema v2: mechanism, surface, evidence, expected_effect, risk, commit per item);
+   verify. Conversation ids come from the manifest — never from memory.
 7. **Human gate**: the user reviews and merges (or declines) the PR. The agent never
    merges on its own authority. On merge: tag the merge commit `exp<seq>-g00<g+1>`
    (annotated, pushed), set the record's `outcome: accepted` + `candidate_commit`,
