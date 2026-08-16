@@ -155,6 +155,21 @@ def pass1_interval(task_stats: list[tuple[int, int]]) -> list | None:
     return [max(0.0, mean - half), min(1.0, mean + half)]
 
 
+def failure_from_info(info: dict | None) -> dict | None:
+    """The failure payload as tau itself recorded it, for rounds that predate the episode
+    manifest. Same shape the manifest writes, so the page has one thing to render."""
+    if not isinstance(info, dict):
+        return None
+    error = info.get("error")
+    if not error:
+        return None
+    return {
+        "error_type": info.get("error_type"),
+        "error": str(error)[:500],
+        "failed_after_attempts": info.get("failed_after_attempts"),
+    }
+
+
 def summarise_sim(sim: dict) -> dict:
     reward_info = sim.get("reward_info") or {}
     reward = reward_info.get("reward")
@@ -188,6 +203,7 @@ def summarise_sim(sim: dict) -> dict:
         "kb_search": tool_counts.get("KB_search", 0),
         "tool_counts": tool_counts,
         "platform_ref": platform_ref,
+        "info_failure": failure_from_info(sim.get("info")),
     }
 
 
@@ -252,6 +268,24 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         sim["stall_warnings"] = row.get("stall_warnings") or 0
         incidents = row.get("incidents") or {}
         sim["incident_count"] = sum(v for v in incidents.values() if isinstance(v, int))
+        # Why an episode failed, not merely that it did. The manifest records the failure
+        # object; pre-manifest rounds carry the same payload on tau's own `info`, so fall
+        # back to it rather than showing nothing.
+        sim["completed"] = row.get("completed")
+        sim["failure"] = row.get("failure") or sim.pop("info_failure", None)
+        # The seam counters. These are the class that grades as an ordinary agent failure:
+        # when the sandbox cannot complete a tool call it answers the call itself, so tau
+        # records no turn and results.json reads clean. Invisible here until now.
+        sim["seam"] = {
+            key: row.get(key) or account.get(key) or 0
+            for key in (
+                "sandbox_seam_disconnects",
+                "sandbox_seam_timeouts",
+                "sandbox_seam_unclassified",
+                "sandbox_tool_errors",
+            )
+        }
+        sim["seam_total"] = sum(sim["seam"].values())
 
     graded = [s for s in sims if s["graded"]]
     task_stats_map: dict[str, list[int]] = {}
@@ -339,6 +373,28 @@ def summarise_round(round_dir: Path, results_root: Path) -> dict:
         "evidence_incomplete": sum(
             1 for s in sims if s.get("evidence_complete") is False
         ),
+        # Episodes that failed outright, and the distinct reasons, so the round row can say
+        # WHY without being expanded.
+        "failed": sum(1 for s in sims if s.get("failure")),
+        "failure_types": sorted(
+            {
+                str((s.get("failure") or {}).get("error_type") or "unknown")
+                for s in sims
+                if s.get("failure")
+            }
+        ),
+        # Episodes carrying a seam counter. Kept separate from `failed`: these graded
+        # normally and would otherwise read as ordinary agent failures.
+        "seam_episodes": sum(1 for s in sims if s.get("seam_total")),
+        "seam_totals": {
+            key: sum((s.get("seam") or {}).get(key) or 0 for s in sims)
+            for key in (
+                "sandbox_seam_disconnects",
+                "sandbox_seam_timeouts",
+                "sandbox_seam_unclassified",
+                "sandbox_tool_errors",
+            )
+        },
         "pass1": pass1(task_stats),
         "pass1_interval": pass1_interval(task_stats),
         "avg_cost": _avg(

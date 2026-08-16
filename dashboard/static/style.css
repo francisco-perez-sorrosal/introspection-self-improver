@@ -226,6 +226,14 @@ tr.episodes-holder > td { padding: 0 0 14px 22px; border-bottom: 1px solid var(-
 .reward-chip { font-weight: 600; }
 .reward-chip.pass { color: var(--good-text); }
 .reward-chip.fail { color: var(--critical); }
+/* A failed episode produced no usable number. The left rule marks the row (the .banner
+   idiom), and the reward is struck through so it is not read as a score — never colour
+   alone, and never colour as the only signal. */
+tr.episode-failed > td { background: color-mix(in srgb, var(--critical) 7%, transparent); }
+tr.episode-failed > td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
+tr.episode-failed .reward-chip { text-decoration: line-through; color: var(--muted); }
+.badge[tabindex] { cursor: help; }
+.badge[tabindex]:focus-visible { outline: 2px solid var(--axis); outline-offset: 1px; }
 .copy-btn {
   font: inherit; font-size: 10.5px; color: var(--muted); background: none;
   border: 1px solid var(--axis); border-radius: 4px; padding: 0 5px; cursor: pointer;

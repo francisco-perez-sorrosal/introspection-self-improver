@@ -92,6 +92,7 @@ function mergeRounds(rounds) {
   const tasks = {};
   const agg = {
     episodes: 0, graded: 0, infra: 0, abnormal: 0, evidenceIncomplete: 0,
+    failed: 0, seamEpisodes: 0,
     cost: 0, costCount: 0, messages: 0, kb: 0, duration: 0, simCount: 0,
     shas: new Set(), diagnostic: false, noSentinel: false, elapsed: 0,
   };
@@ -109,6 +110,8 @@ function mergeRounds(rounds) {
     agg.infra += round.infra_errors;
     agg.abnormal += round.abnormal;
     agg.evidenceIncomplete += round.evidence_incomplete;
+    agg.failed += round.failed || 0;
+    agg.seamEpisodes += round.seam_episodes || 0;
     agg.elapsed += round.elapsed_seconds || 0;
     if (round.mode && round.mode !== "locked") agg.diagnostic = true;
     if (!round.has_sentinel) agg.noSentinel = true;
@@ -167,6 +170,52 @@ function badge(kind, icon, label) {
   return chip;
 }
 
+/* Attach the rich tooltip to any element, keyboard included. The `focus`/`blur` pair with
+   tabIndex is the page's accessibility convention — a reason only reachable by mouse is a
+   reason half the readers never see. */
+function withTooltip(node, title, rows) {
+  const usable = (rows || []).filter((r) => r && r.value);
+  if (!usable.length) return node;
+  node.tabIndex = 0;
+  const show = (evt) => {
+    const box = node.getBoundingClientRect();
+    const point =
+      evt && evt.clientX != null ? evt : { clientX: box.x + box.width / 2, clientY: box.y };
+    tooltip.show(point.clientX, point.clientY, title, usable);
+  };
+  node.addEventListener("pointermove", show);
+  node.addEventListener("focus", show);
+  node.addEventListener("pointerleave", tooltip.hide);
+  node.addEventListener("blur", tooltip.hide);
+  return node;
+}
+
+/* The seam counters, as tooltip rows. Named in full because the whole point of surfacing
+   them is that the reader should not have to know the schema. */
+const SEAM_LABELS = {
+  sandbox_seam_disconnects: "sandbox seam disconnects",
+  sandbox_seam_timeouts: "sandbox seam timeouts",
+  sandbox_seam_unclassified: "sandbox seam unclassified",
+  sandbox_tool_errors: "sandbox tool errors",
+};
+
+function seamRows(seam) {
+  return Object.entries(SEAM_LABELS)
+    .filter(([key]) => (seam || {})[key])
+    .map(([key, label]) => ({ value: String(seam[key]), label }));
+}
+
+function failureRows(failure) {
+  if (!failure) return [];
+  return [
+    { value: failure.error_type || "failure", label: "type" },
+    failure.failed_after_attempts
+      ? { value: String(failure.failed_after_attempts), label: "attempts before giving up" }
+      : null,
+    { value: failure.error || "", label: "" },
+  ].filter(Boolean);
+}
+
 function roundBadges(round) {
   const badges = [];
   if (!round.batch) badges.push(badge("warn", "⚠", "not a batch — excluded from metrics"));
@@ -176,6 +225,27 @@ function roundBadges(round) {
   if (round.infra_errors > 0) badges.push(badge("serious", "✕", `${round.infra_errors} infra`));
   if (round.abnormal > 0) badges.push(badge("serious", "△", `${round.abnormal} abnormal end`));
   if (round.evidence_incomplete > 0) badges.push(badge("serious", "◐", `${round.evidence_incomplete} evidence incomplete`));
+  if (round.failed > 0) {
+    badges.push(
+      withTooltip(
+        badge("critical", "✗", `${round.failed} failed`),
+        `${round.failed} of ${round.episodes} episode(s) failed`,
+        (round.failure_types || []).map((t) => ({ value: t, label: "reason" })),
+      ),
+    );
+  }
+  /* Separate from `failed` on purpose: a seam episode graded normally. When the sandbox
+     cannot complete a tool call it answers the call itself, so tau records no turn and the
+     episode reads as an ordinary agent failure — the one class the numbers cannot show. */
+  if (round.seam_episodes > 0) {
+    badges.push(
+      withTooltip(
+        badge("serious", "⌁", `${round.seam_episodes} seam-affected`),
+        "Graded normally, but the seam interfered",
+        seamRows(round.seam_totals),
+      ),
+    );
+  }
   if (round.incident_count > 0) badges.push(badge("warn", "⚡", `${round.incident_count} incident(s)`));
   if (round.orphaned > 0) badges.push(badge("muted", "≠", `${round.orphaned} orphaned task(s)`));
   if (round.resumed) badges.push(badge("muted", "↻", "resumed"));
@@ -1155,11 +1225,35 @@ function episodeTable(round) {
   table.appendChild(head);
   for (const sim of round.sims) {
     const tr = el("tr");
+    /* A failed episode has no meaningful reward — mark the whole row so it is not read as
+       a score, and hang the reason off it. */
+    if (sim.failure) tr.classList.add("episode-failed");
     const reward = el("td");
     const chip = el("span", `reward-chip ${sim.success ? "pass" : "fail"}`);
     chip.textContent = sim.success ? "✓ 1.0" : `✗ ${sim.reward ?? "—"}`;
     reward.appendChild(chip);
     const flags = el("td");
+    if (sim.failure) {
+      flags.appendChild(
+        withTooltip(
+          badge("critical", "✗", sim.failure.error_type || "failed"),
+          `${sim.task_id} trial ${sim.trial} failed`,
+          failureRows(sim.failure),
+        ),
+      );
+    }
+    if (sim.completed === false && !sim.failure) {
+      flags.appendChild(badge("serious", "◌", "not completed"));
+    }
+    if (sim.seam_total > 0) {
+      flags.appendChild(
+        withTooltip(
+          badge("serious", "⌁", "seam"),
+          "Graded normally, but the seam interfered",
+          seamRows(sim.seam),
+        ),
+      );
+    }
     if (sim.arm_sha_ok === false) flags.appendChild(badge("critical", "✗", "arm sha"));
     if (sim.stall_warnings > 0) flags.appendChild(badge("warn", "⏱", `${sim.stall_warnings} stall(s)`));
     if (sim.incident_count > 0) flags.appendChild(badge("warn", "⚡", String(sim.incident_count)));

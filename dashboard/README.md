@@ -66,6 +66,17 @@ without the sequence prefix falls back to its bare id.
   errors, abnormal terminations, incomplete evidence), per-episode rewards and costs,
   conversation ids with copy buttons, and full **transcripts** (messages, tool calls,
   arguments) fetched on demand.
+- **Failures, with their reason** — an episode that failed is marked on its own row (left
+  rule, and the reward struck through so a failure is never read as a score) and carries a
+  badge naming the error type; hovering or focusing the badge gives the recorded reason,
+  the attempt count, and the message. Rounds roll this up as `N failed` with the distinct
+  reasons on hover. The reason comes from the episode manifest's `failure`, falling back to
+  τ's own `info` for rounds that predate the manifest.
+- **Seam-affected episodes** — the four `sandbox_*` counters, surfaced separately from
+  failures and never merged into them. These episodes *graded normally*: when the sandbox
+  cannot complete a tool call it answers the call itself, so τ records no turn and the
+  episode reads as an ordinary agent failure. That is the one class the rewards cannot
+  show, which is exactly why it gets its own badge rather than a footnote.
 
 ## Honesty rules it inherits
 
