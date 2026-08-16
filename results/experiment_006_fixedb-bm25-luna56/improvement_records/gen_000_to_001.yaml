@@ -1,0 +1,315 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 0
+  to_generation: 1
+experiment: 006_fixedb-bm25-luna56
+outcome: accepted
+schema_version: 2
+batch:
+  name: batch_01
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a0098f-92d8-700f-8a6e-032717638a6c   # task_014 t0 reward 1.0
+  - 01a00992-3341-7127-9c9e-665ca32b6dfa   # task_014 t1 reward 1.0
+  - 01a00995-fb51-7590-94cb-02095d47bcc0   # task_014 t2 reward 0.0
+  - 01a0098f-8e6f-7045-b148-2d51c17bec65   # task_026 t0 reward 0.0
+  - 01a00992-62ea-734c-8a38-7f2697900133   # task_026 t1 reward 0.0
+  - 01a00996-629d-70f4-a2c0-8d9104f709e2   # task_026 t2 reward 0.0
+  - 01a0098f-8e9e-7168-955b-248159d0719a   # task_028 t0 reward 0.0
+  - 01a00992-a78b-7441-a375-9781f6020341   # task_028 t1 reward 0.0
+  - 01a00996-764e-774c-bc0f-93e6fcddc83f   # task_028 t2 reward 0.0
+  - 01a00990-104c-732b-afa6-85f3d3a81d9d   # task_065 t0 reward 0.0
+  - 01a00993-ebb3-7145-8569-54e6a80ac6f7   # task_065 t1 reward 0.0
+  - 01a00996-a508-75b7-94e0-3984bb379bb2   # task_065 t2 reward 0.0
+  - 01a00990-723c-75e1-ab59-e0afcd99f3a2   # task_070 t0 reward 0.0
+  - 01a00994-3650-76df-b464-d85b3b92a2ff   # task_070 t1 reward 0.0
+  - 01a00997-f62b-77ce-827a-c67c2b42d563   # task_070 t2 reward 0.0
+  - 01a00991-93b5-741b-b6e5-9e4007eec02c   # task_072 t0 reward 0.0
+  - 01a00994-ff54-7200-826a-9329df5c24d8   # task_072 t1 reward 0.0
+  - 01a00997-f60d-7363-9c23-dcde1819ecb4   # task_072 t2 reward 0.0
+  - 01a00991-eae0-738a-8433-a72204ef7632   # task_082 t0 reward 0.0
+  - 01a00995-17cb-72c4-9140-e46af6ef6736   # task_082 t1 reward 0.0
+  - 01a00998-2d2f-74bd-9adb-600863353114   # task_082 t2 reward 0.0
+  - 01a00992-231e-77f3-b4f6-41e7e684aeee   # task_096 t0 reward 0.0
+  - 01a00995-5d4a-7665-a136-f3f761e5d9f5   # task_096 t1 reward 0.0
+  - 01a00998-7620-7496-8c09-c5a2175a5bdf   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_01: all 24 episodes (8 tasks x num_trials 3) from
+    generation_000/batch_01/graded/updated_results.json — per-episode reward, reward_basis,
+    db_check, every gold action_check with its match flag and arguments, and the complete
+    agent tool-call trace — joined to episode_manifest.jsonl for conversation identity, arm
+    sha and cost. Open-coded before any taxonomy was applied; the four prior-experiment
+    target names were deliberately not used as bins while coding.
+
+    Round health, clean on every axis: 24/24 completed, arm sha dd1990fc1c44 on every
+    episode with no dirty paths and zero arm_sha_mismatches, all 24 evidence_complete, and
+    ZERO sandbox_seam_timeouts, sandbox_seam_disconnects, sandbox_seam_unclassified and
+    sandbox_tool_errors — the first batch round in this project's history with no seam
+    contamination of any kind. Effective model gpt-5.6-luna at reasoning medium on all 24.
+    $0.5131 platform, 673s at --max-concurrency 3. No cell is excluded from diagnosis.
+
+    Graded read, labelled: 2/24 episodes and 1/8 tasks with any pass (task_014 2/3;
+    everything else 0/3). batch_01 is this experiment's pre-mutation baseline and the only
+    round measuring an untuned set — though not an unbiased one, since the eight tasks were
+    hand-picked from seq-4 known-fails, so the floor is by construction. From batch_02 on,
+    every batch number measures a set the loop has been tuned on.
+
+    The observation harvest (introspection events list --event-name
+    introspection.observation) was not used: the full-population transcript read is a
+    complete census at this batch size and is the stronger evidence tier, per the sia/operate
+    seam note.
+
+    A seam probe was run during this transition and its evidence is committed at
+    generation_000/seam_probe/. It is NOT batch evidence and no signal below rests on it; it
+    bounds which surfaces the mutation could use, and it is why this set is prompt-only.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any
+    point in this transition. The standing exposure recorded at freeze (D23: the orchestrator
+    has seen the revealed per-task held-out results of BOTH seq 4 and seq 5 for these same 28
+    tasks — triple exposure) applies to every T-based number this experiment produces and to
+    none of the batch numbers here. No vault path was opened.
+signals:
+- description: >-
+    A value the bank defines is chosen from a candidate set the agent never enumerated. The
+    cleanest case is task_070, 3/3: gold opens business_checking with account_class
+    "Sky Blue", and the agent opened "Hunter Green" (t0, t1) and "Cobalt Blue" (t2). Across
+    22 KB queries in the three trials, NOT ONE asks for the list of business-checking
+    classes — every query is built either from the customer's stated requirements ("no
+    overdraft fees", "ATM fee rebates at least $15 per month") or from class names the agent
+    already held ("Navy Blue Cobalt Blue True Blue", "Hunter Green Business Checking"). The
+    option was never a candidate, so no care in choosing could have reached it. Same mode:
+    task_065 3/3 (opened Blue/Bluest/Silver Plus against gold Green + Evergreen), task_096
+    (three different expected_apy values — 2.95, 3.0, 2.7 — across three trials for one
+    account whose rate the bank publishes; t1 got the OTHER account's pair 6.85/6.55 exactly
+    right, which shows the mode is retrieval-dependent rather than arithmetic), and task_082
+    t1 (dispute_category card_not_present_fraud against gold card_present_fraud; close reason
+    "fraud_suspected" against gold "lost").
+  prevalence: 4/8 tasks, 10/24 episodes
+- description: >-
+    Coverage failure, distinct from value failure: the agent does part of the requested work
+    correctly and stops. task_096 t0 and t2 credit and report on the Bronze account and never
+    touch the Gold Plus account the same customer named (t1 acted on both). task_065 t0 and
+    t2 close the checking account and open ONE replacement where gold opens two. task_028 t2
+    is the sharpest witness — it updated five of the six gold transactions with EXACTLY the
+    gold values (669, 642, 750, 2049, 1390) and omitted the sixth; it is the one episode in
+    the batch whose values were right, and it failed on coverage alone. task_014 t2 ended
+    after two searches having taken no action at all, on a task whose t0 and t1 passed by
+    taking one.
+  prevalence: 4/8 tasks, 6/24 episodes
+- description: >-
+    Optional arguments are volunteered into state-changing calls and land in the database.
+    task_065's gold closes the account with account_id alone; all three trials supplied a
+    `reason` of the agent's own composition ("customer_requested_closure" t0, "Customer
+    requested replacement with Blue Account" t1, "Customer requested a switch to a checking
+    account with enhanced benefits" t2), and t1 additionally supplied
+    waive_early_closure_fee: false. close_bank_account_7392 writes the value into account
+    state, so on a DB-graded task an argument nobody asked for is a database difference.
+  prevalence: 1/8 tasks, 3/24 episodes
+- description: >-
+    Premature transfer to a human while gold actions remain — the MOST prevalent mode in the
+    batch, and deliberately not targeted. transfer_to_human_agents appears in no DB-basis
+    task's gold. task_082 t0 and t2 transfer at the FIRST user turn after a single KB search
+    (8 messages each, against roughly twenty gold actions) while t1, under the same harness
+    on the same task, worked for 76 messages and filed every dispute — so the behaviour is
+    available and what is missing is the discipline that chooses between them. Also
+    task_026 t0/t2, task_028 t0/t1, task_096 t2. Recorded as a signal, left as backlog T4;
+    the counterevidence field says why it gets no slot.
+  prevalence: 4/8 tasks, 7/24 episodes
+- description: >-
+    The user-facing discoverable-tool handover is never performed. task_026 and task_028 both
+    require give_discoverable_user_tool("submit_cash_back_dispute_0589") followed by the
+    user's own calls; across six episodes the agent called it ZERO times. task_026 t2 searched
+    for it and gave up ("submit cash back dispute tool couldn't be found"), while other trials
+    located agent-side tool names in the same knowledge base and used them freely. Recorded as
+    backlog T5 and not targeted: the frozen <policy> already specifies this procedure at
+    length, and restating policy text is the shape of mutation that failed four times.
+  prevalence: 2/8 tasks, 0/6 episodes performed it
+counterevidence: >-
+  Four arguments against this set, recorded rather than resolved.
+
+  (1) The strongest is against a change NOT in the set, and it is why the set omits the
+  batch's most prevalent mode. Premature transfer is 4/8 tasks and 7/24 episodes here. Across
+  seq 4 and seq 5 (prior-experiment context, prose only) four of seven mutations were transfer
+  guidance and all four failed: one forbade a policy-required transfer, one licensed a
+  policy-forbidden one, one deleted the guidance and deferred to the policy, and seq 5's was
+  authored with that history explicitly in hand and two structural guards designed against it
+  — delegate the threshold to the policy, scope the rule to when the customer asks — and it
+  still suppressed transfers wholesale and broke the one task whose gold IS a transfer.
+  Prevalence argues for consuming it; the evidence about this loop's own behaviour argues
+  against a fifth attempt by the same means. The second argument won. If that is wrong, it is
+  wrong in a recorded and reversible way: the target stands at the top of the backlog with the
+  condition it must meet.
+
+  (2) C1 and C3 are adjacent. Both act on the arguments of a state-changing call — C1 on which
+  value fills a required argument, C3 on whether an optional argument is supplied at all. The
+  set-composition rule forbids two changes interacting on one behavior, and this pair is the
+  closest call in the set. The judgment is that they are distinct behaviors with disjoint
+  witnesses (task_070 and task_065's account_class for C1; task_065's close `reason` for C3),
+  but a reader should treat any batch_02 movement on task_065 as jointly attributable, because
+  that task carries witnesses for both.
+
+  (3) C3's evidence is 1/8 tasks — the weakest thing in this set, and it is landed anyway.
+  The reason is mechanical certainty rather than prevalence: the tool demonstrably writes the
+  volunteered value into the graded database state, so the causal path from behaviour to score
+  is not in doubt, only its breadth. Seq 5 refused this target on different grounds (its only
+  lever looked like matching a default string, i.e. grader-gaming) and that refusal is not
+  disturbed — C3 uses a different lever.
+
+  (4) Prompt-only, with the concentration flag already lit. Six of seven prior mutations were
+  text in this same paragraph, so the prior odds against a prompt set are poor. What is new is
+  a measured reason: the seam probe shows two of the three growth surfaces do not exist here
+  (see owning_layer). That converts "the loop lacked ambition" into "the loop had two fewer
+  options than its own notes claimed", but it does not make prose likelier to work — it only
+  makes this set's surface choice honest rather than lazy. The set is deliberately three
+  changes rather than one so that a null result is informative about the composite hypothesis
+  itself, which is what plan D22 exists to test.
+hypothesis: >-
+  The agent's failures on this batch are not one mode but three, and they are separable by
+  where in a turn they occur. Before a write it must pick a value, and it picks from the
+  options it can already name rather than from the set the bank publishes — so the fix is
+  procedural (search for the set, then choose from it) and needs no judgment about which value
+  is right. Around a write it must decide how many actions the request contains, and it stops
+  when it has done some of them — so the fix is a closing check against what the customer
+  named, bounded so it cannot become licence to act more widely. Inside a write it must decide
+  which arguments to supply, and it fills optional ones from its own wording, which the tool
+  then commits to the database — so the fix is restraint. None of the three is a judgment rule
+  and none states a condition the frozen policy also states, which is the property four
+  previously-failed mutations lacked.
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — three paragraphs,
+  one per change. The frozen <policy> region is untouched and make check asserts it
+  byte-for-byte (5733 chars) on every commit; agents/agent.yaml, package.json, the lock and
+  the partition are all unchanged.
+
+  The surface choice is itself a finding this transition produced, and it is why a prompt-only
+  set satisfies plan D22's justification requirement. A seam probe (committed evidence:
+  generation_000/seam_probe/) measured that transport_local._assistant_turn forwards every
+  toolCall block in a Pi assistant message, so a Pi-local extension-tool call reaches tau as an
+  invalid tool call — "Error: Tool 'probe_note' not found" — costing a tau step and one of the
+  episode's ten max_errors. Sub-agents delegate through the same auto-generated agent tool and
+  therefore the same path, and blocking a tau tool call from a tool_call hook is worse still:
+  the call is forwarded regardless, so tau executes the write while the agent believes it was
+  stopped. Two of the three growth surfaces that both prior closures named as unused were
+  never available. What remains structural is the set of extension hooks that introduce no
+  tool call — before_agent_start, tool_result, context — and none of them is the right home
+  for these three mechanisms, all of which are decisions taken BEFORE a call, where a
+  result-transforming hook has nothing to work on. skills/sia/references/recipe-growth.md
+  asserted the opposite and was corrected against this evidence in the same transition.
+proposed_change: >-
+  One improvement SET of three changes (plan D22), one commit each on branch
+  gen-001/ground-cover-and-restraint, landed as one PR. They compose because they act at three
+  different points of a turn — value selection, action coverage, argument supply — and their
+  predictions are scored on disjoint witnesses. Each would justify landing on its own, and
+  each can be reverted alone next generation because the commits are separable.
+
+  Deliberately excluded from the set despite being the highest-prevalence mode in the batch:
+  any change to transfer behaviour (backlog T4), and any restatement of the discoverable-tool
+  handover the frozen policy already specifies (backlog T5). Also excluded: arithmetic support
+  for computed amounts (backlog T6), which is not yet separable from C1's mechanism — task_096's
+  wrong amounts follow from its wrong rate — and which, if it survives batch_02, has a
+  legitimate structural home in a tool_result hook rather than in more prose.
+changes:
+- mechanism: >-
+    Search for the set of bank-defined values before choosing one from it. A query naming the
+    category returns the list; a query built from the customer's requirements returns only the
+    options the agent could already name.
+  surface: instructions
+  evidence: >-
+    4/8 tasks, 10/24 episodes. task_070 3/3 (22 queries, none enumerating classes, gold
+    "Sky Blue" never a candidate) — conversations 01a00990-723c-75e1-ab59-e0afcd99f3a2,
+    01a00994-3650-76df-b464-d85b3b92a2ff, 01a00997-f62b-77ce-827a-c67c2b42d563. Also
+    task_065 3/3, task_096 3/3 (expected_apy), task_082 t1 (two enums). Backlog target T1.
+  expected_effect: >-
+    At least one task_070 trial in batch_02 issues a query that asks for the business-checking
+    class list, and opens account_class "Sky Blue". At least one task_065 trial opens
+    "Evergreen Account" or "Green Account". Denied if task_070's queries in batch_02 still
+    contain no enumeration request across all three trials — that would mean the instruction
+    did not reach the behaviour, which is precisely how seq 5's equivalent change failed on
+    this same task.
+  risk: >-
+    More searching per episode: longer wall-clock, higher cost, and more room to run into
+    tau's frozen budgets. Also inertness rather than error — bm25 may simply not answer a
+    category-shaped query well, in which case the enumeration attempt returns nothing useful
+    and the agent falls back to guessing.
+  commit: 5bce8ac
+- mechanism: >-
+    Close the loop on scope: before finishing, check the request against what was actually
+    done, so that every item the customer named is acted on or explained — and only those
+    items.
+  surface: instructions
+  evidence: >-
+    4/8 tasks, 6/24 episodes. task_028 t2 (5 of 6 gold transactions, with exactly the gold
+    values, conversation 01a00996-764e-774c-bc0f-93e6fcddc83f); task_096 t0 and t2 (one of
+    two named accounts, 01a00992-231e-77f3-b4f6-41e7e684aeee and
+    01a00998-7620-7496-8c09-c5a2175a5bdf); task_065 t0 and t2 (one of two account opens);
+    task_014 t2 (no action at all, 01a00995-fb51-7590-94cb-02095d47bcc0). Backlog target T2.
+  expected_effect: >-
+    In batch_02, at least one task_096 trial issues both credits and both discrepancy reports,
+    and at least one task_065 trial opens both accounts. Pre-registered falsifier, and it is
+    the mirror failure this change could cause: task_026's write count must not rise above
+    batch_01's fourteen (t1 wrote 14 update calls where 4 were in scope). If it does, the
+    bound in the second sentence failed and this change is a first-class revert candidate for
+    gen-002.
+  risk: >-
+    Converting a coverage rule into licence to act more widely — the exact failure task_026 t1
+    already shows. The wording binds completeness to what the customer NAMED and says outright
+    that acting beyond it is a different error, but that is a sentence, and this experiment's
+    standing lesson is that a sentence does not inherit its author's scope.
+  commit: bd243c5
+- mechanism: >-
+    Do not supply an optional tool argument from your own wording. Supply what the tool
+    requires and what the customer or knowledge base actually provided a value for.
+  surface: instructions
+  evidence: >-
+    1/8 tasks, 3/24 episodes — the weakest evidence in the set, stated rather than rounded up.
+    task_065 all three trials volunteered a self-composed `reason` to close_bank_account_7392
+    where gold passes account_id alone, and t1 also volunteered waive_early_closure_fee:
+    conversations 01a00990-104c-732b-afa6-85f3d3a81d9d, 01a00993-ebb3-7145-8569-54e6a80ac6f7,
+    01a00996-a508-75b7-94e0-3984bb379bb2. The tool writes the value into account state.
+    Backlog target T3.
+  expected_effect: >-
+    At least one task_065 trial in batch_02 calls close_bank_account_7392 with account_id
+    alone. Pre-registered falsifier: any task in batch_02 dropping an argument its tool
+    REQUIRES — if a required argument disappears anywhere, the rule reached past optional ones
+    and is a revert candidate.
+  risk: >-
+    Over-reach into required arguments, as above. Secondary risk of a different kind: this is
+    the change most likely to be mistaken for grader-gaming, so the record states plainly that
+    the lever is "do not write unrequested state", not "match the tool's default string" — the
+    latter is what a prior experiment examined and rejected, and that rejection stands.
+  commit: 29a4878
+mutation:
+  branch: gen-001/ground-cover-and-restraint
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/11
+  source_commit: 34c5012b0e60f7a3e6bbe07de6de7f0f5b8cbbea
+  candidate_commit: 48fa265796c2778f5248c5528a27c469879b2e0e
+expected_effect: >-
+  SET level, and stated as behaviour rather than score. The three changes together should move
+  batch_02 on three observable axes: enumeration queries appear where none existed, the number
+  of named items left unacted falls, and task_065's close call sheds its volunteered argument.
+  A reward improvement is NOT confidently predicted — five of the eight tasks fail on more than
+  one of the coded modes at once, and the two most prevalent modes in the batch (premature
+  transfer, the never-performed user-tool handover) are deliberately untouched, so several tasks
+  can improve on every targeted axis and still score 0.0. A reader who scores this set by the
+  batch_02 number alone will mis-grade it; the per-change predictions above are the attribution,
+  and under plan D22 that attribution is mechanistic, never statistical.
+
+  The generation-level statistical read is the held-out round for H1, which stays sealed until
+  reveal, and the paired batch curve whose endpoint test is H6's batch_07 against H0's batch_01.
+human_approval:
+  approved_by: >-
+    orchestrator — autonomous per D23 (user-delegated)
+  date: '2026-08-16'
+held_out_result: null
