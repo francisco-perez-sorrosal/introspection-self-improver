@@ -1,0 +1,225 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 0
+  to_generation: 1
+experiment: 005_fixedb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_01
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a0086e-3b72-7736-bd2f-cafc55e67648   # task_014 t0 reward 0.0
+  - 01a0086f-a9c7-72f6-b344-16dee2ec1f23   # task_014 t1 reward 1.0
+  - 01a00872-1531-7526-8cef-1bb4204b78f8   # task_014 t2 reward 0.0
+  - 01a0086e-3711-7607-89e4-f6361706fb55   # task_026 t0 reward 0.0
+  - 01a0086f-bc87-746f-81ab-e124a2d8bc38   # task_026 t1 reward 0.0
+  - 01a00872-9e91-701d-b458-0198511ae367   # task_026 t2 reward 0.0
+  - 01a0086e-3ce9-7209-b1ba-a3a9dc58a11c   # task_028 t0 reward 0.0
+  - 01a00870-1578-72d1-8a2f-f6ebe7e9bcd2   # task_028 t1 reward 0.0
+  - 01a00872-a14a-703d-92ec-3962a41a239c   # task_028 t2 reward 0.0
+  - 01a0086e-3826-75bb-845c-6ecc76af90fa   # task_065 t0 reward 0.0
+  - 01a00870-3b29-7659-98e8-1126d591afcb   # task_065 t1 reward 0.0
+  - 01a00872-a692-76fc-866b-0af13fc38531   # task_065 t2 reward 0.0
+  - 01a0086e-bb2d-7179-b8c1-f976e948dcb3   # task_070 t0 reward 0.0
+  - 01a00871-65e7-70b1-8fb4-129b936bec4a   # task_070 t1 reward 0.0
+  - 01a00873-2fdc-73e0-b988-cf7f625582bb   # task_070 t2 reward 0.0
+  - 01a0086f-3a65-722b-89b1-a76e9a2415f7   # task_072 t0 reward 0.0
+  - 01a00871-8ac1-7095-9161-0f0b225b23cb   # task_072 t1 reward 0.0
+  - 01a00873-bf6f-71e0-9998-428019802678   # task_072 t2 reward 0.0
+  - 01a0086f-62f8-7074-a378-20291a836faa   # task_082 t0 reward 0.0
+  - 01a00871-a0db-77a1-a20a-7f1d0db80f81   # task_082 t1 reward 0.0
+  - 01a00873-f62a-7299-a349-a94f177a8526   # task_082 t2 reward 0.0
+  - 01a0086f-65e4-7790-af11-cc3bfe7358a1   # task_096 t0 reward 0.0
+  - 01a00871-e31b-753d-81dc-31fb2bbdfbe5   # task_096 t1 reward 0.0
+  - 01a00874-2e9b-760a-acb0-6cb03e75cadb   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_01: all 24 episodes (8 tasks x num_trials 3), from the
+    graded artifact at generation_000/batch_01/graded/updated_results.json — per-episode
+    reward, reward_basis, db_check, action_checks and the complete message/tool-call
+    trace — cross-checked against generation_000/batch_01/episode_manifest.jsonl for
+    conversation identity and arm sha. At a complete census the full-population
+    transcript read outranks the aggregate telemetry surface for prevalence, so no
+    metrics query was used; the observation harvest was not needed and was not run.
+    Provenance for three claims was resolved outside the telemetry, against the frozen
+    benchmark source, because evidence says what happened and not why it was allowed:
+    the transfer reason-code tier list
+    (data/.../documents/doc_bank_accounts_bank_accounts_(general)_042.json), the
+    apply_checking_account_credit_5829 docstring and the close_bank_account_7392 body
+    (src/tau2/domains/banking_knowledge/tools.py).
+
+    Round health: 24/24 episodes completed, arm sha 51e59e46e007 on every episode with
+    no dirty paths and no arm_sha_mismatches, all 24 conversations evidence_complete,
+    and zero sandbox_seam_disconnects / sandbox_seam_timeouts / sandbox_seam_unclassified.
+    Only benign classes present (83 stream_reattaches, 2s start_gate_wait). $0.4891
+    platform, 486s wall-clock at --max-concurrency 4.
+
+    Graded read, labelled with its set: 1/24 episodes on batch_01 (task_014 t1 only);
+    task level 1/8 tasks with any pass, at 1/3. This is the D8 B1 viability read — it
+    does not trip D8's 0/B or B/B rule, and the near-floor value is expected by
+    construction, because the 8 batch tasks were hand-chosen from seq-4 known-fails
+    (partition manifest header). batch_01 is therefore this experiment's pre-mutation
+    baseline but NOT an unbiased sample of the pool. Under protocol.batch_mode fixed,
+    every batch number from batch_02 on additionally measures a set the loop has been
+    tuned on.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any
+    point in this transition. Two standing exposures are recorded for closure — the D19
+    caveat that the orchestrator has seen seq-4's revealed per-task results for these
+    reused tasks, and a one-datum per-task held-out result disclosed by the user in chat
+    during the H0 round (value not repeated anywhere, and it informed neither this
+    diagnosis nor this mutation). Vault reads during the H0 round were confined to
+    grepping the sealed console for infrastructure lines only (retry and exhaustion
+    counts); no graded output was read.
+signals:
+- description: >-
+    A write-call argument the agent had to CHOOSE is filled from its priors rather than
+    from the source that defines it, while the customer's subject matter is grounded
+    competently. Sharpest instance: task_072 supplies credit_type "rebate_credit" where
+    gold is "fee_refund" in all three trials, with BOTH credit amounts correct in 2/3 —
+    the criterion ('rebate_credit' for missing rebates, 'fee_refund' for incorrect fee
+    charges) is in the tool's own docstring, delivered in the unlock response the agent
+    had already received, and the tool writes "type": credit_type into the DB, so the
+    wrong enum breaks db_match by itself. task_070 opened Hunter Green (t1), Cobalt Blue
+    (t2) and nothing at all (t0) where gold is Sky Blue, and zero of its 28 KB queries
+    across three trials contain the word "promotion" although which of two promotions is
+    currently active is the task's entire decision rule. task_014 used the wrong reason
+    code in 2/3; doc_bank_accounts_bank_accounts_(general)_042 carries the tier list and
+    was retrieved in 0/3 trials INCLUDING the one that scored 1.0 — the passing trial
+    guessed. Also task_065 (wrong account_class 2/3), task_096 (amount 7.5 vs 15.00,
+    expected_apy 6.7 vs 6.85) and task_026 (wrong new_rewards_earned values).
+  prevalence: 6/8
+- description: >-
+    Transfers to a human while actionable work remains — transfer_to_human_agents appears
+    in no DB-basis task's gold. task_082 is the extreme and the most reproducible cell in
+    the batch: the user's opening line asks for a human, and the agent transfers on turn
+    one after a single KB search, with no identity verification and no attempt,
+    identically in all three trials (8 messages each) against 20 gold actions. Also
+    task_026 (2/3), task_028 (2/3), task_096 (2/3). NOT this generation's target — held
+    as the slot-2 candidate; see counterevidence.
+  prevalence: 4/8
+- description: >-
+    A discoverable-tool name is invented rather than taken from the tool surface the
+    agent was handed: task_028 calls call_discoverable_user_tool with
+    discoverable_tool_name "submit_dispute" (t1) and "dispute_submission" (t2) instead of
+    the unlocked submit_cash_back_dispute_0589. Plausibly a sub-case of the targeted
+    mechanism; to be re-ranked against batch_02 before being treated as independent.
+  prevalence: 1/8
+- description: >-
+    A volunteered OPTIONAL argument mutates DB state and breaks db_match on an otherwise
+    gold-identical trial. task_065 t2 issued exactly the three gold write calls with the
+    correct account classes (Evergreen checking, Green savings, close chk_rp65a7b3c4) and
+    still scored 0.0, because it passed reason "customer requested closure" to
+    close_bank_account_7392, whose default is "Customer requested closure", and the tool
+    executes account["closure_reason"] = reason — a capitalisation difference becomes a
+    DB difference. Recorded as a finding and explicitly NOT approved as a target: the
+    only lever that reliably helps is matching a default string, which is grader-gaming
+    against a frozen evaluator rather than a capability improvement.
+  prevalence: 1/8
+counterevidence: >-
+  Three arguments against this hypothesis and this choice of target, all recorded rather
+  than resolved.
+
+  (1) The strongest single witness is partly self-undermining. task_014's passing trial
+  (t1, reward 1.0) did NOT retrieve doc_..._042 either — it supplied the correct reason
+  code without reading the source. So grounding is demonstrably not NECESSARY for a
+  correct value on that task; priors sometimes land it. The claim this record makes is
+  the weaker and survivable one: ungrounded selection is unreliable, and the batch shows
+  its unreliability directly (task_070's three trials produced three different account
+  classes under one frozen configuration). It is not a claim that grounding is the only
+  path to a correct argument.
+
+  (2) A higher-prevalence mode was passed over. Premature transfer covers 9/24 episodes
+  against this mechanism's task-level 6/8, and task_082's 3/3 determinism makes it the
+  most reliably measurable intervention available. It was not chosen because seq 4 (prior
+  experiment, prose context only) spent three of five generations on transfer guidance
+  and each correction created its mirror image — gen-002 forbade a policy-REQUIRED
+  transfer, gen-003 licensed a policy-FORBIDDEN one, gen-005 deleted the guidance and
+  deferred to the policy — because harness prose competed with a frozen policy that
+  already covers the case unambiguously ("only if you absolutely have to, and you are
+  sure that there are no potential actions you can take"). That is standing
+  counterevidence against the slot-2 candidate, not against this one, and it is why the
+  ranking is what it is.
+
+  (3) This mutation's own predicted cost. Instructing the agent to search for the
+  deciding rule as well as the subject can push episodes toward unbounded search: task_070
+  t0 already issued 11 KB searches and never acted at all. The mutation deliberately adds
+  no stopping or verification gate — seq 4's gen-002 added exactly such a check and it
+  blocked determinate actions — but that leaves the abandonment risk unmitigated by
+  design. If abandonment or transfer prevalence RISES in batch_02, that is this
+  mutation's cost and must be read as such rather than attributed elsewhere.
+hypothesis: >-
+  The agent treats a state-changing tool call's arguments as something to be inferred
+  from the conversation rather than resolved from a source. It grounds the customer's
+  subject matter (KB searches are numerous, specific and on-topic) but then selects the
+  code, category, account class or corrected amount by which option best matches the
+  customer's words — reading "ATM fee rebates" and choosing credit_type "rebate_credit"
+  where the tool's stated criterion is "incorrect fee charges", or comparing account
+  attributes at length while never asking which promotion is in force. If the harness
+  makes argument resolution an explicit act with a named source — the unlocked tool's own
+  parameter description for a documented argument, a KB query aimed at the deciding rule
+  when the bank owns the value — then arguments whose defining source is reachable should
+  be filled correctly more often, and the trial-to-trial instability in the chosen value
+  should fall.
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — retrieval USAGE
+  (what a query is aimed at) plus tool-contract reading (using the parameter
+  documentation returned by unlock). Both are explicitly mutable surface. The frozen
+  <policy> region is untouched and make check asserts it byte-for-byte (5733 chars); the
+  frozen bm25 retrieval backend and the graded tool set are untouched. This mechanism was
+  chosen partly BECAUSE it does not compete with the frozen policy, which is the failure
+  pattern seq 4 recorded three times.
+proposed_change: >-
+  Add one rule to the <instructions> block: when a tool call changes state, every argument
+  the agent had to choose — a code, a category, an account class, a corrected amount —
+  comes from a source it actually read. Two clauses: if the tool documents the argument,
+  re-read that parameter description from the unlock response and choose by the criterion
+  it states rather than by which option's name most resembles the customer's words; if
+  the bank decides the value (which product to open, which reason code applies, which of
+  several competing rules is currently in force), search the knowledge base for that
+  decision itself, not only for the customer's topic. It closes with "Search for the
+  deciding rule as well as the subject, then act on what you found" — deliberately
+  non-blocking, adding no stopping or verification gate.
+mutation:
+  branch: gen-001/source-grounded-arguments
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/9
+  source_commit: 28e0770bb3d39d5498d8c05d5da72d48a3c496ce
+  candidate_commit: 1e7b79216513a8a0e93b5e3b2759961c1543c84c
+expected_effect: >-
+  Direction: fewer write calls carrying a wrong chosen value, and less trial-to-trial
+  variance in that value. Mechanism per task, so each is falsifiable separately.
+  task_072 is the strongest prediction — the docstring criterion ("incorrect fee charges")
+  matches the task, both amounts are already correct in 2/3, and credit_type is the sole
+  remaining error; if any task flips it should be this one. task_014: a query aimed at the
+  reason-code list should reach doc_..._042 and yield unconfirmed_external_communication
+  rather than the adjacent kb_search_unsuccessful_customer_requests_transfer. task_070: a
+  query aimed at the deciding rule should surface both promotions and the active-date test,
+  and the three trials should converge rather than producing three different classes.
+  task_065, task_096 and task_026 may benefit, but their values also require multi-step
+  computation, so no flip is predicted there. No prediction is made for task_082 or
+  task_028, whose failures are the untargeted transfer and invented-tool-name modes.
+  No number is predicted. Measured by batch_02 — the sanctioned within-batch verification
+  under batch_mode fixed — and by the hidden held-out round for H1; batch_02's read will
+  be of a set the loop has now been tuned on, and must say so.
+human_approval:
+  approved_by: >-
+    WAIVED BY EXPLICIT USER INSTRUCTION — not held. protocol.require_human_approval is
+    true, and for this run the user explicitly waived the human review-and-merge gate and
+    delegated both the merge and the step-4 mutation-target selection to the orchestrator
+    ("this is a test so I can delegate to you"). The orchestrator opened PR #9 and merged
+    it on that delegated authority. The user did make the proceed/identity/halt call for
+    this transition after being shown the D8 B1 read. Recorded here, and to be reported at
+    close in GUARDRAIL_WALK.md, as waived rather than HELD.
+  date: '2026-08-16'
+held_out_result: null
