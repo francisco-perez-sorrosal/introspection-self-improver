@@ -220,6 +220,22 @@ close.
   N/A-by-design, none waived**; 756 episodes, zero seam disconnect/timeout counters across
   168 platform episodes (one benign `sandbox_tool_error`; platform spend $4.08, ≈$16.75
   total).
+- **The § 8 groundwork is landed (2026-08-16, plan D24–D27) — the common ground for the next
+  experiment, applied task-agnostically from the seq-6 independent review.** The seam now
+  suppresses registry-declared Pi-local tool calls from τ with full evidence-stream logging
+  (D24 — `agent.yaml tools:` doubles as the registry; demoed live: a registered tool called
+  in 3/3 episodes, invisible to grading, logged in `raw_data`/manifest); record schema v3
+  adds per-clause falsifiers for instruction changes and a mechanically-gated backlog stamp
+  (D26, with protocol step 4b surface probes and the positive-obligation concentration
+  flag); the instrument gains a mechanical full-quadrant reading key, stratified-batch and
+  fresh-holdout freeze rules, trend fragility at reveal (backfilled into seq 6), and batch
+  process counters as prediction channels (D25); the recipe ships a committed-undeclared
+  `before_agent_start` template with `h0-baseline` re-anchored at the scaffold commit
+  (D27). Measured along the way (`benchmark/probes/2026-08-16-surface-probes/`): a DECLARED
+  skill reaches nothing on this seam's local lane (with or without `read` — hook injection
+  is the only skill delivery), and the platform lane pins the recipe to pushed main
+  (`--allow-dirty` runs pushed main, `arm_sha_ok=false`). Results under D24 are not
+  comparable to seq ≤ 6.
 
 ## Invariants
 

@@ -96,3 +96,21 @@ re-verify recipe-declared surfaces still load under the flags.
 `discriminator_mock/` (mock manifest, run metadata, instrument marker records for the
 read-granted discriminator). Earlier runs' marker values are transcribed above; run
 directories were removed from the closed seq-6 tree per the convention.
+
+## P6 — D24 suppression demo: measured end-to-end (post-landing)
+
+After the D24 seam change landed (`seam(D24)` commit), a throwaway branch
+(`probe/suppression-demo`, deleted) registered one extension tool (`probe_note`),
+allowlisted it in `agent.yaml tools:` (the registry), and instructed the mock-domain agent
+to call it before its first τ call. Local lane, 3 sims:
+
+- **All three episodes called `probe_note` and τ never saw it** — trajectories carry only
+  τ's own tools (`get_users`, `create_task`), all rewards 1.0, no invalid calls, no
+  `max_errors` spend.
+- Evidence stream intact: each episode's assistant `raw_data.pi_suppressed_tool_names`
+  carries the call; manifest rows derive `pi_local_calls: 1`; `run_metadata.json` records
+  `pi_local_tools: ["probe_note"]`.
+
+The exact call class that cost a τ step and one of ten `max_errors` in the seq-6 seam
+probe is now invisible to grading and fully visible to diagnosis. Raw:
+`suppression_demo/`.

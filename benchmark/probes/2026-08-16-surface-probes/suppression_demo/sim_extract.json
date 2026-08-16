@@ -1,0 +1,32 @@
+[
+ {
+  "reward": 1.0,
+  "tau_calls": [
+   "get_users",
+   "create_task"
+  ],
+  "suppressed": [
+   "probe_note"
+  ]
+ },
+ {
+  "reward": 1.0,
+  "tau_calls": [
+   "get_users",
+   "create_task"
+  ],
+  "suppressed": [
+   "probe_note"
+  ]
+ },
+ {
+  "reward": 1.0,
+  "tau_calls": [
+   "get_users",
+   "create_task"
+  ],
+  "suppressed": [
+   "probe_note"
+  ]
+ }
+]
