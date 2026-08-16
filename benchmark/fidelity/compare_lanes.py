@@ -39,6 +39,15 @@ def _lane_of(run_dir: Path) -> str:
     return "unknown"
 
 
+def _pi_local_of(run_dir: Path) -> set[str]:
+    """The D24 suppression registry the run resolved, from its own metadata."""
+    metadata = run_dir / "run_metadata.json"
+    if metadata.exists():
+        payload = json.loads(metadata.read_text(encoding="utf-8"))
+        return {str(name) for name in (payload.get("pi_local_tools") or [])}
+    return set()
+
+
 def _print_lane(reports: list[EpisodeReport], summary: LaneAggregate) -> bool:
     print(f"\n── {summary.lane}  ({summary.episodes} episode(s))")
     all_ok = True
@@ -76,7 +85,12 @@ def main() -> int:
             print(f"── {run_dir}: no results.json; skipped")
             ok = False
             continue
-        reports = build_reports(results, lane=_lane_of(run_dir), locked_tools=locked)
+        reports = build_reports(
+            results,
+            lane=_lane_of(run_dir),
+            locked_tools=locked,
+            pi_local_tools=_pi_local_of(run_dir),
+        )
         summary = aggregate(reports)
         lanes.append((reports, summary))
         ok = _print_lane(reports, summary) and ok

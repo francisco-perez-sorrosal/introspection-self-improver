@@ -230,6 +230,15 @@ def build_rows(results_payload: dict[str, Any], context: RoundContext) -> list[d
                 "tool_messages": sum(
                     1 for m in (sim.get("messages") or []) if m.get("role") == "tool"
                 ),
+                # Pi-local calls the seam suppressed from τ (D24), derived from the
+                # trajectory's own raw_data — the manifest never keeps a second ledger.
+                # Deliberately NOT an EpisodeIncidents counter: suppression is declared
+                # semantics, and a routine count must not make a clean episode look
+                # incident-bearing.
+                "pi_local_calls": sum(
+                    len((m.get("raw_data") or {}).get("pi_suppressed_tool_names") or [])
+                    for m in (sim.get("messages") or [])
+                ),
                 **(context.bridge_stats_by_ref.get(ref or "") or {}),
                 "duration_seconds": _finite(sim.get("duration")),
             }

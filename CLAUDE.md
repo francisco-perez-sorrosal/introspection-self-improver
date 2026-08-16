@@ -211,7 +211,9 @@ close.
   growth surfaces" were never available**: a g=0 probe measured that a Pi-local extension-tool
   call reaches τ as an invalid tool call costing a step and an error, sub-agents take the same
   path, and blocking a τ call lets τ execute the write anyway — `recipe-growth.md` claimed the
-  opposite and was corrected. That re-reads both prior closures. (e) The fixed batch worked as
+  opposite and was corrected. That re-reads both prior closures. (Since answered: the D24 seam
+  re-decision suppresses registry-declared Pi-local calls from τ with full evidence-stream
+  logging, re-opening extension tools and sub-agents — `contract/constraints.md` divergence 6.) (e) The fixed batch worked as
   designed: fixing `task_065`'s class choice exposed an ordering/eligibility constraint that
   had been masked, and fixing that produced its first pass. Closure:
   `results/experiment_006_fixedb-bm25-luna56/README.md`; §29 walk has **all twenty HELD or
@@ -229,8 +231,12 @@ elsewhere; `benchmark/benchmark_lock.yaml` holds the frozen *values*, this holds
 
 - Modify the τ evaluator, task definitions, gold state, or reward aggregation.
 - Recompute reward anywhere except `tau2 evaluate-trajs`.
-- Change the benchmark semantic adapter's semantics. It sits between agent and an untouched
-  evaluator, so a defect here changes grades invisibly (the blocking A.0a gate guards this).
+- Change the benchmark semantic adapter's semantics **mid-experiment, or silently**. It sits
+  between agent and an untouched evaluator, so a defect here changes grades invisibly (the
+  blocking A.0a gate guards this). The one sanctioned path — first taken by D24 (2026-08-16,
+  user-directed): between experiments only, by explicit user decision recorded in the plan's
+  D-ledger, with the A.0a suite extended to cover the changed semantics before any result is
+  produced, and the cross-change non-comparability of results stated with the decision.
 - Read held-out tasks, trajectories, per-task rewards, or aggregate scores before the
   experiment's reveal — the firewall applies to every generation, H_0 included. Improvement
   batches are fully observable by design; held-out evaluation runs on the local lane with

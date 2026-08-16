@@ -74,6 +74,7 @@ from tau_adapter.experiment import (
     repo_arm_state,
 )
 from tau_adapter.pi_agent import PiRecipeAgent
+from tau_adapter.pi_local import pi_local_tool_names
 from tau_adapter.policy_region import extract_policy, replace_policy
 from tau_adapter.rounds import TRANSPORT_LOCAL, TRANSPORT_PLATFORM, TRANSPORTS
 from tau_adapter.tool_bridge import ToolBridge
@@ -861,6 +862,10 @@ def main() -> int:
         workspace_dir, recipe_dir = _materialise_workspace(live_policy)
         recipe_policy = extract_policy((recipe_dir / "SYSTEM.md").read_text(encoding="utf-8"))
 
+    # The D24 suppression registry, resolved once from the recipe this run serves. Empty
+    # for a bare recipe — suppression then never engages and the seam behaves as before.
+    pi_local_tools = pi_local_tool_names(recipe_dir)
+
     # The arm this run serves. `introspection dev` serves the work-tree while lineage names
     # the base commit, so a dirty served surface makes every arm claim soft: the platform
     # lane refuses it outright unless --allow-dirty records it prominently.
@@ -1072,6 +1077,7 @@ def main() -> int:
             recipe_policy=recipe_policy,
             domain=domain,
             base_env=base_env,
+            pi_local_tools=pi_local_tools,
         )
 
     registry.register_agent_factory(create_agent, AGENT_KEY)
@@ -1121,6 +1127,8 @@ def main() -> int:
     elif muted:
         print("   round type    held_out — hidden evaluation; grading stays in the vault")
     print(f"   recipe        {recipe_dir}")
+    if pi_local_tools:
+        print(f"   pi-local      {', '.join(sorted(pi_local_tools))} — suppressed from τ (D24)")
     if arm_sha:
         dirt = (
             f" — DIRTY served surface ({len(dirty_paths)} path(s), --allow-dirty)"
@@ -1350,6 +1358,9 @@ def main() -> int:
                     else None
                 ),
                 "recipe_dir": str(recipe_dir),
+                # The D24 suppression registry this run resolved; [] means the seam never
+                # suppressed anything (bare recipe) and behaved exactly as pre-D24.
+                "pi_local_tools": sorted(pi_local_tools),
                 "toolchain": {
                     "introspection": _tool_version("introspection", "--version"),
                     "pi": _tool_version("pi", "--version"),

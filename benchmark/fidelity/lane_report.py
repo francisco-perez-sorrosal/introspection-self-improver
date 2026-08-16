@@ -54,6 +54,10 @@ class EpisodeReport:
     trial: int | None = None
     agent_tool_names: list[str] = field(default_factory=list)
     unmapped_tool_names: list[str] = field(default_factory=list)
+    #: Registry names (D24 Pi-local suppression) that reached the τ trajectory anyway.
+    #: Always a seam finding: either the filter failed or the runaway cap fired — both
+    #: need human eyes before any score from this episode is cited.
+    pi_local_leaks: list[str] = field(default_factory=list)
     calls_without_results: list[str] = field(default_factory=list)
     results_without_calls: list[str] = field(default_factory=list)
     reward_present: bool = False
@@ -86,12 +90,22 @@ def _shape_and_counts(messages: list[dict[str, Any]]) -> tuple[str, int]:
     return " ".join(letters), agent_invocations
 
 
-def build_report(results_path: Path, lane: str, locked_tools: set[str]) -> EpisodeReport:
+def build_report(
+    results_path: Path,
+    lane: str,
+    locked_tools: set[str],
+    pi_local_tools: set[str] = frozenset(),
+) -> EpisodeReport:
     """Summarise the first simulation in a τ results file — the single-task instrument."""
-    return build_reports(results_path, lane, locked_tools)[0]
+    return build_reports(results_path, lane, locked_tools, pi_local_tools)[0]
 
 
-def build_reports(results_path: Path, lane: str, locked_tools: set[str]) -> list[EpisodeReport]:
+def build_reports(
+    results_path: Path,
+    lane: str,
+    locked_tools: set[str],
+    pi_local_tools: set[str] = frozenset(),
+) -> list[EpisodeReport]:
     """Summarise every simulation in a τ results file — the gate-scale instrument."""
     payload = json.loads(Path(results_path).read_text(encoding="utf-8"))
     simulations = payload.get("simulations") or []
@@ -101,10 +115,15 @@ def build_reports(results_path: Path, lane: str, locked_tools: set[str]) -> list
         raise SystemExit(
             f"{results_path} holds no simulations — an interrupted or empty run, not a record"
         )
-    return [_report_of(sim, lane, locked_tools) for sim in simulations]
+    return [_report_of(sim, lane, locked_tools, pi_local_tools) for sim in simulations]
 
 
-def _report_of(sim: dict[str, Any], lane: str, locked_tools: set[str]) -> EpisodeReport:
+def _report_of(
+    sim: dict[str, Any],
+    lane: str,
+    locked_tools: set[str],
+    pi_local_tools: set[str] = frozenset(),
+) -> EpisodeReport:
     messages = sim.get("messages") or []
     reward_info = sim.get("reward_info") or {}
 
@@ -134,6 +153,7 @@ def _report_of(sim: dict[str, Any], lane: str, locked_tools: set[str]) -> Episod
         termination=str(sim.get("termination_reason")),
         agent_tool_names=sorted(agent_names),
         unmapped_tool_names=sorted(n for n in agent_names if n not in locked_tools),
+        pi_local_leaks=sorted(n for n in agent_names if n in pi_local_tools),
         calls_without_results=sorted(cid for cid in called if cid not in resulted),
         results_without_calls=sorted(rid for rid in resulted if rid not in called),
         reward_present="reward" in reward_info,
@@ -156,6 +176,16 @@ def check_invariants(report: EpisodeReport) -> list[Finding]:
                 if not report.unmapped_tool_names
                 else f"unmapped: {report.unmapped_tool_names} — the reverse name map let a "
                 "Recipes-mangled name reach τ, so the graded action is not the action taken"
+            ),
+        ),
+        Finding(
+            check="no Pi-local call reached τ (D24)",
+            ok=not report.pi_local_leaks,
+            detail=(
+                "every registry-suppressed name stayed out of the trajectory"
+                if not report.pi_local_leaks
+                else f"leaked: {report.pi_local_leaks} — the suppression filter failed or the "
+                "runaway cap fired; read the episode before citing its score"
             ),
         ),
         Finding(

@@ -16,8 +16,8 @@ Only `target-agent/`, and inside it only the harness:
 | `SYSTEM.md` `<instructions>` block | mutable | — |
 | `SYSTEM.md` `<policy>` block | **frozen** | hash vs lock (pre-commit + CI); region vs live `env.get_policy()` (episode start) |
 | `agents/agent.yaml` `model.name`, `model.thinking_level` | **frozen** | `assert_recipe_matches_lock` before every run |
-| `agents/agent.yaml` `tools`, `skills`, `subagents` | mutable | — |
-| `package.json` `pi.skills`, `pi.extensions` | mutable | — |
+| `agents/agent.yaml` `tools`, `skills`, `subagents` | mutable — `tools:` entries (plus `agent` when `subagents:` is non-empty) double as the D24 Pi-local suppression registry (divergence 6); a declared skill is measurably inert on this seam (`benchmark/probes/2026-08-16-surface-probes/`) | — |
+| `package.json` `pi.skills`, `pi.extensions` | mutable — extension tools and no-tool-call hooks are live growth surfaces under D24 | — |
 | `package.json` `pi.mcp` | **frozen** | tool catalogue vs live environment before every run |
 | `benchmark/`, `contract/`, `.introspection/` | **frozen** | branch protection; the `frozen surfaces` workflow additionally warns (advisory, not blocking) on `benchmark/tau_adapter`, `benchmark/scripts`, the lock, the split manifest, and `contract/` |
 
@@ -146,6 +146,32 @@ demand by `make fidelity` (`SIA_EVALUATION_PLAN.md` D4).
    `pass^k` is retired for generations; the endpoint reliability study (H_0 and H_G ×
    extra trials, after reveal) is the named upgrade path, conditional since D11
    (`SIA_EVALUATION_PLAN.md` D2, D11).
+6. **Pi-local tool calls are suppressed from τ (D24, 2026-08-16 — user-directed, decided
+   between experiments, never mid-freeze).** A tool call whose name is in the recipe's
+   Pi-local registry — `agents/agent.yaml` `tools:` entries, plus `agent` when `subagents:`
+   is non-empty (`tau_adapter/pi_local.py`) — is executed by Pi and never forwarded to τ: it
+   costs no τ step and none of the ten `max_errors`. Before D24 every such call reached τ as
+   an invalid call (measured, `results/experiment_006_fixedb-bm25-luna56/generation_000/
+   seam_probe/`), which made extension tools and sub-agents unusable growth surfaces; three
+   closures named that as the live hypothesis for why the loop failed. Semantics and bounds:
+   suppression is registry-membership only, never a heuristic — a name neither τ nor Pi owns
+   still forwards as the graded invalid call it is; it is a **turn-level pump**, so a
+   fully-suppressed turn holds its narration for the next forwardable turn (the same
+   reassembly rule the platform lane applies) and can never hand τ an empty assistant
+   message; a runaway guard (32 consecutive fully-suppressed turns per τ step) resumes
+   unfiltered forwarding so a pathological harness pays its own graded cost; τ's episode
+   timeout still bounds wall-clock, which Pi-local work continues to spend. The
+   measurability objection this file raises against adapter helpfulness ("every place the
+   adapter silently corrects the agent…") is answered by construction, not waived: the
+   unmeasurable case is *silent* correction, and this is declared, deterministic, gated
+   (A.0a suppression tests + the fidelity `pi_local_leaks` invariant), and fully evidenced —
+   every consumed turn's tool names land in the trajectory's
+   `raw_data.pi_tool_names`, the suppressed subset in `raw_data.pi_suppressed_tool_names`,
+   the manifest derives a per-episode `pi_local_calls`, and `run_metadata.json` records the
+   registry the run resolved. Nothing is hidden from diagnosis — only from grading, which
+   is the point: τ budgets meter benchmark-environment interactions, and Pi-local execution
+   is harness-internal cognition, the same category as model reasoning. Consequence stated
+   with the decision: results produced under D24 are not comparable to seq 4–6.
 
 ## Platform-lane concurrency
 

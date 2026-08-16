@@ -5,6 +5,16 @@ and tool names, and it does nothing else — no repair, no retry, no reformattin
 agent produced. Every place an adapter helps the agent is a place the harness stops being
 measurable, and an unmeasurable harness cannot be improved. τ keeps tool execution, step
 counting, trajectory construction, termination, and grading.
+
+The one DECLARED exception (2026-08-16 seam re-decision, plan D24): tool calls the recipe
+registers as Pi-local (`tau_adapter.pi_local`) are executed by Pi and never forwarded to τ —
+τ's step and error budgets meter benchmark-environment interactions, not harness-internal
+cognition. Suppression is deterministic (registry membership, no heuristics), bounded
+(`MAX_SUPPRESSED_TURNS_PER_STEP`, after which forwarding resumes unfiltered so a runaway
+harness pays its own cost), and fully evidenced: every consumed turn's tool names land in
+`raw_data.pi_tool_names`, the suppressed subset in `raw_data.pi_suppressed_tool_names`, and
+the manifest derives a per-episode `pi_local_calls` count. Nothing is hidden from diagnosis
+— only from grading, which is the declared point.
 """
 
 from __future__ import annotations
@@ -38,6 +48,13 @@ ChannelOpener = Callable[..., EpisodeChannel]
 # and τ's --max-steps-seconds is what bounds the episode.
 TURN_TIMEOUT_SECONDS = 300.0
 
+# Runaway guard for Pi-local suppression: after this many consecutive fully-suppressed turns
+# inside ONE τ step, suppression stops and calls forward unfiltered (τ then grades the
+# invalid calls). Chosen over raising: a TransportError would be booked as infrastructure
+# and retried, hiding a harness defect; forwarding keeps the cost on the harness that
+# caused it. τ's episode timeout bounds the wall-clock either way.
+MAX_SUPPRESSED_TURNS_PER_STEP = 32
+
 
 class TransportError(RuntimeError):
     """The host failed to produce a turn.
@@ -70,6 +87,7 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         recipe_policy: str,
         domain: str,
         base_env: dict[str, str],
+        pi_local_tools: frozenset[str] = frozenset(),
     ) -> None:
         super().__init__(tools=tools, domain_policy=domain_policy)
         self._open_channel = open_channel
@@ -78,6 +96,7 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         self._recipe_policy = recipe_policy
         self._domain = domain
         self._base_env = base_env
+        self._pi_local_tools = pi_local_tools
         self._started = False
 
     # ------------------------------------------------------------------ lifecycle
@@ -151,12 +170,65 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         else:
             raise TransportError(f"unexpected input message type {type(message).__name__}")
 
-        item = self._transport.next_turn(TURN_TIMEOUT_SECONDS)
-        if isinstance(item, TransportFailure):
-            raise TransportError(item.reason)
+        # Pi-local suppression is a TURN-LEVEL pump, never a message filter: the platform
+        # assembler emits one AssistantTurn per tool call, so filtering a lone Pi-local
+        # call out of its message would hand τ an empty assistant message — exactly the
+        # A.0b deadlock the narration reassembler exists to prevent. A fully-suppressed
+        # turn instead holds its narration and pumps the transport again; Pi has already
+        # executed the local call and will produce a further turn on its own.
+        held_text: list[str] = []
+        consumed_pi_names: list[str] = []
+        suppressed_names: list[str] = []
+        cost_total: float | None = None
+        usage_total: dict | None = None
+        suppressed_turns = 0
+        while True:
+            item = self._transport.next_turn(TURN_TIMEOUT_SECONDS)
+            if isinstance(item, TransportFailure):
+                raise TransportError(item.reason)
+            state.assistant_turns += 1
+            consumed_pi_names.extend(call.pi_name for call in item.tool_calls)
+            cost_total = _add_cost(cost_total, item.cost)
+            usage_total = _merge_usage(usage_total, item.usage)
 
-        state.assistant_turns += 1
-        return self._to_tau_message(item, state), state
+            suppress_active = suppressed_turns < MAX_SUPPRESSED_TURNS_PER_STEP
+            local_calls = [
+                call
+                for call in item.tool_calls
+                if suppress_active and call.pi_name in self._pi_local_tools
+            ]
+            forwardable = [call for call in item.tool_calls if call not in local_calls]
+            suppressed_names.extend(call.pi_name for call in local_calls)
+
+            if forwardable or not item.tool_calls:
+                # A τ-visible action or a pure message: forward (any Pi-local siblings in
+                # this same turn are suppressed alongside, mirroring the pump).
+                break
+
+            # Every call in this turn was Pi-local: nothing for τ. Hold the narration so
+            # it reaches τ with the next forwardable turn (the reassembly rule), and pump.
+            suppressed_turns += 1
+            if item.text:
+                held_text.append(item.text)
+            if suppressed_turns == MAX_SUPPRESSED_TURNS_PER_STEP:
+                logger.warning(
+                    f"pi-local suppression cap hit after {suppressed_turns} turns; "
+                    "forwarding resumes unfiltered so the runaway is graded, not hidden"
+                )
+
+        return (
+            self._assemble_tau_message(
+                item,
+                state,
+                forwardable=forwardable,
+                held_text=held_text,
+                cost=cost_total,
+                usage=usage_total,
+                pi_names=consumed_pi_names,
+                suppressed=suppressed_names,
+            ),
+            state,
+        )
 
     # ------------------------------------------------------------------- internals
 
@@ -176,12 +248,24 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
             is_error=bool(tool_message.error),
         )
 
-    def _to_tau_message(self, turn: AssistantTurn, state: PiAgentState) -> AssistantMessage:
+    def _assemble_tau_message(
+        self,
+        turn: AssistantTurn,
+        state: PiAgentState,
+        *,
+        forwardable: list[Any],
+        held_text: list[str],
+        cost: float | None,
+        usage: dict | None,
+        pi_names: list[str],
+        suppressed: list[str],
+    ) -> AssistantMessage:
         assert self._channel is not None  # turns only flow inside a started episode
         tau_calls: list[ToolCall] = []
-        for call in turn.tool_calls:
-            # An unmapped name means the agent called something outside τ's tool set. Passed
-            # through as-is so τ reports it as the invalid call it is.
+        for call in forwardable:
+            # An unmapped name means the agent called something outside τ's tool set (and
+            # outside the Pi-local registry). Passed through as-is so τ reports it as the
+            # invalid call it is.
             tau_name = self._channel.name_map.get(call.pi_name, call.pi_name)
             tau_calls.append(
                 ToolCall(
@@ -193,18 +277,24 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
             )
             state.pending[call.id] = (tau_name, call.arguments)
 
+        # Narration held from fully-suppressed turns rides with the next forwardable turn,
+        # the same reassembly rule the platform lane applies to narration and its own call.
+        texts = [text for text in (*held_text, turn.text) if text]
         return AssistantMessage(
             role="assistant",
-            content=turn.text,
+            content="\n\n".join(texts) if texts else None,
             tool_calls=tau_calls or None,
-            cost=turn.cost,
-            usage=turn.usage,
+            cost=cost,
+            usage=usage,
             # Additive only: τ ignores raw_data when grading, and it is what lets a
-            # conclusion drawn later point back at the session that produced it.
+            # conclusion drawn later point back at the session that produced it. The
+            # suppressed subset is the evidence stream for the D24 seam semantics —
+            # everything Pi did that τ was not shown.
             raw_data={
                 "pi_model": turn.model,
                 "pi_session_ref": self._transport.session_ref,
-                "pi_tool_names": [c.pi_name for c in turn.tool_calls],
+                "pi_tool_names": pi_names,
+                "pi_suppressed_tool_names": suppressed,
             },
         )
 
@@ -212,3 +302,26 @@ class PiRecipeAgent(HalfDuplexAgent[PiAgentState]):
         requester = getattr(self._transport, "request_session_ref", None)
         if callable(requester):
             requester()
+
+
+def _add_cost(total: float | None, cost: float | None) -> float | None:
+    """Sum turn costs across a pumped step; suppressed turns' spend still counts."""
+    if cost is None:
+        return total
+    return cost if total is None else total + cost
+
+
+def _merge_usage(total: dict | None, usage: dict | None) -> dict | None:
+    """Merge usage dicts across a pumped step: numeric values sum, others last-write-win."""
+    if usage is None:
+        return total
+    if total is None:
+        return dict(usage)
+    merged = dict(total)
+    for key, value in usage.items():
+        prior = merged.get(key)
+        if isinstance(prior, (int, float)) and isinstance(value, (int, float)):
+            merged[key] = prior + value
+        else:
+            merged[key] = value
+    return merged
