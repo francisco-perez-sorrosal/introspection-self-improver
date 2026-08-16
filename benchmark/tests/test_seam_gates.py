@@ -192,3 +192,43 @@ def test_batch_refuses_a_recipe_that_is_not_its_generation(cadence, monkeypatch)
     )
     problem = runmod._batch_cadence_problem(_cadence_lock(), 1)
     assert problem is not None and "byte-identical" in problem
+
+
+def test_heldout_baseline_needs_no_batch(cadence):
+    """generation_000 precedes any batch by definition — the baseline is always the
+    experiment's first measurement."""
+    assert runmod._heldout_cadence_problem(_cadence_lock(), "generation_000") is None
+
+
+def test_heldout_refuses_before_the_learning_batch_is_graded(cadence):
+    """H_(g+1) is the product of batch_(g+1)'s learnings: without this refusal a skipped
+    batch would be invisible — merge, tag and measure while citing older evidence."""
+    records_dir = cadence / "results" / "experiment_009_t" / "improvement_records"
+    records_dir.mkdir(parents=True)
+
+    problem = runmod._heldout_cadence_problem(_cadence_lock(), "generation_001")
+    assert problem is not None and "no transition record" in problem
+
+    (records_dir / "gen_000_to_001.yaml").write_text("outcome: accepted\n", encoding="utf-8")
+    problem = runmod._heldout_cadence_problem(_cadence_lock(), "generation_001")
+    assert problem is not None and "make batch B=1" in problem
+
+    from tau_adapter import heldout
+
+    graded = (
+        cadence / "results" / "experiment_009_t" / "generation_000" / "batch_01"
+        / heldout.GRADED_DIR
+    )
+    graded.mkdir(parents=True)
+    (graded / heldout.GRADED_RESULTS).write_text("{}", encoding="utf-8")
+    assert runmod._heldout_cadence_problem(_cadence_lock(), "generation_001") is None
+
+
+def test_heldout_refuses_identity_generations_before_the_spend(cadence):
+    """H_g = H_(g-1) carries forward (D5); reveal refuses the measurement anyway, but
+    refusing here saves the whole round."""
+    records_dir = cadence / "results" / "experiment_009_t" / "improvement_records"
+    records_dir.mkdir(parents=True)
+    (records_dir / "gen_000_to_001.yaml").write_text("outcome: identity\n", encoding="utf-8")
+    problem = runmod._heldout_cadence_problem(_cadence_lock(), "generation_001")
+    assert problem is not None and "carries" in problem

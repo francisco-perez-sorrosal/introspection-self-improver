@@ -277,7 +277,9 @@ dashboard, browser automation, or direct API calls for an operator action the CL
   the final harness's measurement — is MECHANICAL: `run.py` refuses a batch whose
   generation is unmeasured or whose recipe is not that generation's tag (identity chains
   resolved), and `make reveal` refuses to close while any non-identity generation lacks
-  its round (protocol.md § Per generation has the full guarantee).
+  its round; the held-out runner symmetrically refuses to measure H_N before batch_N is
+  graded and its record accepted, so no generation the loop never learned for can enter
+  the curve (protocol.md § Per generation has the full guarantee).
 - **Label every number with its set (batch B_g or held-out) and its N**; report the count
   with the percentage. Never describe generations with `pass^k`; state the scale-aware
   binomial noise band (±17 pp at T=8; ±9 pp at the powered T=28; ±7 pp at T=47)

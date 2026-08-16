@@ -344,6 +344,56 @@ def _infra_failure_classes(rows: list[dict[str, Any]]) -> dict[str, int]:
     return counts
 
 
+def _heldout_cadence_problem(lock: lockmod.Lock, generation_name: str) -> str | None:
+    """Why measuring this generation would break the cadence, or None when it holds.
+
+    The other half of the measure-then-learn guarantee: H_(g+1) exists only as the
+    product of batch_(g+1)'s learnings, so its held-out measurement refuses until that
+    batch is graded and the transition record exists with outcome accepted. Without this,
+    a skipped batch would be invisible — the mutation could merge, tag and measure while
+    citing older evidence, and the curve would carry a point no learning round produced.
+    Also refuses identity/rejected generations outright: H_g = H_(g-1) carries forward
+    (D5) and re-measuring it both wastes a full round and is refused at reveal anyway —
+    better to refuse before the spend. The baseline (generation_000) precedes any batch
+    by definition and is exempt.
+    """
+    from tau_adapter import records as recordsmod
+
+    index = int(generation_name.removeprefix("generation_"))
+    if index == 0:
+        return None
+    experiment_dir = RESULTS_ROOT / f"experiment_{lock.experiment_id}"
+    record_path = experiment_dir / "improvement_records" / recordsmod.record_name(index - 1)
+    if not record_path.exists():
+        return (
+            f"no transition record for H{index - 1} → H{index} ({record_path.name}): the "
+            "record is written while the transition happens (protocol step 6), before its "
+            "generation is measured — scaffold and fill it first."
+        )
+    outcome = recordsmod.load_record(record_path).get("outcome")
+    if outcome != recordsmod.OUTCOME_ACCEPTED:
+        return (
+            f"{record_path.name} has outcome {outcome!r}: H{index} = H{index - 1} carries "
+            "forward (D5) and is never re-measured — this round would be refused at "
+            "reveal after spending every episode. Skip it; the result carries."
+        )
+    graded = (
+        experiment_dir
+        / f"generation_{index - 1:03d}"
+        / f"batch_{index:02d}"
+        / heldoutmod.GRADED_DIR
+        / heldoutmod.GRADED_RESULTS
+    )
+    if not graded.exists():
+        return (
+            f"batch_{index:02d} is not graded ({graded} missing): H{index} is the product "
+            f"of that batch's learnings, so the cadence is batch → learn → merge → "
+            f"measure. Run `make batch B={index} GEN=generation_{index - 1:03d}` to "
+            "completion first."
+        )
+    return None
+
+
 def _batch_cadence_problem(lock: lockmod.Lock, batch_number: int) -> str | None:
     """Why this batch would break the generation cadence, or None when it holds.
 
@@ -890,6 +940,11 @@ def main() -> int:
             )
         except (gensmod.GenerationError, ValueError) as exc:
             raise SystemExit(str(exc)) from exc
+        # And it must come AFTER the learning that produced the generation: batch graded,
+        # record written, outcome accepted (identity generations are never re-measured).
+        cadence_problem = _heldout_cadence_problem(lock, generation_of(out_dir) or "")
+        if cadence_problem:
+            raise SystemExit(cadence_problem)
     # Before --overwrite can delete anything: a run aimed at the wrong experiment directory
     # must refuse here rather than clear another freeze's record first. Also verifies — or,
     # for a non-PROVISIONAL lock, creates — the experiment's freeze snapshot. Held-out
@@ -1407,13 +1462,9 @@ def main() -> int:
         # complete. An episode whose evidence is missing is UNVERIFIED, not clean — reporting
         # it silently as zero would recreate the exact failure these counters exist to catch
         # (a round reading healthy because the evidence of its sickness never arrived).
-        unverified_rows = [
-            row for row in manifest_rows if row.get("evidence_complete") is not True
-        ]
+        unverified_rows = [row for row in manifest_rows if row.get("evidence_complete") is not True]
         if unverified_rows:
-            named = ", ".join(
-                sorted({row["tau_task_id"] for row in unverified_rows})[:6]
-            )
+            named = ", ".join(sorted({row["tau_task_id"] for row in unverified_rows})[:6])
             print(
                 f"   ⚠ seam-blind  {len(unverified_rows)} episode(s) whose platform "
                 f"conversation is missing or incomplete ({named}"

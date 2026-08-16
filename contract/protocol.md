@@ -40,11 +40,17 @@ held-out round is graded in the vault (existence of the graded artifact by path 
 in the vault is opened) and the recipe surface is byte-identical to H_(N-1)'s tag, both
 resolved through the identity chain (an identity/rejected transition carries its
 predecessor's tag and measurement forward, D5); **(b)** the held-out runner refuses a
-recipe that is not byte-identical to the generation it claims to measure; **(c)**
-`make reveal` refuses to close the experiment while any non-identity generation H0…H_G
-lacks its measurement — the final harness cannot go unmeasured, because without its round
-there is no reveal. A skipped baseline is not merely late: once the next merge moves the
-recipe, (b) makes the missed measurement unrunnable — which is why (a) exists.
+recipe that is not byte-identical to the generation it claims to measure — and, for
+H_N (N ≥ 1), refuses to measure at all until batch_N is graded and the transition record
+exists with outcome accepted, so a generation cannot be measured that no learning round
+produced (a skipped batch would otherwise be invisible: merge, tag, measure, cite older
+evidence), and an identity generation is refused before the spend rather than at reveal;
+**(c)** `make reveal` refuses to close the experiment while any non-identity generation
+H0…H_G lacks its measurement — the final harness cannot go unmeasured, because without
+its round there is no reveal. A skipped baseline is not merely late: once the next merge
+moves the recipe, (b) makes the missed measurement unrunnable — which is why (a) exists.
+Together (a) and (b) make each seam bidirectional: a batch cannot run before its
+generation's measurement, and a measurement cannot run before its generation's batch.
 
 1. **Hidden measurement of H_g**: `make heldout GEN=generation_00g`. Local lane only,
    sealed vault, completeness-only terminal (counts, seam incidents, failure classes —
