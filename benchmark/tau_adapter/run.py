@@ -205,8 +205,51 @@ def _account_of(item: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
     # had not settled when it was read.
     account["evidence_complete"] = meta.get("complete")
     account["item_count"] = meta.get("item_count")
+    account.update(_sandbox_tool_failures(item.get("items") or []))
     identity = conversation.get("id") or conversation.get("conversation_id")
     return (str(identity) if identity else None), account
+
+
+#: The sandbox daemon reports a failed tool call in the response BODY, not as a typed error,
+#: so these are matched as text. The two classes are counted apart because they mean opposite
+#: things about the bridge and are fixed in opposite places:
+#:
+#:   disconnected — the daemon could not reach the bridge at all. The tunnel considers our
+#:                  local MCP endpoint gone. Introduced 2026-08-15 by a hand-built serving
+#:                  loop; absent on the commit before it (0/10 vs 3/10 episodes).
+#:   upstream timed out — the daemon DID reach the bridge and the bridge did not answer in
+#:                  time. Pre-existing, and the reason STALL_WARN_SECONDS exists at all; the
+#:                  thread-starvation ceiling is its suspected cause.
+_SEAM_DISCONNECT_MARKER = "local MCP"
+_SEAM_TIMEOUT_MARKER = "mcp upstream timed out"
+
+
+def _sandbox_tool_failures(items: list[dict[str, Any]]) -> dict[str, int]:
+    """Tool failures visible ONLY in the platform conversation, counted per episode.
+
+    There is a failure class this adapter was blind to. When the sandbox's own MCP daemon
+    cannot complete a tool call it answers the call ITSELF, so nothing arrives here: τ records
+    no turn, the bridge's refusal counters never fire (nothing was refused — nothing was
+    received), `results.json` carries no trace, and the episode ends USER_STOP and grades as
+    an ordinary agent failure. The agent was in fact denied its tools. Observed 2026-08-15 on
+    3 of 10 platform episodes while the round printed `incidents none`.
+
+    The conversation export is already fetched for cost and lineage, so counting this costs
+    nothing and makes the invisible case loud — the seam's whole contract being that a round
+    may fail but may never report itself healthy while failing.
+    """
+    counts = {"sandbox_tool_errors": 0, "sandbox_seam_disconnects": 0, "sandbox_seam_timeouts": 0}
+    for entry in items:
+        attributes = entry.get("attributes") or {}
+        operation = ((attributes.get("gen_ai") or {}).get("operation") or {}).get("name")
+        if operation == "execute_tool" and (attributes.get("error") or {}).get("type"):
+            counts["sandbox_tool_errors"] += 1
+        rendered = json.dumps(entry)
+        if _SEAM_DISCONNECT_MARKER in rendered:
+            counts["sandbox_seam_disconnects"] += 1
+        elif _SEAM_TIMEOUT_MARKER in rendered:
+            counts["sandbox_seam_timeouts"] += 1
+    return counts
 
 
 def _platform_accounting(task_ids: list[str]) -> dict[str, Any]:
@@ -1017,6 +1060,25 @@ def main() -> int:
     if incident_totals:
         noted = ", ".join(f"{k}={v}" for k, v in sorted(incident_totals.items()) if v)
         print(f"   incidents     {noted or 'none'}")
+    # Printed beside the seam counters and never folded into them: these come from the
+    # platform conversation, not from the bridge, and they are the only place a call the
+    # sandbox refused can appear at all. Loud on purpose — a round carrying these graded
+    # episodes in which the agent was denied its tools, and it must not read as healthy.
+    disconnects = sum(row.get("sandbox_seam_disconnects") or 0 for row in manifest_rows)
+    timeouts = sum(row.get("sandbox_seam_timeouts") or 0 for row in manifest_rows)
+    tool_errors = sum(row.get("sandbox_tool_errors") or 0 for row in manifest_rows)
+    if disconnects or timeouts or tool_errors:
+        affected = sum(
+            1
+            for row in manifest_rows
+            if (row.get("sandbox_seam_disconnects") or row.get("sandbox_seam_timeouts"))
+        )
+        print(
+            f"   ⚠ sandbox     {tool_errors} tool error(s): {disconnects} unreachable-bridge, "
+            f"{timeouts} bridge-too-slow, across {affected} episode(s) — the sandbox answered "
+            f"these calls itself, so τ never saw them. Treat the affected episodes as harness "
+            f"failures, not agent ones."
+        )
     if orphaned_tasks:
         print(
             f"   orphans       {len(orphaned_tasks)} platform task(s) created but absent from "

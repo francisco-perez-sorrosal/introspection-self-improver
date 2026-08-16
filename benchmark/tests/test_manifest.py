@@ -156,3 +156,46 @@ def test_incident_sink_counts_and_reports():
     assert sink.any()
     assert sink.as_dict()["stall_warnings"] == 1
     assert sink.as_dict()["prompt_409"] == 1
+
+
+def test_sandbox_tool_failures_counts_what_only_the_conversation_shows():
+    """A call the sandbox's MCP daemon answers itself never reaches the bridge.
+
+    τ records no turn for it, the bridge refuses nothing (it received nothing), and the
+    episode ends normally — so without reading the platform conversation the round reports
+    itself healthy while the agent was denied its tools. These counters are the detector.
+    """
+    from tau_adapter.run import _sandbox_tool_failures
+
+    items = [
+        {
+            "attributes": {
+                "gen_ai": {"operation": {"name": "execute_tool"}},
+                "error": {"type": "tool_error"},
+            }
+        },
+        {
+            "attributes": {"gen_ai": {"operation": {"name": "execute_tool"}}},
+            "response": "MCP daemon: Error POSTing to endpoint: "
+            '{"detail":"local MCP \'tau\' is disconnected"}',
+        },
+        {"attributes": {"gen_ai": {"operation": {"name": "chat"}}}},
+    ]
+    items.append(
+        {"response": 'MCP daemon: Error POSTing to endpoint: {"detail":"mcp upstream timed out"}'}
+    )
+    counts = _sandbox_tool_failures(items)
+    assert counts["sandbox_tool_errors"] == 1
+    # The two classes are counted apart: unreachable bridge vs bridge that answered too late.
+    # They mean opposite things and are fixed in different places, so lumping them would
+    # have hidden exactly the regression that motivated this detector.
+    assert counts["sandbox_seam_disconnects"] == 1
+    assert counts["sandbox_seam_timeouts"] == 1
+
+    # A healthy conversation must score zero on all three, or the signal is noise.
+    healthy = [{"attributes": {"gen_ai": {"operation": {"name": "execute_tool"}}}}] * 5
+    assert _sandbox_tool_failures(healthy) == {
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+    }
