@@ -1,0 +1,253 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 2
+  to_generation: 3
+experiment: 006_fixedb-bm25-luna56
+outcome: accepted
+schema_version: 2
+batch:
+  name: batch_03
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a009f4-87cb-71ed-b0c5-ae83b426b203   # task_014 t0 reward 0.0
+  - 01a009fb-ba77-74ac-80cf-75534e66f771   # task_014 t1 reward 1.0
+  - 01a009fe-32e2-708e-96b5-0a5ae8b64a40   # task_014 t2 reward 0.0
+  - 01a009f4-84bb-7754-a446-f86883124531   # task_026 t0 reward 0.0
+  - 01a009fe-cc72-76b2-880f-42851731948c   # task_026 t1 reward 0.0
+  - 01a009fe-aa0a-7614-804e-fef82580e796   # task_026 t2 reward 0.0
+  - 01a009f4-8441-745f-b660-1c7c4773967d   # task_028 t0 reward 0.0
+  - 01a009f8-be92-74f4-864b-45ab2275faa2   # task_028 t1 reward 0.0
+  - 01a009fe-d83e-75c4-9b1f-fa753ca82382   # task_028 t2 reward 0.0
+  - 01a009f4-fe14-757f-b320-eb4bd417f358   # task_065 t0 reward 0.0
+  - 01a009fa-61e5-77a9-98e8-d34243ca6331   # task_065 t1 reward 0.0
+  - 01a00a00-5b12-71f2-ac26-658a13177145   # task_065 t2 reward 0.0
+  - 01a009f5-c52e-76bb-bce5-f8c63a021c05   # task_070 t0 reward 0.0
+  - 01a009fb-784e-7616-9b91-497c5f7c5a74   # task_070 t1 reward 0.0
+  - 01a00a00-7166-76b4-8ffa-2100954b0604   # task_070 t2 reward 0.0
+  - 01a009f5-ebeb-74cb-b802-141a457adb2b   # task_072 t0 reward 1.0
+  - 01a009fc-2eb5-76cb-b640-1a54fb9dde6c   # task_072 t1 reward 0.0
+  - 01a00a01-5235-757c-9b94-869fc45d3da3   # task_072 t2 reward 1.0
+  - 01a009f6-2ff6-712b-ba8e-78f0daede1ca   # task_082 t0 reward 0.0
+  - 01a009fc-d94e-70bf-ad99-315146847e1f   # task_082 t1 reward 0.0
+  - 01a00a01-f13b-761e-b730-9b61c96c017a   # task_082 t2 reward 0.0
+  - 01a009f6-c012-7581-be15-c0ecf1c4ea0d   # task_096 t0 reward 0.0
+  - 01a009fd-2d02-75c2-8c3b-90f61f1362ea   # task_096 t1 reward 0.0
+  - 01a00a08-0572-7065-80ea-50df4bea954f   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_03: all 24 episodes from
+    generation_002/batch_03/graded/updated_results.json — reward, reward_basis, db_check,
+    every gold action_check with arguments and match flag, and the complete agent tool-call
+    and query trace — joined to episode_manifest.jsonl, and read cell by cell against
+    batch_01 (H0) and batch_02 (H1) over the SAME eight tasks.
+
+    Round health, clean on every axis: 24/24 completed, arm sha 95d0ff2f on every episode,
+    no dirty paths, zero arm_sha_mismatches, all 24 evidence_complete, and ZERO seam
+    timeouts, disconnects, unclassified and sandbox tool errors. 0.638 USD platform. No cell
+    excluded.
+
+    Graded read, labelled: 3/24 episodes and 2/8 tasks with any pass, against batch_02's
+    1/24 and 1/8 and batch_01's 2/24 and 1/8. The batch curve is 8.3, 4.2, 12.5 percent.
+    This is the first round to exceed the untuned baseline, and task_072 passes for the first
+    time in the experiment (0/3 to 2/3). batch_03 measures a set two generations were tuned
+    on and is NOT an independent read.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any
+    point in this transition; no vault path was opened. The freeze's triple-exposure caveat
+    (D23) applies to T-based numbers only, of which this record contains none.
+signals:
+- description: >-
+    gen-002 D1's mechanism CONFIRMED at the outcome, on a task it did not name — and this is
+    the experiment's first new passing task. task_072 went 0/3 to 2/3. In batch_02 the agent
+    compared account features and produced amounts of 12 and 8, 14 and 16, 12 and 16 against
+    gold's 14.00 and 3.50. In batch_03, t0 and t2 retrieved the ATM fee POLICY instead —
+    t2's query reads "Light Green Account ATM fee policy foreign ATM withdrawals
+    out-of-network 4 free $1.50 November fee" — and both then supplied exactly 14.0 and 3.5
+    with credit_type fee_refund. Three queries each, fewer than batch_02's four. The rule
+    that decides was the fee schedule, and retrieving it rather than reasoning about products
+    is precisely D1's mechanism.
+  prevalence: 2/3 trials, task 0/3 to 2/3
+- description: >-
+    gen-002 D1's behaviour clause CONFIRMED on both named targets, its outcome clause DENIED
+    a third time on task_070. In-force and eligibility questions appear in the query stream
+    for the first time in the experiment: task_070 t2 "business checking account offers
+    current in force account selection rule", t0 "offer currently in force", t1 "current
+    offer ru[le]"; task_065 t0 "current personal checking account offers" and "current offer
+    selection rule". task_070 nevertheless opened Hunter Green again (t1, t2) and t0 opened
+    nothing at all. Across nine episodes and three harnesses it has never opened Sky Blue,
+    although batch_03 shows it retrieving Sky Blue's own specifications (t1 Q11, t2 Q13) and
+    rejecting it.
+  prevalence: 6/6 episodes asked an in-force question; 0/9 episodes ever chose gold
+- description: >-
+    THE MASKED MECHANISM, and it is the most valuable cell this experiment has produced.
+    task_065 t2 chose BOTH gold account classes correctly for the first time — Evergreen
+    checking and Green savings, exactly gold — supplied close_bank_account_7392 with
+    account_id alone, and still scored 0.0. It closed the existing checking account FIRST;
+    the savings open then failed a 14-day checking-tenure eligibility requirement, and the
+    transcript ends with the agent telling the customer to return on 28 November. Gold opens
+    before it closes. This was invisible in batch_01 and batch_02 because the classes were
+    wrong, so ordering never became binding. Fix one layer and the next surfaces — which is
+    what a fixed batch is for.
+  prevalence: 1/3 trials, newly binding
+- description: >-
+    gen-002 D2 CONFIRMED, and the half it kept STRENGTHENED. Transfer-carrying episodes fell
+    11/24 to 10/24 as predicted; no report with amount_difference 0 was filed. The
+    pre-registered falsifier for the kept half required task_065 to open both accounts in at
+    least 2 of 3 trials, and it did so in ALL THREE, against 2/3 under C2 and 1/3 under H0.
+    So gen-001's C2 WAS separable into a working half and a harmful one, which is the
+    question D2 was built to answer.
+  prevalence: 3/3 trials opened both accounts; transfers 10/24
+- description: >-
+    Transfer is native, not merely licensed by the harness's own previous generation — the
+    condition pre-registered against backlog T4 at g=1 has now fired. With gen-001's escape
+    clause removed, transfers settled at 10/24, still ABOVE batch_01's untuned 9/24. The
+    shape is also clearer: task_096 t0 transferred after 14 queries and two write calls,
+    citing a rate configuration it could not reconcile; t2 transferred after 8 queries citing
+    the same; task_070 t0 ran 9 queries and simply stopped without acting. The agent treats
+    its own unresolved uncertainty as grounds for escalation. That is what E2 targets, and it
+    is a different object than the four failed mutations addressed.
+  prevalence: 10/24 episodes; 3/24 ended with zero state-changing calls
+counterevidence: >-
+  Three arguments against this set.
+
+  (1) E2 is the fifth transfer mutation this project has attempted and four of the previous
+  four failed (prior-experiment context, prose only). The defence is that all four stated a
+  condition for when transfer is appropriate and so competed with a frozen policy that already
+  fixes one at four requests; E2 states no condition and names no threshold, addressing instead
+  the agent's REASON for reaching for the tool. Whether that distinction is real is exactly
+  what batch_04 tests, and the falsifier is the same one that caught seq 5: task_014's gold IS
+  a transfer, so a fall below 1/3 there means E2 over-reached identically.
+
+  (2) E1 generalises from a single trial. task_065 t2 is one cell. It is landed anyway because
+  the causal chain is visible end to end in that transcript — right classes, close first, open
+  refused for tenure, agent tells the customer to come back in two weeks — and because it is
+  the only witness that could exist: no other trial in nine episodes ever got far enough to
+  hit the constraint. A rule generalised from one cell is nonetheless a rule generalised from
+  one cell, and its falsifier is deliberately broad.
+
+  (3) The batch rose to 3/24 and the loop is being extended rather than consolidated. The rise
+  is one episode above batch_01's 2/24, on a set now tuned on for two generations, at three
+  trials per task; it is not outside what single-cell sampling can produce. The set does not
+  claim the rise as evidence for itself — task_072's 0/3 to 2/3 is claimed, because it carries
+  a mechanism visible in the transcript, and that is a different kind of claim.
+hypothesis: >-
+  Two hypotheses, one per change.
+
+  Once the agent chooses the right objects to act on, the remaining failure is the ORDER in
+  which it acts on them: a bank's state changes are not commutative, because closing an
+  account can dissolve the tenure, balance or relationship that qualifies the customer for the
+  one being opened. Naming that dependency should make the agent sequence the opens before the
+  closes without needing to know which specific tenure rule applies.
+
+  Separately: the agent reaches for transfer when its own analysis fails to resolve, not when
+  the policy says to. Four previous mutations tried to correct WHEN transfer is appropriate and
+  each competed with a policy that already fixes that. Naming the reason instead — an
+  unresolved discrepancy is not itself grounds — leaves the policy's conditions untouched while
+  removing the motive that produces the behaviour.
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — two paragraphs added.
+  The frozen <policy> region is untouched and make check asserts it byte-for-byte (5733 chars);
+  agents/agent.yaml, package.json, the lock and the partition are unchanged.
+
+  Prompt-only, and the g=0 justification still binds: the seam probe at
+  generation_000/seam_probe/ measured that a Pi-local extension-tool call reaches tau as an
+  invalid tool call, so extension tools and sub-agents are unavailable and only the
+  no-tool-call hooks remain. Neither mechanism here fits those hooks — both govern decisions
+  taken before a call. E1 is the one mechanism in the experiment so far that WOULD suit a
+  deterministic surface, since "did an earlier write invalidate a later one" is checkable
+  rather than judged; that surface does not exist in this seam, and the fact is recorded rather
+  than worked around.
+proposed_change: >-
+  An improvement SET of two changes, one commit each on branch gen-003/ordering-and-escalation,
+  landed as one PR. E1 acts on the order of write calls; E2 governs the agent's reason for
+  reaching for one specific tool. They do not interact.
+
+  Deliberately not in this set, and this is a change of policy from the two previous
+  generations: task_070 gets NO slot. Its D1 prediction has now been denied three times while
+  its behaviour clause was confirmed twice — the agent enumerates, asks which offer is in force,
+  retrieves Sky Blue's own specification, and still chooses Hunter Green. The live reading is
+  that the gold answer is not derivable from what bm25 surfaces, and bm25 is a deliberate freeze
+  rather than harness surface. A fourth rewording would be the loop repeating itself, which is
+  the failure mode this experiment exists to detect. Also held: backlog T5 (the handover, still
+  settling at 6/6 with a superfluous arguments payload) and T6 (computed amounts, which D1
+  appears to have resolved on task_072 and which should be re-read on batch_04 before being
+  targeted).
+changes:
+- mechanism: >-
+    Sequence state changes so that operations depending on the customer's current standing —
+    accounts, tenure, balances — precede operations that dissolve it.
+  surface: instructions
+  evidence: >-
+    task_065 t2, conversation 01a00a00-5b12-71f2-ac26-658a13177145: both gold classes chosen
+    correctly for the first time in the experiment, close_bank_account_7392 issued first with
+    account_id alone, then open_bank_account_4821 for Evergreen checking, then the Green
+    savings open refused on a 14-day checking-tenure requirement; graded db_match false. Gold's
+    order opens both accounts before closing. Newly binding: batch_01 and batch_02 never
+    reached this constraint because the classes were wrong.
+  expected_effect: >-
+    In batch_04, at least one task_065 trial issues its open calls before its close call and
+    its savings open succeeds rather than being refused for tenure, and task_065 scores at
+    least 1/3 after 0/3 in three consecutive rounds. Denied if the ordering does not change, or
+    if it changes and the open is still refused — the latter would mean tenure is not the
+    binding condition and the diagnosis was wrong.
+  risk: >-
+    A generally-stated ordering rule is the kind of instruction this experiment has repeatedly
+    measured to over-generalise; here it could make the agent defer or skip closures that gold
+    requires. Falsifier: any task ceasing to close or cancel something its gold requires.
+  commit: d8b9bb1
+- mechanism: >-
+    Remove unresolved uncertainty as a motive for escalation, without stating any condition for
+    when transfer is appropriate — the policy already fixes those and four prior mutations
+    failed by competing with them.
+  surface: instructions
+  evidence: >-
+    10/24 episodes carried a transfer, still above batch_01's untuned 9/24 after gen-002
+    removed the clause that had licensed part of the rise — the condition pre-registered
+    against backlog T4 at g=1. Shape: task_096 t0 (01a009f6-c012-7581-be15-c0ecf1c4ea0d)
+    transferred after 14 queries and two writes citing a rate configuration it could not
+    reconcile; task_096 t2 (01a00a08-0572-7065-80ea-50df4bea954f) after 8 queries citing the
+    same; task_070 t0 (01a009f5-c52e-76bb-bce5-f8c63a021c05) ran 9 queries and stopped without
+    acting at all. Backlog target T4.
+  expected_effect: >-
+    In batch_04, transfer-carrying episodes fall below batch_01's 9/24 — the first round in the
+    experiment beneath the untuned floor — and episodes ending with zero state-changing calls
+    fall from batch_03's three. PRE-REGISTERED FALSIFIER, the one that caught seq 5's
+    equivalent mutation: task_014's gold IS a transfer, so if task_014 falls below 1/3 this
+    mutation suppressed a policy-required transfer exactly as its four predecessors did, and it
+    becomes gen-004's revert candidate.
+  risk: >-
+    The single highest-risk change this experiment has landed, by its own recorded history:
+    four of four previous attempts on this behaviour failed, three of them by creating the
+    mirror-image error. Mitigated only by stating no condition, and by a falsifier that fires
+    on one task's regression.
+  commit: 3b1bf58
+mutation:
+  branch: gen-003/ordering-and-escalation
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/13
+  source_commit: 5f8fb58c395aa0328770a5cec4e7b0de18ce2950
+  candidate_commit: ac939cf4614e2175e2e3101fef40bfc275329e91
+expected_effect: >-
+  SET level, stated as behaviour. E1 should change the order of task_065's write calls and let
+  its savings open succeed; E2 should push transfer-carrying episodes below the untuned floor of
+  9/24 and reduce zero-action episodes. A reward improvement is predicted more confidently than
+  in the two previous generations but still not asserted: task_065 is one ordering fix away from
+  its full gold action set, which is the closest any task in this batch has come to passing
+  without passing, while five of the eight tasks continue to fail on more than one coded mode.
+  The generation-level statistical read is H3's sealed held-out round and the paired batch curve
+  whose endpoint test is H6's batch_07 against H0's batch_01.
+human_approval:
+  approved_by: >-
+    orchestrator — autonomous per D23 (user-delegated)
+  date: '2026-08-16'
+held_out_result: null

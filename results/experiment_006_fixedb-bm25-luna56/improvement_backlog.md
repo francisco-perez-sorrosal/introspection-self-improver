@@ -258,13 +258,61 @@ than to the agent's own narration.
 
 ---
 
+---
+
+## Re-ranking against `batch_03` (H2, 2026-08-16)
+
+Clean round, zero seam counters. **3/24 episodes, 2/8 tasks — the curve's first rise**
+(8.3% → 4.2% → **12.5%**), with **`task_072` passing for the first time (0/3 → 2/3)**.
+
+**gen-002's predictions, scored.**
+
+- **D1 — behaviour confirmed on both targets, outcome confirmed on an unpredicted third,
+  denied a third time on `task_070`.** In-force queries appear for the first time
+  (`task_070` t2 *"offers current in force account selection rule"*). The unpredicted win is
+  `task_072`: t0 and t2 retrieved the ATM fee *policy* ("4 free, then $1.50") rather than
+  comparing products, and supplied gold's 14.00/3.50 exactly. **T6 (computed amounts) appears
+  resolved as a consequence of T1's re-specification** — re-read on `batch_04` before touching.
+- **D2 — confirmed, and the kept half strengthened.** Transfers 11/24 → 10/24, no
+  zero-difference report, and `task_065` opened both accounts **3/3** against the ≥2/3 its
+  falsifier demanded. **C2 was separable into a working half and a harmful one**, which is the
+  question D2 existed to answer.
+
+**T8 opened — ordering of state changes (consumed by gen-003 E1).** `task_065` t2 chose **both
+gold classes correctly** for the first time and still scored 0.0: it closed the checking
+account first, and the savings open was then refused for a 14-day checking-tenure requirement.
+Gold opens before it closes. **Invisible until now** — the classes were wrong in every earlier
+round, so ordering never became binding. This is the fixed batch doing exactly what it is for.
+
+**T4 CONSUMED (gen-003 E2), on the condition pre-registered at g=1 — which fired.** The
+condition was: *if `batch_03` still shows transfer at or above `batch_01`'s 9/24 after the
+escape clause is gone, the mode is native and earns a slot.* It shows 10/24. The shape is now
+specific: the agent escalates when its own analysis fails to resolve (`task_096` t0 after 14
+queries and two writes; t2 after 8; `task_070` t0 ran 9 queries and stopped acting entirely).
+E2 targets that motive and states no condition for when transfer is appropriate — the property
+all four failed predecessors lacked.
+
+**T1 RETIRED for `task_070`, with the reason recorded.** Its prediction has been denied three
+times while its behaviour clause was confirmed twice. The agent now enumerates, asks which
+offer is in force, **retrieves `Sky Blue`'s own specification** (`batch_03` t1 Q11, t2 Q13) —
+and still chooses `Hunter Green`, nine episodes running. The live reading is that the gold
+answer is not derivable from what `bm25` surfaces, and **`bm25` is a deliberate freeze, not
+harness surface**. A fourth rewording would be the loop repeating itself, which is the failure
+mode this experiment exists to detect. Retired as a target; the task stays in the batch.
+
+**T5 held again.** Still 6/6 with a superfluous `arguments` payload and repeated calls. Left to
+settle rather than touched while it is moving on its own.
+
+---
+
 ## Slot accounting
 
 | Slot | Generation | Target(s) | Status |
 |---|---|---|---|
-| 1 | gen-001 | T1 + T2 + T3 (first composite set, D22) | consumed — C1 behaviour-only, C2 mixed + harmful, C3 confirmed; resolved T5 as a side effect |
-| 2 | gen-002 | T1 re-specified (D1) + T7 revert (D2) | in flight |
-| 3–6 | — | T4, T5, T6 re-ranked against each new batch | open |
+| 1 | gen-001 | T1 + T2 + T3 | consumed — C1 behaviour-only, C2 mixed + harmful, C3 confirmed; resolved T5 as a side effect |
+| 2 | gen-002 | T1 re-specified (D1) + T7 revert (D2) | consumed — D1 confirmed on `task_072` (first new pass), D2 confirmed and separated C2's halves |
+| 3 | gen-003 | T8 ordering (E1) + T4 escalation (E2) | in flight |
+| 4–6 | — | T5, T6 re-read against each new batch | open |
 
-Seven targets opened, four consumed. T4 remains the highest-prevalence mode and is held for one
-more round on a stated, falsifiable condition.
+Eight targets opened, six consumed, one retired with cause (`task_070`'s T1 — likely bounded by
+the frozen retrieval backend, not by the harness).
