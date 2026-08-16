@@ -1,0 +1,299 @@
+{
+  "experiment": "006_fixedb-bm25-luna56",
+  "computed_at": "2026-08-16T13:41:23+00:00",
+  "batch_mode": "fixed",
+  "rounds": [
+    {
+      "harness": "H0",
+      "round": "batch_01",
+      "measured": true,
+      "stats": {
+        "task_014": [
+          2,
+          3
+        ],
+        "task_028": [
+          0,
+          3
+        ],
+        "task_026": [
+          0,
+          3
+        ],
+        "task_070": [
+          0,
+          3
+        ],
+        "task_065": [
+          0,
+          3
+        ],
+        "task_082": [
+          0,
+          3
+        ],
+        "task_072": [
+          0,
+          3
+        ],
+        "task_096": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H1",
+      "round": "batch_02",
+      "measured": true,
+      "stats": {
+        "task_014": [
+          1,
+          3
+        ],
+        "task_026": [
+          0,
+          3
+        ],
+        "task_028": [
+          0,
+          3
+        ],
+        "task_065": [
+          0,
+          3
+        ],
+        "task_072": [
+          0,
+          3
+        ],
+        "task_082": [
+          0,
+          3
+        ],
+        "task_070": [
+          0,
+          3
+        ],
+        "task_096": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H2",
+      "round": "batch_03",
+      "measured": true,
+      "stats": {
+        "task_014": [
+          1,
+          3
+        ],
+        "task_028": [
+          0,
+          3
+        ],
+        "task_026": [
+          0,
+          3
+        ],
+        "task_065": [
+          0,
+          3
+        ],
+        "task_070": [
+          0,
+          3
+        ],
+        "task_072": [
+          2,
+          3
+        ],
+        "task_082": [
+          0,
+          3
+        ],
+        "task_096": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H3",
+      "round": "batch_04",
+      "measured": true,
+      "stats": {
+        "task_014": [
+          2,
+          3
+        ],
+        "task_028": [
+          0,
+          3
+        ],
+        "task_065": [
+          1,
+          3
+        ],
+        "task_026": [
+          0,
+          3
+        ],
+        "task_072": [
+          1,
+          3
+        ],
+        "task_070": [
+          0,
+          3
+        ],
+        "task_082": [
+          0,
+          3
+        ],
+        "task_096": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H4",
+      "round": "batch_05",
+      "measured": true,
+      "stats": {
+        "task_014": [
+          0,
+          3
+        ],
+        "task_026": [
+          0,
+          3
+        ],
+        "task_028": [
+          0,
+          3
+        ],
+        "task_065": [
+          1,
+          3
+        ],
+        "task_072": [
+          0,
+          3
+        ],
+        "task_070": [
+          0,
+          3
+        ],
+        "task_082": [
+          0,
+          3
+        ],
+        "task_096": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H5",
+      "round": "batch_06",
+      "measured": true,
+      "stats": {
+        "task_014": [
+          1,
+          3
+        ],
+        "task_028": [
+          0,
+          3
+        ],
+        "task_065": [
+          0,
+          3
+        ],
+        "task_026": [
+          0,
+          3
+        ],
+        "task_072": [
+          0,
+          3
+        ],
+        "task_070": [
+          0,
+          3
+        ],
+        "task_096": [
+          0,
+          3
+        ],
+        "task_082": [
+          0,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H6",
+      "round": "batch_07",
+      "measured": true,
+      "stats": {
+        "task_014": [
+          1,
+          3
+        ],
+        "task_028": [
+          0,
+          3
+        ],
+        "task_065": [
+          0,
+          3
+        ],
+        "task_070": [
+          0,
+          3
+        ],
+        "task_072": [
+          0,
+          3
+        ],
+        "task_082": [
+          0,
+          3
+        ],
+        "task_026": [
+          0,
+          3
+        ],
+        "task_096": [
+          0,
+          3
+        ]
+      }
+    }
+  ],
+  "endpoint_test": {
+    "test": "one-sided exact paired sign-flip permutation on per-task rate deltas",
+    "alpha": 0.05,
+    "tasks": 8,
+    "observed_delta_sum": -0.333333,
+    "per_task_deltas": {
+      "task_014": -0.333333,
+      "task_026": 0.0,
+      "task_028": 0.0,
+      "task_065": 0.0,
+      "task_070": 0.0,
+      "task_072": 0.0,
+      "task_082": 0.0,
+      "task_096": 0.0
+    },
+    "p_value": 1.0,
+    "significant": false
+  },
+  "endpoint_status": "primary \u2014 H0 vs H6 on the fixed batch"
+}

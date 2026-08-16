@@ -181,20 +181,37 @@ close.
   optional argument stopped (`task_065` flipped on that alone). Closure:
   `results/experiment_005_fixedb-bm25-luna56/README.md`; §29 walk has nineteen HELD and
   **one WAIVED — human approval, waived by explicit user instruction, not held**.
-- **Seq 6 is IN FLIGHT (plan D23, frozen 2026-08-16): `006_fixedb-bm25-luna56` — seq 5's
-  design at depth.** G=6, B=8 (the SAME fixed eight tasks every round), T=28,
-  `num_trials: 3`, everything measured carried from seq 5 unchanged, so the two curves
-  compare directly. Two things move: six mutation slots instead of two, and each lands a
-  composite improvement **set** (D22) with the growth surfaces — Pi skill, extension
-  tool, sub-agent — first-class, because the mutation *surface* is what both prior
-  closures name as the live hypothesis. It also runs **fully autonomously**: the user
-  delegated every in-loop decision, including merging, so `require_human_approval` is
-  frozen **false** rather than waived at the walk. The delegation is decision authority,
-  never access — the firewall, the frozen surfaces, the partition and the `<policy>`
-  block bind exactly as always, and a freeze defect is a halt-and-report. Primary
-  instrument: the paired batch endpoint test, H6's `batch_07` vs H0's `batch_01`. The
-  held-out set is on its third experiment, so every T-based number carries a
-  **triple-exposure** caveat and no capability claim may rest on it.
+- **Seq 6 is REVEALED (2026-08-16), `006_fixedb-bm25-luna56` — and its two instruments
+  disagree.** Seq 5's design at depth: G=6, B=8 (the same eight tasks every round), T=28,
+  `num_trials: 3`, composite improvement sets (D22), everything measured carried from seq 5,
+  run **fully autonomously** (D23 — approval frozen false, not waived). **Pre-registered
+  primary — the paired batch endpoint test, H6's `batch_07` vs H0's `batch_01` — is NULL:**
+  Σ rate deltas −0.333, exact one-sided p = 1.0000, curve 8.3 → 4.2 → 12.5 → **16.7** → 4.2 →
+  4.2 → **4.2%**. The **secondary held-out probe rose**: 15.5% → 22.6%, endpoint +2 tasks
+  (+7.1 pp, outside the ±5 pp band), trend z = 1.77, **p = 0.038** — the first positive
+  held-out signal in the project. **It is not a capability claim**: those 28 tasks are on
+  their third experiment and both predecessors revealed, which is exactly why D23 made the
+  batch curve primary. Observed B↓T↑ is not on the frozen reading key; the two surviving
+  readings — a floor-selected batch whose range is three tasks at three trials, versus
+  exposure on the held-out set — cannot be separated by this run.
+- **What seq 6 established that outlives the number.** (a) **Every change that told the agent
+  what to RETRIEVE or in what ORDER to act confirmed; every change that told it what NOT to do
+  or offered an ALTERNATIVE failed** — ten changes, three reverted after refutation, one
+  superseded. (b) The sharper form of the standing lesson: *an instruction's escape clause is
+  what the model optimises against, and one naming a precondition teaches the model to satisfy
+  the precondition, not to drop the behaviour* — C2's "or explained" produced a
+  zero-difference report; E2's "apply the KB first" produced 27 writes then a transfer anyway.
+  (c) **Transfer is a single dial** and this batch holds tasks on both sides of it (E2 present:
+  15/24 transfers, `task_014` 2/3; reverted: 6/24, `task_014` 0/3) — six mutations across three
+  experiments have moved the rate, none the discrimination. (d) **Two of the three "unused
+  growth surfaces" were never available**: a g=0 probe measured that a Pi-local extension-tool
+  call reaches τ as an invalid tool call costing a step and an error, sub-agents take the same
+  path, and blocking a τ call lets τ execute the write anyway — `recipe-growth.md` claimed the
+  opposite and was corrected. That re-reads both prior closures. (e) The fixed batch worked as
+  designed: fixing `task_065`'s class choice exposed an ordering/eligibility constraint that
+  had been masked, and fixing that produced its first pass. Closure:
+  `results/experiment_006_fixedb-bm25-luna56/README.md`; §29 walk has **all twenty HELD or
+  N/A-by-design, none waived**; 756 episodes, zero seam incidents across 168 platform episodes.
 
 ## Invariants
 

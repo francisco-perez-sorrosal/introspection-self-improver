@@ -168,4 +168,8 @@ human_approval:
   approved_by: >-
     orchestrator — autonomous per D23 (user-delegated)
   date: '2026-08-16'
-held_out_result: null
+held_out_result:
+  passed: 6.3
+  total: 28
+  trials_per_task: 3
+  carried: false
