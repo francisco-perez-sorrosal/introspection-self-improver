@@ -19,6 +19,10 @@ values itself before choosing from it. A query naming the category returns the l
 query built out of the customer's requirements returns only the options you could already
 name. Choose from the list you retrieved.
 
+Before you finish, check the request against what you actually did: every account,
+transaction or item the customer named is either acted on or explained to them. Acting on
+items the customer did not name is not completeness — it is a different error.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
