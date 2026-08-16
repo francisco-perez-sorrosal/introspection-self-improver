@@ -1,0 +1,206 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 3
+  to_generation: 4
+experiment: 006_fixedb-bm25-luna56
+outcome: accepted
+schema_version: 2
+batch:
+  name: batch_04
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a00a34-d73a-7553-b22f-f2573a84804c   # task_014 t0 reward 1.0
+  - 01a00a37-9e02-75d8-ba63-7f02f7f44b54   # task_014 t1 reward 0.0
+  - 01a00a3a-f9af-7101-8977-74262eba5297   # task_014 t2 reward 1.0
+  - 01a00a34-d3cd-74f7-a2e2-a8bb8717a35e   # task_026 t0 reward 0.0
+  - 01a00a37-effb-705d-a699-fc6fe4868ba6   # task_026 t1 reward 0.0
+  - 01a00a3b-83c0-7769-b9c3-f8d3595c9c1d   # task_026 t2 reward 0.0
+  - 01a00a34-d38f-738f-b1b8-b06bd46826a1   # task_028 t0 reward 0.0
+  - 01a00a38-1de2-7415-b25e-1370e28a1ee6   # task_028 t1 reward 0.0
+  - 01a00a3d-18a4-7582-8521-31fb408f826f   # task_028 t2 reward 0.0
+  - 01a00a35-5ad9-7644-9f73-26f63bbaf608   # task_065 t0 reward 0.0
+  - 01a00a38-b392-7524-abb9-d0f3f58f3236   # task_065 t1 reward 0.0
+  - 01a00a3d-aca0-7364-a16a-dcc41681401c   # task_065 t2 reward 1.0
+  - 01a00a36-476a-7172-9407-cc55e79738d1   # task_070 t0 reward 0.0
+  - 01a00a39-6e14-7758-9d79-0848ff5054d7   # task_070 t1 reward 0.0
+  - 01a00a3e-23b0-7071-af67-33615dc36b80   # task_070 t2 reward 0.0
+  - 01a00a36-6521-7134-81c6-10bf3a684985   # task_072 t0 reward 1.0
+  - 01a00a39-b61d-74de-ad4a-6af8b7bb60ac   # task_072 t1 reward 0.0
+  - 01a00a3e-bf2f-76f5-887b-3e756f4c980c   # task_072 t2 reward 0.0
+  - 01a00a36-cbad-7697-9e7e-a6b69a9ff65b   # task_082 t0 reward 0.0
+  - 01a00a3f-3da8-7725-85f9-84f853fba788   # task_082 t1 reward 0.0
+  - 01a00a3f-1dac-721b-9f30-882509c1b29b   # task_082 t2 reward 0.0
+  - 01a00a37-66dc-74b0-bd55-2791a5d64a41   # task_096 t0 reward 0.0
+  - 01a00a3a-9099-72af-9073-afe2aefd3265   # task_096 t1 reward 0.0
+  - 01a00a3f-7c50-72af-8d3c-985d2adf0b21   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_04: all 24 episodes from
+    generation_003/batch_04/graded/updated_results.json — reward, reward_basis, db_check,
+    gold action_checks with arguments and match flags, and the complete agent tool-call and
+    query trace — joined to episode_manifest.jsonl and read cell by cell against batch_01,
+    batch_02 and batch_03 over the SAME eight tasks.
+
+    Round health: 24/24 completed, arm sha 73b0aee1 on every episode, no dirty paths, zero
+    arm_sha_mismatches, all 24 evidence_complete, ZERO seam timeouts, disconnects,
+    unclassified and sandbox tool errors. 0.5709 USD platform. No cell excluded.
+
+    Graded read, labelled: 4/24 episodes and 3/8 tasks with any pass — the highest of the
+    four rounds. Batch curve 8.3, 4.2, 12.5, 16.7 percent. task_065 passes for the first
+    time (0/3 to 1/3) and task_014 recovers (1/3 to 2/3), while task_072 falls (2/3 to 1/3).
+    batch_04 measures a set three generations were tuned on and is NOT an independent read.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any
+    point in this transition, and no vault path was opened. H4's held-out round exited
+    non-zero mid-run after this transition's diagnosis was complete; per the runner's own
+    instruction the vault console was NOT read and the round was resumed instead, tau
+    re-running only the missing pairs.
+signals:
+- description: >-
+    gen-003 E1 CONFIRMED exactly as predicted, and it produced the experiment's second new
+    passing task. task_065 t2 issued its opens BEFORE its close — open checking Evergreen
+    Account, open savings Green Account, then get transactions, then close_bank_account_7392
+    with account_id alone — the savings open was no longer refused for the 14-day
+    checking-tenure requirement that killed the identical class choice in batch_03, and the
+    task scored 1.0 after 0/3 in three consecutive rounds. The ordering behaviour appears in
+    all three trials; t0 and t1 still fail upstream on class choice (Blue/Silver Plus and
+    Bluest/Silver Plus), which is T1 territory rather than T8.
+  prevalence: 3/3 trials reordered; task 0/3 to 1/3
+- description: >-
+    gen-003 E2 DENIED, by a large move in the OPPOSITE direction. It predicted
+    transfer-carrying episodes below batch_01's untuned 9/24; batch_04 shows 15/24, up from
+    batch_03's 10/24. Its pre-registered falsifier did NOT fire — task_014, whose gold IS a
+    transfer, recovered from 1/3 to 2/3 — so this is not the over-reach that killed the four
+    transfer mutations of seq 4 and seq 5. E2 increased escalation.
+  prevalence: 15/24 episodes, against a predicted below 9/24
+- description: >-
+    WHY E2 failed, and it is this experiment's most reproducible finding about its own
+    output. E2 said being unable to explain a discrepancy is not itself a reason to hand over,
+    and to apply what the knowledge base provides first. The agent satisfied the precondition
+    and kept the terminal behaviour: task_026 t1 made 27 write calls across 146 messages and
+    then transferred citing technical_system_error; task_028 t0 and t1 transferred after 3 and
+    4 write calls with the same reason code; task_072 t2 applied a credit and then transferred.
+    An instruction that names a precondition for a behaviour teaches the model to satisfy the
+    precondition, not to abandon the behaviour. This is gen-001 C2's escape clause in a second
+    shape, and the backlog records it as T7's second witness.
+  prevalence: 8/15 transferring episodes did substantial work first, against 4/10 in batch_03
+- description: >-
+    C2's over-reach bound, recorded as NOT triggered at g=1, IS now triggered. task_026 t1
+    wrote 27 update_transaction_rewards calls where gold has four and where batch_01 t1 wrote
+    fourteen. The sentence bounding completeness to what the customer named is still in the
+    prompt and is no longer holding. Recorded, not targeted this generation: it is entangled
+    with the same episode's transfer behaviour, which this set's single change is measuring.
+  prevalence: 1/3 trials, write count 14 to 27
+- description: >-
+    task_072 regressed 2/3 to 1/3, and both lost trials end in a transfer — t1 transferred
+    after zero write calls citing complex_billing_dispute, t2 applied one credit with
+    credit_type rebate_credit and amount 15.5 and then transferred. D1's mechanism (retrieve
+    the fee policy) still produced a clean pass in t0 with gold's 14.0 and 3.5. The regression
+    is therefore attributed to E2's effect rather than to D1 decaying, which the revert tests.
+  prevalence: 2/3 trials lost, both to transfers
+counterevidence: >-
+  Three arguments against this set.
+
+  (1) The attribution of the transfer rise to E2 is mechanistic, not statistical. gen-003
+  landed two changes and the rise could belong to E1, which lengthened episodes by reordering
+  work, or to drift between rounds. The case for E2 is that the transferring episodes' own
+  transcripts show the precondition-then-transfer shape E2's wording describes, and that E1
+  touches only the order of write calls. The falsifier is explicit and symmetric: if batch_05
+  stays at or above 15/24 after E2 is gone, E2 was not the cause and the whole gen-003 set
+  becomes a revert candidate.
+
+  (2) Reverting after one round discards a change that might have needed two. Against that:
+  the move was 50 percent in the wrong direction on the single most prevalent failure mode in
+  the batch, and the experiment has five rounds of evidence that instructions of this shape do
+  not converge with repetition — they acquire new failure modes. Leaving it in place for a
+  second round would spend a generation to learn that again.
+
+  (3) A one-change set forgoes the composite hypothesis this experiment exists to test. It is
+  chosen because the set-composition rule forbids two changes acting on one behaviour, and
+  every remaining live mode in batch_04 — the technical_system_error reads on task_028,
+  task_072's two lost trials, task_096's three transfers — is transfer-adjacent. Padding the
+  set would have made the revert unmeasurable. Recorded so the closure can weigh a deliberate
+  single-change generation against the D22 design.
+hypothesis: >-
+  E2 caused the escalation rise it was written to prevent, by describing a sequence rather than
+  removing a motive. Remove it and transfers should return to the level batch_03 measured under
+  gen-002's harness, which is the only harness state that has ever reduced them. Everything else
+  gen-003 landed — the ordering rule that produced task_065's first pass — stays.
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — one paragraph removed,
+  restoring the block to its gen-003 E1 state. The frozen <policy> region is untouched and make
+  check asserts it byte-for-byte (5733 chars); agents/agent.yaml, package.json, the lock and the
+  partition are unchanged.
+
+  Prompt-only, and the g=0 seam-probe justification still binds (extension tools and sub-agents
+  reach tau as invalid tool calls; only the no-tool-call hooks remain, and none of them can
+  intervene on a decision taken before a call). Worth recording at the halfway point: of the
+  eight changes this experiment has landed, the three that CONFIRMED told the agent what to
+  retrieve or in what order to act (D1, E1, C3), and the three that failed told it what not to
+  do or offered it an alternative (C1's enumeration was inert, C2's escape clause and E2 both
+  produced the behaviour they named). That asymmetry is a property of the surface, and it is the
+  strongest guidance available for the remaining slots.
+proposed_change: >-
+  An improvement SET of ONE change on branch gen-004/revert-escalation: the revert of gen-003's
+  E2, which plan D22 makes a first-class change. The set is one change deliberately and the
+  reason is recorded in counterevidence (3): every other live failure mode in batch_04 acts on
+  the same behaviour the revert is measuring, and the set-composition rule forbids that.
+
+  Deliberately not in this set: the technical_system_error reading of empty tool results
+  (task_028 3/3, task_096 t2) — transfer-adjacent; task_026's write-count regression to 27 —
+  entangled with the same episode's transfer; task_065 t0/t1's class choice — T1, retired as a
+  target for task_070 but live here, and the natural candidate for gen-005 once this revert has
+  been measured.
+changes:
+- mechanism: >-
+    Remove the paragraph landed as gen-003 E2, restoring the instruction block to its state
+    after E1. No new instruction is added.
+  surface: revert
+  evidence: >-
+    Transfer-carrying episodes 10/24 in batch_03 to 15/24 in batch_04, against E2's prediction
+    of below 9/24. The transferring episodes show E2's own wording as a completed sequence:
+    task_026 t1 (27 writes, 146 messages, then technical_system_error), task_028 t0 and t1
+    (3 and 4 writes, same reason code), task_072 t2 (one credit, then complex_billing_dispute).
+    E2's falsifier did not fire — task_014 recovered 1/3 to 2/3 — so the failure is excess
+    escalation, not suppression. Reverts gen-003 E2 (3b1bf58).
+  expected_effect: >-
+    In batch_05, transfer-carrying episodes return to at or below batch_03's 10/24. Falsifier:
+    if they remain at or above 15/24 with E2 gone, E2 was not the cause — the rise belongs to
+    E1 or to between-round drift — and the whole gen-003 set becomes gen-005's revert
+    candidate. Secondary check: task_072 should recover toward its batch_03 2/3, since both of
+    its lost trials ended in transfers.
+  risk: >-
+    Reverting on one round of evidence, and on a mechanistic rather than statistical
+    attribution. If the rise was drift, this generation spends a slot restoring a state that
+    was not broken — recoverable, since the revert is itself revertible, but a slot lost out of
+    six.
+  commit: 46b980e
+mutation:
+  branch: gen-004/revert-escalation
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/14
+  source_commit: 9f63ff00e4936a76327c6ac0318cba5be8d9cd61
+  candidate_commit: b28e9d4e9e9d88664453659939ba2dfdb4d3ab8f
+expected_effect: >-
+  SET level: transfer-carrying episodes fall back toward 10/24 and task_072 recovers toward
+  2/3, while task_065's first pass and the ordering behaviour that produced it are retained
+  because E1 is untouched. No claim is made about the batch number — batch_04's 4/24 is the
+  experiment's high point and a revert is not expected to raise it further; the purpose is to
+  stop a measured regression before three more generations build on top of it. The
+  generation-level statistical read is H4's sealed held-out round and the paired batch curve
+  whose endpoint test is H6's batch_07 against H0's batch_01.
+human_approval:
+  approved_by: >-
+    orchestrator — autonomous per D23 (user-delegated)
+  date: '2026-08-16'
+held_out_result: null
