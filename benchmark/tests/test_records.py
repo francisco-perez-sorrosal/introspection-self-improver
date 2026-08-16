@@ -179,7 +179,11 @@ def test_record_evidence_must_come_from_this_experiments_own_rounds(tmp_path, mo
     assert len(problems) == 1
     assert "conv-from-a-prior-experiment" in problems[0]
 
-    # A record scaffolded before its round has written manifests must not be refused for
-    # evidence that exists but is not on disk yet.
+    # No manifests at all is a FAILURE, not a skip: by this point the ids are real-looking
+    # (the scaffold's TODO fails earlier), and before any round has written a manifest there
+    # is nowhere legitimate they can have come from. "Cannot verify" must not pass as
+    # "verified".
     unknown = {"experiment_id": "999_none", "evidence": {"conversation_ids": ["conv-x"]}}
-    assert records._evidence_problems(unknown) == []
+    problems = records._evidence_problems(unknown)
+    assert len(problems) == 1
+    assert "no batch episode manifests" in problems[0]

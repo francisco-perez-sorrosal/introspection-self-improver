@@ -207,6 +207,7 @@ def build_rows(results_payload: dict[str, Any], context: RoundContext) -> list[d
                 "sandbox_tool_errors": account.get("sandbox_tool_errors"),
                 "sandbox_seam_disconnects": account.get("sandbox_seam_disconnects"),
                 "sandbox_seam_timeouts": account.get("sandbox_seam_timeouts"),
+                "sandbox_seam_unclassified": account.get("sandbox_seam_unclassified"),
                 "stall_warnings": (incidents or {}).get("stall_warnings", 0),
                 "incidents": incidents,
                 "messages": len(sim.get("messages") or []),

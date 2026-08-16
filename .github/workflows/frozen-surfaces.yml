@@ -27,6 +27,23 @@ jobs:
       - name: frozen policy region matches the lock
         run: python3 benchmark/scripts/check_policy_region.py
 
+  partition-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Cross-experiment task reuse must be declared with a reason, never rediscovered.
+      # tau_adapter.lock/split are stdlib+yaml, and the prior experiments' committed
+      # split manifests live under results/, so PyYAML is the only dependency.
+      - name: partition isolation holds against every prior experiment
+        run: |
+          pip install --quiet pyyaml
+          python3 benchmark/scripts/check_partition_isolation.py
+
   immutable-paths:
     runs-on: ubuntu-latest
     steps:

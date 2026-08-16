@@ -103,6 +103,42 @@ def resolve_round(
     return _heldout_spec(transport, overwrite, manifest)
 
 
+def assert_adhoc_respects_firewall(
+    *,
+    task_ids: list[str] | None,
+    held_out: set[str],
+    revealed: bool,
+) -> None:
+    """Refuse an ad-hoc run that would produce observable evidence for unrevealed held-out tasks.
+
+    The firewall is procedural everywhere reading is concerned, but *producing* the evidence
+    is mechanical and can be refused here: an ad-hoc round on the locked domain writes graded,
+    observable output in-tree, and one careless diagnostic on a held-out task (or a full
+    `make bench` sweep, which selects every task) breaks the firewall for the whole
+    experiment with nothing recording that it happened. No override flag on purpose — the
+    invariant has no sanctioned exception before reveal, and after reveal the guard lifts
+    itself.
+    """
+    if revealed or not held_out:
+        return
+    if task_ids is None:
+        raise RoundError(
+            "an ad-hoc run without --task-ids selects the whole locked split, which includes "
+            f"the experiment's {len(held_out)} unrevealed held-out task(s). Observable "
+            "held-out evidence before reveal breaks the firewall (CLAUDE.md invariants; "
+            "SIA_EVALUATION_PLAN.md D1/D9). Name the tasks explicitly, avoiding the held-out "
+            "set — or wait for the reveal."
+        )
+    overlap = sorted(set(task_ids) & held_out)
+    if overlap:
+        raise RoundError(
+            f"task(s) {', '.join(overlap)} are in the experiment's unrevealed held-out set. "
+            "An ad-hoc run would leave graded, observable evidence for them before the "
+            "reveal, breaking the firewall (CLAUDE.md invariants; SIA_EVALUATION_PLAN.md "
+            "D1/D9). There is no override: diagnose on batch or non-partition tasks instead."
+        )
+
+
 def _refuse_adhoc_flags(task_ids: list[str] | None, domain: str | None) -> None:
     if task_ids:
         raise RoundError(

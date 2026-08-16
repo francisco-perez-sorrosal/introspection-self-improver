@@ -11,3 +11,13 @@ fi
 # The frozen benchmark policy carried inside the Recipe's otherwise-mutable SYSTEM.md. Stdlib
 # only, so this costs milliseconds and needs neither the tau2 checkout nor its environment.
 python3 benchmark/scripts/check_policy_region.py
+
+# Cross-experiment partition isolation: undeclared task reuse against any prior experiment
+# fails the commit. Needs only PyYAML (tau_adapter.lock/split are stdlib+yaml), so the uv
+# env resolves it in ~a second; skipped with a warning if uv is absent so a bare clone can
+# still commit — CI runs the same check unconditionally.
+if command -v uv >/dev/null 2>&1; then
+  (cd benchmark && uv run --quiet python scripts/check_partition_isolation.py)
+else
+  echo "⚠ uv not found: partition isolation not checked locally (CI still enforces it)" >&2
+fi

@@ -305,7 +305,9 @@ class ToolBridge:
         self._tau_tools = list(tau_tools)
         # Sizes the bridge's own thread pool (see BRIDGE_THREADS_PER_EPISODE). Passed by the
         # runner from the round's effective concurrency so the seam is never the binding
-        # constraint; the value is recorded in run_metadata.json alongside max_concurrency.
+        # constraint. This is the DESIGNED sizing, installed only by `_serve`; while `start()`
+        # runs uvicorn's own path it is inert — run_metadata.json records
+        # `effective_executor_workers`, the pool actually in use, never this intent.
         self.executor_workers = max(
             MIN_BRIDGE_WORKERS, BRIDGE_THREADS_PER_EPISODE * max(1, int(max_concurrency))
         )
@@ -378,6 +380,20 @@ class ToolBridge:
         if not self._server.started:
             raise RuntimeError("tool bridge failed to start")
         return self.url
+
+    @property
+    def effective_executor_workers(self) -> int:
+        """Workers in the pool the two `to_thread` hops actually draw from this run.
+
+        While `start()` runs uvicorn's own path (the 2026-08-15 revert above), that pool is
+        asyncio's DEFAULT executor at its stdlib sizing — `min(32, cpu_count + 4)` — and
+        `executor_workers` is the dedicated sizing `_serve` would install, currently inert.
+        run_metadata.json records THIS value: recording the design intent as live capacity
+        would send a future stall diagnosis in exactly the wrong direction (ruling out the
+        thread ceiling that is in fact back). Re-enabling `_serve` must flip this to return
+        `self.executor_workers`.
+        """
+        return min(32, (os.cpu_count() or 1) + 4)
 
     def _serve(self) -> None:
         """uvicorn's own `Server.run`, with one addition: this loop's default executor.

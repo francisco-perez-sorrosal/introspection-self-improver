@@ -24,6 +24,10 @@
 #                           now sitting behind the firewall
 #   batch_from_held_out     a previously hidden task becomes observable
 #   batch_from_batch        observable in both — reported, never blocking
+#
+# `count:` pins how many tasks the declaration acknowledges. A partition that later drifts
+# to overlap more re-trips the gate instead of riding this acknowledgement; omit it only
+# when the overlap is genuinely unbounded by design.
 
 version: 1
 
@@ -31,6 +35,7 @@ declarations:
   - experiment: 005_fixedb-bm25-luna56
     reuses_from: 004_powered-bm25-luna56
     kinds: [held_out_from_held_out]
+    count: 28
     reason: >-
       Plan D19. The eligible pool holds zero virgin tasks (97 − 1 user-sim crasher − 20 seq-2
       − 68 seq-4 − 8 pilot), so seq 5 CANNOT have a fresh held-out set. Reuse of seq 4's T=28

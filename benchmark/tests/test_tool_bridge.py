@@ -368,3 +368,23 @@ def test_executor_is_sized_for_the_round_not_the_host() -> None:
 
     # The default must not silently reintroduce a host-derived cap.
     assert tool_bridge.ToolBridge(tau_tools=[]).executor_workers >= tool_bridge.MIN_BRIDGE_WORKERS
+
+
+def test_effective_executor_reports_the_pool_actually_in_use() -> None:
+    """run_metadata.json must record live capacity, never the inert design intent.
+
+    While `start()` runs uvicorn's own path (the 2026-08-15 revert), the two `to_thread`
+    hops draw from asyncio's default executor at its stdlib sizing — so that is what the
+    round must record. Recording `executor_workers` (the dedicated sizing `_serve` would
+    install) would make a stall diagnostician rule out the exact ceiling that is back.
+    This test flips when `_serve` is re-enabled: at that point the effective value must
+    become `executor_workers`, and updating this assertion is the forcing function.
+    """
+    import os
+
+    bridge = tool_bridge.ToolBridge(tau_tools=[], max_concurrency=16)
+    assert bridge.effective_executor_workers == min(32, (os.cpu_count() or 1) + 4)
+    assert bridge.effective_executor_workers != bridge.executor_workers, (
+        "the designed sizing is inert while the revert stands; if these are equal the "
+        "host happens to mask the distinction — pick a max_concurrency that separates them"
+    )

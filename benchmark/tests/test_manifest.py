@@ -184,18 +184,24 @@ def test_sandbox_tool_failures_counts_what_only_the_conversation_shows():
     items.append(
         {"response": 'MCP daemon: Error POSTing to endpoint: {"detail":"mcp upstream timed out"}'}
     )
+    # A daemon-reported error matching neither known marker: an upstream rewording or a new
+    # failure mode. It must degrade to a loud unclassified count, never to a silent zero —
+    # zero is exactly what this detector exists to distrust.
+    items.append({"response": 'MCP daemon: Error POSTing to endpoint: {"detail":"handshake lost"}'})
     counts = _sandbox_tool_failures(items)
     assert counts["sandbox_tool_errors"] == 1
-    # The two classes are counted apart: unreachable bridge vs bridge that answered too late.
+    # The classes are counted apart: unreachable bridge vs bridge that answered too late.
     # They mean opposite things and are fixed in different places, so lumping them would
     # have hidden exactly the regression that motivated this detector.
     assert counts["sandbox_seam_disconnects"] == 1
     assert counts["sandbox_seam_timeouts"] == 1
+    assert counts["sandbox_seam_unclassified"] == 1
 
-    # A healthy conversation must score zero on all three, or the signal is noise.
+    # A healthy conversation must score zero on all four, or the signal is noise.
     healthy = [{"attributes": {"gen_ai": {"operation": {"name": "execute_tool"}}}}] * 5
     assert _sandbox_tool_failures(healthy) == {
         "sandbox_tool_errors": 0,
         "sandbox_seam_disconnects": 0,
         "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
     }

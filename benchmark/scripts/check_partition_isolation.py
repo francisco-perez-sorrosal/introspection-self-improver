@@ -27,7 +27,17 @@ experiment was revealed:
 Undeclared overlap above the reporting tier exits non-zero. Declarations live in
 benchmark/partition_reuse.yaml — outside the freeze fingerprint on purpose, because it
 describes history rather than configuration, and because adding a fingerprinted key
-mid-experiment would invalidate a running freeze.
+mid-experiment would invalidate a running freeze. A declaration may pin `count:`, the
+number of tasks it acknowledges — then a partition that later drifts to overlap more
+re-trips the gate instead of riding the old acknowledgement.
+
+Two honest limits. Severity is read off the committed results tree, which this analysis
+assumes is append-only for completed rounds — deleting a round un-spends its experiment
+retroactively, so a discarded round must leave its reason in-tree, not just in a commit
+message. And "spent" counts only `generation_*/batch_*/` rounds: calibration pilots and
+ad-hoc probes run real tasks without any manifest entry, so an experiment directory that
+ran episodes but committed no `split_manifest.yaml` is reported as a blind spot rather
+than silently treated as clean.
 """
 
 from __future__ import annotations
@@ -108,22 +118,44 @@ def overlaps(
     }
 
 
-def load_declarations(path: Path, experiment_id: str) -> dict[str, set[str]]:
-    """Declared reuse for this experiment: prior experiment id -> acknowledged kinds."""
+def load_declarations(path: Path, experiment_id: str) -> dict[str, dict[str, int | None]]:
+    """Declared reuse for this experiment: prior id -> {acknowledged kind: pinned count}.
+
+    A pinned count (`count:` on the entry) bounds what the declaration acknowledges; None
+    means unpinned, acknowledging the kind at any size — legacy entries keep working.
+    """
     if not path.exists():
         return {}
     payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    declared: dict[str, set[str]] = {}
+    declared: dict[str, dict[str, int | None]] = {}
     for entry in payload.get("declarations") or []:
         if str(entry.get("experiment")) != experiment_id:
             continue
         if not str(entry.get("reason") or "").strip():
             # A declaration without a reason is a silencer, not a record.
             continue
-        declared.setdefault(str(entry.get("reuses_from")), set()).update(
-            str(kind) for kind in entry.get("kinds") or []
-        )
+        count = entry.get("count")
+        kinds = declared.setdefault(str(entry.get("reuses_from")), {})
+        for kind in entry.get("kinds") or []:
+            kinds[str(kind)] = int(count) if count is not None else None
     return declared
+
+
+def undocumented_experiments(results_root: Path | None = None) -> list[str]:
+    """Experiment directories that ran episodes but committed no partition manifest.
+
+    Invisible to the overlap analysis above by construction — there is no partition to
+    intersect — yet they hold real task spend (calibration pilots, platform probes,
+    concurrency smokes). Reported as blind spots so their exposure is at least named,
+    never silently treated as clean.
+    """
+    missing = []
+    for exp in sorted((results_root or RESULTS_ROOT).glob("experiment_*")):
+        if not exp.is_dir() or (exp / "split_manifest.yaml").exists():
+            continue
+        if any(exp.glob("generation_*/**/results.json")):
+            missing.append(exp.name.removeprefix("experiment_"))
+    return missing
 
 
 def main() -> int:
@@ -146,11 +178,17 @@ def main() -> int:
 
     problems: list[str] = []
     notes: list[str] = []
+    for blind_id in undocumented_experiments():
+        notes.append(
+            f"blind spot — {blind_id} ran episodes but committed no split_manifest.yaml, so "
+            f"its task spend is invisible to this analysis (pilots and probes live outside "
+            f"batch rounds); keeping it off the current partition stays a human check"
+        )
     for prior_id, manifest, revealed, spent in prior_experiments():
         if prior_id == experiment_id:
             continue
         found = overlaps(current, partition_of(manifest))
-        acknowledged = declared.get(prior_id, set())
+        acknowledged = declared.get(prior_id, {})
         if not spent and not revealed:
             total = sum(len(tasks) for tasks in found.values())
             if total:
@@ -168,10 +206,15 @@ def main() -> int:
                 f"{experiment_id} reuses {len(tasks)} task(s) from {prior_id} ({state}) "
                 f"as {kind}: {', '.join(tasks[:6])}{' …' if len(tasks) > 6 else ''}"
             )
-            if kind in acknowledged:
-                notes.append(f"declared — {detail}")
-            else:
+            if kind not in acknowledged:
                 problems.append(detail)
+            elif acknowledged[kind] is not None and acknowledged[kind] != len(tasks):
+                problems.append(
+                    f"{detail} — declared as {acknowledged[kind]} task(s), so the partition "
+                    f"has drifted past its declaration; re-examine and re-declare"
+                )
+            else:
+                notes.append(f"declared — {detail}")
         for kind in REPORTING_KINDS:
             if found[kind]:
                 notes.append(

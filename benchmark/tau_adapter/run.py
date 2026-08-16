@@ -63,6 +63,7 @@ from tau_adapter.dev_lane import (
     warm_runtime,
 )
 from tau_adapter.experiment import (
+    RESULTS_ROOT,
     enforce_snapshot,
     enforce_snapshot_for_experiment,
     freeze_fingerprint,
@@ -223,6 +224,12 @@ def _account_of(item: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:
 _SEAM_DISCONNECT_MARKER = "local MCP"
 _SEAM_TIMEOUT_MARKER = "mcp upstream timed out"
 
+#: The daemon's stable prefix on every tool error it reports in a response body. Coarser than
+#: the two class markers above, and kept deliberately: those are provider prose that can be
+#: reworded upstream at any time, and a rewording must degrade to "unclassified seam error"
+#: — loud — rather than to zero, which would make this whole failure class invisible again.
+_DAEMON_ERROR_MARKER = "MCP daemon: Error"
+
 
 def _sandbox_tool_failures(items: list[dict[str, Any]]) -> dict[str, int]:
     """Tool failures visible ONLY in the platform conversation, counted per episode.
@@ -237,18 +244,37 @@ def _sandbox_tool_failures(items: list[dict[str, Any]]) -> dict[str, int]:
     The conversation export is already fetched for cost and lineage, so counting this costs
     nothing and makes the invisible case loud — the seam's whole contract being that a round
     may fail but may never report itself healthy while failing.
+
+    The markers are substring matches over the whole rendered item, which over-counts by
+    design: the agent SEES the daemon's error text and tends to quote it in its next visible
+    message, so one failure can land in two items. Per-episode presence (>0) is the signal;
+    the item count is an upper bound, not a call count. The same breadth means a harness
+    mutation that writes a marker string into prompt or tool text would flag its own round —
+    if a whole round lights up uniformly, read one conversation before believing it.
     """
-    counts = {"sandbox_tool_errors": 0, "sandbox_seam_disconnects": 0, "sandbox_seam_timeouts": 0}
+    counts = {
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+    }
     for entry in items:
         attributes = entry.get("attributes") or {}
         operation = ((attributes.get("gen_ai") or {}).get("operation") or {}).get("name")
         if operation == "execute_tool" and (attributes.get("error") or {}).get("type"):
             counts["sandbox_tool_errors"] += 1
         rendered = json.dumps(entry)
-        if _SEAM_DISCONNECT_MARKER in rendered:
+        disconnect = _SEAM_DISCONNECT_MARKER in rendered
+        timeout = _SEAM_TIMEOUT_MARKER in rendered
+        if disconnect:
             counts["sandbox_seam_disconnects"] += 1
-        elif _SEAM_TIMEOUT_MARKER in rendered:
+        if timeout:
             counts["sandbox_seam_timeouts"] += 1
+        if _DAEMON_ERROR_MARKER in rendered and not (disconnect or timeout):
+            # A daemon-reported tool error whose wording matches neither known class:
+            # either a new failure mode or an upstream rewording of an old one. Both are
+            # worth a human read, so the bucket exists to keep them from reading as zero.
+            counts["sandbox_seam_unclassified"] += 1
     return counts
 
 
@@ -526,6 +552,19 @@ def main() -> int:
     domain = args.domain or lock.domain
     locked_mode = domain == lock.domain
     muted = spec.kind == roundsmod.KIND_HELDOUT
+
+    # Ad-hoc runs keep their free choice of tasks — except the unrevealed held-out set,
+    # whose observable evidence must not exist before the reveal. Protocol rounds are
+    # partition-driven and skip this; a non-locked domain (mock) shares no task ids.
+    if spec.kind == roundsmod.KIND_ADHOC and locked_mode and splitmod.SPLIT_MANIFEST_PATH.exists():
+        held_out_ids = set(splitmod.load_manifest().get(splitmod.HELD_OUT) or [])
+        revealed = (RESULTS_ROOT / f"experiment_{lock.experiment_id}" / "held_out").is_dir()
+        try:
+            roundsmod.assert_adhoc_respects_firewall(
+                task_ids=spec.task_ids, held_out=held_out_ids, revealed=revealed
+            )
+        except roundsmod.RoundError as exc:
+            raise SystemExit(str(exc)) from exc
 
     try:
         max_concurrency = roundsmod.resolve_max_concurrency(
@@ -982,8 +1021,11 @@ def main() -> int:
                 "max_concurrency": max_concurrency,
                 # The seam's own capacity for this round. Recorded beside max_concurrency
                 # because the two together are what decides whether a rendezvous stall was
-                # the agent or the bridge running out of threads.
-                "bridge_executor_workers": bridge.executor_workers,
+                # the agent or the bridge running out of threads. The EFFECTIVE pool, never
+                # the designed sizing: while the 2026-08-15 revert stands the bridge draws
+                # from asyncio's host-sized default executor, and recording the inert design
+                # value here would make a diagnostician rule out the true ceiling.
+                "bridge_executor_workers": bridge.effective_executor_workers,
                 "max_concurrent_starts": max_concurrent_starts,
                 "transport": spec.transport,
                 "launcher": args.launcher if spec.transport == TRANSPORT_LOCAL else None,
@@ -1066,19 +1108,44 @@ def main() -> int:
     # episodes in which the agent was denied its tools, and it must not read as healthy.
     disconnects = sum(row.get("sandbox_seam_disconnects") or 0 for row in manifest_rows)
     timeouts = sum(row.get("sandbox_seam_timeouts") or 0 for row in manifest_rows)
+    unclassified = sum(row.get("sandbox_seam_unclassified") or 0 for row in manifest_rows)
     tool_errors = sum(row.get("sandbox_tool_errors") or 0 for row in manifest_rows)
-    if disconnects or timeouts or tool_errors:
+    if disconnects or timeouts or unclassified or tool_errors:
         affected = sum(
             1
             for row in manifest_rows
-            if (row.get("sandbox_seam_disconnects") or row.get("sandbox_seam_timeouts"))
+            if (
+                row.get("sandbox_seam_disconnects")
+                or row.get("sandbox_seam_timeouts")
+                or row.get("sandbox_seam_unclassified")
+            )
         )
         print(
             f"   ⚠ sandbox     {tool_errors} tool error(s): {disconnects} unreachable-bridge, "
-            f"{timeouts} bridge-too-slow, across {affected} episode(s) — the sandbox answered "
-            f"these calls itself, so τ never saw them. Treat the affected episodes as harness "
-            f"failures, not agent ones."
+            f"{timeouts} bridge-too-slow, {unclassified} unclassified, across {affected} "
+            f"episode(s) — the sandbox answered these calls itself, so τ never saw them. "
+            f"Unreachable-bridge episodes ran with their tools denied: harness failures, not "
+            f"agent ones. Bridge-too-slow calls may have recovered on τ's retry — read the "
+            f"conversation before excluding the episode."
         )
+    if is_platform:
+        # The counters above can only see conversations that were actually fetched and
+        # complete. An episode whose evidence is missing is UNVERIFIED, not clean — reporting
+        # it silently as zero would recreate the exact failure these counters exist to catch
+        # (a round reading healthy because the evidence of its sickness never arrived).
+        unverified_rows = [
+            row for row in manifest_rows if row.get("evidence_complete") is not True
+        ]
+        if unverified_rows:
+            named = ", ".join(
+                sorted({row["tau_task_id"] for row in unverified_rows})[:6]
+            )
+            print(
+                f"   ⚠ seam-blind  {len(unverified_rows)} episode(s) whose platform "
+                f"conversation is missing or incomplete ({named}"
+                f"{' …' if len(unverified_rows) > 6 else ''}) — sandbox tool failures there "
+                f"are invisible to the counters above. Re-fetch before diagnosing from them."
+            )
     if orphaned_tasks:
         print(
             f"   orphans       {len(orphaned_tasks)} platform task(s) created but absent from "

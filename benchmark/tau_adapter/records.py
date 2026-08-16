@@ -183,16 +183,23 @@ def _provenance_problems(record: dict[str, Any], conversations: list[Any]) -> li
     failure is silent: a plausible-looking id from a prior experiment reads exactly like a
     real one, and nothing downstream would ever resolve it.
 
-    Skipped when the experiment has no manifests yet (a record scaffolded before its round
-    completes), since the alternative is refusing a record for evidence that exists but has
-    not been written down yet.
+    No manifests yet is a FAILURE, not a skip. By the time this runs the record carries
+    real-looking conversation ids (the scaffold's TODO placeholder fails earlier), and before
+    any batch round has written a manifest there is nowhere legitimate such ids can have come
+    from — only a prior experiment or thin air, which are exactly the two cases this check
+    exists to refuse. "Cannot verify" must never validate as "verified".
     """
     experiment_id = str(record.get("experiment_id") or "").strip()
     if not experiment_id:
         return []
     known = _known_conversation_ids(experiment_id)
     if not known:
-        return []
+        return [
+            f"evidence.conversation_ids cannot be provenance-checked: experiment "
+            f"{experiment_id} has no batch episode manifests yet, so no conversation can "
+            "legitimately be cited. Run the batch round first; the record is not done until "
+            "its evidence verifies against the round that produced it."
+        ]
     foreign = sorted({str(c) for c in conversations} - known)
     if not foreign:
         return []

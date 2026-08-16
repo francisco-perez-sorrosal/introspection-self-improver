@@ -16,6 +16,7 @@ from tau_adapter.rounds import (
     TRANSPORT_LOCAL,
     TRANSPORT_PLATFORM,
     RoundError,
+    assert_adhoc_respects_firewall,
     resolve_max_concurrency,
     resolve_round,
 )
@@ -90,6 +91,28 @@ def test_adhoc_defaults_to_local_and_passes_selection_through():
 def test_adhoc_keeps_an_explicit_transport():
     spec = _resolve(transport=TRANSPORT_PLATFORM, manifest=None, rows=None)
     assert spec.transport == TRANSPORT_PLATFORM
+
+
+def test_adhoc_run_on_an_unrevealed_held_out_task_is_refused():
+    """One careless diagnostic on a held-out task leaves graded, observable evidence in-tree
+    and breaks the firewall for the whole experiment — refused, with no override."""
+    with pytest.raises(RoundError, match="held-out"):
+        assert_adhoc_respects_firewall(
+            task_ids=["task_001", "task_042"], held_out={"task_042"}, revealed=False
+        )
+
+
+def test_adhoc_full_sweep_is_refused_while_held_out_is_sealed():
+    """Omitting --task-ids selects every task in the split — held-out included — so a bench
+    sweep before reveal is a firewall breach, not a convenience."""
+    with pytest.raises(RoundError, match="whole locked split"):
+        assert_adhoc_respects_firewall(task_ids=None, held_out={"task_042"}, revealed=False)
+
+
+def test_adhoc_firewall_lifts_after_reveal_and_off_partition():
+    assert_adhoc_respects_firewall(task_ids=None, held_out={"task_042"}, revealed=True)
+    assert_adhoc_respects_firewall(task_ids=["task_001"], held_out={"task_042"}, revealed=False)
+    assert_adhoc_respects_firewall(task_ids=None, held_out=set(), revealed=False)
 
 
 def test_batch_round_forces_the_platform_lane():

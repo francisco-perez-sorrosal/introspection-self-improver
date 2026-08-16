@@ -84,7 +84,42 @@ def test_a_declaration_without_a_reason_does_not_silence_the_check(tmp_path):
     )
     declared = iso.load_declarations(path, "005")
     assert "004" not in declared, "a reasonless declaration is a silencer, not a record"
-    assert declared["002"] == {"held_out_from_batch"}
+    assert declared["002"] == {"held_out_from_batch": None}
+
+
+def test_a_pinned_count_bounds_what_the_declaration_acknowledges(tmp_path):
+    """A declaration made for 28 tasks must not silently cover a partition that later
+    drifts to overlap more — the pin makes drift re-trip the gate."""
+    path = tmp_path / "reuse.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "declarations": [
+                    {
+                        "experiment": "005",
+                        "reuses_from": "004",
+                        "kinds": ["held_out_from_held_out"],
+                        "count": 28,
+                        "reason": "pool exhausted",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    declared = iso.load_declarations(path, "005")
+    assert declared["004"] == {"held_out_from_held_out": 28}
+
+
+def test_an_experiment_without_a_manifest_is_reported_as_a_blind_spot(tmp_path):
+    """Calibration pilots and probes spend tasks outside any batch round; an experiment
+    directory holding episodes but no committed partition is invisible to the overlap
+    analysis and must be named rather than silently treated as clean."""
+    blind = tmp_path / "experiment_003_pilot" / "generation_000" / "calibration_pilot"
+    blind.mkdir(parents=True)
+    (blind / "results.json").write_text("{}", encoding="utf-8")
+    _write_experiment(tmp_path, "004_prior", ["t1"], ["t2"])
+    assert iso.undocumented_experiments(tmp_path) == ["003_pilot"]
 
 
 def test_the_live_repo_partition_is_declared(monkeypatch):

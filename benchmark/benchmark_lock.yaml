@@ -279,14 +279,20 @@ operational:
   # 10 -> 8 (2026-08-15, seq-5 restart). Not a response to a local-lane incident — the
   # discarded H0 held-out round ran 84 episodes 10-wide with ZERO incidents, so the local
   # lane's own evidence says 10 was fine. It is margin, taken deliberately after the seam's
-  # real ceiling was found and removed: every MCP tools/call parks TWO threads (channel
-  # resolution, then the rendezvous), and until this date they drew from asyncio's DEFAULT
-  # executor at min(32, cpu_count + 4) — 16 on the 12-core host, i.e. a hidden ~8-episode cap
-  # that belonged to the machine rather than to any recorded value. tool_bridge.py now sizes
-  # its own pool from the round's concurrency (BRIDGE_THREADS_PER_EPISODE), and each round
-  # records `bridge_executor_workers` in run_metadata.json beside max_concurrency, so a future
-  # stall can be attributed to the agent or to the seam instead of guessed at.
-  # The binding constraint at 8 is provider streams (2N = 16), not the bridge (32 workers).
+  # real ceiling was found: every MCP tools/call parks TWO threads (channel resolution,
+  # then the rendezvous), drawn from asyncio's DEFAULT executor at min(32, cpu_count + 4)
+  # — 16 on the 12-core host, i.e. a hidden ~8-episode cap that belonged to the machine
+  # rather than to any recorded value.
+  #
+  # CEILING STATUS (amended 2026-08-15, same day): the dedicated-pool fix was REVERTED
+  # while the disconnect regression it coincided with is bisected (contract/constraints.md
+  # § The disconnect regression), so the default-executor ceiling is LIVE again. Each round
+  # records `bridge_executor_workers` in run_metadata.json as the EFFECTIVE pool (the host
+  # default while the revert stands), so a stall still attributes to agent or seam without
+  # guessing. At this value the ceiling is tight on the local lane only in theory (2N = 16
+  # parked threads worst-case, but local calls park too briefly to jam); the platform lane,
+  # where parks are long, runs batches at 4 and MUST NOT be raised to ≥8 until the
+  # fix-forward lands. Provider streams (2N = 16) remain the other practical constraint.
   #
   # Platform BATCH rounds still take --max-concurrency 4 from the `make batch` target, and
   # that number now carries evidence in both directions: 4-wide validated clean 2026-08-15,

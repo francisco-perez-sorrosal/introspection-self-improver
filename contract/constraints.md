@@ -191,7 +191,7 @@ The lock's value is the recorded default, any run may override it with
 streams; throttling surfaces as infra retries) and heavy-tailed sandbox provisioning
 latency under concurrent starts (next section).
 
-### The seam's own thread ceiling (found and removed 2026-08-15)
+### The seam's own thread ceiling (found 2026-08-15; the fix reverted the same day — the ceiling is BACK)
 
 For a while there was a third ceiling, and it was invisible because nothing declared it.
 Every `tools/call` parks **two** threads in sequence — `channel_for_request` (up to
@@ -209,19 +209,65 @@ Observed at `--max-concurrency 8` on a 24-episode batch round: one 300s stall
 sandbox round-trip parks a bridge thread for far longer than a local call does, so the
 platform lane reaches the ceiling first.
 
-`tool_bridge.py` now builds the serving loop itself and installs a **dedicated executor**
-sized from the round's concurrency (`BRIDGE_THREADS_PER_EPISODE`, floor
-`MIN_BRIDGE_WORKERS`), so capacity is a property of the round instead of the host. The two
-`to_thread` call sites are untouched — `set_default_executor` on that loop changes capacity
-and nothing else, and the loop is the bridge thread's alone, so τ's runner never sees a
-different executor. Each round records `bridge_executor_workers` beside `max_concurrency` in
-`run_metadata.json`, so a future stall is attributable instead of guessed at. The uvicorn
-loop factory is still uvicorn's own (`get_loop_factory`, which replaced `setup_event_loop`
-in 0.36), so a configured uvloop is honoured.
+The fix (`585ad45`) had `tool_bridge.py` build the serving loop itself and install a
+**dedicated executor** sized from the round's concurrency (`BRIDGE_THREADS_PER_EPISODE`,
+floor `MIN_BRIDGE_WORKERS`). It was **reverted the same day** (`17fa493`): the hand-built
+loop coincided with the disconnect regression described in the next section, and until
+causality is settled the seam runs uvicorn's own path. Consequences that hold as long as
+the revert stands: the two `to_thread` hops draw from **asyncio's default executor again**
+(16 threads on the 12-core host — the ceiling above is live), `_serve` is retained unused
+for the bisect, and `run_metadata.json`'s `bridge_executor_workers` records the
+**effective** default-executor size, never the inert designed sizing — an instrument that
+reported the removed ceiling as still removed would send a stall diagnosis in exactly the
+wrong direction. Operationally the ceiling does not currently bind: platform batches pin
+`--max-concurrency 4` (8 parked threads worst-case against 16), and local calls park
+threads too briefly to jam the pool. Raising platform-lane concurrency to ≥8 before the
+fix returns would re-enter the stall regime. The intended fix-forward is **not** the
+hand-built loop again: replace the two `asyncio.to_thread` call sites with an explicit
+`run_in_executor(self._executor, ctx.run, …)` helper (verbatim `to_thread` semantics,
+CPython's own three lines) — no loop surgery, no uvicorn coupling, validated behind a
+platform canary before it lands.
 
 The lesson generalises past this bug: a seam limit that no value names will be rediscovered
 as a mystery. If concurrency is raised again, the binding constraints are the two above —
 provider streams and provisioning latency — and they should stay that way.
+
+### The disconnect regression and the sandbox-failure counters (2026-08-15)
+
+While the hand-built loop was live, platform episodes began failing with
+`local MCP 'tau' is disconnected` — the sandbox's MCP daemon answering the tool call
+itself because it believed the tunnel to the bridge was down. The failure is invisible to
+every bridge-side detector by construction: the call never arrives, τ records no turn, the
+refusal counters count nothing, `results.json` carries no trace, and the episode grades as
+an ordinary agent failure. It was found by a human reading a platform conversation while
+the round printed `incidents none`.
+
+The evidence and its honest weight: 0/10 episodes with disconnects on the commit before
+the loop change vs 3/10 after (Fisher's exact p ≈ 0.105 — suggestive, not significant);
+the reverted probe (`generation_000/seam_probe_reverted`, n=3 on a lighter task) had ~25%
+power against the runtime-image hypothesis and none against a time-varying platform
+transient — the same afternoon's local H0 round logged 24 provider transport errors, so
+environmental instability is a live confound. A source-level comparison of `_serve`
+against the installed uvicorn 0.52.1 run path (Python 3.12, no uvloop) found **no
+mechanism**: at `--max-concurrency 4` the executor swap was never even exercised, and the
+loop-factory/signal/teardown deltas are inert during serving. **Causality is open.** The
+revert is justified by cost asymmetry alone — the ceiling degrades throughput, the
+regression degrades evidence. The decisive discriminator, deliberately kept one line away:
+re-enable `_serve` on a dirty tree, run ~10 platform episodes on heavy non-partition
+tasks, and read the counters — disconnects returning implicates the loop; a clean run
+implicates the transient.
+
+What the incident left behind mechanically: `run.py::_sandbox_tool_failures` counts, from
+the already-fetched conversation payload, the failures only the platform conversation can
+show — `sandbox_seam_disconnects` (daemon could not reach the bridge; tools denied),
+`sandbox_seam_timeouts` (bridge reached but too slow; pre-existing, τ may have retried
+through it), and `sandbox_seam_unclassified` (a daemon-reported error matching neither
+marker — the drift net, so an upstream rewording degrades to a loud unknown instead of a
+silent zero). Counters land per-episode on the manifest and print as a `⚠ sandbox` line;
+episodes whose conversation could not be fetched print as `⚠ seam-blind`, because
+unverified must never read as clean. The markers are substring matches over provider
+text: over-counting via the agent quoting an error back is accepted, and a round that
+flags uniformly after a prompt-touching mutation deserves one human read before belief.
 
 ### The sandbox-quota misdiagnosis (corrected 2026-08-14)
 
