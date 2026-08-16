@@ -1,0 +1,100 @@
+# Value snapshot written at freeze time by the runner (comments dropped; the
+# canonical commented file lives in benchmark/). Values cannot drift from the
+# experiment: the freeze fingerprint refuses any change.
+version: 2
+domain: banking_knowledge
+task_split_name: base
+batch_mode: fixed
+batches:
+  batch_01:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+  batch_02:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+  batch_03:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+  batch_04:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+  batch_05:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+  batch_06:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+  batch_07:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+held_out:
+- task_007
+- task_012
+- task_016
+- task_018
+- task_019
+- task_021
+- task_022
+- task_025
+- task_031
+- task_033
+- task_039
+- task_044
+- task_049
+- task_052
+- task_059
+- task_068
+- task_073
+- task_075
+- task_078
+- task_084
+- task_085
+- task_086
+- task_092
+- task_093
+- task_095
+- task_097
+- task_098
+- task_100

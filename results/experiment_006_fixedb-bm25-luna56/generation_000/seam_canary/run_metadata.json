@@ -1,0 +1,215 @@
+{
+  "mode": "locked",
+  "experiment": "006_fixedb-bm25-luna56",
+  "freeze_fingerprint": "sha256:890db4b5b44dc8935fc39bd9c814fcce6bac1186d66ed81cb1a7f7a1dca02b89",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 3,
+  "max_concurrency": 3,
+  "bridge_executor_workers": 32,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a0096f-fde8-7256-83e6-1249da1ffe48"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "72c08696e64ae78eb80da25a5dc01f4f9ac7da30",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 1,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 2,
+      "settle_timeouts": 0,
+      "zero_bridge_calls": 0
+    },
+    "unattributed": [],
+    "bridge": {},
+    "infra_failure_classes": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a0096f-fde8-7256-83e6-1249da1ffe48",
+    "environment": "development",
+    "dev_target": "tau-574d",
+    "task_ids": [
+      "01a00970-f17d-7592-bfc8-a14158604120",
+      "01a00970-f1f0-709d-b78f-af9d5b1bd82d",
+      "01a00972-3bf4-7538-8ca9-88f929ff70c9"
+    ],
+    "tasks_created": [
+      "01a00970-f17d-7592-bfc8-a14158604120",
+      "01a00970-f1f0-709d-b78f-af9d5b1bd82d",
+      "01a00970-f609-7002-9098-b8260c6f30c2",
+      "01a00971-4e4c-77d5-9ee1-731b8046c382",
+      "01a00971-b9e9-775b-b581-5907ed3301b9",
+      "01a00972-3bf4-7538-8ca9-88f929ff70c9"
+    ],
+    "orphaned_task_ids": [
+      "01a00970-f609-7002-9098-b8260c6f30c2",
+      "01a00971-4e4c-77d5-9ee1-731b8046c382",
+      "01a00971-b9e9-775b-b581-5907ed3301b9"
+    ],
+    "accounting": {
+      "01a00970-f17d-7592-bfc8-a14158604120": {
+        "cost": {
+          "usd": 0.00824085
+        },
+        "usage": {
+          "input_tokens": 127051,
+          "output_tokens": 1451,
+          "total_tokens": 128502
+        },
+        "metrics": {
+          "duration_ms": 21081.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 5,
+          "span_count": 25,
+          "tool_use_count": 6,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "72c08696e64ae78eb80da25a5dc01f4f9ac7da30",
+        "evidence_complete": true,
+        "item_count": 31,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00970-f1f0-709d-b78f-af9d5b1bd82d": {
+        "cost": {
+          "usd": 0.00301619
+        },
+        "usage": {
+          "input_tokens": 36435,
+          "output_tokens": 466,
+          "total_tokens": 36901
+        },
+        "metrics": {
+          "duration_ms": 8150.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 3,
+          "span_count": 13,
+          "tool_use_count": 2,
+          "trace_count": 1
+        },
+        "recipe_git_commit_sha": "72c08696e64ae78eb80da25a5dc01f4f9ac7da30",
+        "evidence_complete": true,
+        "item_count": 15,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00972-3bf4-7538-8ca9-88f929ff70c9": {
+        "cost": {
+          "usd": 0.01262307
+        },
+        "usage": {
+          "input_tokens": 354863,
+          "output_tokens": 2083,
+          "total_tokens": 356946
+        },
+        "metrics": {
+          "duration_ms": 38716.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 11,
+          "span_count": 47,
+          "tool_use_count": 8,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "72c08696e64ae78eb80da25a5dc01f4f9ac7da30",
+        "evidence_complete": true,
+        "item_count": 55,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      }
+    },
+    "retitles": {
+      "applied": 3,
+      "failed": 0
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 136.5
+}
