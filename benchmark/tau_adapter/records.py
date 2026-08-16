@@ -76,6 +76,7 @@ def validate(
     problems += _changes_problems(record, outcome)
     problems += _evidence_problems(record, results_root or REPO_ROOT / "results")
     problems += _prose_problems(record, outcome, schema)
+    problems += backlog_problems(record, results_root or REPO_ROOT / "results")
     if not revealed and record.get("held_out_result") is not None:
         problems.append(
             "held_out_result is filled, but the experiment has not revealed: this field "
@@ -183,7 +184,80 @@ def _changes_problems(record: dict[str, Any], outcome: str) -> list[str]:
             "a schema_version 2 record with a landed-or-declined mutation must itemize "
             "its improvement set in `changes` (plan D22) — one item per coherent change"
         )
+    if isinstance(version, int) and version >= 3 and outcome in (OUTCOME_ACCEPTED, "rejected"):
+        problems += _clause_problems(changes or [])
     return problems
+
+
+#: The adversarial wording review (plan D26): each clause of a landed instruction that a
+#: letter-over-intent reading could optimise against gets its own falsifier. Seq 6's C2
+#: record falsified over-reach and left "or explained" unwatched; the harm arrived through
+#: the unwatched clause one round later.
+_CLAUSE_REQUIRED_KEYS = ("clause", "adversarial_reading", "falsifier")
+
+
+def _clause_problems(changes: list[Any]) -> list[str]:
+    problems: list[str] = []
+    for index, item in enumerate(changes):
+        if not isinstance(item, dict) or item.get("surface") != "instructions":
+            continue
+        clauses = item.get("clauses")
+        if not isinstance(clauses, list) or not clauses:
+            problems.append(
+                f"changes[{index}] lands instructions text without `clauses` (schema v3): "
+                "enumerate every disjunction, precondition, or licensed alternative in the "
+                "landed wording, each with its adversarial reading and its own falsifier — "
+                "the escape clause is what the model optimises against"
+            )
+            continue
+        for clause_index, clause in enumerate(clauses):
+            if not isinstance(clause, dict):
+                problems.append(f"changes[{index}].clauses[{clause_index}] must be a mapping")
+                continue
+            for key in _CLAUSE_REQUIRED_KEYS:
+                value = clause.get(key)
+                if not isinstance(value, str) or not value.strip() or _is_placeholder(value):
+                    problems.append(
+                        f"changes[{index}].clauses[{clause_index}].{key} must be non-empty "
+                        "prose (no TODO) — an unwatched clause is an unscored prediction"
+                    )
+    return problems
+
+
+def backlog_problems(record: dict[str, Any], results_root: Path) -> list[str]:
+    """The backlog write-through gate (plan D26), keyed on schema_version >= 3.
+
+    A v3 record's transition must be marked in the experiment's improvement_backlog.md:
+    `<!-- transition: gen_NNN_to_MMM -->`, appended by the re-ranking that every
+    transition owes the backlog. Content-based on purpose — no git handle needed, and the
+    marker is exactly the artifact the update produces. Seq 6's backlog silently froze at
+    gen-003 while its gated records stayed impeccable: the gated artifact stayed alive,
+    the ungated one died. v2 and unversioned records validate untouched.
+    """
+    version = record.get("schema_version")
+    if not (isinstance(version, int) and version >= 3):
+        return []
+    transition = record.get("transition") or {}
+    src, dst = transition.get("from_generation"), transition.get("to_generation")
+    if not isinstance(src, int) or not isinstance(dst, int):
+        return []  # the field check already reported the shape
+    experiment_id = str(record.get("experiment") or "").strip()
+    if not experiment_id:
+        return []
+    backlog = results_root / f"experiment_{experiment_id}" / "improvement_backlog.md"
+    marker = f"<!-- transition: gen_{src:03d}_to_{dst:03d} -->"
+    if not backlog.exists():
+        return [
+            f"improvement_backlog.md does not exist for experiment {experiment_id}: a v3 "
+            "record's transition updates the backlog it re-ranked (plan D26)"
+        ]
+    if marker not in backlog.read_text(encoding="utf-8"):
+        return [
+            f"improvement_backlog.md carries no {marker!r} marker: the backlog is updated "
+            "in the same transition as the record — append the marker with the re-ranking "
+            "it stamps (plan D26; seq 6's backlog silently froze at gen-003)"
+        ]
+    return []
 
 
 def _is_placeholder(value: Any) -> bool:
@@ -317,20 +391,34 @@ def scaffold(
             "TODO: the SET-level summary — why these changes compose "
             "(independently justified, non-conflicting)"
         ),
-        "schema_version": 2,
+        "schema_version": 3,
         # One item per coherent change (plan D22): any number, each individually
         # evidenced, each with its own falsifiable prediction the next batch will score.
-        # Duplicate the template item as needed; delete none of its keys.
+        # Duplicate the template item as needed; delete none of its keys. `clauses` is
+        # the v3 adversarial wording review — REQUIRED for surface: instructions, one
+        # entry per disjunction/precondition/licensed alternative in the landed text;
+        # delete the list for non-instructions surfaces.
         "changes": [
             {
                 "mechanism": "TODO: the one coherent mechanism this change encodes",
                 "surface": (
-                    "TODO: instructions | pi-skill | extension-tool | sub-agent | "
-                    "retrieval-usage | revert | other"
+                    "TODO: instructions | extension-hook | extension-tool | sub-agent | "
+                    "pi-skill | retrieval-usage | revert | other"
                 ),
                 "evidence": "TODO: conversation ids / backlog target id behind this change",
                 "expected_effect": "TODO: this change's own falsifiable prediction",
                 "risk": "TODO: how this change could make things worse, or 'none identified'",
+                "clauses": [
+                    {
+                        "clause": "TODO: verbatim fragment of the landed text (git show)",
+                        "adversarial_reading": (
+                            "TODO: what a letter-over-intent reading does with this clause"
+                        ),
+                        "falsifier": (
+                            "TODO: the counter that fires if the adversarial reading wins"
+                        ),
+                    }
+                ],
                 "commit": None,
             }
         ],

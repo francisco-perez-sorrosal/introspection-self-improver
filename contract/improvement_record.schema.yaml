@@ -23,8 +23,18 @@
 #     expected_effect, because per-change attribution is mechanistic (predictions scored
 #     against the next batch), never statistical. Records without `schema_version`
 #     (seq ≤ 5) predate the set discipline and validate under the single-mutation rules.
+#   * schema version 3 (plan D26, post-seq-6): two additions, both keyed on the version so
+#     seq-6 v2 records keep validating untouched. (a) Every `surface: instructions` change
+#     in an accepted/rejected v3 record carries a non-empty `clauses` list — the
+#     adversarial wording review: each clause of the landed text that a
+#     letter-over-intent reading could optimise against gets its own falsifier (seq 6:
+#     C2's unwatched "or explained" carried the harm one round past its record). (b) The
+#     record's transition must be marked in the experiment's improvement_backlog.md
+#     (`<!-- transition: gen_NNN_to_MMM -->`) — the backlog is updated in the same
+#     transition as the record, mechanically (seq 6's backlog silently froze at gen-003
+#     while its gated records stayed impeccable).
 
-version: 2
+version: 3
 
 outcomes: [accepted, rejected, identity]
 
@@ -86,18 +96,26 @@ fields:
     kind: int
     required: false
     description: >-
-      2 = composite improvement sets (plan D22). Absent on seq ≤ 5 records; the validator
-      keys the changes-list requirement on this field so history keeps validating.
+      2 = composite improvement sets (plan D22); 3 = per-clause falsifiers + backlog
+      write-through (plan D26). Absent on seq ≤ 5 records; the validator keys every
+      version-specific requirement on this field so history keeps validating.
   changes:
     kind: list
     required: false
     description: >-
       the improvement set, one item per change. Each item is a mapping with mechanism
       (one coherent mechanism, the CLI improve discipline held per change), surface
-      (instructions | pi-skill | extension-tool | sub-agent | retrieval-usage | revert |
-      other), and expected_effect (its own falsifiable prediction, scored against the
-      next batch); optional evidence (conversation ids / backlog target), risk, and
-      commit (the per-change commit on the generation branch, for selective revert)
+      (instructions | extension-hook | extension-tool | sub-agent | pi-skill |
+      retrieval-usage | revert | other — extension-hook/tool and sub-agent are live under
+      D24; a declared pi-skill is measured inert on this seam, its content ships via an
+      extension-hook), and expected_effect (its own falsifiable prediction, scored
+      against the next batch); optional evidence (conversation ids / backlog target),
+      risk, and commit (the per-change commit, for selective revert). From
+      schema_version 3, a surface: instructions change also carries clauses — a list of
+      mappings {clause: verbatim fragment of the landed text (git show, never memory),
+      adversarial_reading: what a letter-over-intent reading does with it, falsifier:
+      the counter that fires if the adversarial reading wins} — one entry per
+      disjunction, precondition, or licensed alternative in the landed wording
   mutation:
     kind: mapping
     required: true

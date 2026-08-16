@@ -60,7 +60,9 @@ generation's measurement, and a measurement cannot run before its generation's b
 2. **Improvement batch**: `make batch B=<g+1> GEN=generation_00g` (platform lane,
    `--max-concurrency 2` to keep sandbox-provisioning contention out of the evidence).
    Check the manifest: every row
-   should be `evidence_complete`, `arm_sha_ok`, with only benign `stream_reattaches`.
+   should be `evidence_complete`, `arm_sha_ok`, with only benign `stream_reattaches`,
+   and `pi_local_calls` consistent with the recipe (nonzero only when the registry is
+   non-empty; D24).
    The graded read is visible by design; state it as n/B. On B1 it doubles as the D8
    viability read: 0/B or B/B → surface to the user before proceeding.
 3. **Diagnose (`operate` skill)**: export all B conversations
@@ -92,18 +94,42 @@ generation's measurement, and a measurement cannot run before its generation's b
      held per change, not per generation) and would justify landing on its own.
    - No two changes in a set may interact on the same behavior; candidates that
      interact are either genuinely one mechanism, or the weaker-evidenced one waits.
-   - The surface is part of the diagnosis, and the growth surfaces are first-class:
-     seq 4 + seq 5 spent six of seven slots on `SYSTEM.md` text and measured that *an
-     instruction added to a prompt does not inherit the scope its author reasoned
-     about* — when the mechanism is judgment, scope, or verification, prefer a Pi
-     skill, extension tool, or sub-agent (wiring: sia's `recipe-growth` reference +
-     `improve/capability-set`). A set that is prompt-text-only after ≥3 prior prompt
-     mutations on the same surface must say why no structural surface fits.
+   - The surface is part of the diagnosis, and the structural surfaces are first-class
+     under D24 (Pi-local suppression, `constraints.md` divergence 6): extension tools,
+     sub-agents, and the no-tool-call extension hooks are live; a *declared* skill is
+     measurably inert on this seam, so skill-shaped judgment is delivered by hook
+     injection (wiring and measured verdicts: sia's `recipe-growth` reference +
+     `improve/capability-set`). Seq 4 + seq 5 measured that *an instruction added to a
+     prompt does not inherit the scope its author reasoned about*; seq 6 added the
+     sharper form (*the escape clause is what the model optimises against*) — when the
+     mechanism is judgment, scope, verification, or arithmetic, prefer a structural
+     surface. **After ≥3 prior prompt mutations on one surface, a prompt-text-only set
+     is no longer self-certifying: the next set includes at least one
+     non-`instructions` change, or records a `surface_exhausted` finding backed by a
+     committed step-4b probe naming the fact that blocks each structural alternative.**
+     A paragraph alone does not discharge the flag.
    - A **revert** of a prior change whose prediction the batch refuted is a
      first-class change, enabled by per-change commits (step 5).
    G bounds generations, not changes; per-change attribution inside a set is
    **mechanistic** — each prediction is scored against the next batch — while the
    statistical read stays at the generation level, and every record says so.
+
+4b. **Probe an untried surface — one episode, evidence committed.** Required at g=0;
+   afterwards whenever the concentration flag fires or a target's mechanism names a
+   surface this experiment has not exercised. On a throwaway `probe/<slug>` branch,
+   wire the minimal artifact and run one **work-tree-faithful** episode: `make smoke
+   TRANSPORT=local` (mock) or `make single_task TRANSPORT=local` (locked domain). The
+   platform lane cannot serve an unmerged branch — it pins the recipe to pushed main,
+   and `--allow-dirty` runs pushed main anyway with `arm_sha_ok=false` (measured:
+   `benchmark/probes/2026-08-16-surface-probes/` P3) — so platform-side verification
+   of a landed surface happens post-merge. Delete the branch; commit the evidence
+   (markers, manifests, verdict) under `results/experiment_<id>/generation_00g/
+   <probe>/` — `benchmark/probes/<date>-<slug>/` when no freeze is open — citing run
+   ids **in the probe evidence, never as record provenance** (a probe precedes its
+   batch, and provenance validates against batch manifests). The verdict updates
+   `recipe-growth.md`'s surface table: measured, never inherited. Probe runs reuse the
+   current experiment tree only with a non-colliding suffix, and leave nothing behind
+   in a closed experiment's record.
 5. **Mutate (`improve` skill)**: the approved set on branch `gen-00<g+1>/<slug>`,
    **one commit per change** — each message naming the mechanism and its prediction,
    because the commit is the unit of selective revert — touching mutable surface only
@@ -115,8 +141,13 @@ generation's measurement, and a measurement cannot run before its generation's b
    to `main` (it must keep serving H_g until the merge).
 6. **Record as it happens**: `scripts/improvement_record.py --scaffold g --write`,
    fill evidence/signals/counterevidence/hypothesis and the per-change `changes` list
-   (schema v2: mechanism, surface, evidence, expected_effect, risk, commit per item);
-   verify. Conversation ids come from the manifest — never from memory.
+   (schema v3: mechanism, surface, evidence, expected_effect, risk, commit per item,
+   plus per-clause falsifiers for `instructions` changes — see step 5's adversarial
+   wording review); verify, and update the backlog in the same transition (its
+   per-transition marker is validated with the record). Conversation ids come from the
+   manifest — never from memory; **quoted instruction text comes from `git show`
+   against the landed commit — never from memory** (a verdict attributed to words the
+   text does not carry propagated through three seq-6 documents).
 7. **Human gate**: the user reviews and merges (or declines) the PR. The agent never
    merges on its own authority. On merge: tag the merge commit `exp<seq>-g00<g+1>`
    (annotated, pushed), set the record's `outcome: accepted` + `candidate_commit`,
@@ -126,17 +157,29 @@ generation's measurement, and a measurement cannot run before its generation's b
 ## Close (after the final transition)
 
 1. Final hidden measurement: `make heldout GEN=generation_00G` against the final tag.
-2. `make reveal` — the one sanctioned read of the vault: copies rounds verbatim,
+2. **Diagnose the endpoint batch round** — any design whose final harness runs an
+   observable batch round (`batch_mode: fixed` runs batch_G+1 under H_G) gives that
+   round the same diagnosis pass step 3 gives every round: counters, behavioral dials,
+   the final change's prediction scored — minus any mutation. Findings land in the
+   closure README; a measurement-only round is consumed by no transition and gets no
+   improvement record. The final harness's behavioral profile is part of the result —
+   seq 6 paid 24 episodes for its endpoint and read only the reward bits, leaving its
+   own last prediction unscored and its transfer dial unmeasured until the independent
+   review.
+3. `make reveal` — the one sanctioned read of the vault: copies rounds verbatim,
    computes progression/matrix/transitions/retention and the pre-registered trend
    test (plan D11: one-sided over measured generations, identity generations
    excluded; machine-readable at `held_out/trend_test.json`), stamps
    `held_out_result` into every record, writes `summary.md` with the scale-aware
-   noise band and the trend verdict. Refuses a
+   noise band, the trend verdict, and the trend-fragility report
+   (`held_out/trend_fragility.json`: leave-one-task-out and endpoint-cell
+   sensitivity — a significance that rests on one task's cells is reported as such,
+   next to the p-value it qualifies). Refuses a
    missing final tag, a mixed-fingerprint curve, or a measurement for an identity
    generation.
-3. Walk protocol §29 and record it (`GUARDRAIL_WALK.md` beside the summary), including
+4. Walk protocol §29 and record it (`GUARDRAIL_WALK.md` beside the summary), including
    the §27 artifact inventory and the loop-mechanics verdict.
-4. Numbers are always labelled with their set and N; batch reads are diagnosis
+5. Numbers are always labelled with their set and N; batch reads are diagnosis
    evidence, not the progression metric; effects inside the band are directional only.
 
 ## What seq 2 measured about the procedure itself

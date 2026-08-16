@@ -371,13 +371,21 @@ def _heldout_cadence_problem(lock: lockmod.Lock, generation_name: str) -> str | 
             "record is written while the transition happens (protocol step 6), before its "
             "generation is measured — scaffold and fill it first."
         )
-    outcome = recordsmod.load_record(record_path).get("outcome")
+    record = recordsmod.load_record(record_path)
+    outcome = record.get("outcome")
     if outcome != recordsmod.OUTCOME_ACCEPTED:
         return (
             f"{record_path.name} has outcome {outcome!r}: H{index} = H{index - 1} carries "
             "forward (D5) and is never re-measured — this round would be refused at "
             "reveal after spending every episode. Skip it; the result carries."
         )
+    # The backlog write-through gate (plan D26): a v3 record's transition must have
+    # stamped the backlog. Refused here — before the spend — for the same reason the
+    # record itself is: seq 6's backlog silently froze at gen-003 while the gated
+    # records stayed impeccable, and only the gated artifact stayed alive.
+    backlog_problems = recordsmod.backlog_problems(record, RESULTS_ROOT)
+    if backlog_problems:
+        return backlog_problems[0]
     graded = (
         experiment_dir
         / f"generation_{index - 1:03d}"

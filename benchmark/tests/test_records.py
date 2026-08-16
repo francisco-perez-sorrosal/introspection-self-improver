@@ -257,3 +257,104 @@ def test_legacy_single_mutation_records_validate_untouched():
     """Seq <=5 records carry no schema_version and ran one-mutation-per-generation; the
     composite-set requirement must never reach back into history."""
     assert _problems(_record(), filename="gen_000_to_001.yaml") == ""
+
+
+# ------------------------------------------------------------- schema v3 (plan D26)
+
+
+def _v3_record(**overrides) -> dict:
+    change = {
+        "mechanism": "tie completion to the retrieved finding",
+        "surface": "instructions",
+        "evidence": "conv_abc",
+        "expected_effect": "counter X moves on the named tasks",
+        "risk": "over-generalisation",
+        "clauses": [
+            {
+                "clause": "either you took the action, or none exists",
+                "adversarial_reading": "declare that none exists instead of acting",
+                "falsifier": "zero-action episodes rise on tasks whose gold acts",
+            }
+        ],
+        "commit": "ccc333",
+    }
+    base = _record(
+        schema_version=3,
+        changes=[change],
+        proposed_change="one instructions change, clause-reviewed",
+    )
+    base.update(overrides)
+    return base
+
+
+def _stamp_backlog(tmp_path, marker: str = "<!-- transition: gen_000_to_001 -->") -> None:
+    experiment_dir = tmp_path / "results" / "experiment_002_exp-b"
+    (experiment_dir / "improvement_backlog.md").write_text(
+        f"# backlog\n\nre-ranked.\n{marker}\n", encoding="utf-8"
+    )
+
+
+def test_a_v3_record_with_clauses_and_backlog_marker_holds(tmp_path):
+    _stamp_backlog(tmp_path)
+    assert _problems(_v3_record(), filename="gen_000_to_001.yaml") == ""
+
+
+def test_v3_instructions_change_requires_clauses(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v3_record()
+    del record["changes"][0]["clauses"]
+    problems = _problems(record)
+    assert "without `clauses`" in problems
+    assert "escape clause" in problems
+
+
+def test_v3_clause_entries_must_be_filled_prose(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v3_record()
+    record["changes"][0]["clauses"][0]["falsifier"] = "TODO: later"
+    assert "clauses[0].falsifier" in _problems(record)
+
+
+def test_v3_non_instructions_change_needs_no_clauses(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v3_record()
+    record["changes"][0]["surface"] = "extension-hook"
+    del record["changes"][0]["clauses"]
+    assert _problems(record, filename="gen_000_to_001.yaml") == ""
+
+
+def test_v3_record_requires_the_backlog_transition_marker(tmp_path):
+    _stamp_backlog(tmp_path, marker="<!-- transition: gen_001_to_002 -->")
+    problems = _problems(_v3_record())
+    assert "gen_000_to_001" in problems
+    assert "backlog" in problems
+
+
+def test_v3_record_requires_the_backlog_to_exist(tmp_path):
+    problems = _problems(_v3_record())
+    assert "improvement_backlog.md does not exist" in problems
+
+
+def test_v2_records_are_exempt_from_v3_rules(tmp_path):
+    record = _v3_record(schema_version=2)
+    del record["changes"][0]["clauses"]
+    assert _problems(record, filename="gen_000_to_001.yaml") == ""
+
+
+def test_all_committed_seq6_records_still_validate():
+    """The additive-schema guarantee: history validates untouched (plan D26)."""
+    from pathlib import Path
+
+    repo_results = Path(records.__file__).resolve().parents[2] / "results"
+    record_paths = sorted(
+        (repo_results / "experiment_006_fixedb-bm25-luna56" / "improvement_records").glob(
+            "gen_*.yaml"
+        )
+    )
+    assert len(record_paths) == 6, "seq 6 committed six transition records"
+    for path in record_paths:
+        record = records.load_record(path)
+        problems = records.validate(
+            record, filename=path.name, revealed=True, results_root=repo_results
+        )
+        assert problems == [], f"{path.name}: {problems}"
