@@ -222,4 +222,8 @@ human_approval:
     this transition after being shown the D8 B1 read. Recorded here, and to be reported at
     close in GUARDRAIL_WALK.md, as waived rather than HELD.
   date: '2026-08-16'
-held_out_result: null
+held_out_result:
+  passed: 4.3
+  total: 28
+  trials_per_task: 3
+  carried: false
