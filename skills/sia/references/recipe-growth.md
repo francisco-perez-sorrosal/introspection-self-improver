@@ -21,9 +21,9 @@ they can reach). This file adds only the mapping and this repo's constraints:
 | Diagnosed mechanism shape | Surface |
 |---|---|
 | Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or a **skill** when the judgment is bounded, named, and better loaded near the work |
-| Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** |
-| Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline | **extension event interception** (same extension surface: hooks that block/modify tool calls or inject context) |
-| A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** |
+| Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — but see trap 4: in THIS repo's seam every extension-tool call costs a τ step and an error, so prefer a no-tool-call hook (`tool_result`, `context`, `before_agent_start`) |
+| Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline | **extension event interception** — `tool_result` / `context` / `before_agent_start` only. Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
+| A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — but see trap 4: in THIS repo's seam a sub-agent's delegation call reaches τ as an invalid tool call, so the surface is unavailable |
 | External service capability | MCP server — **not** a sanctioned growth surface here without explicit seam work: the tau binding/`--mcp` interplay is fragile (`dev_lane.py`), so surface it as a user decision, never land it as an ordinary mutation |
 
 ## Wiring by surface
@@ -60,10 +60,13 @@ per run).
   children included), but `tools: []` keeps every registered tool unreachable.
 - Extensions receive `PI_RECIPE_DIR` and `PI_AGENT_NAME`; locate package files through
   them, never hardcoded paths.
-- Beyond `registerTool`, an extension can intercept lifecycle events — block or modify
-  tool calls, inject context — the deterministic home for stopping rules and budgets that
-  prose failed to hold. Same file, same manifest declaration; interception of MCP (tau)
-  tool calls must be dev-lane-verified against the bridge's turn semantics before any PR.
+- Beyond `registerTool`, an extension can intercept lifecycle events — modify tool
+  results, inject context, augment the system prompt — the deterministic home for stopping
+  rules and budgets that prose failed to hold. Same file, same manifest declaration.
+  **This was the item that said MCP-tool interception "must be dev-lane-verified against
+  the bridge's turn semantics before any PR". It has been (2026-08-16) and the verdict is
+  in trap 4: `registerTool` and `tool_call` blocking are both unavailable here; only the
+  no-tool-call hooks are.**
 
 **Sub-agent** — a delegatable recipe agent:
 
@@ -140,14 +143,32 @@ discovery scope. Consequences:
    variable, not harness). Sub-agents inherit the frozen `ai:` block (`from: agent`, no
    `ai:` override); wanting anything else is a freeze re-decision to surface to the user,
    never an ordinary mutation.
-4. **τ's surface is untouched by construction — keep it that way.** Extension tools and
-   sub-agents are Pi-local: they never traverse the bridge, consume no τ steps, and the
-   τ-graded tool catalog stays pinned by the bridge against the lock. Anything that would
-   alter what τ sees (a new MCP server, changes to the tau server block) is seam work,
-   not recipe growth. The counterpart: Pi-local work still spends **wall-clock and
-   tokens**, and τ's frozen `timeout_seconds` bounds the episode — a slow sub-agent loop
-   or tool converts harness ambition into timeout failures. Measure episode latency in
-   the dev lane before landing anything that adds a model invocation to the turn path.
+4. **A Pi-local tool call is NOT invisible to τ — measured, and it rules two surfaces out.**
+   This item previously claimed extension tools and sub-agents "never traverse the bridge,
+   consume no τ steps". That is false for this seam and was corrected 2026-08-16 by a probe
+   whose evidence is committed at
+   `results/experiment_006_fixedb-bm25-luna56/generation_000/seam_probe/`.
+   `transport_local._assistant_turn` forwards **every** `toolCall` block in a Pi assistant
+   message, and `pi_agent._to_tau_message` passes an unmapped name through "as-is so τ
+   reports it as the invalid call it is". The probe's trajectory shows exactly that:
+   `assistant calls=['probe_note']` → `tool err=True :: Error: Tool 'probe_note' not found.`
+   So:
+   - an **extension tool** call costs a τ step and one of the episode's `max_errors` (10),
+     and is recorded in the graded trajectory;
+   - a **sub-agent** goes through the auto-generated `agent` tool, i.e. the same path;
+   - **blocking a τ tool call** from a `tool_call` hook is worse than either: the call is
+     still forwarded, so τ executes the write while the agent is told it was stopped, and
+     agent and grader histories diverge.
+
+   What stays legal is every extension hook that introduces **no tool call** —
+   `before_agent_start` (replace/augment the system prompt), `tool_result` (transform what
+   the model sees after a τ tool returns), `context` (inject messages) — plus `SYSTEM.md`
+   and a skill's name/description. Changing the forwarding itself is **seam work**, not an
+   ordinary mutation, and hiding agent tool calls from the graded trajectory is the kind of
+   adapter helpfulness that makes a harness unmeasurable. The counterpart still holds:
+   Pi-local work spends **wall-clock and tokens**, and τ's frozen `timeout_seconds` bounds
+   the episode — measure episode latency in the dev lane before landing anything that adds
+   a model invocation to the turn path.
 5. **Answer-hardcoding extends to code and instructions.** No task-specific artifacts —
    KB document ids, gold values, per-task procedures — in skill bodies, tool code, or
    sub-agent instructions; general procedure only. The frozen `<policy>` text is never

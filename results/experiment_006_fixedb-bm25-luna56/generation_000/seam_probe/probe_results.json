@@ -1,0 +1,1430 @@
+{
+  "timestamp": "2026-08-16T01:10:47.452675",
+  "info": {
+    "git_commit": "dd1990fc1c445ce14f8365dc4041777256df8f0e",
+    "num_trials": 3,
+    "max_steps": 200,
+    "max_errors": 10,
+    "user_info": {
+      "implementation": "user_simulator",
+      "llm": "openai/gpt-5.6-luna",
+      "llm_args": {
+        "reasoning_effort": "medium",
+        "timeout": 60
+      },
+      "global_simulation_guidelines": "# User Simulation Guidelines\nYou are playing the role of a customer contacting a customer service representative. \nYour goal is to simulate realistic customer interactions while following specific scenario instructions.\n\n## Core Principles\n- Generate one message at a time, maintaining natural conversation flow.\n- Strictly follow the scenario instructions you have received.\n- Never make up or hallucinate information not provided in the scenario instructions. Information that is not provided in the scenario instructions should be considered unknown or unavailable.\n- Avoid repeating the exact instructions verbatim. Use paraphrasing and natural language to convey the same information\n- Disclose information progressively. Wait for the agent to ask for specific information before providing it.\n\n## Task Completion\n- The goal is to continue the conversation until the task is complete.\n- If the instruction goal is satisified, generate the '###STOP###' token to end the conversation.\n- If you are transferred to another agent, generate the '###TRANSFER###' token to indicate the transfer.\n- If you find yourself in a situation in which the scenario does not provide enough information for you to continue the conversation, generate the '###OUT-OF-SCOPE###' token to end the conversation.\nRemember: The goal is to create realistic, natural conversations while strictly adhering to the provided instructions and maintaining character consistency.\n",
+      "voice_settings": null,
+      "persona_config": null
+    },
+    "agent_info": {
+      "implementation": "pi_recipe",
+      "llm": "openai/gpt-5.6-luna",
+      "llm_args": {},
+      "voice_settings": null
+    },
+    "environment_info": {
+      "domain_name": "mock",
+      "policy": "# Mock Domain Policy\n\n1. Each task must have a title\n2. Task status can only be \"pending\" or \"completed\"\n3. Only existing users can create tasks \n4. You are not allowed to delete tasks. You should transfer the a human agent.\n5. If the user asks for a compliment, compliment them",
+      "tool_defs": null
+    },
+    "seed": 300,
+    "text_streaming_config": {
+      "chunk_by": "words",
+      "chunk_size": 1
+    },
+    "speech_complexity": null,
+    "audio_native_config": null,
+    "retrieval_config": null,
+    "retrieval_config_kwargs": null
+  },
+  "tasks": [
+    {
+      "id": "create_task_1",
+      "description": {
+        "purpose": "Test the create_task functionality",
+        "relevant_policies": null,
+        "notes": "Basic task creation test with a simple title"
+      },
+      "user_scenario": {
+        "persona": "Professional and direct communicator who writes in a clear and concise style",
+        "instructions": "You are a team member who needs to create a task for an upcoming meeting. Your goal is to create a task to track this important meeting. Create a new task called 'Important Meeting' for user_1."
+      },
+      "ticket": "User needs to create a task for an upcoming meeting. Create a new task called 'Important Meeting' for user_1.",
+      "initial_state": null,
+      "evaluation_criteria": {
+        "actions": [
+          {
+            "action_id": "create_1",
+            "requestor": "assistant",
+            "name": "create_task",
+            "arguments": {
+              "user_id": "user_1",
+              "title": "Important Meeting"
+            },
+            "info": "Create a new task for the meeting",
+            "compare_args": null
+          }
+        ],
+        "env_assertions": null,
+        "communicate_info": null,
+        "nl_assertions": [
+          "The agent confirmed the task was created successfully"
+        ],
+        "reward_basis": [
+          "DB",
+          "COMMUNICATE"
+        ]
+      },
+      "issues": null,
+      "required_documents": null,
+      "user_tools": null
+    }
+  ],
+  "simulations": [
+    {
+      "id": "64f82632-e99d-4d76-8c1c-29527f7b56da",
+      "task_id": "create_task_1",
+      "timestamp": "2026-08-16T01:10:56.462748",
+      "start_time": "2026-08-16T01:10:47.464760",
+      "end_time": "2026-08-16T01:10:56.462704",
+      "duration": 8.997419875115156,
+      "termination_reason": "user_stop",
+      "agent_cost": 0.0007790000000000001,
+      "user_cost": 0.0004161999999999999,
+      "reward_info": {
+        "reward": 1.0,
+        "db_check": {
+          "db_match": true,
+          "db_reward": 1.0
+        },
+        "env_assertions": [],
+        "action_checks": [
+          {
+            "action": {
+              "action_id": "create_1",
+              "requestor": "assistant",
+              "name": "create_task",
+              "arguments": {
+                "user_id": "user_1",
+                "title": "Important Meeting"
+              },
+              "info": "Create a new task for the meeting",
+              "compare_args": null
+            },
+            "action_match": true,
+            "action_reward": 1.0,
+            "tool_type": "write"
+          }
+        ],
+        "nl_assertions": null,
+        "communicate_checks": null,
+        "reward_basis": [
+          "DB",
+          "COMMUNICATE"
+        ],
+        "reward_breakdown": {
+          "DB": 1.0,
+          "COMMUNICATE": 1.0
+        },
+        "info": {
+          "env": null,
+          "nl": null,
+          "communicate": {
+            "note": "No communicate_info to evaluate"
+          },
+          "action": null
+        }
+      },
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "Hi! How can I help you today?",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 0,
+          "timestamp": "2026-08-16T01:10:47.467060",
+          "cost": 0.0,
+          "usage": null,
+          "raw_data": null,
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "user",
+          "content": "Please create a new task titled **\u201cImportant Meeting\u201d** for **user_1**.",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 1,
+          "timestamp": "2026-08-16T01:10:48.911040",
+          "cost": 0.00019879999999999998,
+          "usage": {
+            "completion_tokens": 51,
+            "prompt_tokens": 688
+          },
+          "raw_data": {
+            "id": "chatcmpl-7a2b768e-e691-43de-a710-0d07bd385984",
+            "created": 1786867847,
+            "model": "gpt-5.6-luna",
+            "object": "chat.completion",
+            "system_fingerprint": null,
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "content": "Please create a new task titled **\u201cImportant Meeting\u201d** for **user_1**.",
+                  "role": "assistant",
+                  "tool_calls": null,
+                  "function_call": null
+                }
+              }
+            ],
+            "usage": {
+              "completion_tokens": 51,
+              "prompt_tokens": 688,
+              "total_tokens": 739,
+              "completion_tokens_details": {
+                "reasoning_tokens": 26,
+                "text_tokens": null,
+                "image_tokens": null
+              },
+              "prompt_tokens_details": {
+                "audio_tokens": null,
+                "cache_write_tokens": null,
+                "cached_tokens": 0,
+                "text_tokens": null,
+                "image_tokens": null,
+                "video_tokens": null
+              }
+            }
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_3Z3vORn1cLSJTZMQrXduJ1Li|fc_095bdbdc195e9b49016a81708b48b88199a24e933e66c5d506",
+              "name": "probe_note",
+              "arguments": {
+                "note": "hello"
+              },
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 2,
+          "timestamp": "2026-08-16T01:10:51.411619",
+          "cost": 0.0001744,
+          "usage": {
+            "input": 632,
+            "output": 40,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 19,
+            "totalTokens": 672,
+            "cost": {
+              "input": 0.0001264,
+              "output": 4.8e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.0001744
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93be-7854-aded-948b06bae119",
+            "pi_tool_names": [
+              "probe_note"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_3Z3vORn1cLSJTZMQrXduJ1Li|fc_095bdbdc195e9b49016a81708b48b88199a24e933e66c5d506",
+          "role": "tool",
+          "content": "Error: Tool 'probe_note' not found.",
+          "requestor": "assistant",
+          "error": true,
+          "turn_idx": 3,
+          "timestamp": "2026-08-16T01:10:51.411716"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_xYS3YKWukyDS3oTX9RCakfDk|fc_095bdbdc195e9b49016a81708c06f481998eb2d4cd153082bd",
+              "name": "get_users",
+              "arguments": {},
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 4,
+          "timestamp": "2026-08-16T01:10:52.171646",
+          "cost": 0.0001664,
+          "usage": {
+            "input": 688,
+            "output": 24,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 0,
+            "totalTokens": 712,
+            "cost": {
+              "input": 0.0001376,
+              "output": 2.88e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.0001664
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93be-7854-aded-948b06bae119",
+            "pi_tool_names": [
+              "mcp_tau_get_users_4751e9f472"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_xYS3YKWukyDS3oTX9RCakfDk|fc_095bdbdc195e9b49016a81708c06f481998eb2d4cd153082bd",
+          "role": "tool",
+          "content": "[{\"user_id\": \"user_1\", \"name\": \"Test User\", \"tasks\": [\"task_1\"]}]",
+          "requestor": "assistant",
+          "error": false,
+          "turn_idx": 5,
+          "timestamp": "2026-08-16T01:10:52.176998"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_LCn44kKB7qFEUe8MLG8URRKJ|fc_095bdbdc195e9b49016a81708d36508199ae35aa805e78b26c",
+              "name": "create_task",
+              "arguments": {
+                "user_id": "user_1",
+                "title": "Important Meeting"
+              },
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 6,
+          "timestamp": "2026-08-16T01:10:53.381821",
+          "cost": 0.00020459999999999999,
+          "usage": {
+            "input": 759,
+            "output": 44,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 7,
+            "totalTokens": 803,
+            "cost": {
+              "input": 0.0001518,
+              "output": 5.2799999999999996e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.00020459999999999999
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93be-7854-aded-948b06bae119",
+            "pi_tool_names": [
+              "mcp_tau_create_task_5cab118a37"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_LCn44kKB7qFEUe8MLG8URRKJ|fc_095bdbdc195e9b49016a81708d36508199ae35aa805e78b26c",
+          "role": "tool",
+          "content": "{\"task_id\": \"task_2\", \"title\": \"Important Meeting\", \"description\": null, \"status\": \"pending\"}",
+          "requestor": "assistant",
+          "error": false,
+          "turn_idx": 7,
+          "timestamp": "2026-08-16T01:10:53.385749"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"success\":true,\"task_id\":\"task_2\",\"title\":\"Important Meeting\",\"user_id\":\"user_1\",\"status\":\"pending\"}",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 8,
+          "timestamp": "2026-08-16T01:10:54.482456",
+          "cost": 0.0002336,
+          "usage": {
+            "input": 850,
+            "output": 53,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 19,
+            "totalTokens": 903,
+            "cost": {
+              "input": 0.00017,
+              "output": 6.36e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.0002336
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93be-7854-aded-948b06bae119",
+            "pi_tool_names": []
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "user",
+          "content": "The task **\u201cImportant Meeting\u201d** was created for **user_1**. ###STOP###",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 9,
+          "timestamp": "2026-08-16T01:10:55.921494",
+          "cost": 0.00021739999999999997,
+          "usage": {
+            "completion_tokens": 57,
+            "prompt_tokens": 745
+          },
+          "raw_data": {
+            "id": "chatcmpl-30a4e4df-ab2e-40be-bc48-0f293bccc1a5",
+            "created": 1786867854,
+            "model": "gpt-5.6-luna",
+            "object": "chat.completion",
+            "system_fingerprint": null,
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "content": "The task **\u201cImportant Meeting\u201d** was created for **user_1**. ###STOP###",
+                  "role": "assistant",
+                  "tool_calls": null,
+                  "function_call": null
+                }
+              }
+            ],
+            "usage": {
+              "completion_tokens": 57,
+              "prompt_tokens": 745,
+              "total_tokens": 802,
+              "completion_tokens_details": {
+                "reasoning_tokens": 31,
+                "text_tokens": null,
+                "image_tokens": null
+              },
+              "prompt_tokens_details": {
+                "audio_tokens": null,
+                "cache_write_tokens": null,
+                "cached_tokens": 0,
+                "text_tokens": null,
+                "image_tokens": null,
+                "video_tokens": null
+              }
+            }
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        }
+      ],
+      "ticks": null,
+      "trial": 0,
+      "seed": 626729,
+      "mode": "half_duplex",
+      "speech_environment": null,
+      "review": null,
+      "user_only_review": null,
+      "info": null,
+      "auth_classification": null,
+      "hallucination_retries_used": 0,
+      "hallucination_check": null,
+      "provider_session_id": null,
+      "policy": "# Mock Domain Policy\n\n1. Each task must have a title\n2. Task status can only be \"pending\" or \"completed\"\n3. Only existing users can create tasks \n4. You are not allowed to delete tasks. You should transfer the a human agent.\n5. If the user asks for a compliment, compliment them",
+      "effect_timeline": null
+    },
+    {
+      "id": "45c83d96-b1dc-48ca-8d37-85a4e405e771",
+      "task_id": "create_task_1",
+      "timestamp": "2026-08-16T01:10:57.348598",
+      "start_time": "2026-08-16T01:10:47.466673",
+      "end_time": "2026-08-16T01:10:57.348571",
+      "duration": 9.88144095800817,
+      "termination_reason": "user_stop",
+      "agent_cost": 0.0008058,
+      "user_cost": 0.00039579999999999997,
+      "reward_info": {
+        "reward": 1.0,
+        "db_check": {
+          "db_match": true,
+          "db_reward": 1.0
+        },
+        "env_assertions": [],
+        "action_checks": [
+          {
+            "action": {
+              "action_id": "create_1",
+              "requestor": "assistant",
+              "name": "create_task",
+              "arguments": {
+                "user_id": "user_1",
+                "title": "Important Meeting"
+              },
+              "info": "Create a new task for the meeting",
+              "compare_args": null
+            },
+            "action_match": true,
+            "action_reward": 1.0,
+            "tool_type": "write"
+          }
+        ],
+        "nl_assertions": null,
+        "communicate_checks": null,
+        "reward_basis": [
+          "DB",
+          "COMMUNICATE"
+        ],
+        "reward_breakdown": {
+          "DB": 1.0,
+          "COMMUNICATE": 1.0
+        },
+        "info": {
+          "env": null,
+          "nl": null,
+          "communicate": {
+            "note": "No communicate_info to evaluate"
+          },
+          "action": null
+        }
+      },
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "Hi! How can I help you today?",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 0,
+          "timestamp": "2026-08-16T01:10:47.466939",
+          "cost": 0.0,
+          "usage": null,
+          "raw_data": null,
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "user",
+          "content": "Please create a new task called **\u201cImportant Meeting\u201d** for **user_1**.",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 1,
+          "timestamp": "2026-08-16T01:10:49.140633",
+          "cost": 0.00019399999999999997,
+          "usage": {
+            "completion_tokens": 47,
+            "prompt_tokens": 688
+          },
+          "raw_data": {
+            "id": "chatcmpl-28033cc9-23cd-4999-b199-1efc73877816",
+            "created": 1786867847,
+            "model": "gpt-5.6-luna",
+            "object": "chat.completion",
+            "system_fingerprint": null,
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "content": "Please create a new task called **\u201cImportant Meeting\u201d** for **user_1**.",
+                  "role": "assistant",
+                  "tool_calls": null,
+                  "function_call": null
+                }
+              }
+            ],
+            "usage": {
+              "completion_tokens": 47,
+              "prompt_tokens": 688,
+              "total_tokens": 735,
+              "completion_tokens_details": {
+                "reasoning_tokens": 22,
+                "text_tokens": null,
+                "image_tokens": null
+              },
+              "prompt_tokens_details": {
+                "audio_tokens": null,
+                "cache_write_tokens": null,
+                "cached_tokens": 0,
+                "text_tokens": null,
+                "image_tokens": null,
+                "video_tokens": null
+              }
+            }
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_aJzqmHFAdRySrMSvGDpLXLNC|fc_0ccca4396d7e87cd016a81708b233087d0abb31b5d55cf1f9b",
+              "name": "probe_note",
+              "arguments": {
+                "note": "hello"
+              },
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 2,
+          "timestamp": "2026-08-16T01:10:51.289349",
+          "cost": 0.0001888,
+          "usage": {
+            "input": 632,
+            "output": 52,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 31,
+            "totalTokens": 684,
+            "cost": {
+              "input": 0.0001264,
+              "output": 6.24e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.0001888
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93ae-790c-b36c-2cdbc0e62d6c",
+            "pi_tool_names": [
+              "probe_note"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_aJzqmHFAdRySrMSvGDpLXLNC|fc_0ccca4396d7e87cd016a81708b233087d0abb31b5d55cf1f9b",
+          "role": "tool",
+          "content": "Error: Tool 'probe_note' not found.",
+          "requestor": "assistant",
+          "error": true,
+          "turn_idx": 3,
+          "timestamp": "2026-08-16T01:10:51.289677"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_gc0OcRl9c0oG589jk8sR6Cll|fc_0ccca4396d7e87cd016a81708c9b9087d0a791d49ec5ece21a",
+              "name": "get_users",
+              "arguments": {},
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 4,
+          "timestamp": "2026-08-16T01:10:52.881567",
+          "cost": 0.0001808,
+          "usage": {
+            "input": 700,
+            "output": 34,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 8,
+            "totalTokens": 734,
+            "cost": {
+              "input": 0.00014000000000000001,
+              "output": 4.0799999999999996e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.0001808
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93ae-790c-b36c-2cdbc0e62d6c",
+            "pi_tool_names": [
+              "mcp_tau_get_users_4751e9f472"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_gc0OcRl9c0oG589jk8sR6Cll|fc_0ccca4396d7e87cd016a81708c9b9087d0a791d49ec5ece21a",
+          "role": "tool",
+          "content": "[{\"user_id\": \"user_1\", \"name\": \"Test User\", \"tasks\": [\"task_1\"]}]",
+          "requestor": "assistant",
+          "error": false,
+          "turn_idx": 5,
+          "timestamp": "2026-08-16T01:10:52.881683"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_xvZbFcpIRPU9y9BULV6zijCd|fc_0ccca4396d7e87cd016a81708e11d887d09e281582164d0f16",
+              "name": "create_task",
+              "arguments": {
+                "user_id": "user_1",
+                "title": "Important Meeting"
+              },
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 6,
+          "timestamp": "2026-08-16T01:10:54.263941",
+          "cost": 0.00020899999999999998,
+          "usage": {
+            "input": 781,
+            "output": 44,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 7,
+            "totalTokens": 825,
+            "cost": {
+              "input": 0.0001562,
+              "output": 5.2799999999999996e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.00020899999999999998
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93ae-790c-b36c-2cdbc0e62d6c",
+            "pi_tool_names": [
+              "mcp_tau_create_task_5cab118a37"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_xvZbFcpIRPU9y9BULV6zijCd|fc_0ccca4396d7e87cd016a81708e11d887d09e281582164d0f16",
+          "role": "tool",
+          "content": "{\"task_id\": \"task_2\", \"title\": \"Important Meeting\", \"description\": null, \"status\": \"pending\"}",
+          "requestor": "assistant",
+          "error": false,
+          "turn_idx": 7,
+          "timestamp": "2026-08-16T01:10:54.264188"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"success\":true,\"task_id\":\"task_2\",\"title\":\"Important Meeting\",\"user_id\":\"user_1\",\"status\":\"pending\"}",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 8,
+          "timestamp": "2026-08-16T01:10:55.406709",
+          "cost": 0.0002272,
+          "usage": {
+            "input": 872,
+            "output": 44,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 10,
+            "totalTokens": 916,
+            "cost": {
+              "input": 0.0001744,
+              "output": 5.2799999999999996e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.0002272
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-93ae-790c-b36c-2cdbc0e62d6c",
+            "pi_tool_names": []
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "user",
+          "content": "The task **\u201cImportant Meeting\u201d** was created for **user_1** successfully. ###STOP###",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 9,
+          "timestamp": "2026-08-16T01:10:56.802075",
+          "cost": 0.00020179999999999997,
+          "usage": {
+            "completion_tokens": 44,
+            "prompt_tokens": 745
+          },
+          "raw_data": {
+            "id": "chatcmpl-ae0a437b-d05c-4719-a045-cce45e84970b",
+            "created": 1786867855,
+            "model": "gpt-5.6-luna",
+            "object": "chat.completion",
+            "system_fingerprint": null,
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "content": "The task **\u201cImportant Meeting\u201d** was created for **user_1** successfully. ###STOP###",
+                  "role": "assistant",
+                  "tool_calls": null,
+                  "function_call": null
+                }
+              }
+            ],
+            "usage": {
+              "completion_tokens": 44,
+              "prompt_tokens": 745,
+              "total_tokens": 789,
+              "completion_tokens_details": {
+                "reasoning_tokens": 17,
+                "text_tokens": null,
+                "image_tokens": null
+              },
+              "prompt_tokens_details": {
+                "audio_tokens": null,
+                "cache_write_tokens": null,
+                "cached_tokens": 0,
+                "text_tokens": null,
+                "image_tokens": null,
+                "video_tokens": null
+              }
+            }
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        }
+      ],
+      "ticks": null,
+      "trial": 2,
+      "seed": 361454,
+      "mode": "half_duplex",
+      "speech_environment": null,
+      "review": null,
+      "user_only_review": null,
+      "info": null,
+      "auth_classification": null,
+      "hallucination_retries_used": 0,
+      "hallucination_check": null,
+      "provider_session_id": null,
+      "policy": "# Mock Domain Policy\n\n1. Each task must have a title\n2. Task status can only be \"pending\" or \"completed\"\n3. Only existing users can create tasks \n4. You are not allowed to delete tasks. You should transfer the a human agent.\n5. If the user asks for a compliment, compliment them",
+      "effect_timeline": null
+    },
+    {
+      "id": "c6bc4e25-184f-44bf-a2b5-7d25eb16c47c",
+      "task_id": "create_task_1",
+      "timestamp": "2026-08-16T01:10:57.511477",
+      "start_time": "2026-08-16T01:10:47.465833",
+      "end_time": "2026-08-16T01:10:57.511457",
+      "duration": 10.045173041522503,
+      "termination_reason": "user_stop",
+      "agent_cost": 0.0008156000000000001,
+      "user_cost": 0.0003874,
+      "reward_info": {
+        "reward": 1.0,
+        "db_check": {
+          "db_match": true,
+          "db_reward": 1.0
+        },
+        "env_assertions": [],
+        "action_checks": [
+          {
+            "action": {
+              "action_id": "create_1",
+              "requestor": "assistant",
+              "name": "create_task",
+              "arguments": {
+                "user_id": "user_1",
+                "title": "Important Meeting"
+              },
+              "info": "Create a new task for the meeting",
+              "compare_args": null
+            },
+            "action_match": true,
+            "action_reward": 1.0,
+            "tool_type": "write"
+          }
+        ],
+        "nl_assertions": null,
+        "communicate_checks": null,
+        "reward_basis": [
+          "DB",
+          "COMMUNICATE"
+        ],
+        "reward_breakdown": {
+          "DB": 1.0,
+          "COMMUNICATE": 1.0
+        },
+        "info": {
+          "env": null,
+          "nl": null,
+          "communicate": {
+            "note": "No communicate_info to evaluate"
+          },
+          "action": null
+        }
+      },
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "Hi! How can I help you today?",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 0,
+          "timestamp": "2026-08-16T01:10:47.467023",
+          "cost": 0.0,
+          "usage": null,
+          "raw_data": null,
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "user",
+          "content": "Please create a new task titled **\u201cImportant Meeting\u201d** for **user_1**.",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 1,
+          "timestamp": "2026-08-16T01:10:48.844713",
+          "cost": 0.0001892,
+          "usage": {
+            "completion_tokens": 43,
+            "prompt_tokens": 688
+          },
+          "raw_data": {
+            "id": "chatcmpl-b113ceda-56ad-4d39-a2c7-afc66b8ff70d",
+            "created": 1786867847,
+            "model": "gpt-5.6-luna",
+            "object": "chat.completion",
+            "system_fingerprint": null,
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "content": "Please create a new task titled **\u201cImportant Meeting\u201d** for **user_1**.",
+                  "role": "assistant",
+                  "tool_calls": null,
+                  "function_call": null
+                }
+              }
+            ],
+            "usage": {
+              "completion_tokens": 43,
+              "prompt_tokens": 688,
+              "total_tokens": 731,
+              "completion_tokens_details": {
+                "reasoning_tokens": 18,
+                "text_tokens": null,
+                "image_tokens": null
+              },
+              "prompt_tokens_details": {
+                "audio_tokens": null,
+                "cache_write_tokens": null,
+                "cached_tokens": 0,
+                "text_tokens": null,
+                "image_tokens": null,
+                "video_tokens": null
+              }
+            }
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_rKo3n1nXmFP2uqTf0M2nZw0F|fc_03d03ce25cbc9fbe016a81708a7408819ab6d48a48322177ed",
+              "name": "probe_note",
+              "arguments": {
+                "note": "hello"
+              },
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 2,
+          "timestamp": "2026-08-16T01:10:50.568782",
+          "cost": 0.00019,
+          "usage": {
+            "input": 632,
+            "output": 53,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 32,
+            "totalTokens": 685,
+            "cost": {
+              "input": 0.0001264,
+              "output": 6.36e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.00019
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-9395-7ca5-b750-a7bda9c5fce5",
+            "pi_tool_names": [
+              "probe_note"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_rKo3n1nXmFP2uqTf0M2nZw0F|fc_03d03ce25cbc9fbe016a81708a7408819ab6d48a48322177ed",
+          "role": "tool",
+          "content": "Error: Tool 'probe_note' not found.",
+          "requestor": "assistant",
+          "error": true,
+          "turn_idx": 3,
+          "timestamp": "2026-08-16T01:10:50.572685"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_Xg7mSwk9iwou9Mrf6hR0H9fC|fc_03d03ce25cbc9fbe016a81708c7b0c819ab197756a28bb0a2d",
+              "name": "get_users",
+              "arguments": {},
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 4,
+          "timestamp": "2026-08-16T01:10:52.643277",
+          "cost": 0.00018700000000000002,
+          "usage": {
+            "input": 701,
+            "output": 39,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 13,
+            "totalTokens": 740,
+            "cost": {
+              "input": 0.00014020000000000002,
+              "output": 4.68e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.00018700000000000002
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-9395-7ca5-b750-a7bda9c5fce5",
+            "pi_tool_names": [
+              "mcp_tau_get_users_4751e9f472"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_Xg7mSwk9iwou9Mrf6hR0H9fC|fc_03d03ce25cbc9fbe016a81708c7b0c819ab197756a28bb0a2d",
+          "role": "tool",
+          "content": "[{\"user_id\": \"user_1\", \"name\": \"Test User\", \"tasks\": [\"task_1\"]}]",
+          "requestor": "assistant",
+          "error": false,
+          "turn_idx": 5,
+          "timestamp": "2026-08-16T01:10:52.643627"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_GPOAH1ZiZzjCMqseqZPlfkjg|fc_03d03ce25cbc9fbe016a81708db674819a90e1242123f1af4d",
+              "name": "create_task",
+              "arguments": {
+                "user_id": "user_1",
+                "title": "Important Meeting"
+              },
+              "requestor": "assistant"
+            }
+          ],
+          "is_audio": false,
+          "turn_idx": 6,
+          "timestamp": "2026-08-16T01:10:53.854850",
+          "cost": 0.00021020000000000001,
+          "usage": {
+            "input": 787,
+            "output": 44,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 7,
+            "totalTokens": 831,
+            "cost": {
+              "input": 0.0001574,
+              "output": 5.2799999999999996e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.00021020000000000001
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-9395-7ca5-b750-a7bda9c5fce5",
+            "pi_tool_names": [
+              "mcp_tau_create_task_5cab118a37"
+            ]
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "id": "call_GPOAH1ZiZzjCMqseqZPlfkjg|fc_03d03ce25cbc9fbe016a81708db674819a90e1242123f1af4d",
+          "role": "tool",
+          "content": "{\"task_id\": \"task_2\", \"title\": \"Important Meeting\", \"description\": null, \"status\": \"pending\"}",
+          "requestor": "assistant",
+          "error": false,
+          "turn_idx": 7,
+          "timestamp": "2026-08-16T01:10:53.855108"
+        },
+        {
+          "role": "assistant",
+          "content": "{\"success\":true,\"task_id\":\"task_2\",\"title\":\"Important Meeting\",\"user_id\":\"user_1\",\"status\":\"pending\"}",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 8,
+          "timestamp": "2026-08-16T01:10:55.636038",
+          "cost": 0.00022840000000000002,
+          "usage": {
+            "input": 878,
+            "output": 44,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "reasoning": 10,
+            "totalTokens": 922,
+            "cost": {
+              "input": 0.0001756,
+              "output": 5.2799999999999996e-05,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0.00022840000000000002
+            }
+          },
+          "raw_data": {
+            "pi_model": "gpt-5.6-luna",
+            "pi_session_ref": "01a0099f-9395-7ca5-b750-a7bda9c5fce5",
+            "pi_tool_names": []
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        },
+        {
+          "role": "user",
+          "content": "The task **\u201cImportant Meeting\u201d** was created for **user_1**. ###STOP###",
+          "tool_calls": null,
+          "is_audio": false,
+          "turn_idx": 9,
+          "timestamp": "2026-08-16T01:10:56.973055",
+          "cost": 0.0001982,
+          "usage": {
+            "completion_tokens": 41,
+            "prompt_tokens": 745
+          },
+          "raw_data": {
+            "id": "chatcmpl-7fb8d80d-8067-4d67-86ca-4186c35a6723",
+            "created": 1786867855,
+            "model": "gpt-5.6-luna",
+            "object": "chat.completion",
+            "system_fingerprint": null,
+            "choices": [
+              {
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                  "content": "The task **\u201cImportant Meeting\u201d** was created for **user_1**. ###STOP###",
+                  "role": "assistant",
+                  "tool_calls": null,
+                  "function_call": null
+                }
+              }
+            ],
+            "usage": {
+              "completion_tokens": 41,
+              "prompt_tokens": 745,
+              "total_tokens": 786,
+              "completion_tokens_details": {
+                "reasoning_tokens": 15,
+                "text_tokens": null,
+                "image_tokens": null
+              },
+              "prompt_tokens_details": {
+                "audio_tokens": null,
+                "cache_write_tokens": null,
+                "cached_tokens": 0,
+                "text_tokens": null,
+                "image_tokens": null,
+                "video_tokens": null
+              }
+            }
+          },
+          "generation_time_seconds": null,
+          "audio_format": null,
+          "audio_path": null,
+          "audio_script_gold": null,
+          "speech_effects": null,
+          "source_effects": null,
+          "channel_effects": null,
+          "turn_taking_action": null,
+          "utterance_ids": null,
+          "chunk_id": null,
+          "is_final_chunk": true,
+          "source": null,
+          "contains_speech": true
+        }
+      ],
+      "ticks": null,
+      "trial": 1,
+      "seed": 373753,
+      "mode": "half_duplex",
+      "speech_environment": null,
+      "review": null,
+      "user_only_review": null,
+      "info": null,
+      "auth_classification": null,
+      "hallucination_retries_used": 0,
+      "hallucination_check": null,
+      "provider_session_id": null,
+      "policy": "# Mock Domain Policy\n\n1. Each task must have a title\n2. Task status can only be \"pending\" or \"completed\"\n3. Only existing users can create tasks \n4. You are not allowed to delete tasks. You should transfer the a human agent.\n5. If the user asks for a compliment, compliment them",
+      "effect_timeline": null
+    }
+  ],
+  "simulation_index": null
+}
