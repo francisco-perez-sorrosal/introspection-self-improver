@@ -1,0 +1,171 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 5
+  to_generation: 6
+experiment: 006_fixedb-bm25-luna56
+outcome: accepted
+schema_version: 2
+batch:
+  name: batch_06
+  task_ids:
+  - task_014
+  - task_026
+  - task_028
+  - task_065
+  - task_070
+  - task_072
+  - task_082
+  - task_096
+evidence:
+  conversation_ids:
+  - 01a00a93-dbb7-7490-ac1a-6994a7b63cfb   # task_014 t0 reward 0.0
+  - 01a00a96-81e3-7190-913c-88ac2b8ab244   # task_014 t1 reward 1.0
+  - 01a00a9a-3b40-73ae-be3e-959e7c72d06d   # task_014 t2 reward 0.0
+  - 01a00a93-d817-76f4-ab31-e6dcb68438f1   # task_026 t0 reward 0.0
+  - 01a00a97-620b-70cc-9926-cb6df13e8a8a   # task_026 t1 reward 0.0
+  - 01a00a9a-aba8-7460-bffe-6974f0c17248   # task_026 t2 reward 0.0
+  - 01a00a93-d8b5-72f5-b592-cd70d31ec50c   # task_028 t0 reward 0.0
+  - 01a00a97-70e1-77c0-aa50-1fb9330a44ca   # task_028 t1 reward 0.0
+  - 01a00a9a-edd0-7757-b871-0e8f0259472e   # task_028 t2 reward 0.0
+  - 01a00a94-511a-73d2-9a33-14cda35954ce   # task_065 t0 reward 0.0
+  - 01a00a98-470c-729d-a089-5256a88fde91   # task_065 t1 reward 0.0
+  - 01a00a9b-002e-7558-943c-6bb1a672f5e5   # task_065 t2 reward 0.0
+  - 01a00a95-6619-7246-bcfe-22d886883989   # task_070 t0 reward 0.0
+  - 01a00a98-ac2d-772d-ac80-466864390f1c   # task_070 t1 reward 0.0
+  - 01a00a9c-002c-77a1-b6f7-577e987d6d3f   # task_070 t2 reward 0.0
+  - 01a00a95-8cfa-7640-bd19-7138e5fc6514   # task_072 t0 reward 0.0
+  - 01a00a99-48ca-76bc-810f-733cf94a2aec   # task_072 t1 reward 0.0
+  - 01a00a9c-0034-7404-976c-887f9f302acc   # task_072 t2 reward 0.0
+  - 01a00a96-18f5-7548-ba87-9984929ebf51   # task_082 t0 reward 0.0
+  - 01a00a99-e88a-7291-b48a-b8808488a7e5   # task_082 t1 reward 0.0
+  - 01a00a9c-587f-7702-89cb-5d5fdd57699e   # task_082 t2 reward 0.0
+  - 01a00a96-78b4-71f9-aa06-28a25071e32b   # task_096 t0 reward 0.0
+  - 01a00a9a-1bb7-70b2-a834-8858d0b4879e   # task_096 t1 reward 0.0
+  - 01a00a9c-e3b9-7145-834d-6d62f6a0aaa1   # task_096 t2 reward 0.0
+  summary: >-
+    Full-population read of batch_06: all 24 episodes from
+    generation_005/batch_06/graded/updated_results.json, joined to episode_manifest.jsonl and
+    read cell by cell against all five earlier rounds over the same eight tasks.
+
+    Round health: 24/24 completed, arm sha 3d7c7513 on every episode, no dirty paths, zero
+    arm_sha_mismatches, all evidence_complete, ZERO seam counters. 0.5586 USD platform.
+
+    Graded read, labelled: 1/24 episodes and 1/8 tasks. Curve 8.3, 4.2, 12.5, 16.7, 4.2, 4.2
+    percent. batch_06 measures a set five generations were tuned on.
+
+    Firewall: no held-out task, trajectory, per-task reward or aggregate was read at any point,
+    and no vault path was opened.
+signals:
+- description: >-
+    gen-005 G1 CONFIRMED at its prediction, and it is the weakest confirmation in the
+    experiment. task_014 recovered 0/3 to 1/3, t1 passing with a transfer. The pre-registered
+    RATE falsifier — transfers above batch_04's 15/24 — did not fire: they rose 6/24 to 12/24.
+    So G1 is not simply the sixth rate lever, but a doubling of the transfer rate alongside a
+    one-trial recovery is a thin margin, and the honest reading is that the dial moved again
+    and happened to land where task_014 sits.
+  prevalence: task_014 0/3 to 1/3; transfers 6/24 to 12/24
+- description: >-
+    gen-005 G2 DENIED. Its prediction was that at least one task_072 trial would supply BOTH
+    gold amounts in one episode. batch_06's trials produced 14.00 and 5.00, 16.0 and 6.0, and
+    14.0 with its partner — against gold's 14.00 and 3.50. Across six rounds and eighteen
+    episodes one amount has been right in some trial and both have NEVER been right in one.
+    The instruction reached neither the computation nor, on the sampled narration, the
+    explanation.
+  prevalence: 0/18 episodes across six rounds paired both amounts
+- description: >-
+    task_065 regressed 1/3 to 0/3, and the decomposition matters more than the number. E1's
+    ordering holds in ALL THREE trials — every one issues its opens before its close — and C3's
+    restraint holds, with close_bank_account_7392 carrying account_id alone in all three. What
+    collapsed is the CLASS choice: Blue Account and Silver Plus Account 3/3, against gold's
+    Evergreen and Green. The task's pass was never stable — 1/3 at best, in two of six rounds —
+    so what read as a fixed task was a coin flip whose ordering had been fixed underneath it.
+    Recorded as a correction to the gen-003 record's framing: E1 did produce the pass
+    mechanically, and it did not make the task reliable.
+  prevalence: 3/3 trials ordered correctly; 0/3 chose correctly
+- description: >-
+    The three modes still live at the final slot, each with a reason it is not being mutated
+    against. task_065's class choice is stochastic rather than unaddressed. task_070's target
+    was retired at g=2 after three denied predictions, on the reading that bm25 — a frozen
+    surface, not harness — does not carry what its gold answer needs; the agent retrieves Sky
+    Blue's own specification and rejects it. task_026 and task_028's handover has been
+    performed since gen-001 but never in gold's shape, and the frozen policy already specifies
+    the procedure in full, which is the mutation shape that has failed most often in this
+    project's history.
+  prevalence: 5/8 tasks have never passed under any harness in this experiment
+counterevidence: >-
+  Two arguments against this set.
+
+  (1) Spending the final slot on a revert forgoes the last chance to raise the endpoint the
+  pre-registered test measures. That is precisely why it is the right call: protocol step 4
+  forbids inventing a change to fill a slot, and choosing a speculative change BECAUSE it is
+  the last one measured would be optimising the endpoint statistic rather than following
+  evidence — the behaviour the frozen reading key calls overfitting. The revert is
+  evidence-driven and, on the available evidence, neutral: task_072 has scored 0/3 both with
+  and without G2.
+
+  (2) G1 was retained on a thin confirmation. Its falsifier was a rate test set at batch_04's
+  15/24 and transfers landed at 12/24 — inside the threshold, but double batch_05's. A stricter
+  falsifier would have caught it. The threshold was pre-registered before the round and is not
+  being moved after the fact; the thinness is recorded here instead, and the closure should
+  read G1's confirmation with it.
+hypothesis: >-
+  G2's mechanism was right and its surface was wrong. The agent retrieves the fee rule and then
+  produces a figure that is not the sum of the charges the rule selects; requiring it to name
+  the addends did not change what it produced. The deterministic surface that would fix this —
+  a tool that sums exactly — is unavailable in this seam, as measured at g=0. Removing the
+  instruction leaves the final harness carrying only changes whose evidence survived.
+owning_layer: >-
+  Target-agent harness, <instructions> block of target-agent/SYSTEM.md — one paragraph removed.
+  Frozen <policy> untouched and asserted byte-for-byte at 5733 chars; agent.yaml, package.json,
+  lock and partition unchanged.
+
+  The final harness carries five surviving changes: C3 (do not volunteer optional arguments),
+  D1 (retrieve the rule that decides among options), D2 (no agent-authored escape from the
+  completion check), E1 (order state changes so an earlier one does not disqualify a later
+  one), and G1 (a prescribed handover is an action to retrieve). Three changes were reverted
+  after their predictions were refuted — C2's escape clause, E2, and G2 — and C1 was superseded
+  in place by D1. Every one of the five survivors tells the agent what to retrieve or in what
+  order to act; every one of the four removed told it what not to do, offered it an alternative,
+  or asked prose to do a deterministic job.
+proposed_change: >-
+  An improvement SET of ONE change on branch gen-006/revert-addends: the revert of gen-005's G2,
+  a first-class change under plan D22. The set is one change because no live mode has an
+  evidenced mechanism that has not already been tried, and because this is the harness the
+  endpoint test measures.
+changes:
+- mechanism: >-
+    Remove the paragraph landed as gen-005 G2. No new instruction is added.
+  surface: revert
+  evidence: >-
+    Six rounds and eighteen episodes in which task_072 never paired both gold amounts, including
+    the three batch_06 trials under G2 itself (14.00/5.00, 16.0/6.0, 14.0/...) against gold's
+    14.00 and 3.50. G2's prediction asked for exactly one such pairing and got none. Reverts
+    gen-005 G2.
+  expected_effect: >-
+    No change on task_072 in batch_07, which has scored 0/3 with and without G2. The purpose is
+    that the final harness carry only instructions with surviving evidence, not that the number
+    move. Denied if task_072 improves in batch_07 — that would mean G2 was actively harmful
+    rather than inert, and the closure should say so.
+  risk: >-
+    Removing an instruction on one round of denial when the underlying mechanism (amounts are
+    computed rather than summed) is real and now unaddressed. Accepted because the surface that
+    could address it does not exist in this seam, which the g=0 probe measured.
+  commit: 2291703
+mutation:
+  branch: gen-006/revert-addends
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/16
+  source_commit: cc91d2d577e636724584ac2b4d227af931f880c0
+  candidate_commit: 0bf5b21deff040f49aba1fe03c0d679c76678475
+expected_effect: >-
+  SET level: no movement is predicted. H6 is the final harness and batch_07 is its
+  measurement-only endpoint round, consumed by no transition. The pre-registered primary is
+  batch_curve.py's exact one-sided paired sign-flip test of batch_07 against batch_01, and this
+  record makes no claim about its outcome. The transfer read is H6's sealed held-out round.
+human_approval:
+  approved_by: >-
+    orchestrator — autonomous per D23 (user-delegated)
+  date: '2026-08-16'
+held_out_result: null
