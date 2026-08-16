@@ -1,0 +1,160 @@
+{
+  "mode": "locked",
+  "experiment": "006_fixedb-bm25-luna56",
+  "freeze_fingerprint": "sha256:890db4b5b44dc8935fc39bd9c814fcce6bac1186d66ed81cb1a7f7a1dca02b89",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 3,
+  "max_concurrency": 3,
+  "bridge_executor_workers": 32,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a00c82-1d41-7604-aa59-965a9c516c38"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "36fe5eec2e0dcc69259994f855778cf2b54a2e63",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 0,
+      "termination": "TerminationReason.INFRASTRUCTURE_ERROR",
+      "reward": null,
+      "completed": false,
+      "failure": {
+        "error_type": "ValueError",
+        "error": "UserMessage must have either content or tool_calls. Got UserMessage\nis_final_chunk: True",
+        "failed_after_attempts": 4
+      }
+    },
+    {
+      "task_id": "task_001",
+      "trial": 2,
+      "termination": "TerminationReason.INFRASTRUCTURE_ERROR",
+      "reward": null,
+      "completed": false,
+      "failure": {
+        "error_type": "ValueError",
+        "error": "UserMessage must have either content or tool_calls. Got UserMessage\nis_final_chunk: True",
+        "failed_after_attempts": 4
+      }
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 0,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 3,
+      "settle_timeouts": 0,
+      "zero_bridge_calls": 0
+    },
+    "unattributed": [],
+    "bridge": {},
+    "infra_failure_classes": {
+      "user_sim_empty_completions": 2
+    }
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a00c82-1d41-7604-aa59-965a9c516c38",
+    "environment": "development",
+    "dev_target": "tau-f3e5",
+    "task_ids": [
+      "01a00c83-9cdd-7070-8de6-e1c8eaa6614d"
+    ],
+    "tasks_created": [
+      "01a00c83-9b97-7628-a720-b0484691bafc",
+      "01a00c83-9cdd-7070-8de6-e1c8eaa6614d",
+      "01a00c83-a058-7689-9357-cef1ac043aa9",
+      "01a00c83-f3d5-7174-88da-5a2351aa8de5",
+      "01a00c84-3eb6-766c-9657-908fc2dc048c",
+      "01a00c84-54f0-7059-abe4-2b3e83f238a4",
+      "01a00c84-d296-77eb-b4d9-c27b1f610ed8",
+      "01a00c84-daea-72c5-8d35-b9bf03f6dfcc",
+      "01a00c85-2ea7-71ae-a162-da5b09df0620"
+    ],
+    "orphaned_task_ids": [
+      "01a00c83-9b97-7628-a720-b0484691bafc",
+      "01a00c83-a058-7689-9357-cef1ac043aa9",
+      "01a00c83-f3d5-7174-88da-5a2351aa8de5",
+      "01a00c84-3eb6-766c-9657-908fc2dc048c",
+      "01a00c84-54f0-7059-abe4-2b3e83f238a4",
+      "01a00c84-d296-77eb-b4d9-c27b1f610ed8",
+      "01a00c84-daea-72c5-8d35-b9bf03f6dfcc",
+      "01a00c85-2ea7-71ae-a162-da5b09df0620"
+    ],
+    "accounting": {
+      "01a00c83-9cdd-7070-8de6-e1c8eaa6614d": {
+        "cost": {
+          "usd": 0.005347920000000001
+        },
+        "usage": {
+          "input_tokens": 109144,
+          "output_tokens": 987,
+          "total_tokens": 110131
+        },
+        "metrics": {
+          "duration_ms": 22935.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 6,
+          "span_count": 27,
+          "tool_use_count": 3,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "36fe5eec2e0dcc69259994f855778cf2b54a2e63",
+        "evidence_complete": true,
+        "item_count": 30,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      }
+    },
+    "retitles": {
+      "applied": 1,
+      "failed": 0
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "pi_local_tools": [],
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 138.9
+}

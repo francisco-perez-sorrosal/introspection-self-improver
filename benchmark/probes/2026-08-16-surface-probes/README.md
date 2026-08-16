@@ -114,3 +114,17 @@ to call it before its first τ call. Local lane, 3 sims:
 The exact call class that cost a τ step and one of ten `max_errors` in the seq-6 seam
 probe is now invisible to grading and fully visible to diagnosis. Raw:
 `suppression_demo/`.
+
+## P7 — post-push platform canary: the D24 adapter PASSes on the real seam
+
+After main (`36fe5ee`) and the re-anchored `h0-baseline` were pushed, `make gate_seam` ran
+one platform-lane episode against the pushed arm: **PASS** — the graded trial completed at
+reward 1.0 with `arm_sha_ok: true`, `recipe_git_commit_sha = 36fe5ee`, all four sandbox
+seam counters zero, evidence complete, and `pi_local_calls: 0` (H0's registry is empty, so
+suppression correctly never engaged — the pump path ran, nothing was suppressed). Two
+trials died to the known user-sim empty-completion weather (`ValueError` ×2, τ-excluded,
+non-gating — the same class as P5). The fresh verdict is preserved here
+(`platform_canary/`); the closed experiment's committed `gates/seam_canary.json` and
+`generation_000/seam_canary/` were restored from git per the probes convention.
+Platform-side verification of suppression *engaging* (a non-empty registry) is the next
+experiment's post-merge territory, per protocol step 4b and recipe-growth trap 7.
