@@ -65,6 +65,53 @@ def test_canary_fails_on_a_completed_but_unverifiable_episode():
     assert any("unverifiable" in finding for finding in findings)
 
 
+def _simulations(*tool_names):
+    return [
+        {
+            "messages": [
+                {"role": "assistant", "turn_idx": idx, "tool_calls": [{"name": name}]}
+                for idx, name in enumerate(tool_names)
+            ]
+        }
+    ]
+
+
+def test_suppression_passes_when_engaged_and_absent_from_trajectory():
+    """The suppressing path attests only when the model called the registered tool AND τ
+    never saw it — engagement without a leak."""
+    rows = [_clean_row(pi_local_calls=2)]
+    passed, findings = canary.suppression_judge(rows, _simulations("KB_search"), "probe_note")
+    assert passed and findings == []
+
+
+def test_suppression_fails_when_the_path_never_engaged():
+    """pi_local_calls = 0 means the model never called the tool: 'could not check' must
+    never grade as 'checked and clean' (seq 8 ran an entire experiment pump-path-only)."""
+    rows = [_clean_row(pi_local_calls=0)]
+    passed, findings = canary.suppression_judge(rows, _simulations("KB_search"), "probe_note")
+    assert not passed
+    assert any("never engaged" in finding for finding in findings)
+
+
+def test_suppression_fails_when_the_tool_leaks_into_the_graded_trajectory():
+    rows = [_clean_row(pi_local_calls=1)]
+    passed, findings = canary.suppression_judge(
+        rows, _simulations("KB_search", "probe_note"), "probe_note"
+    )
+    assert not passed
+    assert any("suppression leaked" in finding for finding in findings)
+    assert any("probe_note" in finding for finding in findings)
+
+
+def test_suppression_still_fails_on_seam_counters():
+    """Suppression success on a sick seam is not a PASS — the base seam-health findings
+    carry through."""
+    rows = [_clean_row(pi_local_calls=1, sandbox_seam_timeouts=1)]
+    passed, findings = canary.suppression_judge(rows, _simulations("KB_search"), "probe_note")
+    assert not passed
+    assert any("sandbox_seam_timeouts=1" in finding for finding in findings)
+
+
 def test_batch_refuses_without_a_seam_canary_verdict(tmp_path, monkeypatch):
     monkeypatch.setattr(runmod, "RESULTS_ROOT", tmp_path)
     problem = runmod._seam_canary_problem("099_test")
@@ -216,7 +263,11 @@ def test_heldout_refuses_before_the_learning_batch_is_graded(cadence):
     from tau_adapter import heldout
 
     graded = (
-        cadence / "results" / "experiment_009_t" / "generation_000" / "batch_01"
+        cadence
+        / "results"
+        / "experiment_009_t"
+        / "generation_000"
+        / "batch_01"
         / heldout.GRADED_DIR
     )
     graded.mkdir(parents=True)

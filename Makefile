@@ -1,7 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy propose_split smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a gate_seam weather grade dashboard batch_curve
+.PHONY: help bootstrap check policy propose_split smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a gate_seam gate_suppression weather grade dashboard batch_curve
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -54,6 +54,7 @@ help:
 	@echo "make fidelity    run one task in BOTH lanes and check the adapter invariants"
 	@echo "make gate_a0a    A.0a gate: adapter suite + mock smoke, verdict under gates/"
 	@echo "make gate_seam   platform seam canary; batch rounds refuse to start without a fresh PASS"
+	@echo "make gate_suppression EXPECT_TOOL=<name>  pre-freeze D24 suppressing-path canary"
 	@echo "make weather     probe the user-sim provider for empty completions before spending a round"
 	@echo "make grade       re-grade an existing run: make grade OUT=results/.../mock_smoke"
 	@echo "make dashboard   local read-only results viewer over results/ (dashboard/)"
@@ -79,6 +80,7 @@ bootstrap:
 check:
 	@introspection check -o report
 	@python3 $(BENCH)/scripts/check_policy_region.py
+	@python3 $(BENCH)/scripts/check_extension_facts.py
 	@$(RUN) python scripts/check_partition_isolation.py
 	@$(RUN) python scripts/improvement_record.py --verify-current
 
@@ -202,6 +204,17 @@ gate_a0a:
 # change under benchmark/tau_adapter — the failure domain A.0a's local lane cannot reach.
 gate_seam:
 	@$(RUN) python scripts/gate_seam_canary.py $(if $(TASK),--task $(TASK),)
+
+# Pre-freeze D24 suppression canary: one platform episode against a temporarily-declared
+# probe tool on pushed main (the model must actually call it — declaration reverted before
+# h0-baseline is tagged; contract/protocol.md step 0). EXPECT_TOOL is mandatory. Re-judge
+# an existing round at zero episodes with JUDGE_ONLY=<round dir, repo-relative or absolute>.
+# Verdict → gates/suppression_canary.json, a sibling of the seam canary's — never a batch
+# refusal; the protocol enforces this gate once per freeze.
+gate_suppression:
+	@test -n "$(EXPECT_TOOL)" || { echo "EXPECT_TOOL=<registered tool name> is required" >&2; exit 2; }
+	@$(RUN) python scripts/gate_seam_canary.py --suppression --expect-tool "$(EXPECT_TOOL)" \
+		$(if $(TASK),--task $(TASK),) $(if $(JUDGE_ONLY),--judge-only "$(JUDGE_ONLY)",)
 
 # Provider-weather probe for the frozen user-sim surface: N direct calls with the lock's
 # exact model+args, counting empty completions. Seconds and cents, instead of discovering a

@@ -1,0 +1,28 @@
+# Measured host vocabulary for target-agent extension code — measured, never inherited.
+#
+# Every entry here is a fact about what the Pi host actually presents to recipe extension
+# hooks on this seam, established by committed probe evidence and cited by path. Extension
+# code that keys on a host fact (message roles today; block shapes and event names when
+# they earn entries) must match this vocabulary: `scripts/check_extension_facts.py` lints
+# `target-agent/extensions/*.ts` role literals against it in `make check` and pre-commit.
+#
+# Why this file exists: seq 8's gen-004 spent a generation on a hook keyed to message role
+# "tool" where this host spells it "toolResult" — a fact already recorded in that
+# experiment's own probe evidence. The hook never executed. Consultation of probe facts at
+# mutation time is now mechanical, not remembered.
+#
+# CAUTION — two vocabularies coexist on this seam and they disagree exactly where it hurts:
+# τ's own graded trajectory (results.json) uses role "tool" for tool results, while the Pi
+# session that extension hooks observe uses "toolResult". This file records the Pi-side
+# vocabulary, which is the only one extension code ever sees.
+#
+# Format is deliberately restricted (parsed stdlib-only by check_extension_facts.py):
+# comments, `key: scalar`, and `key:` followed by `- item` lines. Nothing else.
+
+# Pi-session message roles observed by extension hooks. Evidence: every roles[] entry in
+# the g=1 context probe's firing log — 19 firings across three banking-domain episodes.
+message_roles:
+  - user
+  - assistant
+  - toolResult
+message_roles_evidence: results/experiment_008_stratb-bm25-luna56/generation_001/context_probe/hook_firings.json
