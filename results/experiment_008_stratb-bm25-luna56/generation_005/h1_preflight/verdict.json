@@ -1,0 +1,24 @@
+{
+  "lane": "local",
+  "task": "task_057",
+  "note": "pre-merge verification of gen-006 H1; NOT a batch round and never cited as record provenance",
+  "injected_text_occurrences_in_pi_sessions": 3,
+  "verification_channel": "a tool_result patch IS persisted to the Pi session, unlike a context injection \u2014 so this change can be verified where F1 could not",
+  "with_H1": [
+    {
+      "trial": 0,
+      "reward": 1.0,
+      "log_verification_calls": 1
+    },
+    {
+      "trial": 1,
+      "reward": 0.0,
+      "log_verification_calls": 1
+    },
+    {
+      "trial": 2,
+      "reward": 1.0,
+      "log_verification_calls": 1
+    }
+  ]
+}
