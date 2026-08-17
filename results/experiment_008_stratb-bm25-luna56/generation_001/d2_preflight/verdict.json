@@ -1,0 +1,52 @@
+{
+  "lane": "local",
+  "task": "task_014",
+  "note": "pre-merge behavioural verification of D2; NOT a batch round and never cited as record provenance",
+  "batch_01_reason_queries": "1/3",
+  "batch_02_reason_queries": "1/3",
+  "with_D2": [
+    {
+      "trial": 0,
+      "reward": 1.0,
+      "kb_queries": 3,
+      "transfer_reason_queries": 1,
+      "transfer_reasons": [
+        "unconfirmed_external_communication"
+      ],
+      "queries": [
+        "Crypto-Cash Back card referral program $100 every person referred spends $500 first 2 months how get referral link offer letter mail",
+        "\"Crypto-Cash Back\" card referral offer $100 $500 two months 60 days referral link",
+        "transfer to human agent reason code customer requests human verify letter official referral link unavailable offer"
+      ]
+    },
+    {
+      "trial": 1,
+      "reward": 0.0,
+      "kb_queries": 3,
+      "transfer_reason_queries": 1,
+      "transfer_reasons": [],
+      "queries": [
+        "Crypto-Cash Back card referral program $100 every person refers spends $500 first 2 months how get referral link offer mailed letter",
+        "\"Crypto-Cash Back\" card referral $100 $500 2 months referral link",
+        "transfer reason code customer requests human after knowledge base search unsuccessful referral offer cannot be verified"
+      ]
+    },
+    {
+      "trial": 2,
+      "reward": 1.0,
+      "kb_queries": 3,
+      "transfer_reason_queries": 1,
+      "transfer_reasons": [
+        "unconfirmed_external_communication",
+        "unconfirmed_external_communication",
+        "unconfirmed_external_communication",
+        "unconfirmed_external_communication"
+      ],
+      "queries": [
+        "Crypto-Cash Back card referral program $100 referral link how to get referral link offer letter mail",
+        "\"Crypto-Cash Back\" card referral $100 $500 first two months referral link",
+        "transfer reason code customer requests human verify mailed promotion offer not in system referral link unconfirmed external communication"
+      ]
+    }
+  ]
+}

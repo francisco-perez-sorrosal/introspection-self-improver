@@ -35,7 +35,7 @@
       ]
     },
     "extensions": [
-      "extensions/kb-tool-names.ts"
+      "extensions/transfer-reason-lookup.ts"
     ]
   }
 }
