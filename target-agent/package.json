@@ -33,6 +33,9 @@
           }
         }
       ]
-    }
+    },
+    "extensions": [
+      "extensions/kb-tool-names.ts"
+    ]
   }
 }
