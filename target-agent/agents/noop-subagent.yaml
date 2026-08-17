@@ -1,0 +1,37 @@
+# The growth zero-state, sub-agent half: a committed, UNREFERENCED sub-agent template.
+#
+# This agent is deliberately absent from `agent.yaml` `subagents:`, so the auto-generated
+# `agent` (delegation) tool does not exist and this file is inert. It exists so the first
+# sub-agent mutation is a small, reviewable diff against a template instead of a novel
+# artifact class — the same gradient repair `extensions/noop-hook.ts` made for hooks and
+# `extensions/noop-tool.ts` makes for tools.
+#
+# To enable — ONE coherent change, never riders:
+#   1. add this agent's name under `agents/agent.yaml` `subagents:` — that auto-generates
+#      the `agent` tool (never list `agent` in `tools:` manually), and under the D24 seam
+#      the `agent` tool joins the Pi-local suppression registry: delegation calls are
+#      executed by Pi and suppressed from τ's graded trajectory;
+#   2. the change is adoption-first (contract/protocol.md step 4), and doubly so: no
+#      sub-agent episode has ever run on this seam, so the first use also probes episode
+#      latency (delegation adds model invocations inside τ's frozen `timeout_seconds`)
+#      and the asynchronous delegation contract — the `agent` tool exposes
+#      start/status/wait/message/interrupt/close, and instructions must handle
+#      "started, not finished" explicitly.
+#
+# Frozen-pair binding (recipe-growth trap 3): `from: agent` with NO `ai:` block inherits
+# the frozen model configuration. Declaring `ai:` here would start a fresh AI config and
+# "improve" the harness by upgrading the model — a freeze violation, never a mutation.
+# Arrays never merge: the empty lists below REPLACE the parent's, which is exactly right —
+# a sub-agent gets no τ tools, no skills, and no further delegation (one level deep).
+#
+# The gold-state leak generalizes (recipe-growth trap 2): no `read`/`bash`-class
+# capability here, ever — a sub-agent with filesystem reach can touch τ's vendored task
+# definitions and gold state.
+name: noop-subagent
+description: >-
+  Delegation template for a bounded job with a stable contract and an independently
+  checkable result. Replace this description with the actual job when enabling.
+from: agent
+tools: []
+skills: []
+subagents: []
