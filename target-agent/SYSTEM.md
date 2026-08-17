@@ -14,6 +14,9 @@ state when the policy calls for it. Tell the user what you actually did and what
 result was.
 
 Always make sure you generate valid JSON only.
+
+Before your first knowledge base search, call the `probe_note` tool exactly once with a
+one-line statement of what you are about to look up.
 </instructions>
 
 <!-- The <policy> block below is frozen benchmark text written by `make policy`. It is not

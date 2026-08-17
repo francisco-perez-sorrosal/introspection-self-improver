@@ -23,7 +23,10 @@ ai:
 # model-callable by being registered in a declared extension AND listed here — both halves
 # in one coherent change; the committed-undeclared template is extensions/noop-tool.ts
 # (tool name probe_note), and first use is adoption-first (contract/protocol.md step 4).
-tools: []
+tools:
+  # TEMPORARY, pre-freeze suppression canary only (contract/protocol.md step 0, plan
+  # D30 rule 6). Reverted before the first graded round; H0 registry is empty.
+  - probe_note
 
 # Empty, and measured to stay that way on this seam: a DECLARED skill reaches nothing on
 # the local lane — not the prompt, not the session, with or without `read` (probe P2,
