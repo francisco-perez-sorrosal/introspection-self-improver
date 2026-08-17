@@ -102,19 +102,28 @@ four highest-value extractions:
 - **Standing counterevidence**: objections recorded in earlier transitions that still
   apply (disjoint-batch caveats, severity-over-prevalence overrides awaiting judgment).
 - **Surface concentration AND availability**: count mutations per `owning_layer` target;
-  flag ≥3 on one surface in the digest — one observed loop spent four of five generations
-  on a single instruction paragraph, two of them repairing defects the paragraph itself
-  introduced, and noticed the pattern only at close. The flag is a positive obligation
-  (protocol step 4): the next set includes a non-`instructions` change or records a
-  probe-backed `surface_exhausted` finding. Concentration looks backward; pair it with
-  the forward look — which surfaces this experiment has not yet exercised, and what
-  currently blocks each (the activation paths in Mutation classes below).
+  flag ≥3 on any single surface class in the digest — one observed loop spent four of
+  five generations on a single instruction paragraph, two of them repairing defects the
+  paragraph itself introduced, and noticed the pattern only at close; a later loop
+  repaired that gradient and re-formed it one level up, landing six changes on the
+  newly-templated surface while the just-unlocked ones went untouched. The flag is
+  **surface-general** and a positive obligation (protocol step 4): the next set includes
+  a change on a surface class this experiment has never exercised, or records a
+  `surface_exhausted` finding citing a probe or measured fact per unexercised
+  alternative. Concentration looks backward; pair it with the forward look — the
+  **surface ledger**, kept at project scope, not experiment scope: for each surface
+  class, whether it has EVER been exercised in a graded round of any experiment, its
+  measurement status (measured on the real domain / mock only / never probed), and its
+  current blocker. Ties between candidate surfaces break toward the best-measured one
+  unless the digest names that asymmetry out loud — an un-named instrumentation gradient
+  is how a loop converges on one surface while believing it chose freely.
 
 Then state a **recall digest** (≤10 lines) to the user before diagnosis begins, so the
 memory is visibly applied: generation chain so far, batch about to be read, predictions to
-check, top pending targets with witness counts, concentration flags **plus surfaces still
-untried with each one's activation blocker**, slots remaining — and, under
-`batch_mode: fixed`, the per-task batch matrix as it forms.
+check, top pending targets with witness counts, concentration flags **plus the surface
+ledger (project scope: exercised-ever / measurement status / current blocker per
+surface)**, slots remaining — and, under `batch_mode: fixed`, the per-task batch matrix
+as it forms.
 
 ## Write-through — during the transition, never after
 
@@ -162,7 +171,8 @@ is where closed instruction-only loops failed**: three experiments measured that
 instruction added to a prompt does not inherit the scope its author reasoned about*, and
 its sharper form — *the escape clause is what the model optimises against* — so when a
 mechanism is judgment, scope, verification, or arithmetic, prefer a structural surface;
-prose-only sets after the concentration flag carry the positive obligation above. Read
+sets confined to a concentrated surface class carry the surface-general positive
+obligation above. Read
 `introspection skills improve/capability-set` (its `agent-design` and
 `agent-security-review` references own the design methodology) before choosing. Each
 surface with its **activation path** — what must be true for it to reach a graded
@@ -180,10 +190,16 @@ episode:
   registered by a recipe extension AND allowlisted in the agent's `tools:`, which
   doubles as the suppression registry. Where no suppression exists, the call leaks to
   the evaluator as an invalid action: verify the seam before choosing this surface.
+  **First use is adoption-first** (protocol step 4): the falsifiable prediction targets
+  adoption and correct invocation, reward is deferred to the following round, and the
+  tool may bundle its minimal usage instruction as one coherent mechanism — "the model
+  would have to choose to call it" is a design input, never a reason not to land it.
 - A **sub-agent** — delegation through the auto-generated `agent` tool; same
   availability condition as extension tools (the `agent` call is Pi-local under
   suppression), plus the frozen model pair binds the child (`from:` the parent, no
-  `ai:` override).
+  `ai:` override). Adoption-first applies here too, and doubly: no sub-agent episode
+  has ever run on this seam, so the first use also probes latency and the
+  started-not-finished delegation contract before anything rides on them.
 - A **declared skill** — measured inert on this seam's local lane (nothing reaches the
   prompt, with or without `read`); skill-shaped judgment ships via a
   `before_agent_start` hook that reads the body itself. Re-verify per host before

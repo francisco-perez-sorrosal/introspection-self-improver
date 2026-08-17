@@ -75,10 +75,33 @@ Field craft — what the exemplar does that the schema cannot require:
   counter reaches ≥2/3 trials on the tasks this targets". `surface` says where it
   landed (instructions | extension-hook | extension-tool | sub-agent | pi-skill |
   retrieval-usage | revert | other); `commit` names the per-change commit so a refuted
-  change can be reverted alone; a prompt-only set after a concentration flag satisfies
-  the positive obligation (protocol step 4: a structural change, or a probe-backed
-  `surface_exhausted` finding — a paragraph alone no longer discharges it). The
+  change can be reverted alone; a set confined to a concentrated surface class
+  satisfies the surface-general positive obligation (protocol step 4: a change on a
+  never-exercised surface, or a `surface_exhausted` finding citing a probe or measured
+  fact per unexercised alternative — argument alone no longer discharges it). The
   set-level `expected_effect` stays: it is what the generation curve measures.
+- **Adoption-first predictions** (schema v4, from the seq-8 review) — for the first
+  change ever landed on a surface class, mark the change `adoption_stage: true` and
+  write `adoption_criteria` as the prediction: adoption and correct invocation
+  counters (`pi_local_calls ≥ k` on the tasks it targets, well-formed arguments,
+  latency inside τ's frozen budget), with the reward-level prediction explicitly
+  deferred to the following round and stated as deferred. Scoring: a denied adoption
+  prediction (the model never calls it) is a **mechanism denial** and a first-class
+  revert trigger; confirmed adoption with unmoved reward is **not** a denial — the
+  reward falsifier lands in the next round's set as the second stage. This is the
+  denied-prediction-vs-denied-mechanism revert rule (protocol step 4) applied in
+  advance, and it is what makes a first tool or sub-agent change a one-round bet
+  instead of a two-round gamble.
+- **`host_facts`** (schema v4) — every `extension-hook` / `extension-tool` change
+  lists the measured host facts its code keys on ({fact, probe_evidence} pairs:
+  message roles, block shapes, event timing, each citing committed probe evidence).
+  One observed loop spent a generation on a hook keyed to role `tool` where its own
+  probe's `hook_firings.json` had recorded `toolResult` — the field makes the
+  consultation happen at write time, and `make check` lints the literals.
+- **Preflights are never provenance** (protocol step 5b): a preflight verifies a
+  change *runs*, never that it *works* — name any preflights in `evidence.summary`
+  with episode counts, verify injected text in a fetched conversation before reading
+  any behavioural number, and leave every behavioural claim to the scheduled rounds.
 - **`changes[].clauses[]`** (schema v3, plan D26) — the **adversarial wording review**,
   required for every `surface: instructions` change: before landing the text, enumerate
   its disjunctions, preconditions, and licensed alternatives; each becomes

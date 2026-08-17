@@ -21,9 +21,9 @@ they can reach). This file adds only the mapping and this repo's constraints:
 | Diagnosed mechanism shape | Surface |
 |---|---|
 | Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or skill-shaped content delivered by a `before_agent_start` hook: a **declared** skill measurably reaches nothing on this seam's local lane (trap 1), so hook injection is the only working delivery |
-| Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — but see trap 4: in THIS repo's seam every extension-tool call costs a τ step and an error, so prefer a no-tool-call hook (`tool_result`, `context`, `before_agent_start`) |
+| Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — live under the D24 seam: a call whose name is in the suppression registry (`agents/agent.yaml` `tools:`) is executed by Pi and suppressed from τ's graded trajectory; an UNregistered call still leaks to τ as an invalid step (trap 4 has both halves). First use is adoption-first — predict adoption counters, not reward (protocol step 4; record-craft) — and may bundle the tool with its minimal usage instruction as one coherent mechanism |
 | Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline, or *acting on what was retrieved* | **extension event interception** — `tool_result` (measured on the real domain: sees every τ result with its input arguments, can rewrite what the model reads, invisible to grading) / `context` (inferred) / `before_agent_start` (measured). Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
-| A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — but see trap 4: in THIS repo's seam a sub-agent's delegation call reaches τ as an invalid tool call, so the surface is unavailable |
+| A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — live under the D24 seam: the auto-generated `agent` tool joins the suppression registry when `subagents:` is non-empty (trap 4). The frozen model pair binds the child (trap 3), and no sub-agent episode has ever run on this seam — verify per trap 7 before relying on latency or behavior assumptions, and predict adoption first |
 | External service capability | MCP server — **not** a sanctioned growth surface here without explicit seam work: the tau binding/`--mcp` interplay is fragile (`dev_lane.py`), so surface it as a user decision, never land it as an ordinary mutation |
 
 ## Wiring by surface
@@ -74,6 +74,9 @@ so prefer explicit file paths over globs for single files.
 - Agent: a registered tool is model-callable **only if allowlisted in `tools:`** — but
   `tools:` limits model-callable tools, not hook execution: **extension code retains its
   non-tool behavior (all lifecycle hooks) even under `tools: []`** (upstream-normative).
+  Under D24 the same `tools:` list doubles as the seam's Pi-local suppression registry
+  (trap 4): the allowlist entry is what keeps the call out of τ's graded trajectory, so
+  registering a tool without its `tools:` entry ships a surface that leaks.
 - Loading and failure semantics (upstream-verified): extensions load sequentially in
   declaration order and hooks run in load order, middleware-chained; an extension **load**
   failure is fatal before any model call (the session aborts — a broken extension cannot
@@ -180,22 +183,41 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
    variable, not harness). Sub-agents inherit the frozen `ai:` block (`from: agent`, no
    `ai:` override); wanting anything else is a freeze re-decision to surface to the user,
    never an ordinary mutation.
-4. **A Pi-local tool call is NOT invisible to τ — measured, and it rules two surfaces out.**
-   This item previously claimed extension tools and sub-agents "never traverse the bridge,
-   consume no τ steps". That is false for this seam and was corrected 2026-08-16 by a probe
-   whose evidence is committed at
-   `results/experiment_006_fixedb-bm25-luna56/generation_000/seam_probe/`.
-   `transport_local._assistant_turn` forwards **every** `toolCall` block in a Pi assistant
-   message, and `pi_agent._to_tau_message` passes an unmapped name through "as-is so τ
-   reports it as the invalid call it is". The probe's trajectory shows exactly that:
-   `assistant calls=['probe_note']` → `tool err=True :: Error: Tool 'probe_note' not found.`
-   So:
-   - an **extension tool** call costs a τ step and one of the episode's `max_errors` (10),
-     and is recorded in the graded trajectory;
-   - a **sub-agent** goes through the auto-generated `agent` tool, i.e. the same path;
-   - **blocking a τ tool call** from a `tool_call` hook is worse than either: the call is
-     still forwarded, so τ executes the write while the agent is told it was stopped, and
+4. **Pi-local tool calls: registered names are suppressed from τ (D24); unregistered
+   names still leak as graded invalid calls.** Two facts with a seam decision between
+   them, and both halves bind.
+   *History (pre-D24, measured 2026-08-16,
+   `results/experiment_006_fixedb-bm25-luna56/generation_000/seam_probe/`):*
+   `transport_local._assistant_turn` forwards every `toolCall` block, and
+   `pi_agent._to_tau_message` passes an unmapped name through "as-is so τ reports it
+   as the invalid call it is" — `assistant calls=['probe_note']` → `tool err=True ::
+   Error: Tool 'probe_note' not found.` That measurement ruled extension tools and
+   sub-agents out *for seq ≤ 6*.
+   *Current seam (D24, user-directed 2026-08-16 between experiments;
+   `contract/constraints.md` divergence 6):* a tool call whose name is in the
+   **suppression registry** — `agents/agent.yaml` `tools:` entries, plus `agent` when
+   `subagents:` is non-empty (`tau_adapter/pi_local.py`) — is executed by Pi and never
+   forwarded to τ: no τ step, none of the ten `max_errors`, with full evidence-stream
+   logging (`raw_data.pi_tool_names` / `pi_suppressed_tool_names` per assistant
+   message, manifest-derived `pi_local_calls`, the registry snapshot in
+   `run_metadata.json`) and a 32-turn runaway cap that resumes unfiltered forwarding.
+   So under D24:
+   - a **registered extension tool** is a live surface: called by the model, executed
+     by Pi, invisible to grading, visible to diagnosis;
+   - a **sub-agent** rides the same path through the auto-generated `agent` tool;
+   - an **unregistered name** still forwards as the graded invalid call it always was
+     — the registry is the allowlist, and a tool landed without its `tools:` entry
+     leaks;
+   - **blocking a τ tool call** from a `tool_call` hook remains forbidden: the call is
+     still forwarded, τ executes the write while the agent is told it was stopped, and
      agent and grader histories diverge.
+   *Measurement status, kept honest:* suppression is measured end-to-end on the local
+   lane, mock domain (probe P6: 3/3 episodes called a registered `probe_note`, τ saw
+   only its own tools, `pi_local_calls: 1` logged). **The suppressing path has never
+   engaged in a graded round or on the platform lane** — one all-hooks experiment ran
+   the D24 seam with `pi_local_calls = 0` across 168 platform episodes — so the
+   pre-freeze suppression canary (`contract/protocol.md` step 0) converts that
+   assumption to a measurement before any experiment relies on it.
 
    What stays legal is every extension hook that introduces **no tool call** —
    `before_agent_start` (replace/augment the system prompt; **measured functional on the
@@ -252,5 +274,13 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
 - [ ] No `read`/`bash`-class reach anywhere; extension tool reach stated in PR + record
 - [ ] Sub-agents inherit the frozen `ai:` block; no model or thinking-level drift
 - [ ] No frozen policy text, no instance answers, no orchestrator meta-knowledge
+- [ ] First use of a never-exercised surface: the prediction is adoption-first
+      (`pi_local_calls` and correct invocation, reward deferred to the next round —
+      protocol step 4; record-craft), and the change may bundle the tool with its
+      minimal usage instruction as one mechanism
+- [ ] Every host-fact-dependent line in extension code (message roles, block shapes,
+      event timing) cites the committed probe evidence establishing the fact — the
+      measured vocabulary lives in `benchmark/probes/host_facts.yaml`, and
+      `make check` lints role literals against it
 - [ ] Record's `owning_layer` names the surface; `expected_effect` scoped to the
       held-out set with named risks for the next batch
