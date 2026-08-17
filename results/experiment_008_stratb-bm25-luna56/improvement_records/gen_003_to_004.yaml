@@ -1,0 +1,181 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 3
+  to_generation: 4
+experiment: 008_stratb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_04
+  task_ids:
+  - task_006
+  - task_014
+  - task_026
+  - task_032
+  - task_057
+  - task_072
+  - task_096
+  - task_076
+evidence:
+  conversation_ids:
+  - 01a00e29-3fd1-716d-b828-fd61ffa8b56a
+  - 01a00e29-3fd3-72dc-a717-0955b332a5e2
+  - 01a00e29-b07f-72fb-9ab7-81830cdbf8e7
+  - 01a00e29-ccd9-7165-92e7-6fa6d599eeb2
+  - 01a00e2a-280b-75f9-852d-c075b3bbaa1f
+  - 01a00e2a-7bd4-77c7-aac1-66f330763531
+  - 01a00e2b-0056-765b-9cb9-b325b9eca0b1
+  - 01a00e2b-6ad0-71fe-b119-c025313c8a5b
+  - 01a00e2b-a189-72a3-8f65-4851ff07a50c
+  - 01a00e2b-eacd-7024-9fb3-064379679ebe
+  - 01a00e2c-2d79-75fc-8f75-55f951708d1e
+  - 01a00e2c-64af-74d3-9010-1156681e99ea
+  - 01a00e2d-1c91-71ac-b325-57277b3b0e36
+  - 01a00e2d-1fc8-776e-bc70-92635954df6f
+  - 01a00e2d-b217-77dc-aa95-ebb5c96000b4
+  - 01a00e2e-1231-75a2-b57b-afe66de08344
+  - 01a00e2e-89e2-735b-ba78-720c3f6a3a5c
+  - 01a00e2e-cf37-7771-aa04-8bff275179ff
+  - 01a00e2e-e0b1-7258-874b-23b3d7e45dd6
+  - 01a00e2f-32fe-75ed-bb6e-b6815aba65d2
+  - 01a00e2f-4f02-70e7-b560-ff086104aadd
+  - 01a00e2f-d9f2-71b9-8e9b-dd20b32f7597
+  - 01a00e30-7f3d-7282-8a26-43fdd9a0f36b
+  - 01a00e30-c44e-703c-9a60-ed26cdb9c4af
+  summary: >-
+    Round health. batch_04 ran under H3 (arm 6ead6da): 24/24 episodes completed,
+    evidence_complete and arm_sha_ok on every manifest row, all four sandbox seam counters
+    zero, pi_local_calls 0 (all three live extensions are hooks, not registered tools, so the
+    D24 suppression registry is correctly empty).
+
+    Graded read: 15/24 episodes, 62.5% — the experiment's high. Curve 41.7 -> 54.2 -> 45.8 ->
+    62.5. Tuned-on set from batch_02 onward; training-curve evidence, never generalization.
+
+    Both anchors have now held 3/3 for four consecutive rounds, which is what makes every
+    movement below attributable rather than ambient.
+signals:
+- description: >-
+    E1 CONFIRMED on both of its counters. Zero episodes called log_verification more than once
+    (batch_02 and batch_03 each had exactly one such episode), and task_076 returned to 3/3
+    from 2/3. Falsifier (a) — the note read as a prohibition rather than a state — did NOT
+    fire: episodes calling log_verification zero times are unchanged at 9/24. That matters
+    beyond this change, because D2 had demonstrated one round earlier that a purely factual
+    note CAN be read as a gate; here an equally factual note was not. The difference worth
+    recording is that E1's note reports a COMPLETED state ("verification is now on record")
+    while D2's reported a MISSING one ("no query has been issued"), and only the second
+    suppressed behaviour.
+  prevalence: 2/2 predicted counters confirmed
+- description: >-
+    D2 CONFIRMED one round after its prediction was denied, and the gen-003 retirement of T3
+    was WRONG. task_014 went 0/3 -> 3/3: all three trials issued the transfer-reason query
+    (1/3 in each of the three prior rounds) and all three chose
+    unconfirmed_external_communication, the gold reason. The gen-003 reading — "the deciding
+    request arrives as the terminal ###TRANSFER### message, so no hook can act after it" — was
+    drawn from a single round's episodes and does not generalize: here the handoff request
+    lands at message 9-11 of 16-18, leaving turns for the hook to fire in. E1 cannot be the
+    cause, because task_014 performs no verification and E1's hook never fires there.
+    Consequences: (a) had D2 been reverted on its denied prediction, this would not have
+    happened, so the rule stated at gen-003 — a denied prediction is not by itself a revert
+    trigger, a denied MECHANISM is — is now supported by a measured counterfactual rather than
+    by argument; (b) T3 is UN-RETIRED with the correction recorded, because a retirement drawn
+    from one round of episode-shape is not a retirement.
+  prevalence: 3/3 trials of the target task, from 0/3
+- description: >-
+    The first movement of transfer DISCRIMINATION in this project's history, stated with its
+    limit. Correct transfers improved — task_014 (gold transfer, reason compared) 1/3 -> 3/3
+    with the right code, task_032 (gold transfer, reason uncompared) steady 3/3 across four
+    rounds. Over-escalation did NOT improve — task_026 and task_096 together carry 4/6
+    transfer-bearing episodes, against 5/6 at H0, all citing technical_system_error. Seven
+    prior transfer mutations across four experiments moved the RATE and none moved
+    discrimination; this one moved one side of it and left the other where it was.
+  prevalence: 2/2 gold-transfer tasks correct; 4/6 over-escalation episodes unchanged
+- description: >-
+    The framing difference between C1 and D2 is now the experiment's most actionable finding,
+    and gen-004 is built on it. C1 appended a bare LIST of tool names a KB_search result
+    contained and its counter did not move anywhere (task_026 0/3 -> 0/3, task_096 2/3 ->
+    2/3). D2 appended a statement of an UNMET PROCEDURAL CONDITION on the same surface family
+    and its counter moved 0/3 -> 3/3. Same class of injection, same lane, same seam — the
+    measured difference is the framing, not the surface. Pre-merge verification of F1 on the
+    real domain (local, task_026 x3, generation_003/f1_preflight/) reproduces it immediately:
+    update_transaction_rewards_3847 unlocked in 3/3 trials and called 3-6 times, against 0 of
+    12 batch episodes across four harnesses.
+  prevalence: 0/12 -> 3/3 on the pre-merge verification run
+counterevidence: >-
+  Three arguments against this set.
+
+  (1) F1 targets ground C1 already failed on, and a loop that re-attacks a refuted target is
+  the failure mode this project exists to detect. The distinction claimed — framing rather
+  than surface — is supported by exactly one contrast (C1 denied, D2 confirmed) plus a
+  three-episode local verification. It is a hypothesis with one witness and a preflight, not
+  an established law, and batch_05 is its test. Recorded so the closure judges the reasoning
+  rather than the outcome.
+
+  (2) F1's own note reports a MISSING state, which is the shape that suppressed transfers when
+  D2 did it (9/24 -> 6/24 where no suppression was requested). E1's completed-state note did
+  not suppress. F1 is therefore the riskier of the two shapes by this round's own evidence,
+  and falsifier (c) watches total agent calls per episode for exactly that.
+
+  (3) task_026 remains 0/12 on REWARD even though its behaviour counter moved in preflight.
+  Unlocking and calling the tool is necessary and plainly not sufficient — which transactions
+  and which values are the next layer, untouched. The honest expectation for batch_05 is
+  behaviour-confirmed / outcome-denied, and it is stated in advance so a null reward cannot be
+  read afterwards as a surprise.
+hypothesis: >-
+  The agent does not act on a prescribed step because nothing it reads marks the step as
+  outstanding. Salience alone is insufficient — C1 measured that. What changes behaviour is a
+  statement of what remains undone, which D2 measured. Applying that framing to the tool
+  discovery step should make the agent unlock and use the tool the knowledge base names.
+owning_layer: >-
+  Harness, `extension-hook` (`context`). The recipe carries three hooks and one instruction
+  paragraph; no instructions change lands this generation either.
+proposed_change: >-
+  One change. It does not interact with the two live hooks: D2 fires only when a handoff has
+  been requested and no reason lookup issued, E1 only on a successful log_verification result,
+  F1 only when a KB-named tool remains unclaimed. Disjoint triggers, disjoint counters,
+  disjoint falsifiers.
+schema_version: 3
+changes:
+- mechanism: >-
+    List, as a factual state line, the discoverable-tool names that appeared in knowledge-base
+    results in this conversation and have not been unlocked or handed over. States an unmet
+    procedural state; no instruction, no task, no prohibition. A name drops off the list once
+    claimed, so the line reports remaining work rather than restating history.
+  surface: extension-hook
+  evidence: >-
+    Backlog T1 (its true remainder after the gen-001 erratum: task_026 alone). 12/12 failing
+    episodes across four harnesses with one binding constraint — gold requires
+    update_transaction_rewards_3847, KB_search returns that exact name, and the agent has
+    never unlocked it, including under C1. Surface measured at the g=1 step-4b probe
+    (generation_001/context_probe/).
+  expected_effect: >-
+    Counter-native, scored against batch_05: unlock_discoverable_agent_tool naming
+    update_transaction_rewards_3847 in >= 2/3 of task_026's trials (0/12 episodes to date), and
+    call_discoverable_agent_tool on that tool appearing at all. Reward movement is NOT
+    predicted — which transactions and which values are the next layer.
+  risk: >-
+    Three, in descending order of evidence. It reports a MISSING state, the shape that
+    suppressed transfers when D2 did it, so it could suppress action rather than prompt it.
+    It could cause indiscriminate unlocking, which the frozen policy warns twice causes DB
+    logging issues. And it re-attacks a target C1 already failed on, so a null result costs a
+    slot on ground already spent.
+  clauses: []
+  commit: 116bd58
+mutation:
+  branch: gen-004/unlocked-state
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/20
+  source_commit: 6ead6da6e9eabee5619793caad3575946d268653
+  candidate_commit: 0f895d316b9ba293c5674be4a489dc170e65656b
+expected_effect: >-
+  Set level, measured on the held-out set at H4 and nowhere else: a directional improvement on
+  tasks whose gold requires a knowledge-base-named tool the agent currently leaves unused, and
+  no change elsewhere — the hook is silent once nothing remains outstanding. No magnitude is
+  predicted; the band at T=28 x 3 is about +-5 pp and this held-out lane is a FOURTH-EXPOSURE
+  diagnostic transfer probe carrying no capability claim. Deliberately not targeted:
+  task_096's value resolution, task_072's governing-rule half, and over-escalation, which is a
+  symptom of those tasks' real failures rather than an independent target.
+human_approval:
+  approved_by: orchestrator — autonomous per D28 (user-delegated; D23's envelope re-registered)
+  date: '2026-08-17'
+held_out_result: null

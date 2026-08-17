@@ -420,19 +420,81 @@ round's data. That is why gen-003 lands one change rather than two.
 
 <!-- transition: gen_002_to_003 -->
 
+---
+
+## Re-ranking against `batch_04` (H3, 2026-08-17)
+
+Clean round, all four sandbox seam counters zero. **15/24 episodes, 62.5% — the experiment's
+high** (curve: 41.7 → 54.2 → 45.8 → 62.5). Anchors 3/3 and 3/3 for the fourth consecutive
+round.
+
+**gen-003's change, scored.**
+
+- **E1 — CONFIRMED on both counters.** Zero episodes called `log_verification` twice (one in
+  each of `batch_02` and `batch_03`), and `task_076` returned to **3/3**. Falsifier (a) did not
+  fire — zero-call episodes unchanged at 9/24.
+
+**T3 IS UN-RETIRED, and the gen-003 retirement was wrong.**
+
+`task_014` went **0/3 → 3/3**: all three trials issued the transfer-reason query (1/3 in each
+of three prior rounds) and all three chose `unconfirmed_external_communication`, the gold
+reason. **D2 is confirmed one round after its prediction was denied.** The gen-003 reading —
+"the deciding request arrives as the terminal `###TRANSFER###` message, so no hook can act
+after it" — was drawn from a single round's episode shapes and does not generalize: here the
+handoff request lands at message 9–11 of 16–18, leaving turns for the hook. E1 cannot be the
+cause: `task_014` performs no verification, so E1's hook never fires there.
+
+Two things follow, and both outlive this experiment:
+
+1. **The gen-003 rule now has a measured counterfactual.** *A denied prediction is not by
+   itself a revert trigger; a denied mechanism is.* Had D2 been reverted on its denied
+   prediction, `task_014`'s 3/3 would not exist.
+2. **A retirement drawn from one round of episode shapes is not a retirement.** The batch is
+   three trials of eight tasks; where an event lands in a conversation varies run to run.
+   Structural claims about a task need more than one round's witness.
+
+**Transfer discrimination moved for the first time, and only on one side.** Correct transfers
+improved (`task_014` 1/3 → 3/3 with the right code; `task_032` steady 3/3 across four rounds).
+Over-escalation did not (`task_026` + `task_096` carry 4/6 transfer-bearing episodes against
+5/6 at H0, all citing `technical_system_error`). Seven prior transfer mutations across four
+experiments moved the rate and none moved discrimination; this one moved half of it.
+
+**The framing finding — the experiment's most actionable result so far, and gen-004 is built
+on it.** C1 appended a bare **list** of KB-named tools and its counter moved nowhere. D2
+appended a statement of an **unmet procedural condition** on the same surface family and its
+counter moved 0/3 → 3/3. Same injection class, same lane, same seam: **the measured difference
+is the framing, not the surface.** A corollary arrived with E1 in the same round: E1's note
+reports a *completed* state and suppressed nothing, while D2's reports a *missing* state and
+suppressed transfers 9/24 → 6/24 where no suppression was requested. So the two shapes are not
+equivalent — **missing-state notes change behaviour and carry suppression risk; completed-state
+notes are safe and inert on anything but their own target.**
+
+## T1 — RE-OPENED for `task_026` and consumed by gen-004 (F1)
+
+Its true remainder after the gen-001 erratum is `task_026` alone: 12/12 failing episodes across
+four harnesses, gold requiring `update_transaction_rewards_3847`, that exact name returned by
+`KB_search`, and the agent never once unlocking it — including under C1. F1 applies D2's
+missing-state framing to it. Pre-merge verification on the real domain (local, `task_026` × 3,
+`generation_003/f1_preflight/`): **unlocked 3/3 and called 3–6 times, against 0 of 12 batch
+episodes.** Reward stayed 0.0 — which transactions and which values are the next layer, and
+the prediction is written on the behaviour counter accordingly.
+
+<!-- transition: gen_003_to_004 -->
+
 ## Slot accounting
 
 | Slot | Generation | Target(s) | Status |
 |---|---|---|---|
 | 1 | gen-001 | T1 (C1, extension-hook) + T2 (C2, instructions) | consumed — C1 denied and reverted at gen-002; C2 confirmed, clause 2 identified as the operative half |
 | 2 | gen-002 | C1 revert (D1) + T3 transfer-reason lookup (D2, extension-hook) | consumed — D1's attribution test settled task_057 on C2; D2 denied on its target, mechanism confirmed on the anchor, KEPT |
-| 3 | gen-003 | T6 duplicate verification write (E1, extension-hook) | in flight |
-| 4–6 | — | T4 (governing-rule half), T1 (task_026 only), T5 | open |
+| 3 | gen-003 | T6 duplicate verification write (E1, extension-hook) | consumed — CONFIRMED on both counters |
+| 4 | gen-004 | T1 re-opened for task_026 (F1, extension-hook) | in flight |
+| 5–6 | — | T4 (governing-rule half), T5 | open |
 
-Six targets opened, four consumed, **one retired with cause** (T3 for `task_014` — the
-deciding request arrives as the terminal message, so no hook can act after it; seven transfer
-mutations across four experiments have moved the rate and none the discrimination) and **one
-half-retired with cause** (T4's `credit_type`
+Six targets opened, five consumed, **one retirement REVERSED** (T3 was retired at gen-003 on a
+one-round structural reading and un-retired at gen-004 when `task_014` went 0/3 → 3/3 with the
+gold reason code — the retirement was wrong and the correction is recorded rather than
+absorbed) and **one half-retired with cause** (T4's `credit_type`
 enum half — the legal values are already enumerated with their semantics in the unlock
 response and were read correctly; the disagreement is with gold's labelling, which is frozen
 surface, not harness surface).
