@@ -1,0 +1,186 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 2
+  to_generation: 3
+experiment: 008_stratb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_03
+  task_ids:
+  - task_006
+  - task_014
+  - task_026
+  - task_032
+  - task_057
+  - task_072
+  - task_096
+  - task_076
+evidence:
+  conversation_ids:
+  - 01a00de7-1480-75a8-93bf-0c66edac5d9e
+  - 01a00de7-14bb-75a1-be8d-a93cde636e9c
+  - 01a00de7-187f-726f-8507-9a184eea3d02
+  - 01a00de7-5c1c-7419-b8f3-ed82d259dfad
+  - 01a00de7-757f-71f0-9a24-a924844be956
+  - 01a00de7-f4f6-7659-bdbb-7c584d33c2b3
+  - 01a00de8-09f3-7214-a237-8a2da30c07b6
+  - 01a00de8-ec72-74b1-b295-eb1ab32c571b
+  - 01a00de9-0366-71ca-b4c6-e3b7b1a3d95c
+  - 01a00de9-6d1f-7489-94fa-ff73309fc7e4
+  - 01a00de9-6d66-753e-9578-a09ee313f619
+  - 01a00dea-0972-7090-b95f-23d4090395f2
+  - 01a00dea-766b-703d-8e1d-3d3ab244b0fe
+  - 01a00dea-ce2a-73eb-8508-1389c93d37b4
+  - 01a00deb-3a86-711d-87be-ade53c581c4e
+  - 01a00deb-d915-7717-b9c1-bcf6981f34e8
+  - 01a00dec-0138-70eb-b5d5-e885d1353b8c
+  - 01a00dec-75a2-7189-beb3-d75f7d6b4dd7
+  - 01a00ded-14be-74e1-8ddf-dd55124129cd
+  - 01a00ded-a380-7367-8d7b-41b565b7287d
+  - 01a00ded-c372-7099-8267-6bf0bfe1da73
+  - 01a00dee-b102-7099-be6a-eedbf0d1d2d1
+  - 01a00def-3ace-75c8-98cf-f028f6fe6453
+  - 01a00df1-246a-7286-8966-5a67813cec7c
+  summary: >-
+    Round health. batch_03 ran under H2 (arm 708f7b8): 24/24 episodes completed,
+    evidence_complete and arm_sha_ok on every manifest row, ALL FOUR sandbox seam counters
+    zero, pi_local_calls 0 across the round (both live extensions are hooks, not registered
+    tools, so the D24 suppression registry is correctly empty).
+
+    Graded read: 11/24 episodes, 45.8%, against batch_02's 13/24 (54.2%) and batch_01's 10/24
+    (41.7%). Tuned-on set from batch_02 onward; training-curve evidence, never generalization.
+
+    Two diagnoses this round required the platform conversation record rather than the tau
+    trajectory, because a context hook's injection is invisible to grading by design: fetching
+    task_014 t0/t2 and task_032 t0 through the CLI showed the note absent from the first two
+    and present in the third. That asymmetry — effect graded, injection not — was measured at
+    the g=1 probe and is what makes this diagnosis possible at all.
+signals:
+- description: >-
+    D1's revert did exactly what it was landed for, and the attribution it bought is clean.
+    task_057 held 3/3 with C1 REMOVED, and the user called the gold deposit_check_3847 in all
+    three trials. C2 owns gen-001's win outright; C1 never contributed to it. A composite set
+    bought a per-change attribution by spending one change on a revert, which is the D22 trade
+    working exactly as designed rather than as a concession.
+  prevalence: 3/3 trials held on the target task
+- description: >-
+    D2's prediction DENIED on its target, its mechanism CONFIRMED elsewhere, and the gap
+    between the two is this round's most useful finding. Predicted: transfer-reason queries in
+    >= 2/3 of task_014's trials and reward >= 2/3. Measured: task_014 queries 1/3 -> 1/3,
+    reward 1/3 -> 0/3. But task_032's transfer-reason queries went 0/3 -> 3/3, the hook firing
+    precisely as designed and harmlessly, since that gold transfer carries compare_args: [] so
+    its reason is not compared. Fetching the platform conversations settles the mechanism: the
+    note is ABSENT from task_014 t0 and t2 and PRESENT in task_032 t0. In 2 of 3 task_014
+    trials the customer's explicit request arrives as the TERMINAL ###TRANSFER### message, so
+    there is no subsequent LLM call for a context hook to act in. The deciding moment on the
+    target task has no turn. Transfer-carrying episodes fell 9/24 -> 6/24, concentrated on the
+    two over-escalating tasks (task_026 2->1, task_096 2->1) with the anchor unchanged;
+    falsifier (b) was written for a RISE and did not fire.
+  prevalence: 1/8 tasks moved on the intended counter (the anchor), 0/8 on the target
+- description: >-
+    task_076's regression is mechanical and now attributed. Its failing trials call
+    log_verification TWICE and its passing trials once, with every other call identical — same
+    account opened, same class, same arguments, same tools unlocked. Across 72 episodes of
+    batch_01..batch_03 exactly two did it (task_076 t0 in batch_02 and batch_03) and BOTH
+    failed. A duplicate row in the verification records is enough to break a DB-graded task.
+    This is the finding the anchor/marginal stratification was frozen in to make possible: the
+    cause was found by reading a passing trial against a failing one of the SAME task under the
+    SAME harness, which an all-known-fail batch cannot offer.
+  prevalence: 2/72 episodes across three rounds, 2/2 of them failing
+- description: >-
+    Counter-evidence against continuing to attack the batch's headroom, recorded because it
+    bounds the remaining slots. task_026 has now failed 9/9 episodes across three harnesses
+    with its binding constraint unmoved: gold requires correcting the rewards ledger via
+    update_transaction_rewards_3847 and the agent has never unlocked it, including under C1
+    which surfaced that exact name in the KB results it read. Its episode activity has also
+    collapsed (104/98/88 messages at H0, 22/76/44 at H2), so the task is doing less rather than
+    more. task_096 is 0/9 with its dominant mode identified as value resolution, and task_072's
+    surviving half is a governing-rule question whose enum component was retired last round as
+    frozen-surface-bounded.
+  prevalence: 0/9 episodes on task_026 across three rounds
+counterevidence: >-
+  Two arguments against this set, and one against its size.
+
+  (1) E1's prevalence is 2 episodes in 72 — the thinnest evidence any change in this
+  experiment has been landed on. The counter is that the chain is airtight rather than
+  statistical: two failing trials, call-for-call identical to three passing ones except for a
+  duplicated write, on a DB-graded task where a duplicate row is a state difference. Landing it
+  is a bet that a mechanical defect with a known mechanism beats a statistical mode with an
+  unknown one; the falsifier (task_076 stays 2/3 with a single call) settles it in one round.
+
+  (2) E1 is a factual state note, and D2 has just demonstrated in this very round that a
+  factual state note can be read as a gate — its transfer rate fell 9/24 -> 6/24 where no
+  suppression was requested. The same risk applies here in the direction that matters:
+  "verification is now on record" could be read as "verification is handled, do not log", and
+  a task needing a genuine second verification would break. No such task is in the batch, which
+  bounds the observable risk but does not eliminate it on the held-out set. Falsifier (a)
+  watches exactly this.
+
+  (3) The set has ONE change where five slots remain and three tasks are stuck at 0/9. That is
+  deliberate. Every additional candidate on the table is either re-treading a surface already
+  denied here (C1's salience), re-landing a prior experiment's prose, or targeting a mode
+  already shown to be bounded by the frozen surfaces (the credit_type enum, retired last
+  round). Landing a weakly-evidenced change to fill a slot is the failure a prior closure
+  named explicitly when it refused to spend its final slot on a speculative change. A
+  one-change set with a recorded reason is the honest alternative.
+hypothesis: >-
+  The harness repeats a write it has already made because nothing in what it reads marks the
+  write as done. Making the completion legible at the moment it happens removes the ambiguity
+  the repetition depends on, without forbidding anything.
+owning_layer: >-
+  Harness, `extension-hook` (`tool_result`). The recipe now carries two hooks and one
+  instruction paragraph; no instructions change lands this generation.
+proposed_change: >-
+  One change (plan D22 bounds set size by evidence and non-interaction, never by a number).
+  D2 is explicitly KEPT rather than reverted, and the distinction from gen-002's treatment of
+  C1 is the rule this experiment is now applying: C1's mechanism was denied everywhere AND its
+  evidence base was misattributed; D2's mechanism is confirmed on the one task where it can
+  fire, and only its predicted task is structurally unreachable. A denied prediction is not by
+  itself a revert trigger — a denied MECHANISM is.
+schema_version: 3
+changes:
+- mechanism: >-
+    After `log_verification` returns successfully, append one factual line stating that
+    identity verification is now on record for this conversation. It reports a state, gives no
+    instruction, and forbids nothing.
+  surface: extension-hook
+  evidence: >-
+    Backlog T6. 2 of 72 episodes across batch_01..batch_03 called log_verification twice —
+    task_076 t0 in batch_02 and batch_03 — and both failed, while every other trial of that
+    task called it once and passed, call-for-call identical otherwise. Surface measured at the
+    g=0 step-4b probe (generation_000/toolresult_probe/).
+  expected_effect: >-
+    Counter-native, scored against batch_04: zero episodes call log_verification more than
+    once (batch_02 and batch_03 each had exactly one such episode), and task_076 returns to
+    3/3 from 2/3. Pre-merge behavioural verification on the real domain (local lane, task_076
+    x3, generation_002/e1_preflight/) showed 3/3 passing with exactly one call each —
+    verification, not measurement.
+  risk: >-
+    That the note is read as a prohibition rather than a state, and an episode needing a
+    genuine second verification stops logging at all. D2 demonstrated in this same round that
+    a factual note can be read as a gate, so this is a measured risk rather than a
+    hypothetical one. No batch task requires a second verification, which bounds what can be
+    observed here but not what could happen on the held-out set.
+  clauses: []
+  commit: 907137b
+mutation:
+  branch: gen-003/verification-once
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/19
+  source_commit: 1a5f3ee598265f7938152028fed9e91c3b7a9f41
+  candidate_commit: a1f48c63a46a6d34665dbd366a82a603cae4d313
+expected_effect: >-
+  Set level, measured on the held-out set at H3 and nowhere else: at most a small directional
+  improvement, since the change removes one mechanical failure mode rather than adding a
+  capability. No magnitude is predicted; the held-out band at T=28 x 3 is about +-5 pp and
+  this experiment's held-out lane is a FOURTH-EXPOSURE diagnostic transfer probe carrying no
+  capability claim. Deliberately not targeted: task_026's unperformed rewards correction (0/9
+  and its binding constraint unmoved by the one mechanism tried), task_096's value resolution,
+  task_072's governing-rule half, and task_014's transfer discrimination (structurally
+  unreachable by the mechanism available).
+human_approval:
+  approved_by: orchestrator — autonomous per D28 (user-delegated; D23's envelope re-registered)
+  date: '2026-08-17'
+held_out_result: null

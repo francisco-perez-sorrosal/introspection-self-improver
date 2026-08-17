@@ -339,15 +339,100 @@ known to be inert but removing it would perturb a working change for tidiness.
 
 <!-- transition: gen_001_to_002 -->
 
+---
+
+## Re-ranking against `batch_03` (H2, 2026-08-17)
+
+Clean round, all four sandbox seam counters zero. **11/24 episodes, 45.8%** (curve: 41.7 →
+54.2 → 45.8). Anchors held 3/3 and 3/3 for the third consecutive round.
+
+**gen-002's changes, scored.**
+
+- **D1 (revert C1) — worked as intended, and the attribution is now settled.** `task_057`
+  held **3/3 with C1 removed**, user calling the gold `deposit_check_3847` in all three
+  trials. **C2 owns gen-001's win outright; C1 never contributed to it.**
+- **D2 — prediction DENIED, mechanism CONFIRMED, and the gap between them is the finding.**
+  `task_014` queries 1/3 → 1/3 and reward 1/3 → 0/3; but `task_032`'s transfer-reason queries
+  went **0/3 → 3/3**. Fetching the platform conversations settles it: the note is absent from
+  `task_014` t0/t2 and present in `task_032` t0. **In 2 of 3 `task_014` trials the customer's
+  explicit request arrives as the terminal `###TRANSFER###` message, so there is no
+  subsequent LLM call for a `context` hook to act in.** The deciding moment has no turn.
+  D2 is **kept, not reverted** — and the rule this experiment is now applying is worth stating
+  once: *a denied prediction is not by itself a revert trigger; a denied MECHANISM is.* C1's
+  mechanism moved nothing anywhere and its evidence was misattributed; D2's moves a counter
+  0 → 3 exactly as designed.
+- **A factual note can still be read as a gate.** Transfer-carrying episodes fell 9/24 →
+  6/24, concentrated on the two over-escalating tasks, where no suppression was requested.
+  D2 states a fact and gives no instruction, and the rate moved anyway. This sharpens the
+  standing lesson past wording: **it is not only escape clauses — any injected statement about
+  a missing precondition can be read as a bar to acting.** Carried forward as a standing risk
+  for every future state-report change, including E1's.
+
+## T3 — RETIRED for `task_014`, with cause
+
+Its prediction has now been denied under the one mechanism that met seq-6 T4's pre-registered
+condition, and the reason is structural rather than a wording problem: the request that
+decides the task arrives as the terminal message. No hook can act after it. The remaining
+transfer evidence (over-escalation on `task_026`/`task_096`) is a *symptom* of those tasks'
+real failure — the agent escalates when its own analysis stalls — not an independent target.
+Seven mutations across four experiments have now moved the transfer rate; none has moved
+discrimination. **The task stays in the batch; the target is closed.**
+
+## T6 — A write the agent already made is made again
+
+**Status:** consumed-by-gen-003 (E1) · **Owning layer:** harness (state tracking)
+**Prevalence:** 2/72 episodes across three rounds — and 2/2 of them failed
+
+`task_076`'s failing trials call `log_verification` **twice**; its passing trials call it
+once. Every other call is identical — same account opened, same class, same arguments, same
+tools unlocked. A duplicate row in the verification records is a database difference, and the
+task grades on `DB`.
+
+This is the finding the stratification was frozen in to make possible. `task_076` is a
+*reliable marginal*: it passes most of the time, so a passing trial and a failing trial of the
+same task under the same harness sit side by side and the difference is readable. An
+all-known-fail batch has no such pair, which is why seq 5 and seq 6 could not have produced
+this class of finding at all.
+
+**`surfaces_considered`:** `extension-hook` (`tool_result`) — **chosen**; the only legal lever,
+because a `tool_call` hook cannot block the second write (τ executes it regardless and the two
+histories diverge, recipe-growth trap 4), so the intervention must land on what the model
+reads after the FIRST call succeeds. `instructions` — a sentence about not repeating writes is
+the shape that has failed repeatedly, and this defect is mechanical rather than judgemental.
+`extension-tool` — the model would have to choose to call it, which is the step that fails.
+
+## What bounds the remaining slots
+
+Recorded so the closure reads it with the curve. Three of the eight tasks are stuck at 0/9
+across three harnesses, and each is stuck for a *different* identified reason:
+
+- **`task_026` (0/9)** — gold requires correcting the rewards ledger via
+  `update_transaction_rewards_3847`; the agent has never unlocked it, including under C1 which
+  surfaced that exact name in the KB text it read. Its activity has also collapsed (104/98/88
+  messages at H0 → 22/76/44 at H2): the task is doing less, not more.
+- **`task_096` (0/9)** — dominant mode is value resolution, not discovery (the gen-001
+  erratum).
+- **`task_072` (1/9)** — the governing-rule half survives; the enum half was retired last round
+  as frozen-surface-bounded.
+
+None of the three has a mechanism with evidence strong enough to justify a slot on this
+round's data. That is why gen-003 lands one change rather than two.
+
+<!-- transition: gen_002_to_003 -->
+
 ## Slot accounting
 
 | Slot | Generation | Target(s) | Status |
 |---|---|---|---|
 | 1 | gen-001 | T1 (C1, extension-hook) + T2 (C2, instructions) | consumed — C1 denied and reverted at gen-002; C2 confirmed, clause 2 identified as the operative half |
-| 2 | gen-002 | C1 revert (D1) + T3 transfer-reason lookup (D2, extension-hook) | in flight |
-| 3–6 | — | T4 (re-specified: which bank RULE governs a correction), T1 (task_026 only), T5 | open |
+| 2 | gen-002 | C1 revert (D1) + T3 transfer-reason lookup (D2, extension-hook) | consumed — D1's attribution test settled task_057 on C2; D2 denied on its target, mechanism confirmed on the anchor, KEPT |
+| 3 | gen-003 | T6 duplicate verification write (E1, extension-hook) | in flight |
+| 4–6 | — | T4 (governing-rule half), T1 (task_026 only), T5 | open |
 
-Five targets opened, three consumed, **one half-retired with cause** (T4's `credit_type`
+Six targets opened, four consumed, **one retired with cause** (T3 for `task_014` — the
+deciding request arrives as the terminal message, so no hook can act after it; seven transfer
+mutations across four experiments have moved the rate and none the discrimination) and **one
+half-retired with cause** (T4's `credit_type`
 enum half — the legal values are already enumerated with their semantics in the unlock
 response and were read correctly; the disagreement is with gold's labelling, which is frozen
 surface, not harness surface).
