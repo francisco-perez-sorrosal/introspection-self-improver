@@ -943,8 +943,11 @@ reports byte-identity to the re-tagged anchor.
       live; user-sim screen currency confirmed (pair unchanged since the 2026-08-15
       97/97 luna screen; `task_034` stays excluded); `make check` green.
 - [ ] **Batch candidate screen** (~24 candidates × 3 local trials under the incumbent H0,
-      ~72 episodes ≈ $1.5): candidates from burned batch stock per D34; commit evidence
-      under `benchmark/probes/<date>-seq10-screen/`; classify every 0/3 candidate's
+      ~72 episodes ≈ $1.5): candidates from burned batch stock per D34 — **never any of
+      the intended held-out 36** (the screen runs pre-partition, before the manifest
+      guard re-arms, so this exclusion is the screen's own responsibility; verified
+      2026-08-17: the full 60-task candidate stock is disjoint from the 36); commit
+      evidence under `benchmark/probes/<date>-seq10-screen/`; classify every 0/3 candidate's
       terminal failing step harness-reachable vs domain-walled (D30 wall taxonomy) by
       reading its trajectories; select 10 (marginal band preferred, reachable fills,
       walls excluded), targeting ≥15 reachable failing cells; anchors `task_006`,
