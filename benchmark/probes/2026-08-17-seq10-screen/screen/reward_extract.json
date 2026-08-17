@@ -1,0 +1,1142 @@
+{
+ "task_002": {
+  "passes": 3,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.00857919,
+    "db_check": 1.0,
+    "duration_s": 25.1,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.00491083,
+    "db_check": 1.0,
+    "duration_s": 25.3,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.011694109999999997,
+    "db_check": 1.0,
+    "duration_s": 30.8,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_003": {
+  "passes": 1,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.00465397,
+    "db_check": 0.0,
+    "duration_s": 17.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.008659670000000001,
+    "db_check": 1.0,
+    "duration_s": 26.7,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.00584088,
+    "db_check": 0.0,
+    "duration_s": 24.8,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_004": {
+  "passes": 3,
+  "per_trial": {
+   "0": {
+    "action_reward": 1.0,
+    "agent_cost": 0.00400269,
+    "db_check": null,
+    "duration_s": 35.4,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": 1.0,
+    "agent_cost": 0.00364592,
+    "db_check": null,
+    "duration_s": 30.8,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": 1.0,
+    "agent_cost": 0.003918039999999999,
+    "db_check": null,
+    "duration_s": 28.3,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_005": {
+  "passes": 2,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.006652549999999999,
+    "db_check": 1.0,
+    "duration_s": 44.9,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.0053545500000000005,
+    "db_check": 1.0,
+    "duration_s": 53.7,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.006164890000000001,
+    "db_check": 0.0,
+    "duration_s": 37.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_006": {
+  "passes": 3,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.00487191,
+    "db_check": 1.0,
+    "duration_s": 20.4,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.00349221,
+    "db_check": 1.0,
+    "duration_s": 17.6,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.00430875,
+    "db_check": 1.0,
+    "duration_s": 25.0,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_008": {
+  "passes": 1,
+  "per_trial": {
+   "0": {
+    "action_reward": 0.0,
+    "agent_cost": 0.010307990000000001,
+    "db_check": null,
+    "duration_s": 56.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": 0.0,
+    "agent_cost": 0.016868970000000004,
+    "db_check": null,
+    "duration_s": 67.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": 1.0,
+    "agent_cost": 0.013456190000000002,
+    "db_check": null,
+    "duration_s": 61.7,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_010": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.00477559,
+    "db_check": 0.0,
+    "duration_s": 32.2,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.006795020000000001,
+    "db_check": 0.0,
+    "duration_s": 35.6,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.007036669999999999,
+    "db_check": 0.0,
+    "duration_s": 62.0,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_014": {
+  "passes": 1,
+  "per_trial": {
+   "0": {
+    "action_reward": 1.0,
+    "agent_cost": 0.00599679,
+    "db_check": null,
+    "duration_s": 27.4,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": 0.0,
+    "agent_cost": 0.0057196899999999995,
+    "db_check": null,
+    "duration_s": 27.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": 0.0,
+    "agent_cost": 0.0053159,
+    "db_check": null,
+    "duration_s": 26.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_015": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.0033123099999999997,
+    "db_check": 0.0,
+    "duration_s": 29.2,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.00322354,
+    "db_check": 0.0,
+    "duration_s": 22.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.0029552000000000003,
+    "db_check": 0.0,
+    "duration_s": 23.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_020": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.00794334,
+    "db_check": 0.0,
+    "duration_s": 58.6,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.0107661,
+    "db_check": 0.0,
+    "duration_s": 55.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.00877623,
+    "db_check": 0.0,
+    "duration_s": 53.0,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_023": {
+  "passes": 2,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.01507646,
+    "db_check": 1.0,
+    "duration_s": 62.2,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.01065264,
+    "db_check": 1.0,
+    "duration_s": 45.0,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.01072341,
+    "db_check": 0.0,
+    "duration_s": 46.6,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_024": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.02045345,
+    "db_check": 0.0,
+    "duration_s": 76.9,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.011421,
+    "db_check": 0.0,
+    "duration_s": 49.9,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.00940294,
+    "db_check": 0.0,
+    "duration_s": 39.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_027": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.01828616,
+    "db_check": 0.0,
+    "duration_s": 126.0,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.01415115,
+    "db_check": 0.0,
+    "duration_s": 74.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.027512469999999997,
+    "db_check": 0.0,
+    "duration_s": 154.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_029": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.011599400000000001,
+    "db_check": 0.0,
+    "duration_s": 64.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.011872359999999998,
+    "db_check": 0.0,
+    "duration_s": 50.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.026627489999999993,
+    "db_check": 0.0,
+    "duration_s": 94.0,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_032": {
+  "passes": 3,
+  "per_trial": {
+   "0": {
+    "action_reward": 1.0,
+    "agent_cost": 0.00499592,
+    "db_check": null,
+    "duration_s": 33.8,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": 1.0,
+    "agent_cost": 0.006588350000000001,
+    "db_check": null,
+    "duration_s": 35.4,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": 1.0,
+    "agent_cost": 0.00487298,
+    "db_check": null,
+    "duration_s": 36.5,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_037": {
+  "passes": 2,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.018979160000000005,
+    "db_check": 0.0,
+    "duration_s": 89.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.02099963,
+    "db_check": 1.0,
+    "duration_s": 87.6,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.018945629999999998,
+    "db_check": 1.0,
+    "duration_s": 74.3,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_038": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.02028764,
+    "db_check": 0.0,
+    "duration_s": 80.8,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.01979512,
+    "db_check": 0.0,
+    "duration_s": 82.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.014363589999999999,
+    "db_check": 0.0,
+    "duration_s": 73.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_040": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.023336299999999997,
+    "db_check": 0.0,
+    "duration_s": 94.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.021368540000000002,
+    "db_check": 0.0,
+    "duration_s": 76.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.01891466,
+    "db_check": 0.0,
+    "duration_s": 73.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_046": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.01729203,
+    "db_check": 0.0,
+    "duration_s": 64.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.01343631,
+    "db_check": 0.0,
+    "duration_s": 53.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.018584399999999997,
+    "db_check": 0.0,
+    "duration_s": 62.6,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_047": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.014021730000000001,
+    "db_check": 0.0,
+    "duration_s": 68.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.02223962,
+    "db_check": 0.0,
+    "duration_s": 76.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.02027937,
+    "db_check": 0.0,
+    "duration_s": 76.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_055": {
+  "passes": 1,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.03191598,
+    "db_check": 0.0,
+    "duration_s": 104.6,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.04173726,
+    "db_check": 0.0,
+    "duration_s": 143.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.03188121,
+    "db_check": 1.0,
+    "duration_s": 116.9,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_057": {
+  "passes": 1,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.020647239999999997,
+    "db_check": 1.0,
+    "duration_s": 93.2,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.04192803,
+    "db_check": 0.0,
+    "duration_s": 157.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.028022869999999995,
+    "db_check": 0.0,
+    "duration_s": 128.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_058": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.054598799999999996,
+    "db_check": 0.0,
+    "duration_s": 119.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.04177643,
+    "db_check": 0.0,
+    "duration_s": 68.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.03191448,
+    "db_check": 0.0,
+    "duration_s": 101.8,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_060": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.014244749999999997,
+    "db_check": 0.0,
+    "duration_s": 54.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.01171845,
+    "db_check": 0.0,
+    "duration_s": 41.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.010460800000000001,
+    "db_check": 0.0,
+    "duration_s": 41.9,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_061": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.027376309999999994,
+    "db_check": 0.0,
+    "duration_s": 104.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.021273540000000004,
+    "db_check": 0.0,
+    "duration_s": 84.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.03290551,
+    "db_check": 0.0,
+    "duration_s": 105.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_062": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.023782970000000004,
+    "db_check": 0.0,
+    "duration_s": 76.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.041726559999999996,
+    "db_check": 0.0,
+    "duration_s": 155.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.02315752,
+    "db_check": 0.0,
+    "duration_s": 77.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_063": {
+  "passes": 1,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.06968992,
+    "db_check": 1.0,
+    "duration_s": 111.5,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.04656569,
+    "db_check": 0.0,
+    "duration_s": 98.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.06692078,
+    "db_check": 0.0,
+    "duration_s": 119.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_064": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.018949760000000003,
+    "db_check": 0.0,
+    "duration_s": 48.2,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.17984186999999993,
+    "db_check": 0.0,
+    "duration_s": 411.6,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.05893715,
+    "db_check": 0.0,
+    "duration_s": 124.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_065": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.04680754000000001,
+    "db_check": 0.0,
+    "duration_s": 131.2,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.038500070000000004,
+    "db_check": 0.0,
+    "duration_s": 109.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.03147253999999999,
+    "db_check": 0.0,
+    "duration_s": 70.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_066": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.0435981,
+    "db_check": 0.0,
+    "duration_s": 120.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.02834357,
+    "db_check": 0.0,
+    "duration_s": 86.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.04377340999999999,
+    "db_check": 0.0,
+    "duration_s": 107.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_069": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.06356173,
+    "db_check": 0.0,
+    "duration_s": 169.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.033746609999999996,
+    "db_check": 0.0,
+    "duration_s": 62.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.037342400000000005,
+    "db_check": 0.0,
+    "duration_s": 116.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_071": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.023588059999999998,
+    "db_check": 0.0,
+    "duration_s": 72.6,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.02130578,
+    "db_check": 0.0,
+    "duration_s": 76.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.01989965,
+    "db_check": 0.0,
+    "duration_s": 94.2,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_076": {
+  "passes": 2,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.014393930000000001,
+    "db_check": 1.0,
+    "duration_s": 59.5,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.0070063899999999995,
+    "db_check": 0.0,
+    "duration_s": 38.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.00892557,
+    "db_check": 1.0,
+    "duration_s": 40.8,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_083": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": 0.0,
+    "agent_cost": 0.02613828,
+    "db_check": null,
+    "duration_s": 83.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": 0.0,
+    "agent_cost": 0.018460539999999998,
+    "db_check": null,
+    "duration_s": 66.3,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": 0.0,
+    "agent_cost": 0.023764280000000006,
+    "db_check": null,
+    "duration_s": 87.8,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_089": {
+  "passes": 1,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.01729906,
+    "db_check": 0.0,
+    "duration_s": 70.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.015346039999999998,
+    "db_check": 0.0,
+    "duration_s": 65.8,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.033189869999999996,
+    "db_check": 1.0,
+    "duration_s": 110.3,
+    "reward": 1.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_094": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.014179919999999999,
+    "db_check": 0.0,
+    "duration_s": 53.0,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.012707459999999999,
+    "db_check": 0.0,
+    "duration_s": 53.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.010906150000000002,
+    "db_check": 0.0,
+    "duration_s": 45.8,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_101": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.009317269999999999,
+    "db_check": 0.0,
+    "duration_s": 54.1,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.01919081,
+    "db_check": 0.0,
+    "duration_s": 110.5,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.01106998,
+    "db_check": 0.0,
+    "duration_s": 60.2,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ },
+ "task_102": {
+  "passes": 0,
+  "per_trial": {
+   "0": {
+    "action_reward": null,
+    "agent_cost": 0.014873440000000002,
+    "db_check": 0.0,
+    "duration_s": 65.4,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "1": {
+    "action_reward": null,
+    "agent_cost": 0.00742976,
+    "db_check": 0.0,
+    "duration_s": 41.2,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   },
+   "2": {
+    "action_reward": null,
+    "agent_cost": 0.00897443,
+    "db_check": 1.0,
+    "duration_s": 53.7,
+    "reward": 0.0,
+    "termination_reason": "user_stop"
+   }
+  },
+  "trials": 3
+ }
+}
