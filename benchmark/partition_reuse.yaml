@@ -124,3 +124,96 @@ declarations:
       experiment, which REVEALED on 2026-08-15. Declared against its own source for the
       same reason as the seq-5 row. Same accepted consequence: fourth exposure, transfer
       probe only, no capability claim.
+
+  # ── seq 10 (010_adopt-bm25-luna56) ────────────────────────────────────────────────
+  # Five rows, one per prior source, because the check ranks severity per prior experiment
+  # and collapsing them would read as one generation of distance when it is five.
+  #
+  # What changed with plan D33, and it changes what these rows MEAN. Through seq 8 a
+  # held_out_from_held_out row was an admission of weakness: the orchestrator had seen the
+  # prior reveal's per-task results, so the firewall was "weaker than it looks" and the
+  # lane was formally demoted to a diagnostic transfer probe carrying no capability claim.
+  # D33 (user-directed 2026-08-17) replaces that reading with a mechanism. In-loop decision
+  # inputs are improvement batches ONLY — current and past — and held-out artifacts of
+  # every experiment, revealed included, are quarantined from in-loop recall WITHOUT
+  # EXPIRY: no held_out/ directory, no summary.md, no trend or fragility artifact, no
+  # task x generation matrix, no closure section carrying per-task held-out content. Prior
+  # experiments are recalled through their improvement_records/ and improvement_backlog.md,
+  # which are batch-derived by construction.
+  #
+  # So exposure is now graded by CHANNEL, and the two channels are not equivalent:
+  #   * a task the loop used as a BATCH task is burnt for held-out use FOREVER — the loop
+  #     read its transcripts in full as diagnosis evidence and no reading discipline undoes
+  #     that (this is why all 36 rows below are held_out_from_held_out and none is
+  #     held_out_from_batch, and why seq-2's 12 batch tasks went back to batch stock);
+  #   * a HOLDOUT-ONLY task is claim-eligible under the procedural firewall — the same
+  #     enforcement class the project has trusted pre-reveal for eight experiments, now
+  #     with no expiry date and an attestation in the §29 walk.
+  #
+  # The honesty boundary, stated with the decision rather than discovered later: the
+  # strong-form guarantee ("no operator ever saw the key") is NOT restorable for tasks that
+  # have been revealed — the matrices are committed, and sessions that performed those
+  # reveals existed. What seq 10 claims is the procedural form, named in those words
+  # wherever a T-based number appears. The unqualified zero-exposure claim requires a pool
+  # no prior experiment touched, which banking_knowledge cannot supply (zero virgin tasks);
+  # that is a domain decision, user-owned, pencilled seq 12.
+  - experiment: 010_adopt-bm25-luna56
+    reuses_from: 008_stratb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D34. The legacy 28 are seq 10's held-out core for the FIFTH consecutive
+      experiment; seq 8 REVEALED 2026-08-17. Retained rather than re-drawn because the pool
+      holds zero virgin tasks — a structural limit unchanged since D19 — and because under
+      D33 the bar for a claim-bearing held-out set is zero IN-LOOP (batch) exposure plus
+      the cross-experiment quarantine, which these 28 satisfy: no experiment has ever run
+      them as batch tasks, so no loop has read their transcripts as diagnosis evidence.
+      Seq 10 therefore carries a capability claim on the stated procedural basis — the
+      first in the project's history — and every number derived from T=36 names that basis.
+      The batch primary (paired sign-flip, batch_09 vs pooled batch_01+batch_02 over 12
+      tasks with 17 reachable failing cells) remains the pre-registered confirmatory test;
+      the pre-registered SUCCESS is both curves rising, which is why the held-out lane's
+      standing was worth repairing rather than caveating again.
+  - experiment: 010_adopt-bm25-luna56
+    reuses_from: 006_fixedb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D34, transitively. The same 28 were seq 6's hidden set; seq 6 REVEALED
+      2026-08-16. Declared against its own source so accumulated exposure is counted per
+      prior experiment rather than absorbed into the seq-8 row. Same basis and same
+      accepted consequence as the row above.
+  - experiment: 010_adopt-bm25-luna56
+    reuses_from: 005_fixedb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D34, transitively. The same 28 were seq 5's hidden set; seq 5 REVEALED
+      2026-08-16. Declared against its own source. Same basis and same accepted
+      consequence as the rows above.
+  - experiment: 010_adopt-bm25-luna56
+    reuses_from: 004_powered-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D34, transitively. These 28 have been the hidden set since the powered
+      experiment, which REVEALED 2026-08-15. Declared against its own source. Same basis
+      and same accepted consequence as the rows above.
+  - experiment: 010_adopt-bm25-luna56
+    reuses_from: 002_bm25-sonnet46
+    kinds: [held_out_from_held_out]
+    count: 8
+    reason: >-
+      Plan D33 (the row that redesigned seq 10's held-out half) and D34. Seq 2's 8
+      held-out tasks — task_017, task_035, task_036, task_048, task_051, task_067,
+      task_091, task_099 — are added to the legacy 28 to make T=36. They are the
+      LEAST-exposed stock the pool has: last measured 2026-08-14 under the sonnet-4.6 pair,
+      untouched by the luna lineage beyond the 97/97 user-sim crash screen, and never a
+      batch task of any experiment. Seq 2 REVEALED 2026-08-14, so this is a
+      held_out_from_held_out row and carries the same procedural basis as the four above.
+      Seq 2's TWELVE batch tasks are deliberately NOT here: under D33 they are burnt for
+      held-out use forever, and three of them (task_003, task_008, task_089) are seq 10
+      BATCH tasks instead, reported as benign batch_from_batch notes. Beside the fragility
+      report these 8 additionally support a pre-registered ADVISORY exposure-stratified
+      sub-read — the 8 against the 28 — which qualifies the secondary and never carries a
+      claim of its own.

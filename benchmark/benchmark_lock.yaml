@@ -99,23 +99,63 @@
 # concentration flag is now a positive obligation rather than a justification duty. Every
 # curve this experiment renders states the non-comparability.
 #
-# THE HELD-OUT SET IS ON ITS FOURTH EXPOSURE (plan D19/D23/D28, declared in
-# benchmark/partition_reuse.yaml against 004, 005 AND 006, all revealed). The pool holds
-# zero virgin tasks — a structural limit no re-draw escapes — so under D25 rule 2 the
-# held-out lane is FORMALLY a diagnostic transfer probe and may carry no capability claim,
-# however clean its trend. The pre-registered PRIMARY is the batch curve, whose evidence is
-# fully observable by design and therefore unharmed by exposure.
+# SEQ 10 (plan D34, 2026-08-17, user-delegated): THE BOTH-CURVES EXPERIMENT. Every prior
+# null is explained by a violated precondition, and seq 10 is the first design where all
+# five hold at once:
 #
-# AUTONOMY (D23's envelope, re-registered here): require_human_approval stays false —
-# every in-loop decision, PR merge included, is the orchestrator's. What the delegation
-# does NOT cover is unchanged and still enforced mechanically: the frozen surfaces, the
-# partition, the <policy> block, and the held-out firewall. Autonomy is decision authority,
-# never access.
+#   (a) REACHABLE ROOM IN THE BATCH. Seq 8's batch held ~5 reachable failing cells and was
+#       saturated by round 5 (15/15 non-walled cells passed at its peak) under a null
+#       primary. Seq 10's B=12 holds **17 reachable failing cells at H0** — 2 anchors at
+#       3/3 plus ten tasks measured in the 1/3–2/3 marginal band by a 38-candidate,
+#       114-episode pre-partition screen (benchmark/probes/2026-08-17-seq10-screen/). The
+#       band filled every slot, so this batch admits NO headroom tier and NO walled task:
+#       every non-anchor task is one the incumbent H0 demonstrably passes sometimes and
+#       fails sometimes, which is a stronger reachability certificate than any
+#       classification of a never-passing task.
+#   (b) AN INSTRUMENT THAT CAN SAY YES. Movable = 10 of 12, five movers needed at α=0.05,
+#       attainable-p floor 2^-10 — versus seq 8's five-needed-from-six-with-three-walled.
+#       The envelope is computed at freeze (gates/power_envelope.json), not at closure.
+#   (c) KNOWN NOISE. `identity_generations: [1]` pre-registers gen-001 as a behavioural
+#       identity: batch_02 is the A/A measurement, taken BEFORE the first mutation rather
+#       than discovered by accident in round 6, and it pools the primary's H0 baseline to
+#       six trials per task (batch_01 + batch_02).
+#   (d) SURFACES BEYOND PROSE USABLE. D24 re-opened extension tools and sub-agents; D31
+#       gave all four growth surfaces a committed zero-state template; the pre-freeze
+#       suppression canary (gates/suppression_canary.json) converts platform-lane
+#       suppression from an assumption into a measurement; and D29's surface-general
+#       concentration ladder plus adoption-first first-use make the attempt a one-round
+#       bet. Seq 8 ran the D24 seam pump-path-only — pi_local_calls = 0 across 168
+#       platform episodes — and landed six of six changes on one surface.
+#   (e) CRAFT LESSONS PERSISTING. sia recall + schema-v4 records (per-clause falsifiers,
+#       adoption_stage/adoption_criteria, host_facts linted against
+#       benchmark/probes/host_facts.yaml) carry them under the D33 recall scope.
 #
-# Seq 8 is EVEN per D15: a reportable experiment, run to completion. Seq 7 was never cut.
+# THE HELD-OUT SET IS PURE-HOLDOUT AND CARRIES A CAPABILITY CLAIM — the first since the
+# project began (plan D33). T=36 = the legacy 28 + seq-2's 8 never-batched tasks. Every
+# one of the 36 has ZERO in-loop (batch) exposure in every experiment: the loop has never
+# read one of their transcripts as diagnosis evidence. What they do have is prior held-out
+# exposure, declared per source in benchmark/partition_reuse.yaml, and D33 re-grades that
+# channel: batch-used tasks stay burnt forever, while holdout-only tasks are claim-eligible
+# under the CROSS-EXPERIMENT FIREWALL — in-loop decisions are grounded in improvement
+# batches only, current and past, and held-out artifacts of every experiment (revealed
+# included) stay outside in-loop recall without expiry. The claim seq 10 may make therefore
+# rests on a stated PROCEDURAL basis, in those words, wherever it is reported. The
+# unqualified zero-exposure claim needs a pool no prior experiment touched — a domain
+# decision, user-owned, pencilled seq 12.
+#
+# AUTONOMY (D23's envelope, re-registered by D34 and ratified at this freeze):
+# require_human_approval stays false — every in-loop decision, PR merge included, is the
+# orchestrator's. What the delegation does NOT cover is unchanged and still enforced
+# mechanically: the frozen surfaces, the partition, the <policy> block, and the held-out
+# firewall. Autonomy is decision authority, never access. A freeze re-decision, a suspected
+# seam defect, a D8 viability read, or projected spend past the budget remains a
+# halt-and-report to the user in either mode.
+#
+# Seq 10 is EVEN per D15: a reportable experiment. Seq 7 and seq 9 were never cut.
+# Results under the D24 seam (seq 8 onward) are not comparable to seq ≤ 6.
 experiment:
-  seq: 8
-  name: stratb-bm25-luna56
+  seq: 10
+  name: adopt-bm25-luna56
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -149,134 +189,198 @@ benchmark:
 # self_improving_agent_evaluation_protocol.md §26). Frozen with everything else in this
 # file: the partition manifest is proposed from these sizes and verified against them,
 # and the distinct-task budget must fit the eligible pool — (G*B)+T under batch_mode
-# fresh, B+T under fixed (seq 5 and seq 6 alike: 36 of 97 — under fixed mode G does not
-# enter the budget, which is why G could move 2 -> 6 without touching the partition;
-# the pool is exhausted of virgin tasks, so
-# reuse is a recorded freeze decision, not an accident — see the manifest header). Powered scale per D11 (2026-08-14,
-# sized from seq-2 actuals by results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md:
-# powered for a ~+4-5 pp/generation loop — ~97% direction, ~82% trend-significance at
-# α=.05 — where the debug T=8 could resolve nothing smaller than ~45 pp. T=28 gives a
-# ~10-task failure mode 97%/85% odds of ≥1/≥2 held-out witnesses vs 60%/19% at T=8 and
-# tightens the noise band ±17 → ±9 pp; B=8 turns batch prevalence quotes from quarters
-# into eighths — the cheapest lever on mutation quality; G=5 is the strongest power
-# lever, compounding mutations AND adding curve points to the pre-registered trend
-# test). The full G=5/B=10/T=47 experiment is deferred to seq 6: at measured per-episode
-# costs it adds ~10 pp of trend power for ~$80.
+# fresh, B+T under fixed. Seq 10: 12 + 36 = **48 of 96 eligible** (97 minus the
+# task_034 user-sim crasher), the largest partition the project has frozen. Under fixed
+# mode G does not enter the budget, which is why G can move without touching the
+# partition; the pool holds zero VIRGIN tasks, so every task here is declared reuse
+# (benchmark/partition_reuse.yaml) rather than an accident — and under plan D33 what
+# decides a held-out task's eligibility is zero IN-LOOP (batch) exposure plus the
+# cross-experiment quarantine, not zero exposure of any kind.
 #
-# G = 6 for seq 6 (plan D23, user-directed 2026-08-16). B and T are UNCHANGED from
-# seq 4/seq 5, so D11's per-round sizing rationale above stands verbatim; only the
-# number of mutation slots moves — 2 -> 6. This is the direct answer to seq 5's own
-# recorded limitation ("what two slots CANNOT show is compounding across many
-# generations"): six slots, each landing a composite improvement SET (D22), give the
-# loop room to accumulate and give the held-out trend test 7 points instead of 3.
-# Rounds: 7 held-out (H0..H6) x 28 x 3 = 588 local episodes; 7 batch rounds x 8 x 3
-# = 168 platform episodes.
+# SIZING LINEAGE. D11 (2026-08-14, from results/experiment_002_bm25-sonnet46/
+# SIZING_ANALYSIS.md) sized the powered tier G=5/B=8/T=28 at one trial per task and
+# established the two rules that still bind: G is the strongest trend lever, and the
+# noise band is stated wherever a curve renders. D18 replaced the trial regime — one
+# knob, frozen.num_trials, governs both lanes; per-task cells are pass RATES and the
+# aggregate is the mean per-task rate. The single-trial-era bands (±17 pp at T=8,
+# ±9 pp at T=28, ±7 pp at T=47) are NOT reusable here: at T=36 x 3 trials the band is
+# ≈ ±4.5 pp, and the measured identical-harness floor on a B=8x3 batch was
+# 2 cells / 8.3 pp — recompute per scale, never carry a band forward.
+#
+# SEQ 10 SIZES (plan D34): G=8 with gen-001 pre-registered identity, B=12, T=36,
+# num_trials 3. Rounds: 8 measured held-out (H0, H2…H8; H1 carries) x 36 x 3 = 864
+# local episodes; 9 batch rounds x 12 x 3 = 324 platform episodes. Estimated ≈ $29 at
+# seq-8 actuals, before the $2.57 pre-partition screen already spent.
 protocol:
-  generations: 6
-  improvement_tasks_per_generation: 8
-  held_out_tasks: 28
+  generations: 8
+  improvement_tasks_per_generation: 12
+  held_out_tasks: 36
 
-  # CARRIED FROM SEQ 5/6 (plan D17, re-affirmed by D23 and D28): one fixed batch task
-  # set — the SAME eight tasks — measured under every generation, H6 included (batch_07
-  # is H6's measurement-only endpoint round, consumed by no transition). Seq 4's null
-  # left two explanations standing — "the mutations did nothing" vs "the measurement
-  # could not see it" — and fixed mode attacks the prerequisite question directly: can
-  # the improvement loop fix what it stares at? Seq 5 answered no at two slots; seq 6
-  # asked again at six with composite sets and answered no again — but its own review
-  # showed the instrument could barely have said yes, five of eight tasks having
-  # contributed zero dynamic range across 168 episodes. Seq 8 asks the same question
-  # through a STRATIFIED batch (D25 rule 1; strata in split_manifest.yaml's header), so
-  # both directions are measurable: anchors can break, marginals can move, headroom can
-  # open.
+  # CARRIED FROM SEQ 5/6/8 (plan D17, re-affirmed by D23/D28, re-registered by D34): one
+  # fixed batch task set — the SAME twelve tasks — measured under every generation, H8
+  # included (batch_09 is H8's measurement-only endpoint round, consumed by no
+  # transition). Fixed mode attacks the prerequisite question directly: can the
+  # improvement loop fix what it stares at? Seq 5 answered no at two slots; seq 6 asked
+  # again at six with composite sets and answered no; seq 8 asked through a stratified
+  # batch and answered no — but by its own review the batch was SATURATED at its peak
+  # round (15/15 non-walled cells passed) with only ~5 reachable failing cells to move.
+  # Seq 10 removes that excuse: 17 reachable failing cells at H0, every non-anchor task
+  # measured in the 1/3–2/3 band by the pre-partition screen, no walled task admitted.
+  #
+  # G = 8 with gen-001 pre-registered as an identity round (below): SEVEN mutation slots,
+  # one more than seq 8, plus a designed A/A round — and G is the strongest trend lever
+  # (D11), so each of the two curves gets eight points instead of seven for roughly $2.
+  # Rounds: 8 measured held-out (H0, H2…H8; H1 carries) x 36 x 3 = 864 local episodes;
+  # 9 batch rounds x 12 x 3 = 324 platform episodes.
   #
   # The batch curve is a PAIRED saturation curve (same tasks every generation); its
   # pre-registered PRIMARY is scripts/batch_curve.py's exact paired sign-flip endpoint
-  # test on per-task rate deltas, H6's batch_07 vs H0's batch_01, alpha 0.05, 2^8
-  # enumeration, no interim looks. The SECONDARY is the held-out trend (reveal's
-  # one-sided z over H0…H6) read beside its advisory fragility report — and it is a
-  # DIAGNOSTIC TRANSFER PROBE, not a capability instrument: these 28 tasks are on their
-  # fourth experiment and all three predecessors revealed (D25 rule 2; declared in
-  # benchmark/partition_reuse.yaml). Every T-based number states that.
+  # test on per-task rate deltas, H8's batch_09 vs the POOLED H0 baseline
+  # (batch_01 + batch_02 — six trials per task, pooled because gen-001 is a
+  # pre-registered identity), alpha 0.05, no interim looks. Movable = 10 of 12 (anchors
+  # cannot move by construction; no walled task exists here), five movers needed, so the
+  # attainable-p floor is 2^-10 — the envelope is committed at freeze to
+  # gates/power_envelope.json and the gate refuses UNREACHABLE.
+  #
+  # The SECONDARY is the held-out trend (reveal's one-sided z over the eight measured
+  # generations) read beside its fragility report — and under plan D33 it is a
+  # CAPABILITY INSTRUMENT for the first time, not a transfer probe: all 36 held-out
+  # tasks have ZERO in-loop batch exposure in every experiment, and the claim they
+  # support rests on the stated PROCEDURAL basis (the cross-experiment firewall, declared
+  # per source in benchmark/partition_reuse.yaml). Every T-based number states that basis.
   batch_mode: fixed
+
+  # ONE PRE-REGISTERED BEHAVIOURAL-IDENTITY ROUND (plan D30 rule 2; lock-validated,
+  # batch_mode fixed only). Generation 1 is identity BY DESIGN: H1 = H0, its held-out
+  # measurement carries forward, its batch round (batch_02) is the A/A noise measurement,
+  # and `make reveal` refuses the pre-registration dishonored. Registered at generation 1
+  # it also pools the primary's baseline — batch_01 + batch_02, two x num_trials per task.
+  # Seq 8 got its noise floor (2 cells / 8.3 pp on an identical harness) only by accident
+  # of a change that never executed, and that number re-read every attribution the project
+  # had ever made. Seq 10 measures it on purpose, before the first mutation.
+  identity_generations: [1]
 
   # The full-quadrant reading key (plan D25 rule 3), pre-registered here because a key
   # written after the data exists is not a key. lock.py's READING_KEY_CELLS requires all
   # nine primary × secondary cells; a cell may declare its combination run-voiding, never
-  # be absent. Seq 6 observed primary-down / secondary-up and had to adjudicate off-key.
+  # be absent. Seq 6 observed primary-down / secondary-up and had to adjudicate off-key;
+  # seq 8 was read "the meta-agent is the problem" by a key with no language for a batch
+  # the loop had nearly saturated.
+  #
+  # THE PRE-REGISTERED SUCCESS IS THE sig-up x sig-up CELL (plan D34): the batch primary
+  # AND the held-out secondary both rising. Named before the first episode, so "what would
+  # have counted as success" is not decided after the data exists.
   #
   # DIRECTION IS MECHANICAL, decided from the two committed artifacts, not by reading a
   # curve by eye:
   #   PRIMARY   (results/experiment_<id>/batch_curve.json, endpoint pair only)
   #     up   = sum(per-task rate deltas) > 0 AND the pre-registered one-sided exact test
-  #            p < 0.05  (this is the experiment's single confirmatory rejection)
+  #            p < 0.05  (this is the experiment's single confirmatory rejection).
+  #            The pair is H8's batch_09 vs the POOLED H0 baseline (batch_01 + batch_02).
   #     down = sum < 0 AND the MIRRORED enumeration P(sum <= observed) < 0.05. The mirror
   #            is a pre-registered DIRECTION RULE for reading the result, not a second
   #            hypothesis test: alpha is spent once, on the one-sided up test above.
   #     flat = anything else, including a non-significant sum of either sign.
   #   SECONDARY (held_out/trend_test.json, computed only at reveal)
-  #     up = z >= +1.645 · down = z <= -1.645 · flat = otherwise.
+  #     up = z >= +1.645 . down = z <= -1.645 . flat = otherwise. The trend runs over the
+  #     eight measured generations (identity gen-001 excluded, its result carried).
   #     In every cell the fragility report (held_out/trend_fragility.json) qualifies the
-  #     secondary, and the fourth-exposure caveat applies unconditionally.
+  #     secondary before any sentence is written about it.
   #
-  # Standing across all nine cells, stated once so no cell has to repeat it: results
-  # under the D24 seam are NOT comparable to seq <= 6, and no cell licenses a capability
-  # claim from the held-out lane.
+  # THE CO-METRIC THAT DISAMBIGUATES A FLAT PRIMARY (plan D30 rule 4): the
+  # REACHABLE-HARVEST fraction — non-walled batch cells passed, endpoint vs baseline,
+  # emitted by scripts/batch_curve.py from the manifest's strata. Seq 10 froze no walled
+  # task, so harvest runs over all 36 cells and its baseline is 19/36 = 52.8%. Every
+  # flat-primary cell below reads it: harvest >= 90% says the objective's harness-reachable
+  # range is spent and the next move is a pool or domain decision; harvest low says the
+  # loop found nothing.
+  #
+  # THE NOISE FLOOR EVERY CELL IS READ AGAINST: batch_02 vs batch_01, the pre-registered
+  # gen-001 identity pair (payload `noise_floor`). Seq 8's measured floor on a B=8x3 batch
+  # was 2 cells / 8.3 pp; seq 10 measures its own on B=12x3 before the first mutation. An
+  # attribution without a mechanism AND a counter is noise.
+  #
+  # Standing across all nine cells, stated once so no cell has to repeat it: results under
+  # the D24 seam are NOT comparable to seq <= 6, and every claim the held-out lane carries
+  # names its PROCEDURAL basis (plan D33) rather than an unqualified zero-exposure one.
   reading_key:
     primary_up_secondary_up: >-
-      The loop improved the tasks it stared at and the gain appeared on the transfer
-      probe too. The strongest result this design can return. Report as: loop
-      demonstrated on the batch (pre-registered primary), with concordant transfer that
-      is exposure-confounded and therefore corroborating, never claiming. The closure
-      names which changes moved which strata and whether any anchor paid for the gain.
+      THE PRE-REGISTERED SUCCESS CELL, named before the first episode (plan D34). The loop
+      improved the tasks it stared at AND the gain appeared on a held-out set the loop
+      never tuned on. Seq 10 is the first freeze where this cell carries a capability
+      claim rather than corroboration: T=36 is pure-holdout — every task in it has zero
+      in-loop (batch) exposure in every experiment, and the D33 quarantine keeps prior
+      held-out results out of in-loop recall without expiry — so the claim rests on the
+      stated PROCEDURAL basis and says so, in those words, wherever it is reported. Report
+      as: loop demonstrated on the batch (pre-registered primary, exact paired sign-flip
+      batch_09 vs pooled batch_01+batch_02), with a concordant held-out trend over eight
+      measured points read against its noise band and its fragility report. The closure
+      names which changes moved which strata, whether any anchor paid for the gain, and
+      what the identity round (gen-001) measured as the floor.
     primary_up_secondary_flat: >-
       The loop optimizes what it measures and the gain does not transfer — mutations are
-      batch-shaped. The primary claim stands; no generalization claim is available. The
-      endpoint diagnosis asks per change whether its mechanism is task-specific, and the
-      closure reports the batch win with the flat probe as its principal limit.
+      batch-shaped. The primary claim stands; NO capability claim is available, and the
+      pure-holdout secondary makes that a stronger negative statement than seq 8's
+      exposed-probe version could have been: this is a set the loop never touched, so a
+      flat trend is evidence about generalization rather than a confound. The endpoint
+      diagnosis asks per change whether its mechanism is task-specific, and the closure
+      reports the batch win with the flat held-out curve as its principal limit.
     primary_up_secondary_down: >-
-      The batch improved while the transfer probe fell: overfitting with collateral
-      damage, the sharpest negative-transfer signal this instrument can produce. The
-      primary verdict is positive and must be reported with the held-out decline as its
-      headline caveat; the closure identifies the changes that plausibly traded breadth
-      for the eight.
+      The batch improved while the held-out set fell: overfitting with collateral damage,
+      and on a pure-holdout lane this is the sharpest negative-transfer signal the project
+      can produce. The primary verdict is positive and must be reported with the held-out
+      decline as its headline caveat — never as a capability claim. The closure identifies
+      the changes that plausibly traded breadth for the twelve, checks whether any of them
+      carried a suppression risk its own falsifier had already flagged (the standing
+      missing-state lesson), and states what the loop should have reverted.
     primary_flat_secondary_up: >-
-      Null primary with a rising probe — seq 6's cell, now with a batch that could have
-      moved. Check the strata first: a flat sum can hide an anchor regression cancelled
-      by a headroom gain, and the per-task cells decide which happened. If the batch is
-      genuinely inert, a rise on a fourth-exposure set is more likely exposure or noise
-      than capability; report null primary, run the fragility report before writing any
-      sentence about the secondary, and claim nothing.
+      Null primary with a rising held-out curve. READ THE CO-METRIC FIRST. Reachable
+      harvest ≥90% at the endpoint says the batch's harness-reachable range was already
+      spent — the primary had nothing left to move and the secondary is the informative
+      instrument; report the held-out trend against its band and fragility report, and
+      the next decision is a pool or domain decision, not a loop repair. Harvest low says
+      the loop failed on the tasks it watched while the held-out set moved anyway, which
+      on eight measured points and a set with zero in-loop exposure is more likely noise
+      or a general-capability drift than targeted transfer: run the fragility report
+      before writing any sentence about the secondary, and claim nothing without it.
     primary_flat_secondary_flat: >-
-      Null on both instruments. With strata verified to move under H0 before the freeze,
-      the instrument excuse that survived seq 6 is gone: six generations of composite
-      sets, with the structural surfaces available for the first time, produced no
-      detectable change anywhere. Against the standing reading this says the meta-agent
-      is the problem, and the closure says so plainly.
+      Null on both instruments. The co-metric decides which null this is, and this is the
+      cell seq 10 was designed to disambiguate. Harvest ≥90%: the objective's
+      harness-reachable range is EXHAUSTED — the loop passed what could be passed, and the
+      verdict is about the objective, not the meta-agent; the next move is a pool or
+      domain decision (the seq-12 path), stated as such. Harvest low (<90%) with ≥15
+      reachable failing cells at baseline, an attainable power envelope, a measured noise
+      floor and every surface class certified reachable: every precondition a prior null
+      could be blamed on has been removed, and the closure says plainly that the loop
+      found nothing. Name, per unconsumed target, the mechanism that was never reached.
     primary_flat_secondary_down: >-
-      The batch held and the transfer probe fell: the loop is doing harm outside what it
-      watches, which prose-only loops have never been able to see. Report as a negative
-      result; the endpoint diagnosis names the changes whose scope over-generalized, and
-      any surviving change refuted this way is recorded as a first-class failed mutation.
+      The batch held and the held-out set fell: the loop is doing harm outside what it
+      watches. On a pure-holdout lane this is a first-class negative result about
+      generalization, not a probe artifact. Report as negative; the endpoint diagnosis
+      names the changes whose scope over-generalized, any surviving change refuted this
+      way is recorded as a failed mutation, and the closure reads the decline against the
+      identity round's measured noise floor before attributing it to any single change.
     primary_down_secondary_up: >-
-      The batch regressed while the probe rose — the cell seq 6 observed off-key. With
-      anchors in the batch this is now interpretable rather than a floor artifact: the
-      per-task cells say whether anchors broke (a real regression the loop caused) or
-      only marginals and headroom moved. A probe rise concurrent with a batch regression
-      on a fourth-exposure set supports no positive claim of any kind.
+      The batch regressed while the held-out set rose. With two anchors frozen in, the
+      per-task cells say whether anchors broke (a real regression the loop caused) or only
+      marginals and headroom moved; an anchor break is the regression channel doing its
+      job and is reported as such. A held-out rise concurrent with a batch regression
+      supports NO positive claim: read both against the identity round's floor, and treat
+      the divergence itself as the finding — the closure states which changes are the
+      candidates for each side.
     primary_down_secondary_flat: >-
-      The loop actively damaged what it stared at while the probe stayed put. Report as a
-      negative result and name the broken anchor cells; the endpoint diagnosis attributes
-      them to specific surviving changes, and the closure records which revert the loop
-      should have taken and did not.
+      The loop actively damaged what it stared at while the held-out set stayed put.
+      Report as a negative result and name the broken anchor or marginal cells; the
+      endpoint diagnosis attributes them to specific surviving changes, and the closure
+      records which revert the loop should have taken and did not — with the revert bar
+      (a denied MECHANISM, not a denied prediction) applied to each in hindsight.
     primary_down_secondary_down: >-
       The loop made the harness worse on both instruments — the strongest negative result
-      available. The closure states which surviving changes are the candidates, whether
-      any generation's own falsifier had already fired unheeded, and what the failure says
+      available, and under this design it cannot be blamed on the instrument. The closure
+      states which surviving changes are the candidates, whether any generation's own
+      falsifier had already fired unheeded, whether the concentration ladder pushed a
+      change onto a surface whose adoption was never confirmed, and what the failure says
       about composite sets landing changes faster than the next batch can refute them.
-
-  # True BECAUSE batch_mode is fixed: re-measuring the same batch every generation IS
-  # within-batch verification, embraced as the object of study (the lock refuses the
-  # contradictory combination). Under fresh mode this stays false (protocol §15).
   allow_within_batch_verification: true
 
   # The held-out firewall, stated as configuration: nothing about the held-out set —
