@@ -1,0 +1,1178 @@
+{
+  "mode": "locked",
+  "experiment": "008_stratb-bm25-luna56",
+  "freeze_fingerprint": "sha256:fea4ae1c36fa20e2c15cd2657c41f39ae9da6c15adab825c40d535a4ea116d7e",
+  "domain": "banking_knowledge",
+  "generation": "generation_002",
+  "split": "batch_03",
+  "num_trials": 3,
+  "max_concurrency": 3,
+  "bridge_executor_workers": 32,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a00dca-7cc9-769e-b0c3-b489d8a011eb"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_006",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_014",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_026",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_032",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_072",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_076",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_006",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_057",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_014",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_096",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_032",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_026",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_072",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_076",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_057",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_006",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_096",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_026",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_032",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_072",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_057",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_076",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_096",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_014",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 1,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 65,
+      "settle_timeouts": 0,
+      "zero_bridge_calls": 0
+    },
+    "unattributed": [],
+    "bridge": {},
+    "infra_failure_classes": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a00dca-7cc9-769e-b0c3-b489d8a011eb",
+    "environment": "development",
+    "dev_target": "tau-ab0e",
+    "task_ids": [
+      "01a00de7-1480-75a8-93bf-0c66edac5d9e",
+      "01a00de7-14bb-75a1-be8d-a93cde636e9c",
+      "01a00de7-187f-726f-8507-9a184eea3d02",
+      "01a00de7-5c1c-7419-b8f3-ed82d259dfad",
+      "01a00de7-757f-71f0-9a24-a924844be956",
+      "01a00de7-f4f6-7659-bdbb-7c584d33c2b3",
+      "01a00de8-09f3-7214-a237-8a2da30c07b6",
+      "01a00de8-ec72-74b1-b295-eb1ab32c571b",
+      "01a00de9-0366-71ca-b4c6-e3b7b1a3d95c",
+      "01a00de9-6d1f-7489-94fa-ff73309fc7e4",
+      "01a00de9-6d66-753e-9578-a09ee313f619",
+      "01a00dea-0972-7090-b95f-23d4090395f2",
+      "01a00dea-766b-703d-8e1d-3d3ab244b0fe",
+      "01a00dea-ce2a-73eb-8508-1389c93d37b4",
+      "01a00deb-3a86-711d-87be-ade53c581c4e",
+      "01a00deb-d915-7717-b9c1-bcf6981f34e8",
+      "01a00dec-0138-70eb-b5d5-e885d1353b8c",
+      "01a00dec-75a2-7189-beb3-d75f7d6b4dd7",
+      "01a00ded-14be-74e1-8ddf-dd55124129cd",
+      "01a00ded-a380-7367-8d7b-41b565b7287d",
+      "01a00ded-c372-7099-8267-6bf0bfe1da73",
+      "01a00dee-b102-7099-be6a-eedbf0d1d2d1",
+      "01a00def-3ace-75c8-98cf-f028f6fe6453",
+      "01a00df1-246a-7286-8966-5a67813cec7c"
+    ],
+    "tasks_created": [
+      "01a00de7-1480-75a8-93bf-0c66edac5d9e",
+      "01a00de7-14bb-75a1-be8d-a93cde636e9c",
+      "01a00de7-187f-726f-8507-9a184eea3d02",
+      "01a00de7-5c1c-7419-b8f3-ed82d259dfad",
+      "01a00de7-757f-71f0-9a24-a924844be956",
+      "01a00de7-f4f6-7659-bdbb-7c584d33c2b3",
+      "01a00de8-09f3-7214-a237-8a2da30c07b6",
+      "01a00de8-ec72-74b1-b295-eb1ab32c571b",
+      "01a00de9-0366-71ca-b4c6-e3b7b1a3d95c",
+      "01a00de9-6d1f-7489-94fa-ff73309fc7e4",
+      "01a00de9-6d66-753e-9578-a09ee313f619",
+      "01a00dea-0972-7090-b95f-23d4090395f2",
+      "01a00dea-766b-703d-8e1d-3d3ab244b0fe",
+      "01a00dea-ce2a-73eb-8508-1389c93d37b4",
+      "01a00deb-3a86-711d-87be-ade53c581c4e",
+      "01a00deb-d915-7717-b9c1-bcf6981f34e8",
+      "01a00dec-0138-70eb-b5d5-e885d1353b8c",
+      "01a00dec-1b38-7142-a2e7-944f05c1ca42",
+      "01a00dec-75a2-7189-beb3-d75f7d6b4dd7",
+      "01a00ded-14be-74e1-8ddf-dd55124129cd",
+      "01a00ded-a380-7367-8d7b-41b565b7287d",
+      "01a00ded-c372-7099-8267-6bf0bfe1da73",
+      "01a00dee-b102-7099-be6a-eedbf0d1d2d1",
+      "01a00def-3ace-75c8-98cf-f028f6fe6453",
+      "01a00df1-246a-7286-8966-5a67813cec7c"
+    ],
+    "orphaned_task_ids": [
+      "01a00dec-1b38-7142-a2e7-944f05c1ca42"
+    ],
+    "accounting": {
+      "01a00de7-1480-75a8-93bf-0c66edac5d9e": {
+        "cost": {
+          "usd": 0.00223811
+        },
+        "usage": {
+          "input_tokens": 19428,
+          "output_tokens": 429,
+          "total_tokens": 19857
+        },
+        "metrics": {
+          "duration_ms": 6445.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 2,
+          "span_count": 9,
+          "tool_use_count": 1,
+          "trace_count": 1
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 10,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de7-14bb-75a1-be8d-a93cde636e9c": {
+        "cost": {
+          "usd": 0.00771557
+        },
+        "usage": {
+          "input_tokens": 120999,
+          "output_tokens": 3118,
+          "total_tokens": 124117
+        },
+        "metrics": {
+          "duration_ms": 45699.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 9,
+          "span_count": 40,
+          "tool_use_count": 7,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 47,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de7-187f-726f-8507-9a184eea3d02": {
+        "cost": {
+          "usd": 0.0035413199999999997
+        },
+        "usage": {
+          "input_tokens": 55070,
+          "output_tokens": 482,
+          "total_tokens": 55552
+        },
+        "metrics": {
+          "duration_ms": 13717.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 4,
+          "span_count": 18,
+          "tool_use_count": 2,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 20,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de7-5c1c-7419-b8f3-ed82d259dfad": {
+        "cost": {
+          "usd": 0.00780792
+        },
+        "usage": {
+          "input_tokens": 294604,
+          "output_tokens": 1131,
+          "total_tokens": 295735
+        },
+        "metrics": {
+          "duration_ms": 34933.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 12,
+          "span_count": 53,
+          "tool_use_count": 7,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 60,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de7-757f-71f0-9a24-a924844be956": {
+        "cost": {
+          "usd": 0.045785820000000005
+        },
+        "usage": {
+          "input_tokens": 2528361,
+          "output_tokens": 4509,
+          "total_tokens": 2532870
+        },
+        "metrics": {
+          "duration_ms": 119862.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 31,
+          "span_count": 139,
+          "tool_use_count": 24,
+          "trace_count": 11
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 163,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de7-f4f6-7659-bdbb-7c584d33c2b3": {
+        "cost": {
+          "usd": 0.01726738
+        },
+        "usage": {
+          "input_tokens": 652562,
+          "output_tokens": 2685,
+          "total_tokens": 655247
+        },
+        "metrics": {
+          "duration_ms": 54553.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 18,
+          "span_count": 81,
+          "tool_use_count": 17,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 98,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de8-09f3-7214-a237-8a2da30c07b6": {
+        "cost": {
+          "usd": 0.01403911
+        },
+        "usage": {
+          "input_tokens": 576708,
+          "output_tokens": 2248,
+          "total_tokens": 578956
+        },
+        "metrics": {
+          "duration_ms": 51384.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 16,
+          "span_count": 70,
+          "tool_use_count": 12,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 82,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de8-ec72-74b1-b295-eb1ab32c571b": {
+        "cost": {
+          "usd": 0.0328902
+        },
+        "usage": {
+          "input_tokens": 1401212,
+          "output_tokens": 4904,
+          "total_tokens": 1406116
+        },
+        "metrics": {
+          "duration_ms": 88865.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 22,
+          "span_count": 100,
+          "tool_use_count": 24,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 124,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de9-0366-71ca-b4c6-e3b7b1a3d95c": {
+        "cost": {
+          "usd": 0.006354009999999999
+        },
+        "usage": {
+          "input_tokens": 93344,
+          "output_tokens": 965,
+          "total_tokens": 94309
+        },
+        "metrics": {
+          "duration_ms": 17221.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 4,
+          "span_count": 20,
+          "tool_use_count": 4,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 24,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de9-6d1f-7489-94fa-ff73309fc7e4": {
+        "cost": {
+          "usd": 0.00736483
+        },
+        "usage": {
+          "input_tokens": 191266,
+          "output_tokens": 843,
+          "total_tokens": 192109
+        },
+        "metrics": {
+          "duration_ms": 29256.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 8,
+          "span_count": 36,
+          "tool_use_count": 4,
+          "trace_count": 4
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 40,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00de9-6d66-753e-9578-a09ee313f619": {
+        "cost": {
+          "usd": 0.022014690000000003
+        },
+        "usage": {
+          "input_tokens": 928061,
+          "output_tokens": 4451,
+          "total_tokens": 932512
+        },
+        "metrics": {
+          "duration_ms": 107231.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 25,
+          "span_count": 116,
+          "tool_use_count": 21,
+          "trace_count": 10
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 137,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00dea-0972-7090-b95f-23d4090395f2": {
+        "cost": {
+          "usd": 0.00805056
+        },
+        "usage": {
+          "input_tokens": 317283,
+          "output_tokens": 1156,
+          "total_tokens": 318439
+        },
+        "metrics": {
+          "duration_ms": 39710.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 13,
+          "span_count": 58,
+          "tool_use_count": 7,
+          "trace_count": 6
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 65,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00dea-766b-703d-8e1d-3d3ab244b0fe": {
+        "cost": {
+          "usd": 0.029993090000000003
+        },
+        "usage": {
+          "input_tokens": 1412858,
+          "output_tokens": 4203,
+          "total_tokens": 1417061
+        },
+        "metrics": {
+          "duration_ms": 96930.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 26,
+          "span_count": 114,
+          "tool_use_count": 20,
+          "trace_count": 8
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 134,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00dea-ce2a-73eb-8508-1389c93d37b4": {
+        "cost": {
+          "usd": 0.01811813
+        },
+        "usage": {
+          "input_tokens": 624735,
+          "output_tokens": 3045,
+          "total_tokens": 627780
+        },
+        "metrics": {
+          "duration_ms": 58881.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 17,
+          "span_count": 77,
+          "tool_use_count": 18,
+          "trace_count": 4
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 95,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00deb-3a86-711d-87be-ade53c581c4e": {
+        "cost": {
+          "usd": 0.00870937
+        },
+        "usage": {
+          "input_tokens": 333731,
+          "output_tokens": 1539,
+          "total_tokens": 335270
+        },
+        "metrics": {
+          "duration_ms": 40374.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 13,
+          "span_count": 56,
+          "tool_use_count": 9,
+          "trace_count": 4
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 65,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00deb-d915-7717-b9c1-bcf6981f34e8": {
+        "cost": {
+          "usd": 0.02561362
+        },
+        "usage": {
+          "input_tokens": 1004523,
+          "output_tokens": 4322,
+          "total_tokens": 1008845
+        },
+        "metrics": {
+          "duration_ms": 69579.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 19,
+          "span_count": 89,
+          "tool_use_count": 26,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 115,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00dec-0138-70eb-b5d5-e885d1353b8c": {
+        "cost": {
+          "usd": 0.00647581
+        },
+        "usage": {
+          "input_tokens": 118277,
+          "output_tokens": 979,
+          "total_tokens": 119256
+        },
+        "metrics": {
+          "duration_ms": 19840.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 5,
+          "span_count": 23,
+          "tool_use_count": 4,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 27,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00dec-75a2-7189-beb3-d75f7d6b4dd7": {
+        "cost": {
+          "usd": 0.01533001
+        },
+        "usage": {
+          "input_tokens": 500543,
+          "output_tokens": 3125,
+          "total_tokens": 503668
+        },
+        "metrics": {
+          "duration_ms": 64142.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 17,
+          "span_count": 75,
+          "tool_use_count": 14,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 89,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00ded-14be-74e1-8ddf-dd55124129cd": {
+        "cost": {
+          "usd": 0.00822193
+        },
+        "usage": {
+          "input_tokens": 314292,
+          "output_tokens": 1122,
+          "total_tokens": 315414
+        },
+        "metrics": {
+          "duration_ms": 35331.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 12,
+          "span_count": 53,
+          "tool_use_count": 7,
+          "trace_count": 5
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 60,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00ded-a380-7367-8d7b-41b565b7287d": {
+        "cost": {
+          "usd": 0.02952273
+        },
+        "usage": {
+          "input_tokens": 1450827,
+          "output_tokens": 4224,
+          "total_tokens": 1455051
+        },
+        "metrics": {
+          "duration_ms": 93787.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 23,
+          "span_count": 104,
+          "tool_use_count": 21,
+          "trace_count": 7
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 125,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00ded-c372-7099-8267-6bf0bfe1da73": {
+        "cost": {
+          "usd": 0.01389619
+        },
+        "usage": {
+          "input_tokens": 436651,
+          "output_tokens": 2899,
+          "total_tokens": 439550
+        },
+        "metrics": {
+          "duration_ms": 49680.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 15,
+          "span_count": 65,
+          "tool_use_count": 16,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 81,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00dee-b102-7099-be6a-eedbf0d1d2d1": {
+        "cost": {
+          "usd": 0.01179581
+        },
+        "usage": {
+          "input_tokens": 459680,
+          "output_tokens": 1561,
+          "total_tokens": 461241
+        },
+        "metrics": {
+          "duration_ms": 39370.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 14,
+          "span_count": 59,
+          "tool_use_count": 11,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 70,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00def-3ace-75c8-98cf-f028f6fe6453": {
+        "cost": {
+          "usd": 0.030812629999999997
+        },
+        "usage": {
+          "input_tokens": 1340691,
+          "output_tokens": 4628,
+          "total_tokens": 1345319
+        },
+        "metrics": {
+          "duration_ms": 94815.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 25,
+          "span_count": 110,
+          "tool_use_count": 23,
+          "trace_count": 6
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 133,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a00df1-246a-7286-8966-5a67813cec7c": {
+        "cost": {
+          "usd": 0.00410747
+        },
+        "usage": {
+          "input_tokens": 95564,
+          "output_tokens": 629,
+          "total_tokens": 96193
+        },
+        "metrics": {
+          "duration_ms": 19395.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 6,
+          "span_count": 27,
+          "tool_use_count": 3,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "708f7b8d5ffb1bd2f94f34ccb653c2f5bcf2455d",
+        "evidence_complete": true,
+        "item_count": 30,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      }
+    },
+    "retitles": {
+      "applied": 5,
+      "failed": 19
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "pi_local_tools": [],
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 690.5
+}
