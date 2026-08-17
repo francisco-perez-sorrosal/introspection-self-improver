@@ -481,6 +481,61 @@ the prediction is written on the behaviour counter accordingly.
 
 <!-- transition: gen_003_to_004 -->
 
+---
+
+## Re-ranking against `batch_05` (H4, 2026-08-17)
+
+Clean round. **16/24, 66.7% — the experiment's high** (41.7 → 54.2 → 45.8 → 62.5 → 66.7).
+**Every anchor and marginal is at 3/3 — 15/15 — and all eight remaining cells are headroom.**
+
+### gen-004's F1 never ran, and the loop had the evidence to know
+
+Its note appears **zero** times in the fetched `batch_05` conversation for `task_026` t0 while
+E1's appears twice in the same conversation. F1 keyed on message role `tool`; this host spells
+it **`toolResult`** — a fact recorded in *this experiment's own* context probe
+(`generation_001/context_probe/hook_firings.json`) and not read carefully enough when F1 was
+written.
+
+- **H4 was behaviourally identical to H3.** `batch_05` measures H3's harness under a new name.
+- **F1's preflight was chance.** It showed the target unlock 3/3 against a 0/12 baseline for a
+  change that never executed. That is the anchor-calibration lesson one level up: **a preflight
+  verifies that a change RUNS, not that it WORKS** — and this one failed even at that, because
+  nothing checked the injected text appeared. **Standing rule from here: verify an injection's
+  text in a fetched conversation before reading any behavioural number from it.**
+- The repair works (offline replay: 0/16 injection points → 14/16) and is **deliberately not
+  landed** — three of the four names it surfaces on `task_026` belong to `task_096`, and
+  inducing unlocks of tools the agent will not use is the harm the frozen policy names in its
+  own words. Against a batch saturated at 15/15, that trade is bad.
+
+### T4 — SURFACE EXHAUSTED for the remaining headroom, and this is the closing finding
+
+All three 0-cell tasks now fail on the **same** mode, and the fixed batch is what made that
+legible by peeling layers across five rounds:
+
+- **`task_026`** — this round it unlocked the gold tool and called it with **three of four gold
+  values exact** (6300, 3800, 1020), one off by one (**1499** against gold **1500**), plus two
+  corrections gold does not carry. An off-by-one and an over-application with one cause: a
+  computation slightly off both mis-values a correction and manufactures spurious ones. The
+  procedure is now right; the arithmetic convention is not.
+- **`task_096`** — calls both remediation tools with wrong APY-derived amounts.
+- **`task_072`** — applies the wrong fee rule (its `credit_type` enum half was retired at
+  gen-002 as frozen-surface-bounded).
+
+Reaching a rounding convention or a governing rate requires encoding domain knowledge, which
+the invariants forbid outright. **This is the `surface_exhausted` finding for the batch's
+remaining headroom**, and it is backed by five rounds of layer-peeling rather than by argument.
+
+### What that means for the pre-registered primary, stated before the reveal
+
+Three tasks have moved (`task_014` +2/3, `task_057` +3/3, `task_072` +1/3) and five sit at zero
+delta. The exact paired sign-flip test enumerates signs over **non-zero** deltas only, so three
+movers give a best-case p of 1/8 = 0.125: **the primary cannot reach α = 0.05 without
+`task_026` and `task_096` moving**, and those are precisely the tasks the exhausted surface
+cannot reach. Recorded here, before the reveal, so the closure reports a pre-known limit rather
+than discovering one.
+
+<!-- transition: gen_004_to_005 -->
+
 ## Slot accounting
 
 | Slot | Generation | Target(s) | Status |
@@ -488,8 +543,9 @@ the prediction is written on the behaviour counter accordingly.
 | 1 | gen-001 | T1 (C1, extension-hook) + T2 (C2, instructions) | consumed — C1 denied and reverted at gen-002; C2 confirmed, clause 2 identified as the operative half |
 | 2 | gen-002 | C1 revert (D1) + T3 transfer-reason lookup (D2, extension-hook) | consumed — D1's attribution test settled task_057 on C2; D2 denied on its target, mechanism confirmed on the anchor, KEPT |
 | 3 | gen-003 | T6 duplicate verification write (E1, extension-hook) | consumed — CONFIRMED on both counters |
-| 4 | gen-004 | T1 re-opened for task_026 (F1, extension-hook) | in flight |
-| 5–6 | — | T4 (governing-rule half), T5 | open |
+| 4 | gen-004 | T1 re-opened for task_026 (F1, extension-hook) | consumed — F1 measured INERT; H4 behaviourally identical to H3 |
+| 5 | gen-005 | F1 revert (G1) | in flight — behavioural identity, recorded as such |
+| 6 | — | open; T4 is surface-exhausted, T5 resolved as a side effect of C2 | open |
 
 Six targets opened, five consumed, **one retirement REVERSED** (T3 was retired at gen-003 on a
 one-round structural reading and un-retired at gen-004 when `task_014` went 0/3 → 3/3 with the

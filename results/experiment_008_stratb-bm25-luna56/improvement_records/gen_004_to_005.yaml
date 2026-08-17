@@ -1,0 +1,176 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 4
+  to_generation: 5
+experiment: 008_stratb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_05
+  task_ids:
+  - task_006
+  - task_014
+  - task_026
+  - task_032
+  - task_057
+  - task_072
+  - task_096
+  - task_076
+evidence:
+  conversation_ids:
+  - 01a00e68-c092-73ac-8525-91f7d1796c09
+  - 01a00e68-c277-76a2-b3da-c570aded34a8
+  - 01a00e68-c537-731e-bdca-f853273a8a58
+  - 01a00e69-33b2-73d6-a843-8c1744a8eb33
+  - 01a00e69-42e7-7499-9883-77dc622c1e6a
+  - 01a00e69-eb69-747c-8179-45fe2d534eb0
+  - 01a00e6a-5473-721c-a1e9-9bb685f7b9b5
+  - 01a00e6a-f9c2-71e0-9dff-ce5b8eaa502b
+  - 01a00e6b-0ed2-7516-8b5c-dc4a388416b3
+  - 01a00e6b-7517-740a-a6fc-347560393bc4
+  - 01a00e6b-d295-76e0-863b-aa302cabb9ab
+  - 01a00e6b-fc5f-75cd-815e-c6e975750d77
+  - 01a00e6c-b2f1-756e-9098-8170c533c7fa
+  - 01a00e6d-3288-7110-a981-8cbaabc72345
+  - 01a00e6d-761b-7501-a59f-4fac2efba7d5
+  - 01a00e6e-412b-754e-99e3-cf0b6564b650
+  - 01a00e6e-4db7-7769-bdab-0d68c6742fbc
+  - 01a00e6e-9bf7-703d-9f43-a87809142547
+  - 01a00e6e-b4fc-7381-b033-b3b61e254c61
+  - 01a00e6f-12ff-763d-843b-19934c25e19e
+  - 01a00e6f-4bab-7636-b3b4-ba3b08337475
+  - 01a00e6f-bc09-770e-9cbf-e71e12bf099a
+  - 01a00e70-0887-706a-98fc-d7b6a28435da
+  - 01a00e70-e3ad-7120-85df-565c59ab6189
+  summary: >-
+    Round health. batch_05 ran under H4 (arm 1643d18): 24/24 completed, evidence_complete and
+    arm_sha_ok on every row, all four sandbox seam counters zero, pi_local_calls 0.
+
+    Graded read: 16/24, 66.7% — the experiment's high. Curve 41.7 -> 54.2 -> 45.8 -> 62.5 ->
+    66.7. Every anchor and marginal now sits at 3/3 (15/15) and all eight remaining cells are
+    headroom. Tuned-on set; training-curve evidence, never generalization.
+
+    THE ROUND'S FINDING IS ABOUT THE LOOP, NOT THE HARNESS: gen-004's F1 never ran. Its note
+    appears ZERO times in the fetched batch_05 conversation for task_026 t0
+    (01a00e68-c092-73ac-8525-91f7d1796c09) while E1's note appears twice in that same
+    conversation, so the fetch is sound and the absence is real. F1 harvested tool names from
+    messages whose role is 'tool'; this host spells a tool result 'toolResult'. That spelling
+    is recorded in THIS EXPERIMENT'S OWN context probe
+    (generation_001/context_probe/hook_firings.json: observed roles assistant / toolResult /
+    user) and was not read carefully enough when F1 was written.
+signals:
+- description: >-
+    F1 measured INERT. H4 is therefore behaviourally identical to H3, batch_05's 16/24
+    measures H3's harness under a different name, and H4's held-out round measures the same.
+    The generation was spent without moving the recipe's behaviour at all. Recorded as a
+    process failure of this loop rather than as a property of the harness.
+  prevalence: 0 injections in the inspected conversation; 0/24 episodes affected
+- description: >-
+    F1's preflight was CHANCE, and this is the more transferable half. It showed
+    update_transaction_rewards_3847 unlocked 3/3 against a 0/12 baseline — for a change that
+    could not have caused it, since the change never executed. A three-trial local run
+    displayed a perfect result on a behaviour whose observed rate is near zero. This is the
+    anchor-calibration lesson recurring one level up: that probe measured that single-trial
+    history mis-picks an anchor about a third of the time, and here a three-trial preflight
+    manufactured a clean confirmation out of noise. A preflight verifies that a change RUNS,
+    not that it WORKS — and F1's failed even at the first job, because nothing checked that
+    the injected text appeared anywhere.
+  prevalence: 1/1 preflights this experiment has run on an injection change
+- description: >-
+    The repair works and is deliberately NOT landed. Replaying real session message lists
+    through both algorithms offline: old logic 0 injection points of 16, fixed logic 14 of 16.
+    But the outstanding list it produces on task_026 is ['apply_savings_account_credit_6831',
+    'get_all_user_accounts_by_user_id_3847', 'get_bank_account_transactions_9173',
+    'submit_interest_discrepancy_report_7294'] — three of the four belong to task_096,
+    surfaced because knowledge-base documents task_026's searches return happen to name them.
+    The hook would report tools irrelevant to this customer's issue as outstanding, which is
+    the harm falsifier (b) was written for and which the frozen policy names in its own words:
+    "Do not unlock tools that you do not plan on actually using: this causes issues in
+    database logging."
+  prevalence: 3 of 4 surfaced names irrelevant to the task, on the task it targets
+- description: >-
+    The batch's reachable portion is SATURATED and the remaining headroom is one mode. All
+    three 0/3 tasks now fail on value precision rather than on procedure: task_026 t0 in this
+    round unlocked the gold tool and called it with THREE OF FOUR gold values exact (6300,
+    3800, 1020), one off by one (1499 against gold 1500), plus two corrections gold does not
+    have — an off-by-one and an over-application that share a cause, since a computation
+    slightly off both mis-values one correction and manufactures spurious ones. task_096 calls
+    both remediation tools with wrong APY-derived amounts. task_072 applies the wrong fee rule.
+    No legal deterministic mechanism reaches a rounding convention or a governing rate without
+    encoding domain knowledge, which the invariants forbid. This is the surface_exhausted
+    finding for the remaining batch headroom, and it is backed by the layer-peeling this fixed
+    batch produced across five rounds rather than by argument.
+  prevalence: 3/3 remaining 0-cell tasks share the mode
+counterevidence: >-
+  Two arguments against this set.
+
+  (1) Not landing the repair forfeits the only untried mechanism against the two tasks whose
+  movement the primary endpoint test most needs. With three tasks moved and five at zero
+  delta, the exact paired sign-flip test cannot reach alpha 0.05 — five non-zero deltas are
+  required (1/32) and four give 1/16. So declining to gamble on F1's repair is, in effect,
+  accepting that the pre-registered primary will not reach significance. That is recorded
+  explicitly and it is still the right call: optimising the endpoint statistic with a change
+  whose own preflight was chance, and whose predicted side effect the frozen policy names as
+  harmful, is exactly the failure a prior closure named when it refused to spend its last slot
+  speculatively. The instrument reports what the loop did; it is not a target.
+
+  (2) H5's held-out round re-measures a harness identical to H4's and H3's, and could be seen
+  as 84 wasted episodes. It is spent deliberately: an exact behavioural repeat on the same 28
+  tasks measures round-to-round noise directly, which is worth having beside a curve at reveal
+  and which no other round of this experiment can supply.
+hypothesis: >-
+  No behavioural hypothesis is under test this generation. The finding is procedural: a change
+  that cannot be shown to have executed cannot be credited with any behaviour attributed to it,
+  and the loop had the evidence to know that before spending the slot.
+owning_layer: >-
+  Harness, `revert`. The recipe returns to two hooks and one instruction paragraph — D2
+  (context, transfer-reason lookup state), E1 (tool_result, verification-on-record), C2's
+  clause in `SYSTEM.md`.
+proposed_change: >-
+  One change: remove the inert extension. Recorded as `accepted` rather than `identity` because
+  the recipe genuinely moved — the file is gone and the tag differs — even though H5 is
+  behaviourally identical to H4. Calling it an identity would misdescribe the artifact lineage
+  the cadence gates resolve by tag.
+schema_version: 3
+changes:
+- mechanism: >-
+    Remove the F1 extension. It was measured inert, and its repair — verified offline to fire
+    14/16 where the original fired 0/16 — surfaces mostly-irrelevant tool names, whose
+    predictable effect is the indiscriminate unlocking the frozen policy warns about, against
+    a batch whose reachable portion is saturated at 15/15.
+  surface: revert
+  evidence: >-
+    Backlog T1. Zero occurrences of F1's note in conversation
+    01a00e68-c092-73ac-8525-91f7d1796c09 (task_026 t0, batch_05) against two occurrences of
+    E1's note in the same conversation. Role spelling recorded in
+    generation_001/context_probe/hook_firings.json.
+  expected_effect: >-
+    None. H5 is behaviourally identical to H4 and H3, and batch_06 is predicted to be
+    statistically indistinguishable from batch_05 — which makes it a direct measurement of
+    this batch's round-to-round noise, the one thing a behavioural identity can buy. If
+    batch_06 differs from batch_05 by more than the anchors and marginals have varied so far,
+    the variance is larger than five rounds have suggested and every per-change attribution in
+    this experiment is correspondingly weaker.
+  risk: >-
+    Forfeiting the only untried mechanism against task_026 and task_096, and with it any
+    realistic path to significance on the pre-registered primary. Stated in counterevidence
+    and accepted.
+  clauses: []
+  commit: f13a3ed
+mutation:
+  branch: gen-005/fix-unlocked-state
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/21
+  source_commit: 1643d18c788aed790eed2c3e0deacb79f348a2bd
+  candidate_commit: ef885d1373fc7ebe6ec0ae18eb76eb684686c688
+expected_effect: >-
+  Set level, measured on the held-out set at H5 and nowhere else: NO CHANGE, predicted
+  explicitly. H5's recipe behaves exactly as H4's and H3's, so the H5 held-out round is a
+  repeat measurement rather than a test, and any difference it shows is noise by construction.
+  This is the only point on this experiment's curve whose expected delta is exactly zero, and
+  it is worth having for that reason.
+human_approval:
+  approved_by: orchestrator — autonomous per D28 (user-delegated; D23's envelope re-registered)
+  date: '2026-08-17'
+held_out_result: null
