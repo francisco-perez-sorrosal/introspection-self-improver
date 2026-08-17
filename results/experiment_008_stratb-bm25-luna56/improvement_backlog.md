@@ -221,14 +221,136 @@ this persists, it is a distinct target.
 
 ---
 
+---
+
+## Re-ranking against `batch_02` (H1, 2026-08-17)
+
+`batch_02` measures a set gen-001 was tuned on. Round health clean: 24/24, `arm_sha_ok` on
+every row, one episode carrying `sandbox_seam_unclassified=2` / `sandbox_tool_errors=2`
+(`task_096` t1, disclosed rather than rounded to "zero incidents"). Graded read **13/24
+episodes, 4/8 tasks (54.2%)**, up from `batch_01`'s 10/24 (41.7%). Anchors held 3/3 and 3/3.
+
+### ERRATUM against the gen-001 record — the round's most important finding
+
+The gen-001 record's first signal states that `task_096` "unlocked neither" remediation tool
+in 3/3 trials, and counts its three episodes toward T1's 6/24 prevalence. **That is wrong**,
+and scoring C1's prediction against `batch_02` is what exposed it. Re-derived from
+`generation_000/batch_01/graded/updated_results.json`: in 2 of 3 trials `task_096` **did**
+unlock and call both `apply_savings_account_credit_6831` and
+`submit_interest_discrepancy_report_7294`, and failed on the argument **values**; only t0
+never reached them.
+
+Consequences, recorded rather than quietly absorbed:
+
+- **T1's true population is `task_026` alone — 3/24 episodes, not 6/24.**
+- `task_096`'s dominant mode is value resolution and belongs to **T4**, which is re-ranked
+  upward below.
+- **C1 was justified on evidence half of which no amount of name salience could address**,
+  which is the most likely reason its prediction was denied. C1 is reverted at gen-002 (D1).
+- The record itself is left as written — the schema refuses unknown fields, and rewriting a
+  verified record would erase the error rather than record it. This is the durable home.
+
+The lesson generalizes past this experiment: an aggregated miss list is not a mechanism.
+`task_026` (never unlocked) and `task_096` (unlocked, called, wrong values) presented
+identically at the level of "gold action missing" and are different defects with different
+owning layers. Prevalence must be counted on the mechanism, not on the symptom.
+
+### gen-001's predictions, scored
+
+- **C1 — DENIED.** Unlock rate on the target tasks did not move (`task_026` 0/3 → 0/3,
+  `task_096` 2/3 → 2/3). The hook **did** run: the fetched platform conversation for
+  `task_096` t0 carries 8 occurrences of its output, so this is a denied mechanism, not a
+  change that failed to reach the episode. No harm measured — both anchors 3/3, `task_076`'s
+  unlock count identical at 5, no new invalid calls. The two degenerate episodes this round
+  were inspected and neither is the hook's doing (`task_096` t1 read the customer record
+  successfully and then asserted "I'm unable to access the customer information system right
+  now" before transferring — an over-escalation witness, filed under T3).
+- **C2 — CONFIRMED, and the per-clause falsifiers resolved which half works.** `task_057`
+  0/3 → **3/3**, with the gold `call_discoverable_user_tool(deposit_check_3847)` going
+  1/3 → **3/3**, exactly as predicted.
+  - Clause 1 ("with the tool name alone") — **falsifier FIRED**: 7 of 10 grants still carry
+    an `arguments` key. And `task_057` t0 passed *with* payload-bearing grants. **Clause 1 is
+    not the operative half.**
+  - Clause 2 ("give the user that exact tool name") — **this is the mechanism.** Assistant
+    messages naming `deposit_check_3847` went 0/1/1 → 4/1/1, always inside the handover, and
+    the user's calls went from inventing `deposit_check`, `mobile_check_deposit`,
+    `check_deposit` to calling the exact name in 3/3.
+  - Clause 3 (the precondition) — **falsifier FIRED**: grant-using episodes 6 → 5, and
+    `task_026` t2 made zero grants where it previously made 13. The precondition did suppress
+    the behaviour in one episode, exactly the E2 mode the clause was written to watch.
+  - **Attribution caveat (D22).** C1 could also have surfaced `deposit_check_3847`, so the
+    composite set cannot separate them from this round alone. Reverting C1 at gen-002 makes
+    `batch_03` the discriminating test.
+
+### T4 RE-RANKED UP and re-specified — and one half of it retired
+
+`task_072` 0/3 → 1/3 (first pass). Reading t0 in full re-specifies the target and **kills the
+mechanism a slot would otherwise have been spent on**:
+
+- The amounts are **not an arithmetic slip**. The agent's own arithmetic is internally
+  consistent — "10 out-of-network withdrawals, first 4 free, remaining 6 × $1.50 = $9.00,
+  charged $20.00, so $11.00 refund" — and gold is 3.50. It applies the wrong fee **rule**
+  (the transactions are tiered *foreign* ATM fees). An extension-tool calculator, the obvious
+  D24 surface, would compute the same wrong number. **Seq 6 landed prose arithmetic (G2) and
+  scored 0/18; this round establishes that a calculator would have failed too, for a
+  different reason.**
+- **The `credit_type` enum half is RETIRED with cause.** The `unlock_discoverable_agent_tool`
+  response already enumerates the legal values *with their semantics*: "'rebate_credit' for
+  missing rebates, 'fee_refund' for incorrect fee charges". The agent read that correctly and
+  applied it correctly by its own reasoning ("I applied a $14.00 missing-rebate credit" →
+  `rebate_credit`), and gold classifies the same correction as `fee_refund`. The information
+  was in hand and correctly used; the disagreement is with the gold labelling. This is the
+  `task_070` class from seq 6 — bounded by frozen surfaces, not harness surface. Surfacing
+  the enum would change nothing, because it was already surfaced.
+
+What remains of T4 is genuine and unaddressed: **which bank rule governs a correction** is a
+retrieval-usage question, and it is the same mechanism seq 6's D1 confirmed. Held this
+generation because gen-002's slot is spent on a better-evidenced target.
+
+### T3 CONSUMED (gen-002 D2), on a mechanism that finally meets seq-6 T4's condition
+
+The transfer tool's own description says the reason enum "can be found in the knowledge base:
+search it before calling this tool to select the proper applicable reason", and `reason`
+carries a hard enum of 19 values. The agent does not track whether it has looked:
+
+- Across `batch_01` and `batch_02`, **6 of 18 transfer-carrying episodes** issued a
+  transfer-reason query.
+- On `task_014`, whose gold action IS a transfer and whose gold compares `reason` exactly:
+  **every pass (2/2) issued the lookup**; the one trial that transferred without it chose
+  `kb_search_unsuccessful_customer_requests_transfer` — a legal member of the enum, and the
+  wrong one. The lookup is necessary and not sufficient (`batch_02` t2 queried and then
+  refused to transfer at all).
+- `task_032`, the anchor, passes 3/3 **without** the lookup — its gold transfer carries
+  `compare_args: []`, so the reason is not compared and the anchor is insensitive to this
+  change by construction. That is what makes it a safe falsifier.
+
+Seq 6's T4 demanded "a mechanism that is procedural and counted rather than a judgment about
+when transfer is appropriate", and recorded that no such mechanism existed. One exists now,
+and only because the `context` hook was measured this generation: D2 reports whether the
+lookup has happened. It states a fact and gives no instruction, so it has no escape clause by
+construction.
+
+### T5 held, T2 not touched
+
+T5 (verification without remediation) had its single witness on `task_057` t0, which now
+passes 3/3 — the target is plausibly resolved as a side effect of C2 and is left to settle
+rather than touched while it is moving. T2 is confirmed and survives untouched; clause 1 is
+known to be inert but removing it would perturb a working change for tidiness.
+
+<!-- transition: gen_001_to_002 -->
+
 ## Slot accounting
 
 | Slot | Generation | Target(s) | Status |
 |---|---|---|---|
-| 1 | gen-001 | T1 (C1, extension-hook) + T2 (C2, instructions) | in flight |
-| 2–6 | — | T3, T4, T5 re-ranked against each new batch | open |
+| 1 | gen-001 | T1 (C1, extension-hook) + T2 (C2, instructions) | consumed — C1 denied and reverted at gen-002; C2 confirmed, clause 2 identified as the operative half |
+| 2 | gen-002 | C1 revert (D1) + T3 transfer-reason lookup (D2, extension-hook) | in flight |
+| 3–6 | — | T4 (re-specified: which bank RULE governs a correction), T1 (task_026 only), T5 | open |
 
-Five targets opened, two consumed, none retired.
+Five targets opened, three consumed, **one half-retired with cause** (T4's `credit_type`
+enum half — the legal values are already enumerated with their semantics in the unlock
+response and were read correctly; the disagreement is with gold's labelling, which is frozen
+surface, not harness surface).
 
 **Surface concentration (D26 flag):** 0 prior `instructions` mutations in this experiment,
 so the flag has not fired. The set nonetheless leads with a structural change, because the
