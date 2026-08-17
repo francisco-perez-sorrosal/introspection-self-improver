@@ -275,6 +275,28 @@ close.
   **`pi_local_calls` was 0 across all 168 platform episodes** — every landed change was a hook,
   so the D24 seam ran its pump path and never its suppressing path, and **extension tools and
   sub-agents remain available but unexercised in a graded round**.
+- **The seq-8 review groundwork is landed (2026-08-17, plan D29–D32) and seq 10 is designed.**
+  The independent review (`results/experiment_008_stratb-bm25-luna56/INDEPENDENT_REVIEW.md`)
+  added the saturation reading — at its peak round the loop had passed 15/15 reachable batch
+  cells under a null primary — and drove the repairs: the concentration flag is
+  **surface-general**; first use of any surface is **adoption-first** (schema v4
+  `adoption_stage`/`host_facts`; extension role literals linted against
+  `benchmark/probes/host_facts.yaml`); preflights have a slot and a rule (they verify a change
+  *runs*, never that it *works*); reverts trigger on denied mechanisms, retirements need two
+  rounds. A freeze now computes its power envelope, pre-registers a behavioural-identity round
+  (`identity_generations`; gen-1 placement pools the primary's baseline), screens headroom for
+  *reachability* (walled tasks are wall-monitors outside the primary), reads flat primaries
+  against the **reachable-harvest co-metric** ("loop failed" vs "objective exhausted" are
+  different verdicts now), and certifies the D24 suppressing path with a platform canary
+  (`make gate_suppression`). `recipe-growth.md` no longer argues against the D24 surfaces (its
+  stale trap-4 verdicts had steered "prefer a no-tool-call hook" through all of seq 8). The
+  scaffold has zero-state parity — `noop-tool.ts` (`probe_note`) and `noop-subagent.yaml`
+  beside `noop-hook.ts`, all inert — with `h0-baseline` re-tagged at the parity commit and the
+  recipe reset to H0. **Seq 10 (D32, `010_adopt-bm25-luna56`): G=7 with gen-001 identity,
+  B=10 reachability-screened strata, T=48 declared-reuse transfer probe — the pool holds ZERO
+  virgin tasks, so no capability claim is available in this domain (a claim needs a domain
+  decision, user-owned, pencilled seq 12) — and an experiment-level surface-exercise
+  obligation under adoption-first.**
 
 ## Invariants
 
