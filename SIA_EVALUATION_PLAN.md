@@ -32,7 +32,7 @@ powered experiment, seq 4: G=5, B=8, T=28 per D11) is sized to carry the claim; 
 | 5.5 | Loop-reliability experiment (seq 5, D17/D18/D19: fixed batch × 3 trials, G=2 per D20) | ✅ closed 2026-08-16 — REVEALED: paired batch endpoint p=1.0000 (batch curve 4.2→8.3→0.0%), held-out endpoint +0.0 pp; against the frozen key: the meta-agent is the problem; one §29 guardrail waived (human approval, by user instruction) |
 | 5.6 | **Fixed batch at depth (seq 6, D23: G=6, composite sets D22, fully autonomous)** | ✅ closed 2026-08-16 — REVEALED: primary null (p=1.0000, curve ends below baseline), secondary held-out trend z=1.77 p=0.038 on a triple-exposed set — no capability claim; machinery held (756 episodes, twenty §29 guardrails HELD or N/A, none waived); independent review + § 8 groundwork follow |
 | 5.7 | **§ 8 groundwork (D24–D27): seam suppression, contract v3, instrument rules, sia + scaffold)** | ✅ closed 2026-08-16 — all 19 review-§8 items landed task-agnostically; suppression demo PASS; suite 379 green; seq-6 records validate untouched; next freeze consumes the new rules |
-| 5.8 | **Stratified-batch experiment (seq 8, D28: G=6/B=8/T=28, stratified batch, mechanical reading key, autonomous, first run on the D24 seam)** | 🔵 in flight — frozen 2026-08-16 |
+| 5.8 | **Stratified-batch experiment (seq 8, D28: G=6/B=8/T=28, stratified batch, mechanical reading key, autonomous, first run on the D24 seam)** | ✅ closed 2026-08-17 — REVEALED: NULL on both instruments (primary Σ=+1.333, p=0.250; held-out trend z=0.60, p=0.274). Batch curve 41.7→66.7 peak→58.3; noise floor MEASURED at 2 cells on an identical harness |
 | 6 | Full experiment (the next even seq per D15) | deferred — sizing per D11 and the seq-6 independent review's instrument rules |
 
 Fast orientation: every decision with its rationale is a §2 row (the D-ledger); what each
@@ -862,12 +862,31 @@ than assumed after it. Consumes every rule Phase 5.7 landed.
       manifest header), full-quadrant `reading_key`, fourth-exposure reuse declared
       against all three prior sources, `process_metric_tools` reviewed and deliberately
       unchanged, `reset_h0` byte-identity, `make check` green (2026-08-16)
-- [ ] A.0a gate PASS recorded (blocking, and load-bearing here: D24 changed adapter
-      semantics between experiments) + platform seam canary
-- [ ] Step-4b surface probe at g=0 (required), then six autonomous transitions
-- [ ] Reveal, §29 guardrail walk, closure README with the primary verdict against the
-      pre-registered key cell, the quadruple-exposure caveat on every T number, and the
-      D24 non-comparability with seq ≤ 6
+- [x] A.0a gate PASS (379 tests + mock smoke) and platform seam canary PASS, both recorded
+      before the first episode (2026-08-16)
+- [x] Step-4b surface probes: `tool_result` at g=0 and `context` at g=1, both measured
+      functional on the real domain — every hook this repo can use is now measured rather
+      than inherited (2026-08-16/17)
+- [x] Six autonomous transitions (PRs #17–#22, tags exp8-g001…g006), seven held-out rounds,
+      seven batch rounds, reveal, §29 walk, closure (2026-08-17)
+
+**Outcome:** NULL on both instruments — the frozen `primary_flat_secondary_flat` cell. Primary
+Σ per-task rate deltas +1.333, exact p = 0.250 (only two of eight tasks had a non-zero endpoint
+delta; five movers were needed for α = 0.05, computed and recorded BEFORE the endpoint round).
+Secondary z = 0.60, p = 0.274, endpoint +1 task inside the ±5 pp band, on a fourth-exposure
+set carrying no capability claim. What outlives the number: a MEASURED noise floor (2 cells,
+8.3 pp, from a behavioural-identity round — a first for this project); the framing finding
+(list → nothing; missing-state → behaviour change plus unasked suppression; completed-state →
+safe and inert; consequence-stating → confirmed); transfer discrimination moved for the first
+time in four experiments, on one side only; the revert rule *a denied prediction is not a
+revert trigger, a denied mechanism is*, with a measured counterfactual; anchors 42/42 across
+seven rounds proving the stratification's regression channel; and a surface-exhausted finding
+for the remaining headroom, reached by five rounds of layer-peeling. Three process failures are
+recorded (an inert change consumed a generation; a preflight manufactured a confirmation out of
+noise; a target was retired on one round's evidence and un-retired two rounds later).
+`pi_local_calls` was 0 across all 168 platform episodes — the D24 seam ran its pump path and
+never its suppressing path, so extension tools and sub-agents remain available but unexercised
+in a graded round.
 
 **Validate:** the primary is decided mechanically from `batch_curve.json`'s endpoint pair
 against the frozen `reading_key`; no cell is adjudicated off-key; every improvement record

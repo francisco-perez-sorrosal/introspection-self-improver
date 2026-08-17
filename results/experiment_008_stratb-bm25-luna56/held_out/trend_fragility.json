@@ -1,0 +1,189 @@
+{
+  "note": "sensitivity of the pre-registered trend verdict; advisory context beside the p-value, never a gate and never a replacement test",
+  "base": {
+    "statistic": 2.6666666666666665,
+    "z": 0.6007514091861106,
+    "p_value": 0.27400278618065466,
+    "significant": false
+  },
+  "leave_one_task_out": [
+    {
+      "task_id": "task_007",
+      "z": 0.9990152631781921,
+      "p_value": 0.1588936487339769,
+      "significant": false
+    },
+    {
+      "task_id": "task_012",
+      "z": 0.3827327723098715,
+      "p_value": 0.35095895625163537,
+      "significant": false
+    },
+    {
+      "task_id": "task_016",
+      "z": 0.7808688094430305,
+      "p_value": 0.21743982924789168,
+      "significant": false
+    },
+    {
+      "task_id": "task_018",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_019",
+      "z": 0.8355099778440249,
+      "p_value": 0.2017153156904193,
+      "significant": false
+    },
+    {
+      "task_id": "task_021",
+      "z": 0.39364791081110845,
+      "p_value": 0.3469205017929785,
+      "significant": false
+    },
+    {
+      "task_id": "task_022",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_025",
+      "z": 0.845320607304624,
+      "p_value": 0.19896592919651676,
+      "significant": false
+    },
+    {
+      "task_id": "task_031",
+      "z": 0.08111071056538126,
+      "p_value": 0.467676953977976,
+      "significant": false
+    },
+    {
+      "task_id": "task_033",
+      "z": 0.325875267956141,
+      "p_value": 0.3722593642412598,
+      "significant": false
+    },
+    {
+      "task_id": "task_039",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_044",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_049",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_052",
+      "z": 0.5806513267897976,
+      "p_value": 0.28073773606027275,
+      "significant": false
+    },
+    {
+      "task_id": "task_059",
+      "z": 0.5358258812338202,
+      "p_value": 0.2960394466604237,
+      "significant": false
+    },
+    {
+      "task_id": "task_068",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_073",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_075",
+      "z": 0.4592793267718459,
+      "p_value": 0.32301679572855124,
+      "significant": false
+    },
+    {
+      "task_id": "task_078",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_084",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_085",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_086",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_092",
+      "z": 0.3797772626563749,
+      "p_value": 0.352055380903012,
+      "significant": false
+    },
+    {
+      "task_id": "task_093",
+      "z": 0.845320607304624,
+      "p_value": 0.19896592919651676,
+      "significant": false
+    },
+    {
+      "task_id": "task_095",
+      "z": 0.6076436202501999,
+      "p_value": 0.2717119318128348,
+      "significant": false
+    },
+    {
+      "task_id": "task_097",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    },
+    {
+      "task_id": "task_098",
+      "z": 0.614778623494272,
+      "p_value": 0.26935046412846586,
+      "significant": false
+    },
+    {
+      "task_id": "task_100",
+      "z": 0.6007514091861106,
+      "p_value": 0.27400278618065466,
+      "significant": false
+    }
+  ],
+  "load_bearing_tasks": [],
+  "endpoint_only_first_passes": [
+    "task_092"
+  ],
+  "without_endpoint_first_passes": {
+    "statistic": 1.6666666666666665,
+    "z": 0.3797772626563749,
+    "p_value": 0.352055380903012,
+    "significant": false
+  }
+}
