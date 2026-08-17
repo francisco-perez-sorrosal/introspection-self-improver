@@ -35,11 +35,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tau_adapter import heldout as heldoutmod
 from tau_adapter import lock as lockmod
 from tau_adapter import process_metrics
+from tau_adapter import split as splitmod
 from tau_adapter.lock import BATCH_MODE_FIXED, REPO_ROOT
-from tau_adapter.reveal import PASS_THRESHOLD, fmt_count
+from tau_adapter.reveal import PASS_THRESHOLD, GenerationResult, fmt_count, trend_test
 
 ALPHA = 0.05
 OUTPUT_NAME = "batch_curve.json"
+
+STRATUM_VALUES = ("anchor", "marginal", "headroom")
 
 
 def load_batch_round(round_dir: Path) -> dict[str, tuple[int, int]] | None:
@@ -88,6 +91,138 @@ def paired_endpoint_test(
     }
 
 
+def pool_rounds(
+    rounds_stats: list[dict[str, tuple[int, int]]],
+) -> dict[str, tuple[int, int]]:
+    """Sum (passed, trials) per task across rounds of one behaviourally-identical harness."""
+    pooled: dict[str, list[int]] = {}
+    for stats in rounds_stats:
+        for task_id, (passed, trials) in stats.items():
+            entry = pooled.setdefault(task_id, [0, 0])
+            entry[0] += passed
+            entry[1] += trials
+    return {task_id: (c, n) for task_id, (c, n) in pooled.items()}
+
+
+def baseline_round_indices(identity_generations: tuple[int, ...]) -> list[int]:
+    """Indices into the rounds list that the primary's H0 side pools.
+
+    A pre-registered gen-1 identity means H1 ≡ H0, so batch_01 (run by H0, index 0) and
+    batch_02 (run by H1, index 1) are draws of the SAME harness — pooling them doubles
+    the baseline's trials at zero cost (protocol.md § 0). Only a leading identity chain
+    from generation 1 keeps pooled rounds at H0; a mid-experiment identity still gets its
+    noise_floor entry but never joins the baseline.
+    """
+    indices = [0]
+    generation = 1
+    while generation in identity_generations:
+        indices.append(generation)  # batch_(g+1) sits at index g, run by H_g
+        generation += 1
+    return indices
+
+
+def noise_floor_entries(rounds: list[dict], identity_generations: tuple[int, ...]) -> list[dict]:
+    """Per pre-registered identity generation k: batch_k vs batch_(k+1) — the same harness
+    measured twice on the same tasks, so every moved cell is measured noise."""
+    entries: list[dict] = []
+    for k in identity_generations:
+        before, after = rounds[k - 1], rounds[k]
+        if not (before["measured"] and after["measured"]):
+            continue
+        b = {t: tuple(v) for t, v in before["stats"].items()}
+        a = {t: tuple(v) for t, v in after["stats"].items()}
+        if sorted(b) != sorted(a):
+            continue
+        per_task = {t: a[t][0] - b[t][0] for t in sorted(b) if a[t][0] != b[t][0]}
+        episodes = sum(n for _, n in b.values())
+        cells = sum(abs(d) for d in per_task.values())
+        entries.append(
+            {
+                "identity_generation": k,
+                "rounds": [before["round"], after["round"]],
+                "cells_moved": cells,
+                "pp_moved": round(100 * cells / episodes, 1) if episodes else 0.0,
+                "net_cells": sum(per_task.values()),
+                "per_task_cell_deltas": per_task,
+            }
+        )
+    return entries
+
+
+def strata_summary(rounds: list[dict], strata: dict[str, str], walled: set[str]) -> dict | None:
+    """Per-stratum rates per round, plus the reachable-harvest co-metric.
+
+    Harvest — the fraction of non-walled batch cells passed — is the pre-registered
+    disambiguator between loop failure and headroom exhaustion (protocol.md § 0): a flat
+    primary with high harvest says the objective's reachable range is spent, not that
+    the loop found nothing.
+    """
+    measured = [r for r in rounds if r["measured"]]
+    if not measured:
+        return None
+
+    def cells(round_entry: dict, tasks: list[str]) -> tuple[int, int]:
+        stats = {t: tuple(v) for t, v in round_entry["stats"].items()}
+        chosen = [t for t in tasks if t in stats]
+        return sum(stats[t][0] for t in chosen), sum(stats[t][1] for t in chosen)
+
+    per_round = []
+    for r in measured:
+        by_stratum = {}
+        for stratum in STRATUM_VALUES:
+            passed, trials = cells(r, [t for t in strata if strata[t] == stratum])
+            by_stratum[stratum] = {
+                "passed": passed,
+                "trials": trials,
+                "rate": round(passed / trials, 4) if trials else None,
+            }
+        per_round.append({"round": r["round"], "harness": r["harness"], "strata": by_stratum})
+
+    def harvest(round_entry: dict) -> float | None:
+        reachable = [t for t in round_entry["stats"] if t not in walled]
+        passed, trials = cells(round_entry, reachable)
+        return round(passed / trials, 4) if trials else None
+
+    return {
+        "per_round": per_round,
+        "walled": sorted(walled),
+        "reachable_harvest": {
+            "baseline": harvest(measured[0]),
+            "endpoint": harvest(measured[-1]),
+            "note": (
+                "fraction of non-walled batch cells passed — the loop-failure vs "
+                "headroom-exhaustion disambiguator (protocol.md § 0)"
+            ),
+        },
+    }
+
+
+def batch_trend(rounds: list[dict], identity_generations: tuple[int, ...]) -> dict | None:
+    """The reveal's trend statistic over the measured batch rounds — diagnostic by default.
+
+    rounds[g] is run by H_g; a round run by a pre-registered identity harness re-measures
+    its predecessor, so it is excluded from the statistic exactly the way the reveal
+    excludes carried held-out columns (one harness, one column).
+    """
+    measured = [(g, r) for g, r in enumerate(rounds) if r["measured"]]
+    if not measured:
+        return None
+    reference = sorted(measured[0][1]["stats"])
+    if any(sorted(r["stats"]) != reference for _, r in measured):
+        return None  # not one paired task set — no cross-round statistic exists
+    results = [
+        GenerationResult(
+            g,
+            {t: tuple(v) for t, v in r["stats"].items()},
+            carried=g in identity_generations,
+        )
+        for g, r in measured
+    ]
+    verdict = trend_test(results)
+    verdict["status"] = "diagnostic unless the freeze's reading key names it"
+    return verdict
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -129,7 +264,6 @@ def main() -> int:
             }
         )
 
-    measured = [r for r in rounds if r["measured"]]
     print(f"── batch curve: {lock.experiment_id} (batch_mode fixed)")
     for r in rounds:
         if not r["measured"]:
@@ -142,6 +276,11 @@ def main() -> int:
             f"{100 * expected / len(stats):5.1f}%   expected {fmt_count(expected)}/{len(stats)}"
         )
 
+    identity = lock.protocol.identity_generations
+    manifest = splitmod.load_manifest() if splitmod.SPLIT_MANIFEST_PATH.exists() else {}
+    strata = dict(manifest.get("strata") or {})
+    walled = set(manifest.get("walled") or [])
+
     payload: dict = {
         "experiment": lock.experiment_id,
         "computed_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -150,18 +289,28 @@ def main() -> int:
         "endpoint_test": None,
         "endpoint_status": "descriptive — endpoint pair incomplete",
     }
-    first_round, last_round = rounds[0], rounds[-1]
-    if first_round["measured"] and last_round["measured"]:
-        first = {t: tuple(v) for t, v in first_round["stats"].items()}
+    base_rounds = [rounds[i] for i in baseline_round_indices(identity)]
+    last_round = rounds[-1]
+    if all(r["measured"] for r in base_rounds) and last_round["measured"]:
+        first = pool_rounds([{t: tuple(v) for t, v in r["stats"].items()} for r in base_rounds])
         last = {t: tuple(v) for t, v in last_round["stats"].items()}
         if sorted(first) == sorted(last):
             payload["endpoint_test"] = paired_endpoint_test(first, last)
+            baseline_desc = (
+                base_rounds[0]["harness"]
+                if len(base_rounds) == 1
+                else (
+                    "H0 pooled over "
+                    + ", ".join(r["round"] for r in base_rounds)
+                    + " (pre-registered identity)"
+                )
+            )
             payload["endpoint_status"] = (
-                f"primary — {first_round['harness']} vs {last_round['harness']} on the fixed batch"
+                f"primary — {last_round['harness']} vs {baseline_desc} on the fixed batch"
             )
             verdict = payload["endpoint_test"]
             print(
-                f"   endpoint {last_round['harness']} vs {first_round['harness']}: "
+                f"   endpoint {last_round['harness']} vs {baseline_desc}: "
                 f"Σ rate deltas = {verdict['observed_delta_sum']:+.3f}, exact one-sided "
                 f"p = {verdict['p_value']:.4f} — "
                 + ("significant" if verdict["significant"] else "not significant")
@@ -170,7 +319,28 @@ def main() -> int:
         else:
             payload["endpoint_status"] = "task sets differ — not a paired endpoint"
     else:
-        print("   endpoint test: pending — needs the first and last batch rounds graded")
+        print("   endpoint test: pending — needs the baseline and last batch rounds graded")
+
+    if identity:
+        payload["identity_generations"] = list(identity)
+        payload["noise_floor"] = noise_floor_entries(rounds, identity)
+        for entry in payload["noise_floor"]:
+            print(
+                f"   noise floor (gen {entry['identity_generation']} identity, "
+                f"{entry['rounds'][0]}→{entry['rounds'][1]}): {entry['cells_moved']} cells, "
+                f"{entry['pp_moved']} pp on an identical harness"
+            )
+    if strata:
+        payload["strata"] = strata_summary(rounds, strata, walled)
+        if payload["strata"] is not None:
+            reachable = payload["strata"]["reachable_harvest"]
+            print(
+                f"   reachable harvest: baseline {reachable['baseline']} → endpoint "
+                f"{reachable['endpoint']} (walled: {', '.join(sorted(walled)) or 'none'})"
+            )
+    trend = batch_trend(rounds, identity)
+    if trend is not None:
+        payload["trend"] = trend
 
     out_path = experiment_dir / OUTPUT_NAME
     out_path.parent.mkdir(parents=True, exist_ok=True)

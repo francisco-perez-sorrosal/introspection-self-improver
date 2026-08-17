@@ -398,6 +398,26 @@ def load_records(records_path: Path, total_generations: int) -> dict[int, dict[s
     return records
 
 
+def verify_identity_preregistration(lock: Lock, records: dict[int, dict[str, Any]]) -> None:
+    """A pre-registered identity generation must have stayed identity.
+
+    `protocol.identity_generations` names generations frozen as A/A noise measurements
+    (protocol.md § 0): landing a mutation on one silently converts the noise instrument
+    back into an ordinary round, so the reveal refuses rather than reads around it.
+    """
+    for generation in lock.protocol.identity_generations:
+        record = records.get(generation - 1)
+        if record is None:
+            continue  # load_records already refuses a missing record with the full list
+        if record["outcome"] == recordsmod.OUTCOME_ACCEPTED:
+            raise RevealError(
+                f"generation {generation} is pre-registered identity "
+                f"(protocol.identity_generations), yet {recordsmod.record_name(generation - 1)} "
+                "has outcome accepted — the pre-registration was dishonored, and the A/A "
+                "noise measurement it promised does not exist"
+            )
+
+
 def verify_freeze_chain(
     experiment_dir: Path,
     vault_experiment_dir: Path,
@@ -596,6 +616,37 @@ def retention_csv(results: list[GenerationResult], total: int) -> str:
     return out.getvalue()
 
 
+def _churn_lines(results: list[GenerationResult], total: int) -> list[str]:
+    """The churn narration under the transitions table (seq-8 review § 6.5).
+
+    The transitions table always carried this; nobody read it — seq 8's held-out lane
+    held a second noise measurement (3-5 cells of churn per transition against nets of
+    -2..+3) that the closure never surfaced. Saying it in prose is the fix.
+    """
+    rows = transitions(results)
+    if not rows:
+        return []
+    moved = sum(row["gains"] + row["regressions"] for row in rows) / len(rows)
+    net = sum(abs(row["net"]) for row in rows) / len(rows)
+    endpoint = retention(results)[-1]
+    lines = [
+        "",
+        f"**Churn:** ~{moved:.1f} task cells move per transition (gains + regressions) "
+        f"against a mean |net| of {net:.1f} — per-task movement inside that churn band is "
+        f"noise, not signal. Ever solved {endpoint['ever']}/{total} vs "
+        f"{endpoint['currently']}/{total} fully solved at the endpoint.",
+    ]
+    carried = [result.label for result in results if result.carried]
+    if carried:
+        lines.append(
+            f"Identity generations ({', '.join(carried)}) carry their predecessor's "
+            "held-out draws forward — the zero-movement rows above are carried copies, "
+            "not fresh measurements; the A/A noise number lives on the batch side "
+            "(batch_curve.json)."
+        )
+    return lines
+
+
 def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) -> str:
     protocol = lock.protocol
     total = protocol.held_out_tasks
@@ -658,6 +709,7 @@ def summary_md(lock: Lock, results: list[GenerationResult], revealed_on: str) ->
         f"| {'identity' if row['identity'] else ''} |"
         for row in transitions(results)
     ]
+    lines += _churn_lines(results, total)
     lines += [
         "",
         "## Retention",
@@ -729,6 +781,7 @@ def reveal(
     manifest = splitmod.load_manifest() if manifest is None else manifest
     held_out_ids = list(manifest.get(splitmod.HELD_OUT) or [])
     records = load_records(experiment_dir / recordsmod.RECORDS_DIRNAME, lock.protocol.generations)
+    verify_identity_preregistration(lock, records)
     results = assemble(lock, vault_experiment_dir, records, held_out_ids)
     verify_freeze_chain(experiment_dir, vault_experiment_dir, results)
 

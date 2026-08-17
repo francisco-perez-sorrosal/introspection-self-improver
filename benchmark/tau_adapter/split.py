@@ -50,6 +50,13 @@ DEFAULT_SEED = 20260812
 
 _UNUSED = "unused"
 
+#: The empirical strata a fixed batch spans (protocol.md § 0, plan D25 rule 1): anchors
+#: are regression detectors, marginals the band where num_trials resolves movement,
+#: headroom the failing tasks a mutation could plausibly reach. `walled` marks headroom
+#: tasks whose failure is domain-walled — kept, if at all, as declared wall-monitors
+#: outside the primary's movable set.
+STRATUM_VALUES = ("anchor", "marginal", "headroom")
+
 
 @dataclass(frozen=True)
 class TaskRow:
@@ -244,6 +251,40 @@ def verify(
         problems += _disjointness_problems(lists)
     problems += _list_problems(lists, sizes, rows)
     problems += _action_spread_problems(lists, sizes, rows, batch_mode)
+    problems += _strata_problems(manifest, lists, batch_mode)
+    return problems
+
+
+def _strata_problems(
+    manifest: dict[str, Any], lists: dict[str, list[str]], batch_mode: str
+) -> list[str]:
+    """The optional strata mapping must describe the fixed batch, completely and only it."""
+    strata = manifest.get("strata")
+    walled = list(manifest.get("walled") or [])
+    if strata is None:
+        return ["walled names tasks but no strata mapping exists"] if walled else []
+    if not isinstance(strata, dict):
+        return ["strata must be a mapping of task_id -> anchor|marginal|headroom"]
+    problems: list[str] = []
+    if batch_mode != "fixed":
+        problems.append("strata describe a fixed batch; batch_mode is fresh")
+    batch_tasks = set(next(iter(ids for name, ids in lists.items() if name != HELD_OUT), []))
+    missing = sorted(batch_tasks - set(strata))
+    if missing:
+        problems.append(f"batch tasks missing a stratum: {', '.join(missing)}")
+    extra = sorted(set(strata) - batch_tasks)
+    if extra:
+        problems.append(f"strata name non-batch tasks: {', '.join(extra)}")
+    bad = sorted(t for t, s in strata.items() if s not in STRATUM_VALUES)
+    if bad:
+        problems.append(
+            f"strata values must be one of {'/'.join(STRATUM_VALUES)}; bad: {', '.join(bad)}"
+        )
+    non_headroom = sorted(t for t in walled if strata.get(t) != "headroom")
+    if non_headroom:
+        problems.append(
+            f"walled tasks must be headroom-stratum batch tasks: {', '.join(non_headroom)}"
+        )
     return problems
 
 
@@ -350,6 +391,8 @@ def render_manifest(
     seed: int,
     note: str = "",
     batch_mode: str = "fresh",
+    strata: dict[str, str] | None = None,
+    walled: list[str] | None = None,
 ) -> str:
     """The frozen manifest's file content, header comments included."""
     if batch_mode == "fixed":
@@ -410,6 +453,19 @@ def render_manifest(
         lines.extend(f"    - {task_id}" for task_id in assignment[name])
     lines += ["", f"{HELD_OUT}:"]
     lines.extend(f"  - {task_id}" for task_id in assignment[HELD_OUT])
+    if strata:
+        lines += [
+            "",
+            "# Empirical strata measured under the incumbent H0 (protocol.md § 0):",
+            "# anchor = regression detector, marginal = num_trials resolves movement,",
+            "# headroom = failing task a mutation could plausibly reach. `walled` marks",
+            "# headroom tasks proven domain-walled — outside the primary's movable set.",
+            "strata:",
+        ]
+        lines.extend(f"  {task_id}: {strata[task_id]}" for task_id in sorted(strata))
+        if walled:
+            lines.append("walled:")
+            lines.extend(f"  - {task_id}" for task_id in sorted(walled))
     return "\n".join(lines)
 
 

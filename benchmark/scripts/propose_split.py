@@ -97,6 +97,23 @@ def main() -> int:
             "are refused."
         ),
     )
+    parser.add_argument(
+        "--strata",
+        default="",
+        help=(
+            "task_id:stratum pairs (comma-separated; strata anchor/marginal/headroom) "
+            "recording the pre-freeze H0 screen for a fixed batch (protocol.md § 0). "
+            "Every batch task needs one; requires --batch-tasks."
+        ),
+    )
+    parser.add_argument(
+        "--walled",
+        default="",
+        help=(
+            "comma-separated headroom task ids proven domain-walled by the reachability "
+            "screen — declared wall-monitors outside the primary's movable set"
+        ),
+    )
     args = parser.parse_args()
 
     lock = lockmod.load_lock()
@@ -155,6 +172,36 @@ def main() -> int:
             )
             return 1
         assignment = splitmod.propose(rows, sizes, seed=args.seed)
+    strata = {
+        task.strip(): stratum.strip()
+        for task, _, stratum in (
+            pair.partition(":") for pair in args.strata.split(",") if pair.strip()
+        )
+    }
+    walled = sorted({t.strip() for t in args.walled.split(",") if t.strip()})
+    if strata and not batch_tasks:
+        print(
+            "✗ --strata records a fixed batch's screen; it requires --batch-tasks", file=sys.stderr
+        )
+        return 1
+    if strata:
+        strata_problems = (
+            [
+                f"strata task {t} is not in --batch-tasks"
+                for t in sorted(set(strata) - set(batch_tasks))
+            ]
+            + [f"batch task {t} has no stratum" for t in sorted(set(batch_tasks) - set(strata))]
+            + [
+                f"stratum {s!r} for {t} is not one of {'/'.join(splitmod.STRATUM_VALUES)}"
+                for t, s in sorted(strata.items())
+                if s not in splitmod.STRATUM_VALUES
+            ]
+            + [f"walled task {t} is not headroom" for t in walled if strata.get(t) != "headroom"]
+        )
+        if strata_problems:
+            for problem in strata_problems:
+                print(f"✗ {problem}", file=sys.stderr)
+            return 1
     rendered = splitmod.render_manifest(
         assignment,
         lock.domain,
@@ -162,6 +209,8 @@ def main() -> int:
         args.seed,
         args.note,
         lock.protocol.batch_mode,
+        strata=strata or None,
+        walled=walled or None,
     )
     print(splitmod.strata_report(rows, assignment), file=sys.stderr)
 

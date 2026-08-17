@@ -347,3 +347,82 @@ def test_fixed_rendered_manifest_verifies_as_written() -> None:
     assert manifest["batch_mode"] == "fixed"
     assert verify(manifest, rows, "banking_knowledge", FIXED, "fixed") == []
 
+
+
+def _strata_for(batch_ids: list[str]) -> dict[str, str]:
+    """2 anchors + 3 marginals + 3 headroom over an 8-task fixed batch, in id order."""
+    tiers = ["anchor"] * 2 + ["marginal"] * 3 + ["headroom"] * 3
+    return dict(zip(sorted(batch_ids), tiers, strict=True))
+
+
+def test_fixed_manifest_with_complete_strata_verifies() -> None:
+    manifest = _fixed_manifest()
+    batch_ids = manifest["batches"]["batch_01"]
+    manifest["strata"] = _strata_for(batch_ids)
+    manifest["walled"] = [t for t, s in manifest["strata"].items() if s == "headroom"][:1]
+    assert verify(manifest, _rows(), "banking_knowledge", FIXED, "fixed") == []
+
+
+def test_strata_flag_missing_extra_and_bad_values() -> None:
+    manifest = _fixed_manifest()
+    batch_ids = manifest["batches"]["batch_01"]
+    strata = _strata_for(batch_ids)
+    dropped = sorted(strata)[0]
+    del strata[dropped]
+    strata["task_999"] = "anchor"
+    strata[sorted(strata)[1]] = "bedrock"
+    manifest["strata"] = strata
+    problems = "\n".join(verify(manifest, _rows(), "banking_knowledge", FIXED, "fixed"))
+    assert f"missing a stratum: {dropped}" in problems
+    assert "non-batch tasks: task_999" in problems
+    assert "must be one of anchor/marginal/headroom" in problems
+
+
+def test_walled_must_be_headroom_batch_tasks() -> None:
+    manifest = _fixed_manifest()
+    batch_ids = manifest["batches"]["batch_01"]
+    manifest["strata"] = _strata_for(batch_ids)
+    anchor = next(t for t, s in manifest["strata"].items() if s == "anchor")
+    manifest["walled"] = [anchor]
+    problems = "\n".join(verify(manifest, _rows(), "banking_knowledge", FIXED, "fixed"))
+    assert "walled tasks must be headroom" in problems
+
+
+def test_walled_without_strata_is_flagged() -> None:
+    manifest = _fixed_manifest()
+    manifest["walled"] = ["task_001"]
+    problems = "\n".join(verify(manifest, _rows(), "banking_knowledge", FIXED, "fixed"))
+    assert "no strata mapping" in problems
+
+
+def test_strata_on_a_fresh_manifest_are_flagged() -> None:
+    rows = _rows()
+    assignment = propose(rows, DEBUG)
+    manifest = _manifest(assignment)
+    manifest["strata"] = {assignment["batch_01"][0]: "anchor"}
+    problems = "\n".join(verify(manifest, rows, "banking_knowledge", DEBUG, "fresh"))
+    assert "strata describe a fixed batch" in problems
+
+
+def test_render_manifest_with_strata_round_trips() -> None:
+    from tau_adapter.split import explicit_assignment
+
+    rows = _rows()
+    batch_ids = [r.task_id for r in rows[:8]]
+    held_ids = [r.task_id for r in rows[10:36]] + [r.task_id for r in rows[-2:]]
+    strata = _strata_for(batch_ids)
+    walled = [t for t, s in strata.items() if s == "headroom"][:2]
+    rendered = render_manifest(
+        explicit_assignment(batch_ids, held_ids, FIXED),
+        "banking_knowledge",
+        "base",
+        1,
+        "strata round-trip",
+        "fixed",
+        strata=strata,
+        walled=walled,
+    )
+    manifest = yaml.safe_load(rendered)
+    assert manifest["strata"] == strata
+    assert manifest["walled"] == sorted(walled)
+    assert verify(manifest, rows, "banking_knowledge", FIXED, "fixed") == []

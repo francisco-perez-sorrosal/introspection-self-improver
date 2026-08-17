@@ -279,7 +279,6 @@ def test_batch_mode_fixed_requires_within_batch_verification() -> None:
         _ = Lock(raw={"protocol": _protocol_block(batch_mode="fixed")}).protocol
 
 
-
 # ------------------------------------------------------- reading key (plan D25)
 
 
@@ -324,3 +323,40 @@ def test_reading_key_blank_cell_is_refused() -> None:
                 )
             }
         ).protocol
+
+
+def _fixed_block(**overrides) -> dict:
+    return _protocol_block(batch_mode="fixed", allow_within_batch_verification=True, **overrides)
+
+
+def test_identity_generations_default_to_empty() -> None:
+    assert Lock(raw={"protocol": _protocol_block()}).protocol.identity_generations == ()
+
+
+def test_identity_generations_parse_in_fixed_mode() -> None:
+    protocol = Lock(raw={"protocol": _fixed_block(identity_generations=[1, 3])}).protocol
+    assert protocol.identity_generations == (1, 3)
+
+
+@pytest.mark.parametrize("bad", [[2, 2], [3, 1]])
+def test_identity_generations_refuse_duplicates_and_disorder(bad) -> None:
+    with pytest.raises(LockError, match="strictly increasing"):
+        _ = Lock(raw={"protocol": _fixed_block(identity_generations=bad)}).protocol
+
+
+@pytest.mark.parametrize("bad", [[0], [4]])
+def test_identity_generations_refuse_out_of_range(bad) -> None:
+    with pytest.raises(LockError, match=r"outside 1\.\.3"):
+        _ = Lock(raw={"protocol": _fixed_block(identity_generations=bad)}).protocol
+
+
+def test_identity_generations_refuse_fresh_mode() -> None:
+    # An A/A round measures noise only when every batch round measures the same tasks.
+    with pytest.raises(LockError, match="batch_mode: fixed"):
+        _ = Lock(raw={"protocol": _protocol_block(identity_generations=[1])}).protocol
+
+
+@pytest.mark.parametrize("bad", [["1"], [True]])
+def test_identity_generations_refuse_non_integers(bad) -> None:
+    with pytest.raises(LockError, match="must be an integer"):
+        _ = Lock(raw={"protocol": _fixed_block(identity_generations=bad)}).protocol

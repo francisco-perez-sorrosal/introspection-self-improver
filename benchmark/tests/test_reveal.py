@@ -609,3 +609,35 @@ def test_fragility_sentence_names_the_load_bearing_and_endpoint_cells():
     assert report["endpoint_only_first_passes"] == ["t2"]
     sentence = reveal.fragility_sentence(report)
     assert "t2" in sentence
+
+
+def _identity_lock(identity: list[int]) -> Lock:
+    raw = dict(_lock().raw)
+    raw["protocol"] = {
+        **raw["protocol"],
+        "batch_mode": "fixed",
+        "allow_within_batch_verification": True,
+        "identity_generations": identity,
+    }
+    return Lock(raw=raw)
+
+
+def test_preregistered_identity_dishonored_by_an_accepted_record_refuses():
+    recs = {n: _record(n, "accepted") for n in range(3)}
+    with pytest.raises(reveal.RevealError, match="pre-registered identity"):
+        reveal.verify_identity_preregistration(_identity_lock([2]), recs)
+
+
+def test_preregistered_identity_honored_by_an_identity_outcome_passes():
+    recs = {0: _record(0, "accepted"), 1: _record(1, "identity"), 2: _record(2, "accepted")}
+    reveal.verify_identity_preregistration(_identity_lock([2]), recs)
+
+
+def test_summary_narrates_churn_and_the_carried_pair():
+    summary = reveal.summary_md(_lock(), _fixture_results(), "2026-08-17")
+    # Transitions H0→H1 (1 gain, 1 regression), H1→H2 (identity copy), H2→H3 (2 gains):
+    # mean moved (2+0+2)/3 ≈ 1.3 against mean |net| (0+0+2)/3 ≈ 0.7.
+    assert "**Churn:** ~1.3 task cells move per transition" in summary
+    assert "mean |net| of 0.7" in summary
+    assert "Ever solved 4/5 vs 4/5 fully solved at the endpoint" in summary
+    assert "Identity generations (H2) carry their predecessor's held-out draws" in summary

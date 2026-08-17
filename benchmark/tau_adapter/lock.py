@@ -46,6 +46,7 @@ _PROTOCOL_KEYS = (
     "holdout_visibility",
     "batch_mode",
     "reading_key",
+    "identity_generations",
 )
 
 #: The nine cells a mechanical reading key must name (plan D25): primary direction ×
@@ -103,6 +104,12 @@ class ProtocolConfig:
     #: at freeze, validated by READING_KEY_CELLS. Optional in code so pre-D25 value
     #: snapshots keep parsing; protocol.md § 0 makes it mandatory for new freezes.
     reading_key: dict[str, str] | None = None
+    #: Pre-registered behavioural-identity generations (protocol.md § 0): each named
+    #: generation k is identity BY DESIGN — H_k = H_(k-1), its held-out round carries
+    #: forward, and its batch round is the A/A noise measurement. Fixed batch mode only:
+    #: under fresh batches an A/A round would measure a different task set and no noise.
+    #: Default () keeps every pre-existing lock and snapshot valid.
+    identity_generations: tuple[int, ...] = ()
 
 
 def _protocol_positive_int(section: dict, key: str) -> int:
@@ -144,6 +151,33 @@ def _parse_reading_key(section: dict) -> dict[str, str] | None:
             f"combination run-voiding, never be blank): {', '.join(empty)}"
         )
     return {cell: str(reading_key[cell]) for cell in READING_KEY_CELLS}
+
+
+def _parse_identity_generations(
+    section: dict, generations: int, batch_mode: str
+) -> tuple[int, ...]:
+    value = section.get("identity_generations")
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise LockError("protocol.identity_generations must be a list of generation numbers")
+    for entry in value:
+        if isinstance(entry, bool) or not isinstance(entry, int):
+            raise LockError(f"protocol.identity_generations entry {entry!r} must be an integer")
+        if not 1 <= entry <= generations:
+            raise LockError(
+                f"protocol.identity_generations entry {entry} is outside 1..{generations}"
+            )
+    if list(value) != sorted(set(value)):
+        raise LockError(
+            "protocol.identity_generations must be strictly increasing with no duplicates"
+        )
+    if value and batch_mode != BATCH_MODE_FIXED:
+        raise LockError(
+            "protocol.identity_generations requires batch_mode: fixed — an A/A round "
+            "measures noise only when every batch round measures the same task set"
+        )
+    return tuple(value)
 
 
 def _parse_holdout_visibility(section: dict) -> HoldoutVisibility:
@@ -319,6 +353,9 @@ class Lock:
             holdout_visibility=_parse_holdout_visibility(section),
             batch_mode=batch_mode,
             reading_key=_parse_reading_key(section),
+            identity_generations=_parse_identity_generations(
+                section, _protocol_positive_int(section, "generations"), batch_mode
+            ),
         )
         if config.batch_mode == BATCH_MODE_FIXED and not config.allow_within_batch_verification:
             raise LockError(
