@@ -1,0 +1,33 @@
+{
+  "lane": "local",
+  "task": "task_026",
+  "note": "pre-merge behavioural verification of F1; NOT a batch round and never cited as record provenance",
+  "baseline": "update_transaction_rewards_3847 unlocked in 0 of 12 batch episodes across four harnesses",
+  "with_F1": [
+    {
+      "trial": 0,
+      "reward": 0.0,
+      "unlocks": [
+        "update_transaction_rewards_3847",
+        "get_user_dispute_history_7291"
+      ],
+      "gold_tool_calls": 4
+    },
+    {
+      "trial": 1,
+      "reward": 0.0,
+      "unlocks": [
+        "update_transaction_rewards_3847"
+      ],
+      "gold_tool_calls": 6
+    },
+    {
+      "trial": 2,
+      "reward": 0.0,
+      "unlocks": [
+        "update_transaction_rewards_3847"
+      ],
+      "gold_tool_calls": 3
+    }
+  ]
+}
