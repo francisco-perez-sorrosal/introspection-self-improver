@@ -236,6 +236,45 @@ close.
   is the only skill delivery), and the platform lane pins the recipe to pushed main
   (`--allow-dirty` runs pushed main, `arm_sha_ok=false`). Results under D24 are not
   comparable to seq ≤ 6.
+- **Seq 8 is REVEALED (2026-08-17), `008_stratb-bm25-luna56` — NULL on both instruments, and
+  the first experiment whose instrument was calibrated by measurement.** Seq 6's design with
+  two repairs (plan D28): a batch spanning strata *measured under H0 before the freeze*
+  (2 anchors + 3 marginals + 3 headroom), and a mechanical nine-cell reading key. G=6, B=8,
+  T=28, `num_trials: 3`, fully autonomous, first run on the D24 seam. **Primary** (paired
+  batch endpoint, H6 vs H0): Σ rate deltas **+1.333**, exact p = **0.250** — positive but not
+  significant, which the frozen rule classes FLAT. **Secondary** (held-out, FOURTH exposure,
+  no capability claim): z = 0.60, p = 0.274, +1 task inside the ±5 pp band. Batch curve
+  41.7 → 54.2 → 45.8 → 62.5 → **66.7** → 58.3 → 58.3%. The primary was underpowered by the
+  batch's own endpoint structure — only 2 of 8 tasks had a non-zero endpoint delta and the
+  exact sign-flip test needs 5 — which was computed and recorded *before* the endpoint round.
+  Honest summary: **the loop changed the harness's behaviour and did not improve its
+  capability.**
+- **What seq 8 established that outlives the number.** (a) A **measured noise floor**: gen-005
+  removed a change that never executed, so H5 was behaviourally identical to H4 and its batch
+  round still moved **2 cells (8.3 pp)** — the first behavioural-identity round in this
+  project, and it re-reads every attribution ever made here. (b) **Framing, not surface, moves
+  an injected note**: a bare *list* changed nothing (reverted); a *missing-state* note changed
+  behaviour **and suppressed unasked** (transfer rate 9/24 → 6/24 with no suppression
+  requested); a *completed-state* note was safe and inert; a *consequence-stating* note
+  confirmed. So it is not only escape clauses — **any** statement about a missing precondition
+  can be read as a bar to acting. (c) **Transfer discrimination moved for the first time** in
+  four experiments and seven prior mutations (`task_014` 1/3 → 3/3 with the gold reason code;
+  every endpoint trial that issued the prescribed lookup chose the gold reason, the one that
+  did not, did not) — **and only on one side**: over-escalation did not improve. (d) The rule
+  **a denied prediction is not a revert trigger; a denied *mechanism* is** — with a measured
+  counterfactual, since the change kept under it produced the clearest win two rounds later.
+  (e) Anchors **42/42 across seven rounds**: the regression channel worked, and it produced a
+  finding a known-fail batch cannot (a duplicate write diagnosed by reading a passing trial
+  against a failing one of the same task). (f) The remaining headroom is **surface-exhausted**,
+  proven by five rounds of layer-peeling — `task_026` ended calling the gold tool with three of
+  four values *exact* and one off by one; reaching a rounding convention needs domain knowledge
+  the invariants forbid. Recorded as first-class results: two reverts, one change measured
+  **inert**, one retirement reversed, an erratum against its own gen-001 record, and three
+  process failures. §29: seventeen HELD, two N/A, one HELD by frozen delegation, **none
+  waived**; 756 episodes, one fingerprint, zero seam disconnects/timeouts, ≈ $17.
+  **`pi_local_calls` was 0 across all 168 platform episodes** — every landed change was a hook,
+  so the D24 seam ran its pump path and never its suppressing path, and **extension tools and
+  sub-agents remain available but unexercised in a graded round**.
 
 ## Invariants
 
