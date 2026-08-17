@@ -1,0 +1,22 @@
+{
+  "marker_occurrences_in_tau_graded_trajectory": 0,
+  "marker_occurrences_in_pi_sessions": 24,
+  "tool_error_messages_in_trajectory": 0,
+  "rewards": [
+    [
+      "task_096",
+      2,
+      0.0
+    ],
+    [
+      "task_096",
+      0,
+      0.0
+    ],
+    [
+      "task_096",
+      1,
+      0.0
+    ]
+  ]
+}

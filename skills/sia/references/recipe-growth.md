@@ -22,7 +22,7 @@ they can reach). This file adds only the mapping and this repo's constraints:
 |---|---|
 | Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or skill-shaped content delivered by a `before_agent_start` hook: a **declared** skill measurably reaches nothing on this seam's local lane (trap 1), so hook injection is the only working delivery |
 | Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — but see trap 4: in THIS repo's seam every extension-tool call costs a τ step and an error, so prefer a no-tool-call hook (`tool_result`, `context`, `before_agent_start`) |
-| Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline | **extension event interception** — `tool_result` / `context` / `before_agent_start` only. Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
+| Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline, or *acting on what was retrieved* | **extension event interception** — `tool_result` (measured on the real domain: sees every τ result with its input arguments, can rewrite what the model reads, invisible to grading) / `context` (inferred) / `before_agent_start` (measured). Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
 | A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — but see trap 4: in THIS repo's seam a sub-agent's delegation call reaches τ as an invalid tool call, so the surface is unavailable |
 | External service capability | MCP server — **not** a sanctioned growth surface here without explicit seam work: the tau binding/`--mcp` interplay is fragile (`dev_lane.py`), so surface it as a user decision, never land it as an ordinary mutation |
 
@@ -201,9 +201,15 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
    `before_agent_start` (replace/augment the system prompt; **measured functional on the
    banking domain, local lane, 2026-08-16** — probe P1: fires every session, sees the
    fully composed prompt, `undefined` leaves it unchanged, zero τ-side visibility),
-   `tool_result` (transform what the model sees after a τ tool returns), `context`
-   (inject messages) — plus `SYSTEM.md` (a declared skill's name/description measurably
-   does NOT arrive here; trap 1). Changing the forwarding itself is **seam work**, not an
+   `tool_result` (transform what the model sees after a τ tool returns; **measured
+   functional on the banking domain, local lane, 2026-08-16** — 56 firings over three
+   episodes across every τ tool, name shape `mcp_tau_<tau name>_<hash>` so a handler must
+   match on a substring and never on equality, `event.content` an array of `{type:"text"}`
+   blocks, **`event.input` carrying the tool's own arguments**; a returned `content` patch
+   reached the model in 24/24 firings and appeared **0** times in τ's graded trajectory,
+   with zero tool errors), `context` (inject messages; still INFERRED, never measured) —
+   plus `SYSTEM.md` (a declared skill's name/description measurably does NOT arrive here;
+   trap 1). Changing the forwarding itself is **seam work**, not an
    ordinary mutation, and hiding agent tool calls from the graded trajectory is the kind of
    adapter helpfulness that makes a harness unmeasurable. The counterpart still holds:
    Pi-local work spends **wall-clock and tokens**, and τ's frozen `timeout_seconds` bounds
