@@ -8,8 +8,10 @@ description: >-
   before diagnosing a new improvement batch (recall first), when writing or verifying an
   improvement record, when updating backlog target statuses, and when a mutation grows an
   Introspection agent recipe with Pi tools, skills, or sub-agents. Keeps every
-  experiment's memory isolated and enforces the held-out firewall (never reads unrevealed
-  held-out results); complements the CLI workflows' diagnosis and change methodology,
+  experiment's memory isolated and enforces the held-out firewall (in-loop reads of
+  held-out results are forbidden, and the quarantine does not expire at reveal —
+  batch evidence is the only decision input); complements the CLI workflows' diagnosis
+  and change methodology,
   never substitutes it; not for executing batches or held-out rounds (the run harness
   owns those). Trigger terms: generation transition, improvement batch, improvement
   record, backlog, recall digest, pi skill, pi tool, sub-agent, recipe growth,
@@ -76,9 +78,12 @@ reconcile, never override:
   a disagreement is an incident to surface, not to paper over.
 - Every sia read and write stays inside that root. A record for experiment X never lives
   under, cites, or borrows evidence from experiment Y's root — experiments are isolated.
-- Prior experiments are readable only once revealed/closed, and only as labeled
-  prior-experiment context ("experiment <id> found …") in digests and prose — never as evidence in a
-  record. Record evidence is the current batch's conversations, nothing else.
+- Prior experiments' **batch-side** artifacts are readable only once revealed/closed, and
+  only as labeled prior-experiment context ("experiment <id> found …") in digests and
+  prose — never as evidence in a record. Record evidence is the current batch's
+  conversations, nothing else. Prior experiments' **held-out** artifacts and reveal
+  analyses are never in-loop inputs at all, revealed or not (D33) — the quarantine has no
+  expiry.
 
 ## Recall — before every diagnosis
 
@@ -86,7 +91,12 @@ Before exporting the batch conversations (protocol step 3), read in order:
 
 1. `results/experiment_<id>/improvement_records/gen_*.yaml` — all of them, filename order
 2. `results/experiment_<id>/improvement_backlog.md`
-3. Once, at experiment start: revealed prior experiments' closure `README.md`/`summary.md`
+3. Once, at experiment start: revealed prior experiments' `improvement_records/` and
+   `improvement_backlog.md` — their batch-derived memory. **Never their `held_out/`,
+   `summary.md`, reveal analyses, or any closure/review section carrying per-task
+   held-out content** (D33): in-loop decisions are grounded in batches only, current
+   and past, and a prior reveal read here contaminates every mutation this experiment
+   selects.
 
 Mine them per the table in [references/record-craft.md](references/record-craft.md). The
 four highest-value extractions:
@@ -146,9 +156,13 @@ as it forms.
 
 Authority: root `CLAUDE.md` Invariants (enforced here, not restated). At the sia level:
 
-- Never Read, Glob, or Grep under `results/experiment_<id>/held_out/` of an unrevealed
-  experiment. Scope every search under `results/` to `improvement_records/` or
-  `generation_*/` — a broad grep can surface held-out content by accident.
+- Never Read, Glob, or Grep under `results/experiment_*/held_out/` of ANY experiment
+  while operating in-loop — pre-reveal it is the vault rule; post-reveal it is
+  cross-experiment contamination of mutation selection (D33). The same quarantine covers
+  prior experiments' `summary.md`, trend/fragility artifacts, and per-task reveal
+  content in closures and reviews. Scope every search under `results/` to
+  `improvement_records/` or `generation_*/` — a broad grep can surface held-out content
+  by accident.
 - `held_out_result` is written by `make reveal` only. A non-null value before reveal is an
   incident: stop and surface it to the user.
 - Records, backlogs, and digests contain no held-out numbers, no vault paths, and no

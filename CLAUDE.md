@@ -292,11 +292,12 @@ close.
   stale trap-4 verdicts had steered "prefer a no-tool-call hook" through all of seq 8). The
   scaffold has zero-state parity — `noop-tool.ts` (`probe_note`) and `noop-subagent.yaml`
   beside `noop-hook.ts`, all inert — with `h0-baseline` re-tagged at the parity commit and the
-  recipe reset to H0. **Seq 10 (D32, `010_adopt-bm25-luna56`): G=7 with gen-001 identity,
-  B=10 reachability-screened strata, T=48 declared-reuse transfer probe — the pool holds ZERO
-  virgin tasks, so no capability claim is available in this domain (a claim needs a domain
-  decision, user-owned, pencilled seq 12) — and an experiment-level surface-exercise
-  obligation under adoption-first.**
+  recipe reset to H0. **Seq 10 (D32 as amended by D33, `010_adopt-bm25-luna56`): G=7 with
+  gen-001 identity, B=10 reachability-screened strata, T=36 pure-holdout set (the legacy 28 +
+  seq-2's 8 never-batched tasks) carrying a capability claim on the D33 procedural basis, and
+  an experiment-level surface-exercise obligation under adoption-first. The pool holds ZERO
+  virgin tasks, so the unqualified zero-exposure claim still requires a domain decision
+  (user-owned, pencilled seq 12).**
 
 ## Invariants
 
@@ -318,6 +319,12 @@ elsewhere; `benchmark/benchmark_lock.yaml` holds the frozen *values*, this holds
   experiment's reveal — the firewall applies to every generation, H_0 included. Improvement
   batches are fully observable by design; held-out evaluation runs on the local lane with
   outputs out of tree (plan D1/D9), revealed only after the final generation is frozen.
+  **And the firewall does not expire at reveal (plan D33)**: in-loop mutation decisions are
+  grounded in improvement batches only — current and past. Held-out traces, per-task
+  results, and reveal analyses of ANY experiment, revealed included, stay outside in-loop
+  recall forever; reveal analysis is a closure-phase activity whose outputs are quarantined
+  from later experiments' recall. Aggregate curves in this file are history, never
+  diagnosis material.
 - Hardcode benchmark answers, or redefine the objective in terms of diagnostics.
 - Pre-label failures with a human-authored taxonomy. Open-code the evidence first.
 - Fabricate a signal. Every claim cites the executions behind it.

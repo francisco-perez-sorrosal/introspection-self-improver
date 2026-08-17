@@ -43,11 +43,18 @@ file and the code disagree, the code wins and this file gets fixed.
      wall-monitors outside the primary. Screen rates and classifications are
      committed with the probe evidence and land in the manifest header's `strata:`
      mapping, which the freeze snapshot restates under `results/experiment_<id>/`.
-   - **A capability-claim freeze draws its held-out set from zero-prior-exposure
-     tasks** (the partition-isolation machinery prints every reuse at commit; a
-     declared reuse demotes the experiment's held-out lane to a diagnostic probe, and
-     the freeze decision must say which it is). A set on its third experiment cannot
-     carry a claim, however clean its trend.
+   - **A capability-claim freeze draws its held-out set from tasks the loop never
+     tuned on: zero batch exposure, ever** (the partition-isolation machinery prints
+     every reuse at commit). Under the D33 cross-experiment firewall — in-loop
+     decisions are grounded in batches only, and held-out artifacts of every
+     experiment stay outside in-loop recall forever — **holdout-only reuse, declared
+     per source, carries a claim on the stated procedural basis**: the same
+     enforcement class as the local-lane vault (D1/D9), named in every writeup.
+     Batch-derived reuse (`held_out_from_batch`) still demotes the lane to a
+     diagnostic probe — the loop read those transcripts and tuned on them, and no
+     reading discipline undoes that. The freeze decision states which basis its
+     held-out lane claims; the unqualified zero-exposure claim requires a pool no
+     prior experiment touched.
 3. **Freeze**: set `experiment.seq`, protocol block (G/B/T, and the full-quadrant
    `reading_key` — all nine primary × secondary cells, validated by the lock parser;
    optional in code for old snapshots, mandatory here for new freezes: a key that does
@@ -141,7 +148,11 @@ generation's measurement, and a measurement cannot run before its generation's b
    ~40-min window; when it returns nothing, say so and use the full-population
    transcript read as the fallback — at these batch sizes it is the stronger evidence
    tier anyway. Open-code failure modes;
-   prevalence is n/B by enumeration. Never read anything held-out.
+   prevalence is n/B by enumeration. Never read anything held-out — this
+   experiment's (the vault rule) or **any prior experiment's, revealed included**
+   (D33): in-loop decision inputs are improvement batches only, current and past, and
+   a prior reveal's per-task results in the diagnosis loop are the answer key leaking
+   into mutation selection.
 4. **Decide with the user** — two questions with different shapes. Proceed / identity /
    halt is exclusive and stays a single choice. The detected improvements are not:
    present every mode with prevalence and conversation ids as a **multi-select**, and
@@ -308,8 +319,15 @@ generation's measurement, and a measurement cannot run before its generation's b
    missing final tag, a mixed-fingerprint curve, a measurement for an identity
    generation, or a pre-registered identity generation whose record says otherwise.
 4. Walk protocol §29 and record it (`GUARDRAIL_WALK.md` beside the summary), including
-   the §27 artifact inventory and the loop-mechanics verdict.
-5. Numbers are always labelled with their set and N; batch reads are diagnosis
+   the §27 artifact inventory and the loop-mechanics verdict — plus the **D33
+   attestation**: no in-loop session of this experiment opened held-out artifacts of
+   any experiment, and every recall digest named its sources.
+5. **Structure the closure for the quarantine**: the closure README and any
+   post-reveal review separate batch-derived findings (recallable by later
+   experiments' in-loop sessions) from held-out reveal analysis (quarantined from
+   in-loop recall forever, D33) under explicit headings, so future recalls can honor
+   the boundary mechanically instead of parsing prose.
+6. Numbers are always labelled with their set and N; batch reads are diagnosis
    evidence, not the progression metric; effects inside the band are directional only.
 
 ## What seq 2 measured about the procedure itself
