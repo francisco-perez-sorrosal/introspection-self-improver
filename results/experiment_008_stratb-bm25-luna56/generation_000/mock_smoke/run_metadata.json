@@ -1,0 +1,82 @@
+{
+  "mode": "diagnostic",
+  "experiment": "008_stratb-bm25-luna56",
+  "freeze_fingerprint": "sha256:fea4ae1c36fa20e2c15cd2657c41f39ae9da6c15adab825c40d535a4ea116d7e",
+  "domain": "mock",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 3,
+  "max_concurrency": 3,
+  "bridge_executor_workers": 32,
+  "max_concurrent_starts": null,
+  "transport": "local",
+  "launcher": "pi",
+  "launch_argv": [
+    "pi",
+    "--recipe",
+    "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
+    "--agent",
+    "agent",
+    "--mode",
+    "rpc",
+    "--session-dir",
+    "/Users/fperez/dev/introspection-self-improver/results/experiment_008_stratb-bm25-luna56/generation_000/mock_smoke/pi_sessions"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": null,
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "create_task_1",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "create_task_1",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "create_task_1",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 0,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 0,
+      "settle_timeouts": 0,
+      "zero_bridge_calls": 0
+    },
+    "unattributed": [],
+    "bridge": {},
+    "infra_failure_classes": {}
+  },
+  "platform": null,
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
+  "pi_local_tools": [],
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 9.2
+}

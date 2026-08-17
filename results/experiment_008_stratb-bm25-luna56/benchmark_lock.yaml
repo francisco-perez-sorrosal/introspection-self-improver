@@ -1,0 +1,119 @@
+# Value snapshot written at freeze time by the runner (comments dropped; the
+# canonical commented file lives in benchmark/). Values cannot drift from the
+# experiment: the freeze fingerprint refuses any change.
+experiment:
+  seq: 8
+  name: stratb-bm25-luna56
+benchmark:
+  repository: sierra-research/tau2-bench
+  commit: fc0055dc4e0a316c3f83133267fbd6faaa770992
+  tag: v1.0.1
+  domain: banking_knowledge
+  retrieval_config: bm25
+  task_set_name: banking_knowledge
+  task_split_name: base
+protocol:
+  generations: 6
+  improvement_tasks_per_generation: 8
+  held_out_tasks: 28
+  batch_mode: fixed
+  reading_key:
+    primary_up_secondary_up: 'The loop improved the tasks it stared at and the gain
+      appeared on the transfer probe too. The strongest result this design can return.
+      Report as: loop demonstrated on the batch (pre-registered primary), with concordant
+      transfer that is exposure-confounded and therefore corroborating, never claiming.
+      The closure names which changes moved which strata and whether any anchor paid
+      for the gain.'
+    primary_up_secondary_flat: "The loop optimizes what it measures and the gain does\
+      \ not transfer \u2014 mutations are batch-shaped. The primary claim stands;\
+      \ no generalization claim is available. The endpoint diagnosis asks per change\
+      \ whether its mechanism is task-specific, and the closure reports the batch\
+      \ win with the flat probe as its principal limit."
+    primary_up_secondary_down: 'The batch improved while the transfer probe fell:
+      overfitting with collateral damage, the sharpest negative-transfer signal this
+      instrument can produce. The primary verdict is positive and must be reported
+      with the held-out decline as its headline caveat; the closure identifies the
+      changes that plausibly traded breadth for the eight.'
+    primary_flat_secondary_up: "Null primary with a rising probe \u2014 seq 6's cell,\
+      \ now with a batch that could have moved. Check the strata first: a flat sum\
+      \ can hide an anchor regression cancelled by a headroom gain, and the per-task\
+      \ cells decide which happened. If the batch is genuinely inert, a rise on a\
+      \ fourth-exposure set is more likely exposure or noise than capability; report\
+      \ null primary, run the fragility report before writing any sentence about the\
+      \ secondary, and claim nothing."
+    primary_flat_secondary_flat: 'Null on both instruments. With strata verified to
+      move under H0 before the freeze, the instrument excuse that survived seq 6 is
+      gone: six generations of composite sets, with the structural surfaces available
+      for the first time, produced no detectable change anywhere. Against the standing
+      reading this says the meta-agent is the problem, and the closure says so plainly.'
+    primary_flat_secondary_down: 'The batch held and the transfer probe fell: the
+      loop is doing harm outside what it watches, which prose-only loops have never
+      been able to see. Report as a negative result; the endpoint diagnosis names
+      the changes whose scope over-generalized, and any surviving change refuted this
+      way is recorded as a first-class failed mutation.'
+    primary_down_secondary_up: "The batch regressed while the probe rose \u2014 the\
+      \ cell seq 6 observed off-key. With anchors in the batch this is now interpretable\
+      \ rather than a floor artifact: the per-task cells say whether anchors broke\
+      \ (a real regression the loop caused) or only marginals and headroom moved.\
+      \ A probe rise concurrent with a batch regression on a fourth-exposure set supports\
+      \ no positive claim of any kind."
+    primary_down_secondary_flat: The loop actively damaged what it stared at while
+      the probe stayed put. Report as a negative result and name the broken anchor
+      cells; the endpoint diagnosis attributes them to specific surviving changes,
+      and the closure records which revert the loop should have taken and did not.
+    primary_down_secondary_down: "The loop made the harness worse on both instruments\
+      \ \u2014 the strongest negative result available. The closure states which surviving\
+      \ changes are the candidates, whether any generation's own falsifier had already\
+      \ fired unheeded, and what the failure says about composite sets landing changes\
+      \ faster than the next batch can refute them."
+  allow_within_batch_verification: true
+  holdout_visibility:
+    expose_tasks_to_orchestrator: false
+    expose_traces_to_orchestrator: false
+    expose_per_task_results_to_orchestrator: false
+    expose_aggregate_score_to_orchestrator: false
+  require_human_approval: false
+frozen:
+  status: FROZEN
+  agent_model: openai/gpt-5.6-luna
+  agent_thinking_level: null
+  agent_llm_declared: openai/gpt-5.6-luna
+  user_llm: openai/gpt-5.6-luna
+  user_llm_args:
+    reasoning_effort: medium
+    timeout: 60
+  num_trials: 3
+  seed: 300
+  max_steps: 200
+  max_errors: 10
+  timeout_seconds: 600
+  enforce_communication_protocol: false
+operational:
+  max_concurrency: 3
+  process_metric_tools:
+    search: KB_search
+    transfer: transfer_to_human_agents
+    discoverable:
+    - unlock_discoverable_agent_tool
+    - call_discoverable_agent_tool
+    - give_discoverable_user_tool
+policy:
+  sha256: 9c660d4354d7cb0858dd03dae0ad6ace1c25c181a07440b519442c48517fb176
+  source_domain: banking_knowledge
+  source_retrieval_config: bm25
+tool_catalog:
+- KB_search
+- transfer_to_human_agents
+- get_current_time
+- get_user_information_by_id
+- get_user_information_by_name
+- get_user_information_by_email
+- change_user_email
+- get_referrals_by_user
+- get_credit_card_transactions_by_user
+- get_credit_card_accounts_by_user
+- log_verification
+- give_discoverable_user_tool
+- unlock_discoverable_agent_tool
+- call_discoverable_agent_tool
+- list_discoverable_agent_tools
