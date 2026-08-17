@@ -1,0 +1,18 @@
+{
+  "test": "one-sided exact paired sign-flip permutation on per-task rate deltas",
+  "alpha": 0.05,
+  "batch_size": 12,
+  "anchors": 2,
+  "walled": 0,
+  "movable_tasks": 10,
+  "movers_needed": 5,
+  "attainable_best_case_p": 0.0009765625,
+  "verdict": "REACHABLE",
+  "experiment": "010_adopt-bm25-luna56",
+  "computed_at": "2026-08-17T20:19:39+00:00",
+  "anchor_tasks": [
+    "task_006",
+    "task_032"
+  ],
+  "walled_tasks": []
+}
