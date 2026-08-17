@@ -1,0 +1,42 @@
+{
+  "gate": "suppression-canary",
+  "passed": true,
+  "generated": "2026-08-17T20:14:28Z",
+  "adapter_sha": "cf42c356a60cc82294cc7e70dd86ed50a5b8df0b",
+  "expect_tool": "probe_note",
+  "round_dir": "/Users/fperez/dev/introspection-self-improver/results/experiment_010_adopt-bm25-luna56/generation_000/suppression_canary",
+  "judge_only": false,
+  "findings": [],
+  "episodes": [
+    {
+      "trial": 0,
+      "completed": true,
+      "evidence_complete": true,
+      "pi_local_calls": 1,
+      "sandbox_seam_disconnects": 0,
+      "sandbox_seam_timeouts": 0,
+      "sandbox_seam_unclassified": 0,
+      "sandbox_tool_errors": 0
+    },
+    {
+      "trial": 1,
+      "completed": true,
+      "evidence_complete": true,
+      "pi_local_calls": 1,
+      "sandbox_seam_disconnects": 0,
+      "sandbox_seam_timeouts": 0,
+      "sandbox_seam_unclassified": 0,
+      "sandbox_tool_errors": 0
+    },
+    {
+      "trial": 2,
+      "completed": true,
+      "evidence_complete": true,
+      "pi_local_calls": 1,
+      "sandbox_seam_disconnects": 0,
+      "sandbox_seam_timeouts": 0,
+      "sandbox_seam_unclassified": 0,
+      "sandbox_tool_errors": 0
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+# Value snapshot written at freeze time by the runner (comments dropped; the
+# canonical commented file lives in benchmark/). Values cannot drift from the
+# experiment: the freeze fingerprint refuses any change.
+experiment:
+  seq: 10
+  name: adopt-bm25-luna56
+benchmark:
+  repository: sierra-research/tau2-bench
+  commit: fc0055dc4e0a316c3f83133267fbd6faaa770992
+  tag: v1.0.1
+  domain: banking_knowledge
+  retrieval_config: bm25
+  task_set_name: banking_knowledge
+  task_split_name: base
+protocol:
+  generations: 8
+  improvement_tasks_per_generation: 12
+  held_out_tasks: 36
+  batch_mode: fixed
+  identity_generations:
+  - 1
+  reading_key:
+    primary_up_secondary_up: "THE PRE-REGISTERED SUCCESS CELL, named before the first\
+      \ episode (plan D34). The loop improved the tasks it stared at AND the gain\
+      \ appeared on a held-out set the loop never tuned on. Seq 10 is the first freeze\
+      \ where this cell carries a capability claim rather than corroboration: T=36\
+      \ is pure-holdout \u2014 every task in it has zero in-loop (batch) exposure\
+      \ in every experiment, and the D33 quarantine keeps prior held-out results out\
+      \ of in-loop recall without expiry \u2014 so the claim rests on the stated PROCEDURAL\
+      \ basis and says so, in those words, wherever it is reported. Report as: loop\
+      \ demonstrated on the batch (pre-registered primary, exact paired sign-flip\
+      \ batch_09 vs pooled batch_01+batch_02), with a concordant held-out trend over\
+      \ eight measured points read against its noise band and its fragility report.\
+      \ The closure names which changes moved which strata, whether any anchor paid\
+      \ for the gain, and what the identity round (gen-001) measured as the floor."
+    primary_up_secondary_flat: "The loop optimizes what it measures and the gain does\
+      \ not transfer \u2014 mutations are batch-shaped. The primary claim stands;\
+      \ NO capability claim is available, and the pure-holdout secondary makes that\
+      \ a stronger negative statement than seq 8's exposed-probe version could have\
+      \ been: this is a set the loop never touched, so a flat trend is evidence about\
+      \ generalization rather than a confound. The endpoint diagnosis asks per change\
+      \ whether its mechanism is task-specific, and the closure reports the batch\
+      \ win with the flat held-out curve as its principal limit."
+    primary_up_secondary_down: "The batch improved while the held-out set fell: overfitting\
+      \ with collateral damage, and on a pure-holdout lane this is the sharpest negative-transfer\
+      \ signal the project can produce. The primary verdict is positive and must be\
+      \ reported with the held-out decline as its headline caveat \u2014 never as\
+      \ a capability claim. The closure identifies the changes that plausibly traded\
+      \ breadth for the twelve, checks whether any of them carried a suppression risk\
+      \ its own falsifier had already flagged (the standing missing-state lesson),\
+      \ and states what the loop should have reverted."
+    primary_flat_secondary_up: "Null primary with a rising held-out curve. READ THE\
+      \ CO-METRIC FIRST. Reachable harvest \u226590% at the endpoint says the batch's\
+      \ harness-reachable range was already spent \u2014 the primary had nothing left\
+      \ to move and the secondary is the informative instrument; report the held-out\
+      \ trend against its band and fragility report, and the next decision is a pool\
+      \ or domain decision, not a loop repair. Harvest low says the loop failed on\
+      \ the tasks it watched while the held-out set moved anyway, which on eight measured\
+      \ points and a set with zero in-loop exposure is more likely noise or a general-capability\
+      \ drift than targeted transfer: run the fragility report before writing any\
+      \ sentence about the secondary, and claim nothing without it."
+    primary_flat_secondary_flat: "Null on both instruments. The co-metric decides\
+      \ which null this is, and this is the cell seq 10 was designed to disambiguate.\
+      \ Harvest \u226590%: the objective's harness-reachable range is EXHAUSTED \u2014\
+      \ the loop passed what could be passed, and the verdict is about the objective,\
+      \ not the meta-agent; the next move is a pool or domain decision (the seq-12\
+      \ path), stated as such. Harvest low (<90%) with \u226515 reachable failing\
+      \ cells at baseline, an attainable power envelope, a measured noise floor and\
+      \ every surface class certified reachable: every precondition a prior null could\
+      \ be blamed on has been removed, and the closure says plainly that the loop\
+      \ found nothing. Name, per unconsumed target, the mechanism that was never reached."
+    primary_flat_secondary_down: 'The batch held and the held-out set fell: the loop
+      is doing harm outside what it watches. On a pure-holdout lane this is a first-class
+      negative result about generalization, not a probe artifact. Report as negative;
+      the endpoint diagnosis names the changes whose scope over-generalized, any surviving
+      change refuted this way is recorded as a failed mutation, and the closure reads
+      the decline against the identity round''s measured noise floor before attributing
+      it to any single change.'
+    primary_down_secondary_up: "The batch regressed while the held-out set rose. With\
+      \ two anchors frozen in, the per-task cells say whether anchors broke (a real\
+      \ regression the loop caused) or only marginals and headroom moved; an anchor\
+      \ break is the regression channel doing its job and is reported as such. A held-out\
+      \ rise concurrent with a batch regression supports NO positive claim: read both\
+      \ against the identity round's floor, and treat the divergence itself as the\
+      \ finding \u2014 the closure states which changes are the candidates for each\
+      \ side."
+    primary_down_secondary_flat: "The loop actively damaged what it stared at while\
+      \ the held-out set stayed put. Report as a negative result and name the broken\
+      \ anchor or marginal cells; the endpoint diagnosis attributes them to specific\
+      \ surviving changes, and the closure records which revert the loop should have\
+      \ taken and did not \u2014 with the revert bar (a denied MECHANISM, not a denied\
+      \ prediction) applied to each in hindsight."
+    primary_down_secondary_down: "The loop made the harness worse on both instruments\
+      \ \u2014 the strongest negative result available, and under this design it cannot\
+      \ be blamed on the instrument. The closure states which surviving changes are\
+      \ the candidates, whether any generation's own falsifier had already fired unheeded,\
+      \ whether the concentration ladder pushed a change onto a surface whose adoption\
+      \ was never confirmed, and what the failure says about composite sets landing\
+      \ changes faster than the next batch can refute them."
+  allow_within_batch_verification: true
+  holdout_visibility:
+    expose_tasks_to_orchestrator: false
+    expose_traces_to_orchestrator: false
+    expose_per_task_results_to_orchestrator: false
+    expose_aggregate_score_to_orchestrator: false
+  require_human_approval: false
+frozen:
+  status: FROZEN
+  agent_model: openai/gpt-5.6-luna
+  agent_thinking_level: null
+  agent_llm_declared: openai/gpt-5.6-luna
+  user_llm: openai/gpt-5.6-luna
+  user_llm_args:
+    reasoning_effort: medium
+    timeout: 60
+  num_trials: 3
+  seed: 300
+  max_steps: 200
+  max_errors: 10
+  timeout_seconds: 600
+  enforce_communication_protocol: false
+operational:
+  max_concurrency: 3
+  process_metric_tools:
+    search: KB_search
+    transfer: transfer_to_human_agents
+    discoverable:
+    - unlock_discoverable_agent_tool
+    - call_discoverable_agent_tool
+    - give_discoverable_user_tool
+policy:
+  sha256: 9c660d4354d7cb0858dd03dae0ad6ace1c25c181a07440b519442c48517fb176
+  source_domain: banking_knowledge
+  source_retrieval_config: bm25
+tool_catalog:
+- KB_search
+- transfer_to_human_agents
+- get_current_time
+- get_user_information_by_id
+- get_user_information_by_name
+- get_user_information_by_email
+- change_user_email
+- get_referrals_by_user
+- get_credit_card_transactions_by_user
+- get_credit_card_accounts_by_user
+- log_verification
+- give_discoverable_user_tool
+- unlock_discoverable_agent_tool
+- call_discoverable_agent_tool
+- list_discoverable_agent_tools
