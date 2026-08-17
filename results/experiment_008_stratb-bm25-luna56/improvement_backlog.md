@@ -536,6 +536,56 @@ than discovering one.
 
 <!-- transition: gen_004_to_005 -->
 
+---
+
+## Re-ranking against `batch_06` (H5, 2026-08-17) — the final transition
+
+Clean round. **14/24, 58.3%** (41.7 → 54.2 → 45.8 → 62.5 → 66.7 → 58.3).
+
+### The round measured the INSTRUMENT, and it was predicted
+
+H5 is behaviourally identical to H4 — gen-005 removed an extension that never executed — so
+`batch_06` and `batch_05` measure **the same harness**. The batch still moved two cells
+(`task_057` 3/3 → 2/3, `task_072` 1/3 → 0/3), everything else unchanged.
+
+> **Measured round-to-round noise on an identical harness: 2 cells, 8.3 pp.**
+
+This is the most important number the experiment produced about itself, and it is a
+*measurement* rather than an estimate — no prior experiment in this project had a
+behavioural-identity round to make it with. **Every attribution in this experiment must be read
+against it.** A single-cell movement on a marginal or headroom task is noise; what survives are
+the attributions carrying a mechanism and a counter — C2's clause 2 (the user calling the exact
+tool name, 1/3 → 3/3), D2's transfer-reason query rate (1/3 → 3/3 with the gold code), E1's
+duplicate-write count — never a bare cell.
+
+### The anchors did their job for six rounds
+
+`task_006` and `task_032` are **18/18 each, 36 episodes, no regression**, across eleven landed
+changes and six generations. The regression channel stayed silent, which is what makes every
+movement elsewhere attributable rather than ambient. Seq 5 and seq 6 had no such channel by
+construction — this is the stratification paying for itself.
+
+### T6 re-opened and consumed by gen-006
+
+`task_057` t2 called `log_verification` twice and failed, with the two calls in **separate**
+turns — E1's note was delivered between them and ignored. Three such episodes across six
+rounds, all failing. E1 is partially effective at best (duplicates 0,1,1 before it landed;
+0,0,1 after), which the measured 2-cell noise cannot separate.
+
+### The framing sequence — the experiment's most transferable output
+
+Not designed in advance; it emerged because three changes happened to differ in framing while
+sharing a surface, and the fixed batch measured each:
+
+| injection shape | measured effect |
+|---|---|
+| a bare **list** of facts | changed nothing (C1, reverted) |
+| a **missing-state** note | changed behaviour **and suppressed unasked** (D2: queries 0/3 → 3/3; transfer rate 9/24 → 6/24) |
+| a **completed-state** note | safe, and inert outside its own target (E1) |
+| a **consequence-stating** note | the untested fourth point — gen-006 lands it |
+
+<!-- transition: gen_005_to_006 -->
+
 ## Slot accounting
 
 | Slot | Generation | Target(s) | Status |
@@ -544,8 +594,8 @@ than discovering one.
 | 2 | gen-002 | C1 revert (D1) + T3 transfer-reason lookup (D2, extension-hook) | consumed — D1's attribution test settled task_057 on C2; D2 denied on its target, mechanism confirmed on the anchor, KEPT |
 | 3 | gen-003 | T6 duplicate verification write (E1, extension-hook) | consumed — CONFIRMED on both counters |
 | 4 | gen-004 | T1 re-opened for task_026 (F1, extension-hook) | consumed — F1 measured INERT; H4 behaviourally identical to H3 |
-| 5 | gen-005 | F1 revert (G1) | in flight — behavioural identity, recorded as such |
-| 6 | — | open; T4 is surface-exhausted, T5 resolved as a side effect of C2 | open |
+| 5 | gen-005 | F1 revert (G1) | consumed — behavioural identity, and its round measured the batch's noise |
+| 6 | gen-006 | T6 re-opened: consequence-stating note (H1) | in flight — scored by batch_07, the endpoint round |
 
 Six targets opened, five consumed, **one retirement REVERSED** (T3 was retired at gen-003 on a
 one-round structural reading and un-retired at gen-004 when `task_014` went 0/3 → 3/3 with the

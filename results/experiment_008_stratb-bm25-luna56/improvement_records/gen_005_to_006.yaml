@@ -1,0 +1,169 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 5
+  to_generation: 6
+experiment: 008_stratb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_06
+  task_ids:
+  - task_006
+  - task_014
+  - task_026
+  - task_032
+  - task_057
+  - task_072
+  - task_096
+  - task_076
+evidence:
+  conversation_ids:
+  - 01a00ea9-c5b7-71b8-9390-e345a53ceaf8
+  - 01a00ea9-c5ea-75ff-9a7f-3762c2bea1a6
+  - 01a00eaa-274a-727a-ab4a-f80b61536a1b
+  - 01a00eaa-5de6-70d4-ba04-0f42cc0477d8
+  - 01a00eaa-82b6-77e4-a7a8-8a1930ddd982
+  - 01a00eaa-f974-7671-8a24-076bfe8d10bd
+  - 01a00eab-2d3d-7661-82d8-f2d14c2afb6a
+  - 01a00eab-d6f1-7733-9a01-ab588829e9c2
+  - 01a00eac-1a36-7465-a39a-b03f3d0bdac8
+  - 01a00eac-675b-7153-8294-24d68428943e
+  - 01a00eac-8557-7390-9d8a-cb2caec07350
+  - 01a00eac-e8bc-7574-ad45-e2b926cc00a3
+  - 01a00ead-5a28-7247-994e-bc961b811f79
+  - 01a00ead-6839-76fe-97ef-3173b59f3fed
+  - 01a00ead-a26f-70b9-813b-15234412312f
+  - 01a00eae-7072-70fb-8dea-31e51801614a
+  - 01a00eae-860c-715a-87ce-c07534b8103f
+  - 01a00eae-f838-7434-a745-07cfcf0e0662
+  - 01a00eaf-2770-722b-b06a-3de5ade9933f
+  - 01a00eaf-801e-7274-8a2e-b33f52dd6c0b
+  - 01a00eaf-bcd9-76f1-8f09-878561d96ace
+  - 01a00eb0-44a0-7683-ace6-17f39e7292f5
+  - 01a00eb1-3a07-73b9-8745-accc0f9273dc
+  - 01a00eb1-3e76-75ad-870f-4b0e2f0d086b
+  summary: >-
+    Round health. batch_06 ran under H5 (arm 4ef7171): 24/24 completed, evidence_complete and
+    arm_sha_ok on every row, all four sandbox seam counters zero, pi_local_calls 0.
+
+    Graded read: 14/24, 58.3%. Curve 41.7 -> 54.2 -> 45.8 -> 62.5 -> 66.7 -> 58.3.
+
+    THIS ROUND MEASURED THE INSTRUMENT, NOT THE HARNESS, AND IT WAS PREDICTED. H5 is
+    behaviourally identical to H4 — gen-005 removed an extension that never executed — so
+    batch_06 and batch_05 measure THE SAME HARNESS. The batch still moved two cells: task_057
+    3/3 -> 2/3 and task_072 1/3 -> 0/3, everything else unchanged, both anchors at 3/3 for the
+    sixth consecutive round. gen-005's record stated this prediction before the round ran and
+    named exactly what a difference would mean.
+signals:
+- description: >-
+    MEASURED ROUND-TO-ROUND NOISE ON AN IDENTICAL HARNESS: 2 cells, 8.3 pp, from two tasks each
+    moving one cell. This is the single most important number the experiment produced about
+    its own instrument, and it is a direct measurement rather than an estimate — no prior
+    experiment in this project has had a behavioural-identity round to measure it with. Every
+    per-change attribution must be read against it: a single-cell movement on a marginal or
+    headroom task is noise, and the attributions that survive are the ones carrying a mechanism
+    and a counter (C2's clause 2 on task_057's user-call name, D2's transfer-reason query rate,
+    E1's duplicate-write count), never the ones resting on a cell.
+  prevalence: 2/24 cells moved with no harness change
+- description: >-
+    The anchors have now held 3/3 for six consecutive rounds — 18/18 each on task_006 and
+    task_032, 36 episodes with no regression. That is the stratified batch delivering its
+    designed function: the regression channel stayed silent through eleven landed changes
+    across six generations, so every movement elsewhere is attributable rather than ambient.
+    Seq 5 and seq 6 had no such channel by construction.
+  prevalence: 36/36 anchor episodes passed across six rounds
+- description: >-
+    E1's completed-state note is DELIVERED AND IGNORED, which is gen-006's target. task_057 t2
+    called log_verification twice and failed, with the two calls in SEPARATE assistant turns
+    (#38 and #40) — so the note landed between them and changed nothing. Across six rounds the
+    duplicate has cost three episodes (task_076 in batch_02 and batch_03, task_057 here) and
+    every one failed. E1 is therefore partially effective at best: duplicates ran 0,1,1 before
+    it landed and 0,0,1 after, which the measured 2-cell noise cannot separate.
+  prevalence: 3/144 episodes across six rounds, 3/3 of them failing
+- description: >-
+    The framing sequence is now four points and it is the experiment's most transferable
+    output. A bare LIST of facts changed nothing (C1, reverted after its counter moved
+    nowhere). A MISSING-state note changed behaviour AND suppressed unasked (D2: transfer-reason
+    queries 0/3 -> 3/3, and the transfer rate 9/24 -> 6/24 where no suppression was requested).
+    A COMPLETED-state note was safe and inert outside its own target (E1). The untested fourth
+    point is a CONSEQUENCE-stating note, and gen-006 lands it. The sequence was not designed in
+    advance; it emerged because three changes happened to differ in framing while sharing a
+    surface, and the fixed batch measured each one.
+  prevalence: 4 injection shapes, 3 measured, 1 landed this generation
+counterevidence: >-
+  Three arguments against this set, and the third is the strongest.
+
+  (1) The evidence is 3 episodes in 144. That is thinner than anything else landed this
+  experiment except E1 itself, and it is a one-line text change to a hook that already exists.
+
+  (2) The measured noise is 2 cells and the predicted effect is at most 1. The batch curve
+  CANNOT distinguish this change from noise, and the record says so rather than letting a
+  batch_07 number be read as evidence either way. Its prediction is written on the
+  duplicate-write counter for that reason, not on reward.
+
+  (3) It lands immediately before batch_07, the endpoint round of the pre-registered primary.
+  Changing the harness right before the endpoint measurement is exactly the shape of decision
+  that deserves suspicion, and the honest defence is not that the risk is zero but that the
+  risk is BOUNDED BY CONSTRUCTION: the note can only appear after a successful log, so it
+  cannot suppress the first verification, only a redundant second. The alternative — an
+  identity generation — would have been safer and would have asked nothing. With the batch's
+  reachable portion saturated at 15/15 and its remaining headroom surface-exhausted, asking the
+  framing question was the only remaining way to spend the slot on information rather than on
+  the statistic.
+hypothesis: >-
+  A note that states only a completed state is read as background; a note that states what a
+  further action would cause is read as decision-relevant. If that is right, naming the
+  duplicate as a consequence prevents the second write where naming the state did not.
+owning_layer: >-
+  Harness, `extension-hook` (`tool_result`) — one line of injected text. The final recipe
+  carries two hooks (D2 on `context`, E1/H1 on `tool_result`) and one instruction clause (C2)
+  above the H0 baseline.
+proposed_change: >-
+  One change, one line. It does not interact with D2 (which fires only on a handoff request
+  with no reason lookup) and it is a text refinement of E1's own note rather than a new
+  mechanism, so the set is internally trivial by design — the last slot of a saturated batch
+  is not the place for an ambitious composite.
+schema_version: 3
+changes:
+- mechanism: >-
+    After a successful log_verification, state the consequence as well as the state: "Identity
+    verification is on record for this conversation; logging it again would write a duplicate
+    verification record." Still a fact with no imperative and no alternative.
+  surface: extension-hook
+  evidence: >-
+    Backlog T6. task_057 t2 in batch_06 logged twice across SEPARATE turns and failed, so E1's
+    note was delivered between the calls and ignored; three such episodes across six rounds,
+    all failing (task_076 batch_02 and batch_03, task_057 batch_06).
+  expected_effect: >-
+    Counter-native, scored against batch_07: zero episodes call log_verification more than
+    once. Reward movement is NOT predicted — the measured noise is 2 cells and this change's
+    maximum effect is 1. Pre-merge verification (local, task_057 x3,
+    generation_005/h1_preflight/): the injected text appears 3 times in the Pi sessions, once
+    per episode, and every trial logged exactly once. That check is gen-005's standing rule
+    applied, and it is possible here because a tool_result patch IS persisted to the session
+    where a context injection is not.
+  risk: >-
+    The note read as a prohibition on verifying at all, which would break every task requiring
+    account access. Bounded by construction — the note cannot appear before the first
+    successful log — and watched by the falsifier: episodes calling log_verification zero times
+    rising above the 9/24 that has held across six rounds.
+  clauses: []
+  commit: 3b3a62e
+mutation:
+  branch: gen-006/verification-consequence
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/22
+  source_commit: 4ef71713b363370713a8e332e136a54aa76382aa
+  candidate_commit: 5be24a9aecc00fcda4786e622c7ea3480c694856
+expected_effect: >-
+  Set level, measured on the held-out set at H6 and nowhere else: no detectable change is
+  predicted. The change removes one rare mechanical failure mode and touches nothing else. The
+  band at T=28 x 3 is about +-5 pp, the batch's own measured noise is 8.3 pp, and this
+  experiment's held-out lane is a FOURTH-EXPOSURE diagnostic transfer probe carrying no
+  capability claim in any case. What the generation is FOR is the framing question, whose
+  answer is read off the duplicate-write counter in batch_07 and not off any curve.
+human_approval:
+  approved_by: orchestrator — autonomous per D28 (user-delegated; D23's envelope re-registered)
+  date: '2026-08-17'
+held_out_result: null
