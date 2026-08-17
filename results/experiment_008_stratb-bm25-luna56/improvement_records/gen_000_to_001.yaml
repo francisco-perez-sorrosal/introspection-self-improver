@@ -1,0 +1,309 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 0
+  to_generation: 1
+experiment: 008_stratb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_01
+  task_ids:
+  - task_006
+  - task_014
+  - task_026
+  - task_032
+  - task_057
+  - task_072
+  - task_096
+  - task_076
+evidence:
+  conversation_ids:
+  - 01a00d66-bdae-72b8-a66d-41a1894e8003
+  - 01a00d68-a89e-71f9-9e8b-aa390fcdfaab
+  - 01a00d6f-0a21-7371-ae54-b632d724d289
+  - 01a00d65-9fc2-7073-9764-510fe5d0c5fa
+  - 01a00d69-254b-76ad-8f0c-98fb53e4b462
+  - 01a00d6f-0aba-745e-b125-065aa7c9bd44
+  - 01a00d65-a075-7641-9375-d565495fe56c
+  - 01a00d69-8b05-70c4-b241-30ecbbb52069
+  - 01a00d6f-75e7-7318-9a50-ea292b00ed6f
+  - 01a00d66-2491-723d-b1bf-6f41e17446c4
+  - 01a00d69-af1f-7250-885f-0ff11da05572
+  - 01a00d6f-7ebe-7054-bd32-8a324ca91ff3
+  - 01a00d6d-35fe-70a9-8a73-edcb2a3d337b
+  - 01a00d70-9815-755e-a0c4-0afd77cb7a70
+  - 01a00d70-1911-7505-a8eb-c9748eea3fe8
+  - 01a00d67-1faf-77b9-b43c-d72f5ccdb02d
+  - 01a00d6b-4aed-743e-a2ca-a9018269e9f1
+  - 01a00d70-e91a-70e3-b115-5ab57e179b12
+  - 01a00d67-bc68-7184-beaf-1d30cdfccc90
+  - 01a00d6c-3705-7007-bcf1-8b38c0a0895a
+  - 01a00d71-ed66-72ae-9b5a-6386b1c1ab92
+  - 01a00d68-0144-7152-b3ac-d57f51a49de9
+  - 01a00d6d-18b2-70ef-a8d0-fdf7ad04fca5
+  - 01a00d72-774e-7340-8f8f-347ffeca5939
+  summary: >-
+    Round health first. batch_01 is the H0 baseline round on the platform lane: 24/24
+    episodes completed, evidence_complete and arm_sha_ok on every manifest row against arm
+    5b6c368, all four sandbox seam counters zero, zero stall warnings, zero 409s, zero
+    prompt failures, and pi_local_calls 0 across the round — consistent with H0's empty
+    `tools:` registry, so D24 suppression correctly never engaged. 89 stream_reattaches,
+    the documented benign class. Platform spend $0.3869. Graded read from
+    generation_000/batch_01/graded/updated_results.json: 10/24 episodes, 3/8 tasks, mean
+    reward 0.4167.
+
+    Read in FULL rather than by tail, and the depth was decided by the evidence rather than
+    by budget: the decisive facts in this round are (a) which tool names appeared inside
+    KB_search RESULT text, which no summary carries, and (b) the exact spelling of tool
+    arguments, which is where the near-misses live. Both required the raw trajectories.
+    The Introspection observation harvest was not used — the round completed inside the
+    ~40-minute eligibility window and the full-population transcript read is the stronger
+    evidence tier at B=8 x 3 anyway (24 episodes is a census, not a sample).
+
+    TWO READING CORRECTIONS were established before any prevalence was computed, and both
+    change what the graded artifacts mean. First, `call_discoverable_*_tool` payloads are
+    compared as JSON STRINGS on this domain, so gold's {"user_id": "x"} and the agent's
+    {"user_id":"x"} register as a MISS while being the identical call: of 85 gold-action
+    misses in this round, 39 are formatting-only and 46 genuinely absent. Every prevalence
+    below is computed against a whitespace-normalized comparison, never the raw miss list.
+    Second, seq 6's founding structural constraint — "an extension-tool call reaches tau as
+    an invalid call, so two of three growth surfaces were never available" — is OBSOLETE
+    under D24; extension tools, sub-agents and the no-tool-call hooks are all live, and a
+    declared skill remains measurably inert.
+
+    Stratified-batch caveat, new in seq 8: the eight tasks span measured strata, so a mode
+    seen only on headroom tasks has never been seen on a task this harness can pass, and
+    the anchor cells (task_006, task_032, both 3/3 here, matching their pre-freeze
+    calibration exactly) are the regression channel every falsifier must name.
+signals:
+- description: >-
+    A tool the knowledge base NAMES is retrieved and then never used. In 6 of 6 episodes
+    across two tasks the exact gold remediation tool name appeared in the text KB_search
+    returned, and the agent never unlocked it. task_026 (3/3): gold requires
+    unlock_discoverable_agent_tool + 4x call_discoverable_agent_tool on
+    update_transaction_rewards_3847; that name is in the returned KB text at query #3
+    (01a00d65-a075-7641-9375-d565495fe56c), #1/#4/#5
+    (01a00d69-8b05-70c4-b241-30ecbbb52069) and #4 (01a00d6f-75e7-7318-9a50-ea292b00ed6f),
+    and it was never unlocked in any trial; the agent performed the customer-facing half
+    instead (handing over submit_cash_back_dispute_0589, whose four gold user-calls all
+    match semantically) and then transferred citing technical_system_error in two trials.
+    task_096 (3/3): gold requires apply_savings_account_credit_6831 and
+    submit_interest_discrepancy_report_7294; BOTH names are returned by query #1 and query
+    #2 in every trial (01a00d68-0144-7152-b3ac-d57f51a49de9,
+    01a00d6d-18b2-70ef-a8d0-fdf7ad04fca5, 01a00d72-774e-7340-8f8f-347ffeca5939), the agent
+    then spent 9-10 queries on APY rate detail, unlocked neither, and transferred in 3/3.
+    DECISIVE, and the counterfactual is measured rather than argued: this is not a
+    retrieval-backend limit — seq 6 retired its own T1 for task_070 on the opposite finding
+    that bm25 never surfaced the answer. Backlog target T1.
+  prevalence: 6/24 episodes (2/8 tasks)
+- description: >-
+    A user-discoverable tool is handed over without its exact name. Gold calls
+    give_discoverable_user_tool with the tool NAME ALONE; in every episode that used the
+    tool the agent supplied an extra `arguments` payload instead. On task_057 that is the
+    measured cause of a 0/3: t0 (01a00d6d-35fe-70a9-8a73-edcb2a3d337b) granted
+    deposit_check_3847 with a pre-filled payload, described the action in prose, and the
+    user called NOTHING — the agent then checked the account, found no transaction, and
+    advised the customer to check the app; t1 and t2
+    (01a00d70-9815-755e-a0c4-0afd77cb7a70, 01a00d70-1911-7505-a8eb-c9748eea3fe8) show the
+    user attempting the call with INVENTED names deposit_check, mobile_check_deposit and
+    check_deposit, never deposit_check_3847, so the gold user call occurs 0/3. task_026 is
+    the same defect with the opposite outcome, which is what makes the mechanism legible:
+    the agent granted 13-18 times, once per transaction, and the user's calls DID carry the
+    exact name, matching gold 4/4 semantically. Repetition kept the exact string in front
+    of the user; a single payload-bearing grant did not. Backlog target T2.
+  prevalence: 6/24 episodes — 6/6 of the episodes that use the tool (2/8 tasks)
+- description: >-
+    Transfer discrimination fails in BOTH directions within one harness, which this project
+    has never been able to see before because no prior batch held tasks on both sides of
+    the dial. Under-escalation: task_014 2/3, where the gold action IS a transfer
+    (reason unconfirmed_external_communication) — the customer asks in plain words to be
+    transferred and the agent REFUSES, t0 "I'm unable to transfer this request because the
+    offer cannot be verified in the available official program information"
+    (01a00d65-9fc2-7073-9764-510fe5d0c5fa) and t2 "I can't transfer this request because
+    the offer cannot be verified in Rho-Bank's documented referral programs"
+    (01a00d6f-0aba-745e-b125-065aa7c9bd44), against a frozen policy whose guideline 5 makes
+    a transfer the response once the user asks. Over-escalation: 5/24 episodes transfer
+    where gold has none (task_026 t0/t1, task_096 3/3), in every case after the agent's own
+    analysis failed to resolve. Correct: task_032 3/3 (anchor, gold includes the transfer)
+    and task_014 t1. Round-wide 9/24 transfer-carrying episodes, 4 of them gold-correct.
+    NOT TARGETED this generation — see counterevidence. Backlog target T3.
+  prevalence: 7/24 episodes wrong in one direction or the other (3/8 tasks)
+- description: >-
+    Computed amounts and enum values on a prescribed write are wrong. task_072 3/3
+    performs the right tool with the right account ids and the wrong values: gold
+    amount 14.0 / credit_type "fee_refund" and amount 3.5 / "fee_refund", against the
+    agent's 16.0 / "rebate_credit" and 6.5 / "fee_refund" at t0
+    (01a00d67-1faf-77b9-b43c-d72f5ccdb02d). t2 (01a00d70-e91a-70e3-b115-5ab57e179b12) got
+    the second pair EXACTLY right and the first wrong — the same never-both-in-one-trial
+    signature seq 6 recorded for this task. Two components not yet separated: the
+    arithmetic (16.0 vs 14.0) and the enum (rebate_credit vs fee_refund, a bank-defined
+    value with a legal set). Held this generation. Backlog target T4.
+  prevalence: 3/24 episodes (1/8 tasks), latent on task_096 which never reaches the write
+counterevidence: >-
+  Three arguments against this set, recorded so they can be judged rather than assumed.
+
+  (1) The best-evidenced mode in the round is NOT the one this set targets. Transfer
+  discrimination is wrong in 7/24 episodes against T1's 6/24, and it is wrong in both
+  directions at once — the sharpest single finding of the batch. It is deliberately left
+  unconsumed. Six mutations across seq 4, 5 and 6 moved the transfer RATE (9 -> 11 -> 10 ->
+  15 -> 6 -> 12 -> 9 per 24) and not one moved DISCRIMINATION; seq 6's own independent
+  review calls that "a controlled demonstration that this surface cannot express the needed
+  distinction", and seq 6's T4 recorded the condition for a seventh attempt — a mechanism
+  that is procedural and counted rather than a judgment about when transfer is appropriate.
+  That condition is unmet by anything this round's evidence suggests, and a prose sentence
+  would additionally put the task_032 anchor at risk, which is exactly what anchors were
+  frozen in to detect. This is a severity-over-prevalence override in reverse: the
+  best-evidenced target is skipped on the strength of six prior failures, and the override
+  is recorded here so a later reader can judge the choice rather than discover it.
+
+  (2) C1's evidence lives entirely on headroom tasks. task_026 and task_096 are 0/31 and
+  0/31 lifetime; NO episode of either has ever passed under any harness this project has
+  built. So C1's mechanism is confirmed as a behaviour gap but has never been shown to be
+  the BINDING constraint on a pass — fixing it may simply expose the next layer, exactly as
+  seq 6's task_065 did across three generations. The prediction is written on the behaviour
+  counter rather than on reward for that reason, and a behaviour-confirmed / outcome-denied
+  result is an anticipated outcome, not a surprise.
+
+  (3) C2's causal claim is partial. The payload-bearing grant coincides with failure on
+  task_057 and with success on task_026's user-call half, so the payload alone does not
+  determine whether the user calls correctly; the honest reading is that the exact name
+  must reach the user, and repetition achieved that on task_026 by accident. If batch_02
+  shows grants without payloads and task_057 still failing, C2's mechanism is real but not
+  binding, and T5 (verification without remediation) becomes the live successor.
+hypothesis: >-
+  The harness reads retrieval output as prose to summarise rather than as a procedure to
+  execute, and it hands work to the user as description rather than as a named tool. Both
+  are failures of USING what was retrieved, not of retrieving it — the knowledge base
+  supplied the tool name in 6/6 episodes of T1 and the policy supplied the handover rule in
+  full for T2. If the tool names a KB_search returned are made impossible to skim past, and
+  the handover carries the exact tool name instead of a pre-filled payload, then the
+  prescribed remediation gets performed and the user's own call matches gold.
+owning_layer: >-
+  Harness, two surfaces, deliberately not the same one. C1 lands on `extension-hook`
+  (tool_result) — the first structural mutation in this project's history, taken because
+  the frozen <policy> ALREADY instructs the agent to search the knowledge base for tools it
+  can unlock and the agent DOES search, so a sentence would compete with the policy rather
+  than add discipline it lacks. C2 lands on `instructions`, where it is a rule about the
+  SHAPE of one call rather than a judgment about when to act.
+proposed_change: >-
+  One improvement set of two changes (plan D22). They compose because they act on different
+  steps, different tools, and disjoint counters: C1 changes what the model reads back from
+  KB_search (agent-side discovery), C2 changes how the agent writes one call to hand a tool
+  to the user. They co-occur on task_026 and nowhere else, and even there at different
+  points of the episode. Each would justify landing on its own: C1 on 6/24 episodes with a
+  measured counterfactual, C2 on 6/6 of the episodes that use the tool with an end-to-end
+  causal chain on task_057. Neither is a revert; no prior seq-8 change exists to revert.
+schema_version: 3
+changes:
+- mechanism: >-
+    Re-state, at the end of every KB_search result the model reads, the discoverable-tool
+    names that result already contained — deduplicated, capped at 12, matched by naming
+    convention (lowercase snake_case with a four-digit suffix, `doc_` excluded). It adds no
+    instruction, no judgement and no alternative: it changes where the information sits,
+    not what the agent is told to do with it. Deliberately free of any imperative, so it
+    has no escape clause to optimise against — the seq-6 lesson applied by construction
+    rather than by wording care.
+  surface: extension-hook
+  evidence: >-
+    Backlog T1. 6/24 episodes, 2/8 tasks, 6/6 with the gold tool name measured present in
+    returned KB text: task_026 01a00d65-a075-7641-9375-d565495fe56c,
+    01a00d69-8b05-70c4-b241-30ecbbb52069, 01a00d6f-75e7-7318-9a50-ea292b00ed6f; task_096
+    01a00d68-0144-7152-b3ac-d57f51a49de9, 01a00d6d-18b2-70ef-a8d0-fdf7ad04fca5,
+    01a00d72-774e-7340-8f8f-347ffeca5939. Surface legality measured at g=0 by the step-4b
+    probe committed at generation_000/toolresult_probe/ (56 firings across every tau tool;
+    the patch reaches the model 24/24; 0 occurrences in tau's graded trajectory; 0 tool
+    errors).
+  expected_effect: >-
+    Counter-native, scored against batch_02: unlock_discoverable_agent_tool calls naming
+    the gold remediation tool (update_transaction_rewards_3847 on task_026;
+    apply_savings_account_credit_6831 or submit_interest_discrepancy_report_7294 on
+    task_096) appear in at least 2/3 trials on at least one of the two tasks — the batch_01
+    value is 0/6 episodes. Secondarily the lock-named `discoverable` process counter rises
+    on those two tasks. Reward movement is NOT predicted: both tasks are 0/31 lifetime and
+    a behaviour-confirmed / outcome-denied result is the anticipated case.
+  risk: >-
+    Indiscriminate unlocking. The appended list names every convention-matching token in
+    the result, including tools that do not apply, and the frozen policy warns twice that
+    unlocking tools you do not plan to use "causes issues in database logging" — so the
+    change could convert a coverage failure into a spurious-write failure. Second risk: the
+    appended text lengthens every KB_search result on every task, including the anchors and
+    the passing marginal, so a regression there would be collateral from a change that was
+    never meant to reach them.
+  clauses: []
+  commit: 6324712
+- mechanism: >-
+    Hand a user-discoverable tool over by its exact name rather than as a pre-filled
+    machine payload, so the name the user must call reaches the user.
+  surface: instructions
+  evidence: >-
+    Backlog T2. 6/6 of the episodes that use the tool, 2/8 tasks. Causal chain end to end
+    on task_057: 01a00d6d-35fe-70a9-8a73-edcb2a3d337b (payload grant, user calls nothing,
+    agent verifies absence and advises), 01a00d70-9815-755e-a0c4-0afd77cb7a70 and
+    01a00d70-1911-7505-a8eb-c9748eea3fe8 (user invents deposit_check,
+    mobile_check_deposit, check_deposit; gold deposit_check_3847 never called). Contrast on
+    task_026: 01a00d65-a075-7641-9375-d565495fe56c, 01a00d69-8b05-70c4-b241-30ecbbb52069,
+    01a00d6f-75e7-7318-9a50-ea292b00ed6f — 13-18 repeated grants kept the exact string in
+    front of the user and its four gold user-calls all match semantically.
+  expected_effect: >-
+    Counter-native, scored against batch_02: on task_057, call_discoverable_user_tool
+    carrying discoverable_tool_name == "deposit_check_3847" occurs in at least 2/3 trials
+    (batch_01 value: 0/3), and across task_026 + task_057 the number of
+    give_discoverable_user_tool calls carrying an `arguments` key falls to 0 (batch_01
+    value: every such call carried one).
+  risk: >-
+    task_026 currently gets its four semantically-correct user calls BECAUSE it grants
+    13-18 times. A rule that tightens the shape of the grant could reduce the repetition
+    that is accidentally carrying that half, trading a working behaviour for a cleaner one.
+    The clause-3 falsifier watches exactly this.
+  clauses:
+  - clause: >-
+      call give_discoverable_user_tool with the tool name
+      alone
+    adversarial_reading: >-
+      "alone" is read as scoping the sentence ("just call it, nothing else needed") rather
+      than the argument list, and the pre-filled `arguments` payload survives untouched.
+    falsifier: >-
+      Any give_discoverable_user_tool call in batch_02 carrying an `arguments` key. The
+      batch_01 value is 6/6 episodes.
+  - clause: >-
+      and give the user that exact tool name
+    adversarial_reading: >-
+      The name is satisfied by being printed in prose to the user while the grant call
+      itself is skipped — the model optimises the visible half of the conjunction.
+    falsifier: >-
+      An episode in batch_02 where the exact tool name appears in an assistant message but
+      give_discoverable_user_tool was not called on that task.
+  - clause: >-
+      When you hand a tool to the user,
+    adversarial_reading: >-
+      The precondition is treated as avoidable: the model hands tools over LESS often so
+      the rule does not apply. This is seq 6's E2 failure mode, where an instruction
+      targeting a motive moved the rate the wrong way. The text was deliberately phrased as
+      a rule about HOW rather than about WHEN for this reason, so the clause cannot suppress
+      the behaviour, only reshape it — but the reading is still available and is watched.
+    falsifier: >-
+      give_discoverable_user_tool episode count across task_026 + task_057 drops below
+      batch_01's 6/6 episodes.
+  commit: 1bc18de
+mutation:
+  branch: gen-001/kb-tool-salience
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/17
+  source_commit: 644a12dd4d771a91fecc5695d42fa7062d4b3aa1
+  candidate_commit: 5a0dbf97b842f1cc02b8473f323aa63524b0d3d4
+expected_effect: >-
+  Set level, measured on the held-out set at H1 and nowhere else: a directional improvement
+  from the harness executing prescribed remediation it currently retrieves and skips, and
+  from user-side handovers that carry an executable name. No magnitude is predicted — the
+  held-out band at T=28 x 3 trials is about +-5 pp, both mechanisms are procedural rather
+  than task-shaped, and the held-out lane of this experiment is a FOURTH-EXPOSURE
+  diagnostic transfer probe that carries no capability claim in any case. What the set
+  deliberately does NOT target: transfer discrimination (T3), computed amounts and enums
+  (T4), and verification-without-remediation (T5) — all three held with their reasons in
+  the backlog. The primary instrument is the batch curve, and per-change attribution is
+  mechanistic only: each change's own prediction is scored against batch_02.
+human_approval:
+  approved_by: orchestrator — autonomous per D28 (user-delegated; D23's envelope re-registered)
+  date: '2026-08-17'
+held_out_result: null
