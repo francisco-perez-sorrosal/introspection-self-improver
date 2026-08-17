@@ -1,0 +1,372 @@
+[
+ {
+  "at": "context",
+  "count": 1,
+  "roles": [
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 1,
+  "roles": [
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 1,
+  "roles": [
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 3,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 3,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 3,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 5,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 5,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 7,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 5,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 7,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 7,
+  "roles": [
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 9,
+  "roles": [
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 9,
+  "roles": [
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 9,
+  "roles": [
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 11,
+  "roles": [
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 11,
+  "roles": [
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 11,
+  "roles": [
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ },
+ {
+  "at": "context",
+  "count": 13,
+  "roles": [
+   "assistant",
+   "toolResult",
+   "assistant",
+   "user",
+   "assistant",
+   "toolResult",
+   "assistant",
+   "toolResult"
+  ],
+  "lastUserKeys": [
+   "role",
+   "content",
+   "timestamp"
+  ],
+  "lastUserContentType": "object",
+  "lastUserContentIsArray": true,
+  "alreadyMarked": false
+ }
+]

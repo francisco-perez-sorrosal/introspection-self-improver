@@ -1,0 +1,35 @@
+{
+  "run1_marker_only": {
+    "firings": 19,
+    "marker_in_tau_trajectory": 0,
+    "marker_in_pi_sessions": 0
+  },
+  "run2_behavioral": {
+    "token": "ZANZIBAR7",
+    "token_occurrences_in_tau_trajectory": 3,
+    "episodes": 3,
+    "rewards": [
+      [
+        2,
+        1.0
+      ],
+      [
+        0,
+        1.0
+      ],
+      [
+        1,
+        0.0
+      ]
+    ]
+  },
+  "message_shape": {
+    "keys": [
+      "role",
+      "content",
+      "timestamp"
+    ],
+    "content_is_array": true
+  },
+  "injection_accumulates_across_calls": false
+}

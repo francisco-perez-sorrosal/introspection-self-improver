@@ -207,9 +207,15 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
    match on a substring and never on equality, `event.content` an array of `{type:"text"}`
    blocks, **`event.input` carrying the tool's own arguments**; a returned `content` patch
    reached the model in 24/24 firings and appeared **0** times in τ's graded trajectory,
-   with zero tool errors), `context` (inject messages; still INFERRED, never measured) —
-   plus `SYSTEM.md` (a declared skill's name/description measurably does NOT arrive here;
-   trap 1). Changing the forwarding itself is **seam work**, not an
+   with zero tool errors), `context` (inject messages; **measured functional on the banking
+   domain, local lane, 2026-08-17** — fires before every LLM call, `event.messages` is the
+   growing conversation as `{role, content, timestamp}` with `content` an ARRAY, injections
+   do not accumulate across calls, and an APPENDED message changed model output in 3/3
+   episodes while the injection itself appeared 0 times in τ's trajectory; note the
+   asymmetry — a `context` injection is invisible to grading but its behavioural effect is
+   fully graded, because the agent's output is what τ scores) — plus `SYSTEM.md` (a declared
+   skill's name/description measurably does NOT arrive here; trap 1). **Every hook this
+   repo can use is now measured rather than inherited.** Changing the forwarding itself is **seam work**, not an
    ordinary mutation, and hiding agent tool calls from the graded trajectory is the kind of
    adapter helpfulness that makes a harness unmeasurable. The counterpart still holds:
    Pi-local work spends **wall-clock and tokens**, and τ's frozen `timeout_seconds` bounds
