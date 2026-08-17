@@ -193,8 +193,9 @@ surface with its **activation path** — what must be true for it to reach a gra
 episode:
 
 - **Instructions** (`SYSTEM.md` `<instructions>`) — always live; the historical default
-  where instruction-only loops spend every slot. Under record schema v3, every landed
-  instructions change carries per-clause falsifiers (the adversarial wording review).
+  where instruction-only loops spend every slot. Since record schema v3 (current: v4),
+  every landed instructions change carries per-clause falsifiers (the adversarial
+  wording review).
 - An **extension hook** (`before_agent_start` / `tool_result` / `context`) — no tool
   call, deterministic; live in every seam configuration and measured functional on the
   real domain. The delivery surface for injected judgment, result transformation, and

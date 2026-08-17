@@ -80,8 +80,8 @@ file and the code disagree, the code wins and this file gets fixed.
      8.3 pp on an identical harness) only by accident of a change that never
      executed, and the number re-read every attribution the project had ever made.
      Registered at generation 1 the identity round also pools the baseline: the
-     primary's H0 side reads batch_01 + batch_02 — six trials per task — against the
-     endpoint.
+     primary's H0 side reads batch_01 + batch_02 (2 × `num_trials` per task) against
+     the endpoint.
    - **The D24 suppressing path is exercised before anything relies on it**: the
      pre-freeze suppression canary (`scripts/gate_seam_canary.py --suppression
      --expect-tool <name>`) runs ≥1 platform episode against a temporarily-declared
@@ -132,8 +132,9 @@ generation's measurement, and a measurement cannot run before its generation's b
    never rewards). If INCOMPLETE, rerun the same target: τ resumes missing pairs and
    replaces `infrastructure_error` placeholders; completed episodes are never re-spent.
    The round refuses a dirty recipe tree and verifies byte-identity to H_g's tag.
-2. **Improvement batch**: `make batch B=<g+1> GEN=generation_00g` (platform lane,
-   `--max-concurrency 2` to keep sandbox-provisioning contention out of the evidence).
+2. **Improvement batch**: `make batch B=<g+1> GEN=generation_00g` (platform lane, at the
+   `make batch` concurrency default — pinned low to keep sandbox-provisioning contention
+   out of the evidence; the Makefile is the authority on the value).
    Check the manifest: every row
    should be `evidence_complete`, `arm_sha_ok`, with only benign `stream_reattaches`,
    and `pi_local_calls` consistent with the recipe (nonzero only when the registry is
@@ -256,11 +257,14 @@ generation's measurement, and a measurement cannot run before its generation's b
    to `main` (it must keep serving H_g until the merge).
 
 5b. **Preflight — verify a change runs, never that it works.** Optional, bounded:
-   up to ~12 local-lane episodes per generation, on batch tasks only and only when
-   the lock's `allow_within_batch_verification` is true, covering execution checks
-   and up to three candidate forms of one change (the sanctioned within-generation
-   selection pressure — candidates are compared on execution and process counters,
-   never anointed by preflight reward). Two rules, both bought with a seq-8
+   up to ~12 local-lane episodes per generation, on batch tasks (only when the lock's
+   `allow_within_batch_verification` is true) and/or on **burned non-partition tasks**
+   — tasks in neither the batch nor the held-out set (D34) — where the read doubles as
+   a candidate-generalization probe: an out-of-batch check before landing that touches
+   nothing held-out. The budget covers execution checks and up to three candidate
+   forms of one change (the sanctioned within-generation selection pressure —
+   candidates are compared on execution and process counters, never anointed by
+   preflight reward). Two rules, both bought with a seq-8
    generation: an injected text is verified **present in a fetched conversation**
    before any behavioural number is read (F1's preflight showed 3/3 against a 0/12
    baseline for a change that never executed — chance); and a preflight's
@@ -269,9 +273,10 @@ generation's measurement, and a measurement cannot run before its generation's b
    names any preflights run with their episode counts.
 6. **Record as it happens**: `scripts/improvement_record.py --scaffold g --write`,
    fill evidence/signals/counterevidence/hypothesis and the per-change `changes` list
-   (schema v3: mechanism, surface, evidence, expected_effect, risk, commit per item,
-   plus per-clause falsifiers for `instructions` changes — see step 5's adversarial
-   wording review); verify, and update the backlog in the same transition (its
+   (schema v4: mechanism, surface, evidence, expected_effect, risk, commit per item;
+   per-clause falsifiers for `instructions` changes since v3 — see step 5's adversarial
+   wording review; `adoption_stage`/`adoption_criteria` for first-use surfaces and
+   `host_facts` for extension changes since v4); verify, and update the backlog in the same transition (its
    per-transition marker is validated with the record). Conversation ids come from the
    manifest — never from memory; **quoted instruction text comes from `git show`
    against the landed commit — never from memory** (a verdict attributed to words the
@@ -340,8 +345,6 @@ billing, the τ-side user-sim on that lane being manifest-invisible, plus ~$3
 screens/probes; an earlier "≈ $11" note here undercounted by omitting the local
 lane's manifests). The endpoint at T=8 was
 directional-negative (−1 task, inside ±18 pp): the debug scale demonstrates the
-loop, not the claim. The claim path was re-staged from this run's own data (plan
-D11, `results/experiment_002_bm25-sonnet46/SIZING_ANALYSIS.md`): seq 4 runs the
-POWERED scale — G=5, B=8, T=28, powered for a ~+4–5 pp/generation loop, with a
-pre-registered one-sided trend test over H0…H5 at α=0.05 as the primary
-instrument — and the full T=47 run defers to seq 6 (parity convention, plan D15).
+loop, not the claim. Sizing and instrument decisions since then live in the plan's
+D-ledger (`SIA_EVALUATION_PLAN.md` §2), not here — this section records only what
+the first complete run measured about the procedure itself.
