@@ -39,7 +39,11 @@
 # the paired batch endpoint test gave p = 1.0000 with the curve 4.2% -> 8.3% -> 0.0%,
 # held-out endpoint +0.0 pp — against the frozen reading key, "B flat -> the meta-agent
 # is the problem". Seq 6 IS that experiment repeated at G=6 with composite improvement
-# sets (see the seq-6 header above); the full T=47 run is deferred past it.
+# sets (see the seq-6 header below); it REVEALED 2026-08-16 — pre-registered primary NULL
+# (paired batch endpoint p = 1.0000, curve ending below baseline), secondary held-out trend
+# z = 1.77 / p = 0.038 on a triple-exposed set, so no capability claim. Seq 7 is unused.
+# Seq 8 IS the stratified-batch experiment defined in its own block below; the full T=47
+# run is deferred past it.
 #
 # PARITY CONVENTION (plan D15, 2026-08-15): EVEN seqs are stable, reportable
 # experiments; ODD seqs are experimentation — bring-up, detours, voided freezes
@@ -65,9 +69,53 @@
 # the full T=47 run. The user overrode that on 2026-08-16 (recorded in D23, not
 # relitigated): loop mechanics at depth outrank curve power while the loop has not yet
 # been shown to improve anything at all.
+#
+# SEQ 8 (plan D28, 2026-08-16, user-directed): the SAME design as seq 6 — fixed batch,
+# G=6, B=8, T=28, num_trials 3, luna on both halves, bm25, seed 300, every budget and both
+# concurrency defaults carried UNCHANGED — with exactly two things moved, both of them
+# instrument repairs the seq-6 independent review demanded and D25/D26 encoded:
+#
+#   1. THE BATCH IS STRATIFIED (plan D25 rule 1). Seq 5 hand-picked eight known-fails;
+#      five of them never passed once in 168 episodes, so the pre-registered primary
+#      reduced to one task's day-to-day variance and a regression on anything the harness
+#      already did well was invisible by construction. Seq 8's eight span measured strata
+#      under the incumbent H0 — anchors (reliable passes: regression detectors), marginals
+#      (the band three trials resolve), headroom (fails whose modes the NOW-AVAILABLE
+#      structural surfaces can plausibly address) — with each task's stratum and the
+#      composition rationale in benchmark/split_manifest.yaml's header and the anchor tier
+#      verified by a pre-partition calibration probe
+#      (benchmark/probes/2026-08-16-anchor-calibration/). The endpoint test therefore has
+#      dynamic range in BOTH directions for the first time.
+#   2. THE READING KEY IS MECHANICAL (plan D25 rule 3). `protocol.reading_key` below names
+#      all nine primary × secondary cells, lock-validated. Seq 6 observed primary-down /
+#      secondary-up, a cell its prose key never named, and its closure had to adjudicate
+#      off-key.
+#
+# THE SEAM CHANGED UNDER D24, so NOTHING in seq 8 is comparable to seq ≤ 6: registry-
+# declared Pi-local tool calls are executed by Pi and suppressed from τ (no step, none of
+# the ten max_errors), which re-opens extension tools and sub-agents as real mutation
+# surfaces for the first time in this project. Three experiments of prose-only mutation
+# are the standing prior; the structural surfaces are the live hypothesis, and the D26
+# concentration flag is now a positive obligation rather than a justification duty. Every
+# curve this experiment renders states the non-comparability.
+#
+# THE HELD-OUT SET IS ON ITS FOURTH EXPOSURE (plan D19/D23/D28, declared in
+# benchmark/partition_reuse.yaml against 004, 005 AND 006, all revealed). The pool holds
+# zero virgin tasks — a structural limit no re-draw escapes — so under D25 rule 2 the
+# held-out lane is FORMALLY a diagnostic transfer probe and may carry no capability claim,
+# however clean its trend. The pre-registered PRIMARY is the batch curve, whose evidence is
+# fully observable by design and therefore unharmed by exposure.
+#
+# AUTONOMY (D23's envelope, re-registered here): require_human_approval stays false —
+# every in-loop decision, PR merge included, is the orchestrator's. What the delegation
+# does NOT cover is unchanged and still enforced mechanically: the frozen surfaces, the
+# partition, the <policy> block, and the held-out firewall. Autonomy is decision authority,
+# never access.
+#
+# Seq 8 is EVEN per D15: a reportable experiment, run to completion. Seq 7 was never cut.
 experiment:
-  seq: 6
-  name: fixedb-bm25-luna56
+  seq: 8
+  name: stratb-bm25-luna56
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -128,28 +176,103 @@ protocol:
   improvement_tasks_per_generation: 8
   held_out_tasks: 28
 
-  # CARRIED FROM SEQ 5 UNCHANGED (plan D17, re-affirmed by D23): one fixed batch task
+  # CARRIED FROM SEQ 5/6 (plan D17, re-affirmed by D23 and D28): one fixed batch task
   # set — the SAME eight tasks — measured under every generation, H6 included (batch_07
   # is H6's measurement-only endpoint round, consumed by no transition). Seq 4's null
   # left two explanations standing — "the mutations did nothing" vs "the measurement
   # could not see it" — and fixed mode attacks the prerequisite question directly: can
   # the improvement loop fix what it stares at? Seq 5 answered no at two slots; seq 6
-  # asks it again at six, with composite sets.
-  # The batch curve is a PAIRED saturation curve (same tasks every generation);
-  # its pre-registered primary is scripts/batch_curve.py's exact paired sign-flip
-  # endpoint test, H6 vs H0, alpha 0.05. The held-out lane is unchanged and stays the
-  # transfer probe. The reading key, pre-registered with the freeze (identical to
-  # seq 5's, so the two experiments are read by the same rule):
-  #   B rises + T rises  -> the loop works and generalizes
-  #   B rises + T flat   -> the loop optimizes but overfits (mutations task-shaped)
-  #   B flat             -> the meta-agent is the problem
-  # POST-SEQ-6 NOTE (plan D25): seq 6 observed B down + T up — a cell this prose key
-  # never named — and the closure had to adjudicate off-key. The NEXT freeze supplies
-  # the mechanical `reading_key:` block instead (all nine primary × secondary cells,
-  # validated by lock.py READING_KEY_CELLS; a cell may declare its combination
-  # run-voiding, never be absent). This comment is documentation only — adding the
-  # key to a frozen lock would move the fingerprint, so it lands at the seq bump.
+  # asked again at six with composite sets and answered no again — but its own review
+  # showed the instrument could barely have said yes, five of eight tasks having
+  # contributed zero dynamic range across 168 episodes. Seq 8 asks the same question
+  # through a STRATIFIED batch (D25 rule 1; strata in split_manifest.yaml's header), so
+  # both directions are measurable: anchors can break, marginals can move, headroom can
+  # open.
+  #
+  # The batch curve is a PAIRED saturation curve (same tasks every generation); its
+  # pre-registered PRIMARY is scripts/batch_curve.py's exact paired sign-flip endpoint
+  # test on per-task rate deltas, H6's batch_07 vs H0's batch_01, alpha 0.05, 2^8
+  # enumeration, no interim looks. The SECONDARY is the held-out trend (reveal's
+  # one-sided z over H0…H6) read beside its advisory fragility report — and it is a
+  # DIAGNOSTIC TRANSFER PROBE, not a capability instrument: these 28 tasks are on their
+  # fourth experiment and all three predecessors revealed (D25 rule 2; declared in
+  # benchmark/partition_reuse.yaml). Every T-based number states that.
   batch_mode: fixed
+
+  # The full-quadrant reading key (plan D25 rule 3), pre-registered here because a key
+  # written after the data exists is not a key. lock.py's READING_KEY_CELLS requires all
+  # nine primary × secondary cells; a cell may declare its combination run-voiding, never
+  # be absent. Seq 6 observed primary-down / secondary-up and had to adjudicate off-key.
+  #
+  # DIRECTION IS MECHANICAL, decided from the two committed artifacts, not by reading a
+  # curve by eye:
+  #   PRIMARY   (results/experiment_<id>/batch_curve.json, endpoint pair only)
+  #     up   = sum(per-task rate deltas) > 0 AND the pre-registered one-sided exact test
+  #            p < 0.05  (this is the experiment's single confirmatory rejection)
+  #     down = sum < 0 AND the MIRRORED enumeration P(sum <= observed) < 0.05. The mirror
+  #            is a pre-registered DIRECTION RULE for reading the result, not a second
+  #            hypothesis test: alpha is spent once, on the one-sided up test above.
+  #     flat = anything else, including a non-significant sum of either sign.
+  #   SECONDARY (held_out/trend_test.json, computed only at reveal)
+  #     up = z >= +1.645 · down = z <= -1.645 · flat = otherwise.
+  #     In every cell the fragility report (held_out/trend_fragility.json) qualifies the
+  #     secondary, and the fourth-exposure caveat applies unconditionally.
+  #
+  # Standing across all nine cells, stated once so no cell has to repeat it: results
+  # under the D24 seam are NOT comparable to seq <= 6, and no cell licenses a capability
+  # claim from the held-out lane.
+  reading_key:
+    primary_up_secondary_up: >-
+      The loop improved the tasks it stared at and the gain appeared on the transfer
+      probe too. The strongest result this design can return. Report as: loop
+      demonstrated on the batch (pre-registered primary), with concordant transfer that
+      is exposure-confounded and therefore corroborating, never claiming. The closure
+      names which changes moved which strata and whether any anchor paid for the gain.
+    primary_up_secondary_flat: >-
+      The loop optimizes what it measures and the gain does not transfer — mutations are
+      batch-shaped. The primary claim stands; no generalization claim is available. The
+      endpoint diagnosis asks per change whether its mechanism is task-specific, and the
+      closure reports the batch win with the flat probe as its principal limit.
+    primary_up_secondary_down: >-
+      The batch improved while the transfer probe fell: overfitting with collateral
+      damage, the sharpest negative-transfer signal this instrument can produce. The
+      primary verdict is positive and must be reported with the held-out decline as its
+      headline caveat; the closure identifies the changes that plausibly traded breadth
+      for the eight.
+    primary_flat_secondary_up: >-
+      Null primary with a rising probe — seq 6's cell, now with a batch that could have
+      moved. Check the strata first: a flat sum can hide an anchor regression cancelled
+      by a headroom gain, and the per-task cells decide which happened. If the batch is
+      genuinely inert, a rise on a fourth-exposure set is more likely exposure or noise
+      than capability; report null primary, run the fragility report before writing any
+      sentence about the secondary, and claim nothing.
+    primary_flat_secondary_flat: >-
+      Null on both instruments. With strata verified to move under H0 before the freeze,
+      the instrument excuse that survived seq 6 is gone: six generations of composite
+      sets, with the structural surfaces available for the first time, produced no
+      detectable change anywhere. Against the standing reading this says the meta-agent
+      is the problem, and the closure says so plainly.
+    primary_flat_secondary_down: >-
+      The batch held and the transfer probe fell: the loop is doing harm outside what it
+      watches, which prose-only loops have never been able to see. Report as a negative
+      result; the endpoint diagnosis names the changes whose scope over-generalized, and
+      any surviving change refuted this way is recorded as a first-class failed mutation.
+    primary_down_secondary_up: >-
+      The batch regressed while the probe rose — the cell seq 6 observed off-key. With
+      anchors in the batch this is now interpretable rather than a floor artifact: the
+      per-task cells say whether anchors broke (a real regression the loop caused) or
+      only marginals and headroom moved. A probe rise concurrent with a batch regression
+      on a fourth-exposure set supports no positive claim of any kind.
+    primary_down_secondary_flat: >-
+      The loop actively damaged what it stared at while the probe stayed put. Report as a
+      negative result and name the broken anchor cells; the endpoint diagnosis attributes
+      them to specific surviving changes, and the closure records which revert the loop
+      should have taken and did not.
+    primary_down_secondary_down: >-
+      The loop made the harness worse on both instruments — the strongest negative result
+      available. The closure states which surviving changes are the candidates, whether
+      any generation's own falsifier had already fired unheeded, and what the failure says
+      about composite sets landing changes faster than the next batch can refute them.
 
   # True BECAUSE batch_mode is fixed: re-measuring the same batch every generation IS
   # within-batch verification, embraced as the object of study (the lock refuses the
@@ -166,13 +289,15 @@ protocol:
     expose_per_task_results_to_orchestrator: false
     expose_aggregate_score_to_orchestrator: false
 
-  # FALSE FOR SEQ 6 ONLY (plan D23, user-directed 2026-08-16). Every other experiment
-  # ran with this true: a mutation lands as a PR a human reviews and merges, and the
-  # agent never merges its own work (root CLAUDE.md's standing guardrail). Seq 6 tests
+  # FALSE FOR SEQ 6 AND SEQ 8 (plan D23, re-registered by D28; both user-directed
+  # 2026-08-16). Seq <= 5 ran with this true: a mutation lands as a PR a human reviews and merges, and the
+  # agent never merges its own work (root CLAUDE.md's standing guardrail). Seq 6 tested
   # the loop at six generations with composite sets, and the user explicitly delegated
   # ALL in-loop decisions to the orchestrator — diagnose, compose the set, accept or
   # take an identity generation, open the PR, MERGE it, tag, proceed — through the
-  # reveal.
+  # reveal. Seq 8 runs the same envelope by the same explicit user direction (D28),
+  # which now also covers the per-clause adversarial wording review the orchestrator
+  # performs on its own instruction text before landing it (schema v3, D26).
   #
   # The deviation lives HERE, in the freeze, rather than being waived at the §29
   # guardrail walk after the fact: seq 5 recorded human approval as "waived, not held",
@@ -187,15 +312,31 @@ protocol:
   require_human_approval: false
 
 frozen:
-  # FROZEN directly at cut (plan D23, 2026-08-16): seq 6's parameters are user-fixed in
-  # the directing prompt, and no pilot precedes them — seq 5's calibration is current
-  # and every measured surface below is carried from it UNCHANGED. Nothing in this block
-  # differs from the seq-5 freeze; the two seq-6 changes are `protocol.generations`
-  # (2 -> 6) and `protocol.require_human_approval` (true -> false), both above, plus the
-  # operational concurrency default below, which is outside the fingerprint by design.
-  # The start gate is unchanged: `make reset_h0` (done, commit 1179b9c — H0 back to the
-  # D16-corrected `h0-baseline`; seq-5 mutations are evidence, not inheritance), then
-  # `make gate_a0a` and `make gate_seam` before the first episode is spent.
+  # FROZEN directly at cut (plan D28, 2026-08-16): seq 8's parameters are user-fixed in
+  # the directing prompt, and NOTHING IN THIS BLOCK MOVES — every value below is carried
+  # from the seq-6 freeze unchanged, which is deliberate. Seq 8 changes the INSTRUMENT
+  # (a stratified batch, a mechanical reading key) and inherits the seam change D24 made
+  # between experiments; holding the measured surfaces constant is what keeps the batch
+  # curve readable against seq 5's and seq 6's at all.
+  #
+  # No pilot precedes this freeze and the user-sim screen is NOT re-run: the model pair
+  # is unchanged and the 2026-08-15 luna screen (97/97, benchmark/data/user_sim_screen.json)
+  # is current — screening evidence is model-conditioned (D12/D13) and the condition
+  # holds. This is D19's precedent, applied identically. task_034 stays excluded.
+  #
+  # What DID get bought before the cut, because D25 rule 1 requires strata measured under
+  # the incumbent H0 rather than inherited from lifetime rates:
+  # benchmark/probes/2026-08-16-anchor-calibration/ — 69 local episodes, $0.97, three
+  # anchor-grade tasks found outside the held-out set, and two of the previously-named
+  # marginal candidates measured BELOW the marginal band. The composition that resulted,
+  # with every drop and its reason, is in benchmark/split_manifest.yaml's header.
+  #
+  # Start gate: `make reset_h0` (the recipe is already byte-identical to `h0-baseline`
+  # at the D27 scaffold commit b76f274 — seq-6 mutations are evidence, not inheritance),
+  # then `make gate_a0a` and `make gate_seam` before the first episode is spent. A.0a is
+  # blocking per experiment AND newly load-bearing here: D24 changed the adapter's
+  # semantics between experiments, so the suite covering the changed semantics must pass
+  # before any seq-8 result exists.
   status: FROZEN
 
   # The model that actually serves the agent. Authoritative copy lives in
@@ -359,6 +500,15 @@ operational:
   # this block says what "search", "transfer", and "capability discovery" mean for the
   # frozen domain. The user's own discoverable calls are deliberately not listed: they
   # measure the simulated user, not the harness.
+  # REVIEWED for the seq-8 freeze (the D25/Phase-5.7 checklist item) and left UNCHANGED,
+  # deliberately: five of seq 8's eight batch tasks carry discoverable-tool gold actions,
+  # so the counter matters more here than it did in seq 6 — and comparability of the
+  # counter across the two experiments is worth more than completeness. `list_discoverable
+  # _agent_tools` is in the tool_catalog and is NOT added: it records that the agent
+  # LOOKED, while these three record that it ACTED, and collapsing the two would blunt
+  # exactly the handover-procedure distinction the headroom tier exists to test. If a
+  # round's diagnosis wants the looking count it is one grep over bridge_calls.jsonl,
+  # outside the pre-registered channels.
   process_metric_tools:
     search: KB_search
     transfer: transfer_to_human_agents

@@ -83,3 +83,44 @@ declarations:
       so seq 5's firewall is weaker than seq 4's. This is acceptable precisely because seq 5 is
       an odd-seq loop-mechanics experiment whose PRIMARY instrument is the paired batch curve;
       the held-out lane is only the transfer probe. A capability claim must not rest on it.
+
+  # ── seq 8 (008_stratb-bm25-luna56) ────────────────────────────────────────────────
+  # Three rows because the same 28 tasks have now been the hidden set of THREE revealed
+  # experiments, and the check ranks severity per prior experiment: collapsing them would
+  # read as one generation of distance when it is three.
+  - experiment: 008_stratb-bm25-luna56
+    reuses_from: 006_fixedb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D28 (user-directed 2026-08-16). Seq 8 reuses the T=28 held-out set verbatim
+      because the pool holds zero virgin tasks — a structural limit no re-draw escapes,
+      unchanged since D19 — and because holding the transfer probe constant is what lets
+      seq 8's secondary read against seq 5's and seq 6's at all. Seq 6 REVEALED on
+      2026-08-16, so its per-task results for these 28 are known to the orchestrator.
+      This is the set's FOURTH exposure. The accepted consequence is stated in the freeze
+      itself and must appear beside every T-based number seq 8 produces: under plan D25
+      rule 2 the held-out lane is FORMALLY a diagnostic transfer probe and may carry no
+      capability claim, however clean its trend. The pre-registered PRIMARY is the paired
+      batch endpoint test (H6's batch_07 vs H0's batch_01) over a STRATIFIED batch, whose
+      evidence is fully observable by design and therefore unharmed by exposure — and
+      which, unlike seq 6's all-known-fail batch, has measured dynamic range in both
+      directions (benchmark/probes/2026-08-16-anchor-calibration/).
+  - experiment: 008_stratb-bm25-luna56
+    reuses_from: 005_fixedb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D28, transitively. The same 28 tasks were seq 5's hidden set; seq 5 REVEALED on
+      2026-08-16. Declared against its own source so the accumulated exposure is counted
+      per prior experiment rather than absorbed into the seq-6 row. Same accepted
+      consequence as the row above.
+  - experiment: 008_stratb-bm25-luna56
+    reuses_from: 004_powered-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D28, transitively. These 28 have been the hidden set since the powered
+      experiment, which REVEALED on 2026-08-15. Declared against its own source for the
+      same reason as the seq-5 row. Same accepted consequence: fourth exposure, transfer
+      probe only, no capability claim.

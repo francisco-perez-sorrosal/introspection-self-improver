@@ -1,0 +1,148 @@
+{
+  "source_run": "anchor_calib_probe3",
+  "timestamp": "2026-08-16T17:54:40.302738",
+  "git_commit": "c36c7f86ed2f0a960f7e405f7f766edb304e8a9d",
+  "num_trials": 3,
+  "per_task": {
+    "task_006": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "634ea095-b663-4844-adf0-20ce9d465efd",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "ef6a7c39-9803-421f-b884-40364468027b",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 1.0,
+        "sim_id": "77ecb7c7-b23b-4ca9-99e5-793b5e0faf8b",
+        "termination": "user_stop"
+      }
+    ],
+    "task_015": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "312f72d0-37c2-44b7-a1d5-8937b6175a1a",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 0.0,
+        "sim_id": "8ad6fd27-e504-4312-9747-cecc2fd7c237",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "e7333102-e6f0-4089-8e87-c3de2e6c4fac",
+        "termination": "user_stop"
+      }
+    ],
+    "task_024": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "f7cc438f-3b90-4db6-9065-aac6c09010b1",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "8ad9ac24-8ff5-4678-b822-755be4ba2086",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "4883d325-6bd7-400c-8479-3dacb7e11501",
+        "termination": "user_stop"
+      }
+    ],
+    "task_037": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "f82da9a2-474e-4c9e-8d98-2701b2836d89",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "99e6ee75-c317-4be5-85e0-bea99454aeff",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 1.0,
+        "sim_id": "43ec884d-34d2-4a15-b9d8-4de64124f274",
+        "termination": "user_stop"
+      }
+    ],
+    "task_057": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "0f012d81-226b-47eb-b18a-4a7f6a92dc1b",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "2441e5bf-c6af-4ba7-9e2a-00ea1ab89339",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "45ba1eb3-0423-4c3a-a77b-24145fe8972b",
+        "termination": "user_stop"
+      }
+    ],
+    "task_062": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "4771cb48-7799-4aff-b537-8f135e46d3fc",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 0.0,
+        "sim_id": "84c82339-7e35-4547-9a58-2e34afc4ab6c",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "e3259acc-90a9-49e3-9106-f90b162f11ce",
+        "termination": "user_stop"
+      }
+    ],
+    "task_076": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "4d9109ff-8844-4850-9276-93abd19341e3",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "ac5a752d-3fa0-4938-9fe6-efa139b2fc58",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 1.0,
+        "sim_id": "8a47922f-7283-4c7a-b057-b94bbbe5465f",
+        "termination": "user_stop"
+      }
+    ]
+  }
+}

@@ -18,20 +18,93 @@
 # experiment.seq in benchmark_lock.yaml), never new lists under the old one. Verify
 # with scripts/propose_split.py --verify.
 #
-# seq 6 loop-reliability at depth (plan D23/D22). The partition is seq 5's, REUSED VERBATIM in
-# both halves — same fixed 8 batch tasks, same T=28 held-out set — because holding the
-# instrument constant is the point: seq 6 changes G (2 -> 6) and the mutation shape (composite
-# improvement SETS, D22, growth surfaces first-class), and nothing else, so its curve compares
-# directly against seq 5's. FIXED BATCH, hand-chosen originally for seq 5: 8 tasks that FAILED
-# under recent harnesses in seq-4 batches, covering the recurring modes — value resolution
-# (task_065, task_072, task_096), discoverable-tool handover (task_026, task_028), transfer
-# discipline in both directions (task_014 refused a required transfer; task_082 transferred on
-# first request), wholesale abandonment/unbounded search (task_070). Under fixed mode G does not
-# enter the distinct-task budget (B+T = 36 of 97), which is why six slots cost no extra tasks.
-# HELD-OUT: the pool holds zero virgin tasks and the orchestrator has now seen TWO revealed per-
-# task result sets for these 28 (seq 4 and seq 5), so the held-out lane is a transfer probe
-# carrying a triple-exposure caveat that every T-based number must state; the BATCH curve is the
-# primary instrument. Declared in benchmark/partition_reuse.yaml.
+# excluded from the pool before proposal: task_034 (benchmark/data/user_sim_screen.json has the
+# evidence). seq 8 STRATIFIED fixed batch (plan D25 rule 1 / D28): 2 anchors + 3 marginals + 3
+# headroom, strata measured under the incumbent H0 by benchmark/probes/2026-08-16-anchor-
+# calibration/. Held-out set reused verbatim from seq 4/5/6 — FOURTH exposure, declared in
+# partition_reuse.yaml, lane demoted to a diagnostic transfer probe.
+#
+# ─────────────────────────────────────────────────────────────────────────────────────
+# THE STRATA (plan D25 rule 1; the freeze decision this header exists to record)
+#
+# Seq 5 hand-picked eight known-fails and seq 6 inherited them unchanged. Five of the
+# eight never passed once in 168 episodes, so the pre-registered paired endpoint test
+# reduced to one task's day-to-day variance and a regression on anything the harness
+# already did well was invisible BY CONSTRUCTION. Seq 8's eight span measured strata so
+# the endpoint test has dynamic range in BOTH directions for the first time.
+#
+# Rates below are under the INCUMBENT H0 (recipe byte-identical to tag h0-baseline,
+# commit b76f274), num_trials 3, local lane, bm25 + openai/gpt-5.6-luna on both halves —
+# the configuration this lock freezes. Sources: (P) benchmark/probes/2026-08-16-anchor-
+# calibration/, three clean trials each; (S6) seq 6's H0 round, batch_01, three trials
+# each, in results/experiment_006_fixedb-bm25-luna56/generation_000/batch_01/graded/.
+#
+#   ANCHORS — reliable passes; their job is to make a REGRESSION visible.
+#     task_006  3/3 (P) + 1/1 seq-4   DB, one gold action (apply_for_credit_card).
+#                                     The floor detector: basic write execution.
+#     task_032  4/4 (P) + 1/1 seq-4   ACTION, gold includes transfer_to_human_agents
+#                                     plus unlock/call of an agent-discoverable tool.
+#                                     A direct regression detector for the TRANSFER
+#                                     dial — the scalar six mutations across three
+#                                     experiments moved without ever moving
+#                                     discrimination (seq-6 independent review § 2.2).
+#     (verified reserve, not frozen in: task_037, 3/3 (P) + 1/1 seq-4. Left out because
+#     its mode — discoverable-tool handover — is already carried by task_026 in the
+#     headroom tier, and an anchor duplicating a headroom mode buys less range.)
+#
+#   MARGINALS — the 1/3–2/3 band, where three trials resolve movement in EITHER
+#   direction. This tier is what the primary test actually lives on.
+#     task_014  2/3 (S6)              ACTION, gold IS a transfer. Lifetime 10/31 = 32%.
+#                                     Paired with anchor task_032, the batch now holds
+#                                     transfer-gold tasks on both sides of the dial, so
+#                                     DISCRIMINATION is measurable rather than just rate.
+#     task_057  2/3 (P) + 1/1 seq-4   DB, 7 gold actions, discoverable-tool handover.
+#     task_076  2/3 (P) + 1/1 seq-4   DB, 3 gold actions, agent-discoverable tool.
+#
+#   HEADROOM — failing under H0, chosen because a NOW-AVAILABLE surface can plausibly
+#   reach the failure mode (D24 re-opened extension tools and sub-agents; the
+#   no-tool-call hooks were already live and are measured functional on this domain).
+#     task_026  0/31 lifetime         Cash-back disputes via a user-side discoverable
+#                                     tool; 11 gold actions, 8 writes. Mode: multi-step
+#                                     procedure completion + handover. Plausible surface:
+#                                     an injected procedure checklist (before_agent_start)
+#                                     or a tool_result hook that tracks outstanding steps.
+#     task_072  0/3 (S6), 3/31 = 9.7% 8 net-credit fee errors across two accounts;
+#                                     overcharge + missing-fee arithmetic. PROVEN
+#                                     REACHABLE: 2/3 under seq-6's H2. Plausible surface:
+#                                     an extension tool that computes the net figure
+#                                     (arithmetic is exactly what prose failed at — seq-6
+#                                     G2 landed prose arithmetic and scored 0/18).
+#     task_096  0/31 lifetime         Dual-savings APY, card boosts do NOT stack, 23
+#                                     required documents (94th percentile). Mode: value
+#                                     resolution under heavy retrieval load + arithmetic.
+#
+# WHAT WAS DROPPED FROM THE CANDIDATE POOL, AND WHY (recorded so the composition can be
+# judged rather than assumed):
+#   task_065  Named as a marginal on LIFETIME rate (≈0.10) but measured 0/3 under the
+#             incumbent H0 — below the 1/3–2/3 band the marginal tier is defined by. Its
+#             modes (class choice, ordering/eligibility) are represented by task_072 and
+#             task_096. Its seq-6 layer-peeling history is diagnosis context, not a rate.
+#   task_028  0/31 lifetime, 15 gold actions / 12 writes — the pool's hardest handover
+#             task and a near-duplicate of task_026's mode. Two zero-range tasks for one
+#             mode is the seq-5/6 mistake repeated at smaller scale.
+#   task_070  Retired in seq 6 (backlog T1) as likely bounded by the FROZEN bm25 backend:
+#             a date-dependent expired-vs-active promotion conflict in the KB. Headroom
+#             the mutable surface cannot reach is not headroom.
+#   task_082  0/31 lifetime, 20 gold actions across 7 distinct discoverable tools and
+#             Regulation E liability timing. No structural mechanism could be named for
+#             it, and the D25 rule requires one.
+#
+# EXPECTED H0 BASELINE from the strata: (3 + 3 + 2 + 2 + 2 + 0 + 0 + 0)/24 ≈ 50%, versus
+# seq 6's H0 of 8.3%. Twelve cells can fall and twelve can rise. This is a PREDICTION of
+# the instrument's range, not a result — batch_01 measures it.
+#
+# HELD-OUT: unchanged from seq 4/5/6, all three REVEALED. Fourth exposure. Under D25
+# rule 2 this lane is FORMALLY a diagnostic transfer probe and carries no capability
+# claim, however clean its trend; the pool holds zero virgin tasks, a structural limit no
+# re-draw escapes. The pre-registered PRIMARY is the batch curve above, whose evidence is
+# fully observable by design and therefore unharmed by exposure.
+# ─────────────────────────────────────────────────────────────────────────────────────
 
 version: 2
 domain: banking_knowledge
@@ -40,67 +113,67 @@ batch_mode: fixed
 
 batches:
   batch_01:
+    - task_006
     - task_014
     - task_026
-    - task_028
-    - task_065
-    - task_070
+    - task_032
+    - task_057
     - task_072
-    - task_082
+    - task_076
     - task_096
   batch_02:
+    - task_006
     - task_014
     - task_026
-    - task_028
-    - task_065
-    - task_070
+    - task_032
+    - task_057
     - task_072
-    - task_082
+    - task_076
     - task_096
   batch_03:
+    - task_006
     - task_014
     - task_026
-    - task_028
-    - task_065
-    - task_070
+    - task_032
+    - task_057
     - task_072
-    - task_082
+    - task_076
     - task_096
   batch_04:
+    - task_006
     - task_014
     - task_026
-    - task_028
-    - task_065
-    - task_070
+    - task_032
+    - task_057
     - task_072
-    - task_082
+    - task_076
     - task_096
   batch_05:
+    - task_006
     - task_014
     - task_026
-    - task_028
-    - task_065
-    - task_070
+    - task_032
+    - task_057
     - task_072
-    - task_082
+    - task_076
     - task_096
   batch_06:
+    - task_006
     - task_014
     - task_026
-    - task_028
-    - task_065
-    - task_070
+    - task_032
+    - task_057
     - task_072
-    - task_082
+    - task_076
     - task_096
   batch_07:
+    - task_006
     - task_014
     - task_026
-    - task_028
-    - task_065
-    - task_070
+    - task_032
+    - task_057
     - task_072
-    - task_082
+    - task_076
     - task_096
 
 held_out:

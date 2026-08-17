@@ -1,0 +1,168 @@
+{
+  "source_run": "anchor_calib_probe2",
+  "timestamp": "2026-08-16T17:42:43.641367",
+  "git_commit": "c36c7f86ed2f0a960f7e405f7f766edb304e8a9d",
+  "num_trials": 3,
+  "per_task": {
+    "task_001": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "70362d01-6240-44e4-864b-dc2bfc56149b",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 0.0,
+        "sim_id": "90ee5e56-310f-4c51-844e-7fe113e4a996",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "e7589690-dff7-49f2-a518-9f02baf0977c",
+        "termination": "user_stop"
+      }
+    ],
+    "task_002": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "4cb6727c-18ca-4b68-b7f9-37a9e9671c20",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "809d00bd-52af-496a-9729-532759f3e916",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "f8e35783-93fd-44e0-9c6c-9afeb4c9ac19",
+        "termination": "user_stop"
+      }
+    ],
+    "task_004": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "0a79edde-e64f-48c0-b80a-fbd9b188827f",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 0.0,
+        "sim_id": "9150f65e-7084-45a1-ae4a-7587d30b5783",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 1.0,
+        "sim_id": "0012cd73-bb80-4fdb-b22a-2e8a5aba33bf",
+        "termination": "user_stop"
+      }
+    ],
+    "task_023": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "25b10c6f-1ece-40f9-8cf9-2479176dbb69",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "7e536545-38ee-46a8-81d1-ae940949f74c",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "1e61a642-e358-4e99-8f75-aca175f1a36b",
+        "termination": "user_stop"
+      }
+    ],
+    "task_032": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "1e4cacd0-eb33-49e1-a9e7-30e86687428b",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "536a2d7d-802b-4515-93b6-2baa17b04220",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 1.0,
+        "sim_id": "69bdaf76-8782-493e-92b3-a19658ea623e",
+        "termination": "user_stop"
+      }
+    ],
+    "task_047": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "23d6579e-a5a3-4596-a2d9-5d99a2ef053c",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "8dc366f2-a320-4c00-9176-c8f7a7bb6f8e",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "2832d188-c98c-4a8c-90ac-c316810cb77f",
+        "termination": "user_stop"
+      }
+    ],
+    "task_063": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "d087158d-59a5-49b5-b285-23a27895a887",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 0.0,
+        "sim_id": "a91874ef-53d9-4559-bd7f-3685cae92e5d",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 1.0,
+        "sim_id": "69c7fa44-59c1-41df-9a30-2084bd1293c5",
+        "termination": "user_stop"
+      }
+    ],
+    "task_089": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "3e6ede50-a51b-471f-baa6-12c7014ed40f",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 0.0,
+        "sim_id": "16d55013-02a6-4fd3-928d-c77126e11078",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": 0.0,
+        "sim_id": "ffd8234e-f5e4-4c9c-a254-a563527c5883",
+        "termination": "user_stop"
+      }
+    ]
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "source_run": "anchor_calib_probe",
+  "timestamp": "2026-08-16T15:57:09.075653",
+  "git_commit": "c36c7f86ed2f0a960f7e405f7f766edb304e8a9d",
+  "num_trials": 3,
+  "per_task": {
+    "task_001": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "694bcca1-e185-42ae-8b0c-98c2b0d9185c",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "ffa64ade-9e5a-4423-81f0-5c6646fc079b",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "d24e798f-10c7-4a77-ab8a-d2c8f2561791",
+        "termination": "infrastructure_error"
+      }
+    ],
+    "task_002": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "85b8684f-ca9e-4e6b-82fe-8ff06a59c855",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "9e0b9474-1a62-4de5-9f7b-53050567c293",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "d347d09f-6121-4c6f-ac40-e8c68f216667",
+        "termination": "infrastructure_error"
+      }
+    ],
+    "task_004": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "96eb2f5d-c4a5-4c8a-ac55-43b848d50234",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": 1.0,
+        "sim_id": "acc1bf1a-f992-480d-a0f1-0477a340b137",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "d3a95ec1-7ef2-4082-927b-77e73c8690da",
+        "termination": "infrastructure_error"
+      }
+    ],
+    "task_023": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "2a28187b-8c5b-499c-93bd-3921e7ac6ca7",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": null,
+        "sim_id": "624ce670-9f60-4d88-ba8e-370ca9df2342",
+        "termination": "infrastructure_error"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "69f517eb-0d49-4f9e-be42-f606e4ba80b3",
+        "termination": "infrastructure_error"
+      }
+    ],
+    "task_032": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "0db2c147-a7eb-42c8-837c-42c64b4d118b",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": null,
+        "sim_id": "66dd7789-cd11-4fe0-a924-a019ba2e1c44",
+        "termination": "infrastructure_error"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "c66b44fa-2390-4ba6-99e9-2251950153cf",
+        "termination": "infrastructure_error"
+      }
+    ],
+    "task_047": [
+      {
+        "trial": 0,
+        "reward": 0.0,
+        "sim_id": "c8762fe1-be85-49ee-8506-3d91e6fe0ef7",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": null,
+        "sim_id": "6f6b4b26-d887-4fec-a608-30528a9c22ca",
+        "termination": "infrastructure_error"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "6cce00f2-7376-4c71-929f-ed0f77b64a4d",
+        "termination": "infrastructure_error"
+      }
+    ],
+    "task_063": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "34d82c82-9bf9-4721-b442-d1df5db0f0c5",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": null,
+        "sim_id": "5f1316b3-5367-48dd-8e5c-6ae0efc69a7c",
+        "termination": "infrastructure_error"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "e1dfcca0-79e5-49fb-83da-74ef5ba12826",
+        "termination": "infrastructure_error"
+      }
+    ],
+    "task_089": [
+      {
+        "trial": 0,
+        "reward": 1.0,
+        "sim_id": "1f9f74e6-4194-49a9-968b-f53261edd7e1",
+        "termination": "user_stop"
+      },
+      {
+        "trial": 1,
+        "reward": null,
+        "sim_id": "f11f7d97-e506-4eb6-a408-d3ae92ddb725",
+        "termination": "infrastructure_error"
+      },
+      {
+        "trial": 2,
+        "reward": null,
+        "sim_id": "2e05efbc-0046-4378-bf04-7d182b37009e",
+        "termination": "infrastructure_error"
+      }
+    ]
+  }
+}
