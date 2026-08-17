@@ -1,0 +1,266 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 1
+  to_generation: 2
+experiment: 008_stratb-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_02
+  task_ids:
+  - task_006
+  - task_014
+  - task_026
+  - task_032
+  - task_057
+  - task_072
+  - task_096
+  - task_076
+evidence:
+  conversation_ids:
+  - 01a00da7-d55c-76b4-a0d7-17ecf56bef09
+  - 01a00da7-d7b9-7533-8e8a-5b60200f0758
+  - 01a00da8-38b8-72cd-a2e0-ca55ac6d4f23
+  - 01a00da8-4d1c-70d8-a307-33fcf336696e
+  - 01a00da8-c6b5-7538-bc92-9dd3ade0eea2
+  - 01a00da9-b6b6-71f9-a3fa-4c8a874dff05
+  - 01a00daa-1ca8-74c5-a631-8d413e18e5d6
+  - 01a00daa-be6f-7618-afd3-038df63311f6
+  - 01a00dab-0264-7446-8d78-10af44f317ee
+  - 01a00dab-5a8f-73de-a6c3-b8d7b122f2da
+  - 01a00dab-70b2-75c5-bbca-a02723ab6ef9
+  - 01a00dac-120c-779e-b8d0-74bccc31d9e6
+  - 01a00dad-4871-70c1-b961-e12a18b71ea6
+  - 01a00dad-4ae3-71f8-a744-ea516f1786a6
+  - 01a00dad-d450-7657-8944-5e4d3a5551df
+  - 01a00dae-3e3b-7313-bc8f-b6f8bc6ea96b
+  - 01a00dae-8043-70a1-b297-accb6f758cf0
+  - 01a00dae-8a9f-71c1-9325-93f396489fed
+  - 01a00dae-ba8a-71c5-8f37-1dcf19dd1856
+  - 01a00dae-d8bc-750a-a61b-edef3495c521
+  - 01a00daf-38ac-7199-baca-a66eab3348d4
+  - 01a00daf-7241-70ca-a8ec-217f88bd61bd
+  - 01a00daf-9f80-7062-b2bd-e6b44cd8233a
+  - 01a00db0-43a6-7768-80fa-e4a50f0d4984
+  summary: >-
+    Round health. batch_02 ran under H1 (arm e60a7a2): 24/24 episodes completed,
+    evidence_complete and arm_sha_ok on every manifest row, 65 stream_reattaches (the
+    documented benign class), platform spend $0.3135. One episode is disclosed rather than
+    rounded away: task_096 t1 carried sandbox_seam_unclassified=2 and sandbox_tool_errors=2
+    and still completed with evidence intact. pi_local_calls is 0 across the round, which is
+    correct rather than surprising — C1 is a hook, not a registered tool, so the D24
+    suppression registry stays empty and nothing is suppressed.
+
+    Graded read: 13/24 episodes, 4/8 tasks, 54.2%, up from batch_01's 10/24 / 41.7%. Under
+    batch_mode fixed this is a TUNED-ON set from batch_02 onward and is training-curve
+    evidence, never generalization evidence.
+
+    C1's hook is confirmed to have RUN IN VIVO on the platform lane, which matters because a
+    denied prediction means nothing if the change never reached the episode: the platform
+    conversation for task_096 t0 (01a00daa-1ca8-74c5-a631-8d413e18e5d6), fetched through the
+    CLI, carries 8 occurrences of the hook's own output text. The first platform round after
+    a recipe extension lands is that extension's in-vivo check, and it passed.
+
+    Read in full again, and the depth paid for itself twice. Scoring C1's prediction required
+    re-deriving batch_01's unlock behaviour from the graded artifacts rather than trusting the
+    gen-001 record's prose — which is how the erratum below was found. Scoring C2's clause
+    falsifiers required per-call argument inspection and per-message prose search, neither of
+    which any aggregate carries.
+
+    ERRATUM AGAINST THE GEN-001 RECORD, the round's most transferable finding. That record's
+    first signal states task_096 "unlocked neither" remediation tool in 3/3 trials and counts
+    its three episodes toward a 6/24 prevalence. It is wrong. Re-derived from
+    generation_000/batch_01/graded/updated_results.json: in 2 of 3 trials task_096 unlocked
+    AND called both apply_savings_account_credit_6831 and
+    submit_interest_discrepancy_report_7294, failing on the argument VALUES; only t0 never
+    reached them. So the "retrieved and never used" population is task_026 alone — 3/24
+    episodes — and task_096's dominant mode is value resolution. C1 was therefore justified on
+    evidence half of which no amount of name salience could address, which is the most likely
+    reason its prediction was denied. The gen-001 record is left as written (the schema
+    refuses unknown fields, and rewriting a verified record would erase the error rather than
+    record it); the erratum's durable home is improvement_backlog.md, which the closure reads.
+    Generalized: an aggregated miss list is not a mechanism. "Never unlocked" and "unlocked,
+    called, wrong values" present identically as a missing gold action and are different
+    defects with different owning layers.
+signals:
+- description: >-
+    C1's prediction DENIED on its own counter. Predicted: unlock_discoverable_agent_tool
+    naming the gold remediation tool in >= 2/3 trials on task_026 or task_096. Measured:
+    task_026 0/3 -> 0/3, task_096 2/3 -> 2/3. No movement on either. No harm either — both
+    anchors held 3/3 (task_006, task_032), task_076's unlock count was identical at 5 across
+    three trials in both rounds, and no new invalid calls appeared. Two degenerate episodes
+    were inspected and neither is the hook's doing: task_026 t2 (01a00dad-4ae3-71f8-a744-
+    ea516f1786a6) is a scripted user speedbump ("I don't have my phone with me"), and
+    task_096 t1 (01a00dab-70b2-75c5-bbca-a02723ab6ef9) read the customer record successfully
+    and THEN asserted "I'm unable to access the customer information system right now" before
+    transferring — an over-escalation witness that belongs to T3, not to C1.
+  prevalence: 0/6 target episodes moved (2/8 tasks)
+- description: >-
+    C2's prediction CONFIRMED, and its per-clause falsifiers resolved WHICH HALF of the
+    instruction is doing the work — the first time this project has attributed an outcome to
+    a clause rather than to an instruction. task_057 went 0/3 -> 3/3 with the gold
+    call_discoverable_user_tool(deposit_check_3847) going 1/3 -> 3/3, exactly as predicted
+    (01a00dae-8a9f-71c1-9325-93f396489fed, 01a00daf-9f80-7062-b2bd-e6b44cd8233a,
+    01a00db0-43a6-7768-80fa-e4a50f0d4984). Clause 1 ("with the tool name alone") FIRED its
+    falsifier: 7 of 10 grants still carry an `arguments` key, and t0 passed with
+    payload-bearing grants — clause 1 is not the operative half. Clause 2 ("give the user that
+    exact tool name") IS the mechanism: assistant messages naming deposit_check_3847 went
+    0/1/1 to 4/1/1, always inside the handover, and the user's calls went from inventing
+    deposit_check, mobile_check_deposit and check_deposit to calling the exact name 3/3.
+    Clause 3 (the precondition) also FIRED: grant-using episodes 6 -> 5, with task_026 t2
+    making zero grants where it previously made 13 — the E2 suppression mode the clause was
+    written to watch, on one episode that was 0/3 either way.
+  prevalence: 3/3 trials of the target task flipped; 2 of 3 clause falsifiers fired
+- description: >-
+    The transfer-reason lookup is the discriminator on task_014, and it is the mechanism
+    gen-002 consumes. The transfer tool's own description states that the reason enum "can be
+    found in the knowledge base: search it before calling this tool to select the proper
+    applicable reason", and `reason` carries a hard enum of 19 values, so both the instruction
+    and the vocabulary are already in front of the model. Across batch_01 and batch_02 only
+    6 of 18 transfer-carrying episodes issued such a query. On task_014, whose gold action IS
+    a transfer and whose gold compares `reason` exactly: batch_01 t1 and batch_02 t0
+    (01a00dad-d450-7657-8944-5e4d3a5551df) both queried and both chose
+    unconfirmed_external_communication and PASSED; batch_02 t1
+    (01a00dae-d8bc-750a-a61b-edef3495c521) transferred WITHOUT querying and chose
+    kb_search_unsuccessful_customer_requests_transfer — a legal member of the enum, and the
+    wrong one. The lookup is necessary and not sufficient: batch_02 t2 queried and then
+    refused to transfer at all. task_032, the anchor, passes 3/3 WITHOUT the lookup because
+    its gold transfer carries compare_args: [] — the reason is not compared there, which is
+    exactly what makes it a safe falsifier for a change to reason selection.
+  prevalence: 6/18 transfer-carrying episodes across two rounds issued the lookup
+- description: >-
+    T4 re-specified, and half of it retired with cause — two slots' worth of plausible
+    mutations ruled out on evidence rather than by argument. task_072 rose 0/3 -> 1/3. Reading
+    t0 in full (01a00dab-0264-7446-8d78-10af44f317ee) shows the wrong amounts are NOT an
+    arithmetic slip: the agent's own arithmetic is internally consistent — "10 out-of-network
+    withdrawals, first 4 are free, remaining 6 at $1.50 = $9.00, you were charged $20.00, so
+    I applied an $11.00 fee-refund credit" — against gold's 3.50. It applies the wrong fee
+    RULE; the transactions are tiered foreign ATM fees. An extension-tool calculator, the
+    obvious D24 surface for this target, would compute the same wrong number. Separately the
+    credit_type enum half is RETIRED: the unlock_discoverable_agent_tool response already
+    enumerates the legal values with their semantics ("'rebate_credit' for missing rebates,
+    'fee_refund' for incorrect fee charges"), the agent read and applied that correctly by its
+    own reasoning, and gold classifies the same correction differently. Information in hand
+    and correctly used; the disagreement is with gold's labelling. That is the task_070 class
+    from seq 6 — bounded by frozen surfaces, not harness surface.
+  prevalence: 3/24 episodes (1/8 tasks), with the enum half retired
+counterevidence: >-
+  Four arguments against this set.
+
+  (1) Reverting C1 discards a change that caused no measured harm after a single round of
+  evidence, and one round is thin for a structural change — seq 6's D1 was confirmed only on
+  its second round, on an unpredicted task. The counter-argument that wins: C1's prediction
+  was denied on its own pre-registered counter AND its stated evidence base was half wrong, so
+  keeping it would mean carrying a change whose rationale is refuted on the hope that it helps
+  somewhere unmeasured. That is precisely the "a bad change hides inside a good set" risk D22
+  names as the cost of composite sets, and the per-change commit exists so it can be paid.
+
+  (2) The revert may cost the round's only confirmed win. task_057 flipped 0/3 -> 3/3 and BOTH
+  changes could have caused it: C2 by design, C1 because deposit_check_3847 is exactly the
+  shape of name it surfaced. This is the attribution limit D22 accepts, and it is being
+  resolved rather than assumed — with C1 gone, batch_03 attributes task_057 to C2 if it holds
+  and to C1 if it collapses. Recorded as a named risk of this transition, not a certainty.
+
+  (3) D2 is the SEVENTH mutation aimed at transfer behaviour across four experiments, and the
+  previous six all failed. The reason to try again is not optimism: seq 6's T4 recorded a
+  specific unmet condition — "procedural and counted rather than a judgment about when
+  transfer is appropriate" — and stated that no such mechanism existed on that seam. One
+  exists now, and only because the `context` hook was measured this generation. If D2 fails,
+  it fails as a counted-state mechanism rather than as a seventh sentence, which is new
+  information about the surface rather than a repetition.
+
+  (4) D2's own risk is that it moves transfer RATE rather than transfer DISCRIMINATION, which
+  is the exact failure of all six predecessors. Its falsifiers are written to catch that:
+  transfer-carrying episodes above batch_02's 9/24, and any movement on task_032, whose reason
+  is uncompared and which therefore should not move at all.
+hypothesis: >-
+  The agent does not track whether it has performed the lookups its own tools prescribe. On
+  task_014 the tool description instructs a knowledge-base query for the reason code, the
+  parameter carries a hard enum, and every passing trial issued that query while the trial
+  that skipped it chose a legal-but-wrong value. If the agent is told, as a matter of fact
+  rather than instruction, that the customer has asked for a human and the lookup has not
+  happened, the lookup happens and the reason selected is the one the knowledge base names.
+owning_layer: >-
+  Harness, and the set deliberately reduces surface count rather than adding: D1 removes an
+  `extension-hook` whose prediction was denied, and D2 adds an `extension-hook` on a different
+  event (`context` rather than `tool_result`) targeting a different behaviour. The net recipe
+  still carries exactly one extension and one instruction paragraph.
+proposed_change: >-
+  One improvement set of two changes (plan D22). They compose because D1 removes a change on
+  the retrieval-reading path and D2 adds one on the escalation path; they share no tool, no
+  counter and no falsifier, and the only task where both could act (task_026, which uses
+  neither transfer nor the reverted hook's targets successfully) was 0/3 under both harnesses.
+  D1 is a first-class revert of a refuted change, enabled by gen-001's per-change commits.
+schema_version: 3
+changes:
+- mechanism: >-
+    Revert C1, the tool_result hook that re-stated discoverable-tool names at the end of
+    KB_search results. Its prediction was denied on its own counter and half its cited
+    evidence was a value-resolution mode that name salience cannot address.
+  surface: revert
+  evidence: >-
+    Backlog T1 and the erratum above. C1 measured live in vivo
+    (01a00daa-1ca8-74c5-a631-8d413e18e5d6 carries 8 occurrences of its output) with zero
+    movement on its counter: task_026 0/3 -> 0/3, task_096 2/3 -> 2/3.
+  expected_effect: >-
+    None on the behaviour C1 targeted — the counter was already unmoved, so removing the hook
+    should leave task_026 and task_096 exactly where they are. The change exists to buy
+    attribution: if task_057 holds at >= 2/3 in batch_03 with C1 gone, C2 owns last round's
+    win; if it collapses to <= 1/3, C1 owned it and the revert is itself refuted.
+  risk: >-
+    C1 may have been silently carrying task_057's flip, in which case this revert costs the
+    experiment its only confirmed win and buys the attribution with a real regression. That
+    trade is taken deliberately: an unattributed win on a fixed batch cannot be built on,
+    and five slots remain to re-land the hook if the evidence says so.
+  clauses: []
+  commit: 64c1a01
+- mechanism: >-
+    When the customer has asked to be handed to a human and no knowledge-base query about
+    transfer reason codes has been issued in this conversation, a `context` hook appends one
+    factual line saying exactly that. It reports a procedural state and gives no instruction —
+    not whether to transfer, not which reason to choose, not what to search.
+  surface: extension-hook
+  evidence: >-
+    Backlog T3. 6 of 18 transfer-carrying episodes across batch_01 and batch_02 issued the
+    lookup the transfer tool's own description prescribes. On task_014 every pass issued it
+    (batch_01 t1; batch_02 t0, 01a00dad-d450-7657-8944-5e4d3a5551df) and the trial that
+    transferred without it chose a legal-but-wrong enum member
+    (01a00dae-d8bc-750a-a61b-edef3495c521). Surface legality measured at this generation's
+    step-4b probe (generation_001/context_probe/): fires before every LLM call, sees the full
+    conversation, an appended message changed model output in 3/3 episodes, and the injection
+    itself appears 0 times in tau's graded trajectory.
+  expected_effect: >-
+    Counter-native, scored against batch_03: KB queries matching the transfer-reason pattern
+    rise to >= 2/3 of task_014's trials (batch_01 1/3, batch_02 1/3), and task_014's reward
+    reaches >= 2/3 (1/3 in both prior rounds). Pre-merge behavioural verification on the real
+    domain (local lane, task_014 x3, generation_001/d2_preflight/) showed 3/3 trials issuing
+    the query and 2/3 passing with the gold reason — verification, not measurement.
+  risk: >-
+    That it moves transfer RATE rather than DISCRIMINATION, the exact failure of all six
+    prior transfer mutations. Watched by two falsifiers: transfer-carrying episodes rising
+    above batch_02's 9/24, and any movement on task_032, whose gold transfer carries
+    compare_args: [] so its reason is uncompared and it should not move at all. A third risk
+    surfaced in pre-merge verification: one trial called transfer_to_human_agents four times
+    in one episode, so repeated-call count is watched too.
+  clauses: []
+  commit: c18788c
+mutation:
+  branch: gen-002/transfer-reason-lookup
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/18
+  source_commit: 5ff7e6365b0c0c3ec98dd97e4ad2b4df3fb2175f
+  candidate_commit: 3d1e8c70c69887623e990c3b84192ffed494c426
+expected_effect: >-
+  Set level, measured on the held-out set at H2 and nowhere else: a directional improvement
+  on tasks whose gold action is an escalation with a knowledge-base-defined reason code, and
+  no change on anything else — D1 removes a mechanism already measured inert and D2 is silent
+  on every episode where the customer has not asked for a human. No magnitude is predicted;
+  the held-out band at T=28 x 3 is about +-5 pp and this experiment's held-out lane is a
+  FOURTH-EXPOSURE diagnostic transfer probe carrying no capability claim. Deliberately not
+  targeted: T4's surviving half (which bank rule governs a correction), T1's true remainder
+  (task_026's unperformed rewards correction), and T5.
+human_approval:
+  approved_by: orchestrator — autonomous per D28 (user-delegated; D23's envelope re-registered)
+  date: '2026-08-17'
+held_out_result: null
