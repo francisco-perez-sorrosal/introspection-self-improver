@@ -36,7 +36,8 @@
     },
     "extensions": [
       "extensions/transfer-reason-lookup.ts",
-      "extensions/verification-logged.ts"
+      "extensions/verification-logged.ts",
+      "extensions/unlocked-state.ts"
     ]
   }
 }
