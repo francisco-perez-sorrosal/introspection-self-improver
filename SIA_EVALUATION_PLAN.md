@@ -969,7 +969,12 @@ reports byte-identity to the re-tagged anchor.
       (ratified); nine-cell `reading_key` naming the sig-up × sig-up cell as the
       pre-registered success and reading every flat-primary cell against the
       reachable-harvest co-metric (≥90% = objective exhausted → pool/domain decision;
-      low = loop found nothing); `operational.process_metric_tools` reviewed.
+      low = loop found nothing); `operational.process_metric_tools` reviewed; **both
+      concurrency defaults carried from seq 6/8 unchanged** (lock
+      `operational.max_concurrency: 3`, `make batch` pinned 3 — the values that ran
+      seq 8's 168 platform episodes with zero disconnect/timeout/stall incidents;
+      operational, outside the fingerprint, droppable per run if provisioning churn
+      shows).
 - [ ] **Gates**: `make gate_a0a` (blocking; full adapter suite + mock smoke); platform
       seam canary; `power_envelope.py --write` (must be REACHABLE); commit all PASS
       records; first run writes the freeze snapshot.
