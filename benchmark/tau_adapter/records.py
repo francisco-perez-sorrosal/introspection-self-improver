@@ -186,6 +186,9 @@ def _changes_problems(record: dict[str, Any], outcome: str) -> list[str]:
         )
     if isinstance(version, int) and version >= 3 and outcome in (OUTCOME_ACCEPTED, "rejected"):
         problems += _clause_problems(changes or [])
+    if isinstance(version, int) and version >= 4 and outcome in (OUTCOME_ACCEPTED, "rejected"):
+        problems += _adoption_problems(changes or [])
+        problems += _host_facts_problems(changes or [])
     return problems
 
 
@@ -220,6 +223,75 @@ def _clause_problems(changes: list[Any]) -> list[str]:
                     problems.append(
                         f"changes[{index}].clauses[{clause_index}].{key} must be non-empty "
                         "prose (no TODO) — an unwatched clause is an unscored prediction"
+                    )
+    return problems
+
+
+#: Adoption-first predictions (schema v4, post-seq-8 review): the first change ever landed
+#: on a surface class predicts adoption and correct invocation — pi_local_calls on the
+#: targeted tasks, well-formed arguments, latency inside τ's frozen budget — with the
+#: reward-level prediction deferred to the following round. A denied adoption is a
+#: mechanism denial and a first-class revert trigger; a confirmed adoption with unmoved
+#: reward is not a denial. This is what makes a first tool or sub-agent change a one-round
+#: bet instead of a two-round gamble.
+def _adoption_problems(changes: list[Any]) -> list[str]:
+    problems: list[str] = []
+    for index, item in enumerate(changes):
+        if not isinstance(item, dict):
+            continue
+        stage = item.get("adoption_stage")
+        if stage is None:
+            continue
+        if not isinstance(stage, bool):
+            problems.append(f"changes[{index}].adoption_stage must be a boolean")
+            continue
+        if not stage:
+            continue
+        criteria = item.get("adoption_criteria")
+        if not isinstance(criteria, str) or not criteria.strip() or _is_placeholder(criteria):
+            problems.append(
+                f"changes[{index}] is adoption_stage without `adoption_criteria` (schema "
+                "v4): a first use of a surface predicts adoption and correct invocation "
+                "(pi_local_calls on the targeted tasks, well-formed arguments, latency "
+                "inside the frozen budget), reward deferred to the following round — an "
+                "adoption bet without adoption criteria cannot be scored"
+            )
+    return problems
+
+
+#: Host-fact citations (schema v4): every extension change names the measured host facts
+#: its code keys on. Seq 8's F1 keyed a hook on message role `tool` where the experiment's
+#: own probe had recorded `toolResult` — a generation spent on a change that never
+#: executed, with the truth already committed.
+_EXTENSION_SURFACES = ("extension-hook", "extension-tool")
+_HOST_FACT_REQUIRED_KEYS = ("fact", "probe_evidence")
+
+
+def _host_facts_problems(changes: list[Any]) -> list[str]:
+    problems: list[str] = []
+    for index, item in enumerate(changes):
+        if not isinstance(item, dict) or item.get("surface") not in _EXTENSION_SURFACES:
+            continue
+        facts = item.get("host_facts")
+        if not isinstance(facts, list) or not facts:
+            problems.append(
+                f"changes[{index}] lands extension code without `host_facts` (schema v4): "
+                "list every measured host behavior the code keys on — message roles, block "
+                "shapes, event timing — each citing the committed probe evidence that "
+                "establishes it; an uncited keying assumption is how a change ships inert"
+            )
+            continue
+        for fact_index, fact in enumerate(facts):
+            if not isinstance(fact, dict):
+                problems.append(f"changes[{index}].host_facts[{fact_index}] must be a mapping")
+                continue
+            for key in _HOST_FACT_REQUIRED_KEYS:
+                value = fact.get(key)
+                if not isinstance(value, str) or not value.strip() or _is_placeholder(value):
+                    problems.append(
+                        f"changes[{index}].host_facts[{fact_index}].{key} must be non-empty "
+                        "prose (no TODO) — an uncited host fact is an unverified keying "
+                        "assumption"
                     )
     return problems
 
@@ -391,13 +463,15 @@ def scaffold(
             "TODO: the SET-level summary — why these changes compose "
             "(independently justified, non-conflicting)"
         ),
-        "schema_version": 3,
+        "schema_version": 4,
         # One item per coherent change (plan D22): any number, each individually
         # evidenced, each with its own falsifiable prediction the next batch will score.
-        # Duplicate the template item as needed; delete none of its keys. `clauses` is
-        # the v3 adversarial wording review — REQUIRED for surface: instructions, one
-        # entry per disjunction/precondition/licensed alternative in the landed text;
-        # delete the list for non-instructions surfaces.
+        # Duplicate the template item as needed. `clauses` is the v3 adversarial wording
+        # review — REQUIRED for surface: instructions, one entry per disjunction/
+        # precondition/licensed alternative in the landed text; delete the list for
+        # non-instructions surfaces. `adoption_stage`/`adoption_criteria` and
+        # `host_facts` are the v4 additions — surface-conditional, guidance in their
+        # TODO strings; delete the ones that do not apply.
         "changes": [
             {
                 "mechanism": "TODO: the one coherent mechanism this change encodes",
@@ -408,6 +482,24 @@ def scaffold(
                 "evidence": "TODO: conversation ids / backlog target id behind this change",
                 "expected_effect": "TODO: this change's own falsifiable prediction",
                 "risk": "TODO: how this change could make things worse, or 'none identified'",
+                "adoption_stage": False,
+                "adoption_criteria": (
+                    "TODO (adoption_stage: true only, else delete): adoption + correct "
+                    "invocation — pi_local_calls >= k on targeted tasks, well-formed "
+                    "arguments, latency inside the frozen budget; reward deferred to the "
+                    "next round"
+                ),
+                "host_facts": [
+                    {
+                        "fact": (
+                            "TODO (extension-hook/tool surfaces only, else delete the "
+                            "list): the measured host behavior this code keys on"
+                        ),
+                        "probe_evidence": (
+                            "TODO: path to the committed probe evidence establishing it"
+                        ),
+                    }
+                ],
                 "clauses": [
                     {
                         "clause": "TODO: verbatim fragment of the landed text (git show)",

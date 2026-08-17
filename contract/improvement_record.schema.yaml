@@ -24,7 +24,8 @@
 #     against the next batch), never statistical. Records without `schema_version`
 #     (seq ≤ 5) predate the set discipline and validate under the single-mutation rules.
 #   * schema version 3 (plan D26, post-seq-6): two additions, both keyed on the version so
-#     seq-6 v2 records keep validating untouched. (a) Every `surface: instructions` change
+#     seq-6 v2 records keep validating untouched — and v3 stays the valid contract for the
+#     records that carry it. (a) Every `surface: instructions` change
 #     in an accepted/rejected v3 record carries a non-empty `clauses` list — the
 #     adversarial wording review: each clause of the landed text that a
 #     letter-over-intent reading could optimise against gets its own falsifier (seq 6:
@@ -33,8 +34,22 @@
 #     (`<!-- transition: gen_NNN_to_MMM -->`) — the backlog is updated in the same
 #     transition as the record, mechanically (seq 6's backlog silently froze at gen-003
 #     while its gated records stayed impeccable).
+#   * schema version 4 (post-seq-8 review): two additions, keyed on the version so v3
+#     records keep validating untouched. (a) Adoption-first predictions: the first change
+#     ever landed on a surface class may carry `adoption_stage: true`, and must then carry
+#     non-empty `adoption_criteria` — the prediction targets adoption and correct
+#     invocation (pi_local_calls ≥ k on the targeted tasks, well-formed arguments, latency
+#     inside τ's frozen budget), with the reward-level prediction stated in
+#     `expected_effect` as DEFERRED to the following round. Scoring: a denied adoption
+#     (the model never calls it) is a mechanism denial and a first-class revert trigger; a
+#     confirmed adoption with unmoved reward is NOT a denial — the reward falsifier lands
+#     next round. (b) Host-fact citations: every v4 change with `surface: extension-hook`
+#     or `extension-tool` carries non-empty `host_facts` — {fact, probe_evidence} pairs
+#     naming each measured host behavior the code keys on (seq 8 spent a generation on a
+#     hook keyed to message role `tool` where the experiment's own probe had recorded
+#     `toolResult`; the change was measured inert).
 
-version: 3
+version: 4
 
 outcomes: [accepted, rejected, identity]
 
@@ -82,9 +97,10 @@ fields:
     kind: str
     required: true
     description: >-
-      the mutable harness layer(s) targeted (prompt, retrieval usage, pi-skill, tool,
-      sub-agent, ...); with a `changes` list this is the set-level summary and each item
-      names its own surface
+      the mutable harness layer(s) targeted, in the same vocabulary as changes[].surface
+      (instructions | extension-hook | extension-tool | sub-agent | pi-skill |
+      retrieval-usage — one vocabulary, two altitudes); with a `changes` list this is the
+      set-level summary and each item names its own surface
   proposed_change:
     kind: str
     required: true
@@ -97,7 +113,8 @@ fields:
     required: false
     description: >-
       2 = composite improvement sets (plan D22); 3 = per-clause falsifiers + backlog
-      write-through (plan D26). Absent on seq ≤ 5 records; the validator keys every
+      write-through (plan D26); 4 = adoption-first predictions + host-fact citations
+      (post-seq-8 review). Absent on seq ≤ 5 records; the validator keys every
       version-specific requirement on this field so history keeps validating.
   changes:
     kind: list
@@ -115,7 +132,14 @@ fields:
       mappings {clause: verbatim fragment of the landed text (git show, never memory),
       adversarial_reading: what a letter-over-intent reading does with it, falsifier:
       the counter that fires if the adversarial reading wins} — one entry per
-      disjunction, precondition, or licensed alternative in the landed wording
+      disjunction, precondition, or licensed alternative in the landed wording. From
+      schema_version 4, a change may carry adoption_stage: true (the first change ever
+      landed on a surface class) and must then carry adoption_criteria — non-empty prose
+      naming the adoption-and-correct-invocation counters, with the reward prediction
+      deferred to the following round — and every surface: extension-hook or
+      extension-tool change carries host_facts, a non-empty list of mappings
+      {fact: the measured host behavior the code keys on, probe_evidence: the committed
+      probe evidence establishing it}
   mutation:
     kind: mapping
     required: true

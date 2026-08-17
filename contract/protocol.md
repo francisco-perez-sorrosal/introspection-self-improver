@@ -31,7 +31,18 @@ file and the code disagree, the code wins and this file gets fixed.
      stratum recorded in the manifest header. An all-known-fail batch is by
      construction a floor: one revealed experiment's primary spent 168 episodes with
      five of eight tasks contributing zero dynamic range, and its endpoint test
-     reduced to one task's day-to-day variance.
+     reduced to one task's day-to-day variance. **Headroom is screened for
+     reachability, not only level** (seq 8): stratifying by pass rate alone admitted
+     three headroom tasks whose failure modes five rounds of layer-peeling proved
+     domain-walled — a rounding convention, a governing rate, a gold-label semantics
+     disagreement — unreachable by any mutation the invariants allow. The screen
+     therefore also reads each headroom candidate's H0 trajectories and classifies
+     the terminal failing step **harness-reachable** (procedure, retrieval, ordering,
+     handover, verification) or **domain-walled** (needs domain knowledge the
+     invariants forbid encoding); walled tasks enter, if at all, as declared
+     wall-monitors outside the primary. Screen rates and classifications are
+     committed with the probe evidence and land in the manifest header's `strata:`
+     mapping, which the freeze snapshot restates under `results/experiment_<id>/`.
    - **A capability-claim freeze draws its held-out set from zero-prior-exposure
      tasks** (the partition-isolation machinery prints every reuse at commit; a
      declared reuse demotes the experiment's held-out lane to a diagnostic probe, and
@@ -43,7 +54,47 @@ file and the code disagree, the code wins and this file gets fixed.
    not name every cell is a key that gets rewritten after the data exists), flip
    `frozen.status` to FROZEN; `make reset_h0` (byte-identity to `h0-baseline`);
    commit; `make gate_a0a` (blocking) and commit the PASS record — the first run
-   writes the freeze snapshot that every later run must match.
+   writes the freeze snapshot that every later run must match. Four additions, each
+   bought with a seq-8 closure finding:
+   - **The primary's power envelope is computed at freeze, not discovered at
+     closure** (`scripts/power_envelope.py`; verdict committed to
+     `gates/power_envelope.json`): given the frozen composition and test, it states
+     the movers α = 0.05 requires, the movable-task count (anchors cannot move by
+     construction; walled tasks will not), and the attainable-p ceiling — seq 8's
+     five-movers-needed-with-three-walled-tasks envelope was computable before its
+     first episode and discovered at closure. An envelope that cannot reach α under
+     plausible success means fixing the composition or the test before freezing,
+     never the narration after.
+   - **One behavioural-identity round is pre-registered**
+     (`protocol.identity_generations`, lock-validated; `batch_mode: fixed` only):
+     the named generation is identity by design — H_k = H_(k−1), its held-out round
+     carries forward, its batch round is the A/A noise measurement, and the reveal
+     refuses the pre-registration dishonored. Seq 8 got its noise floor (2 cells,
+     8.3 pp on an identical harness) only by accident of a change that never
+     executed, and the number re-read every attribution the project had ever made.
+     Registered at generation 1 the identity round also pools the baseline: the
+     primary's H0 side reads batch_01 + batch_02 — six trials per task — against the
+     endpoint.
+   - **The D24 suppressing path is exercised before anything relies on it**: the
+     pre-freeze suppression canary (`scripts/gate_seam_canary.py --suppression
+     --expect-tool <name>`) runs ≥1 platform episode against a temporarily-declared
+     probe tool on pushed main — expected `pi_local_calls ≥ 1` in the manifest, the
+     tool name absent from τ's graded trajectory, seam counters clean — verdict
+     committed to `gates/suppression_canary.json`, the declaration reverted before
+     `h0-baseline` is tagged so H0's registry stays empty. Seq 8 ran the D24 seam
+     pump-path-only (`pi_local_calls` = 0 across 168 platform episodes), so
+     platform-lane suppression entered the next freeze as an assumption; this
+     converts it to a measurement. The script's `--judge-only` mode re-judges the
+     experiment's first real tool generation post-merge at zero extra episodes.
+   - **The reading key distinguishes loop failure from headroom exhaustion**: beside
+     the nine cells the freeze pre-registers the **reachable-harvest co-metric** —
+     the fraction of non-walled batch cells passed at the endpoint vs baseline
+     (emitted by `scripts/batch_curve.py` from the manifest's strata) — and the
+     flat-primary cells read it: flat with harvest high (≥90%) says the objective's
+     harness-reachable range is spent and the next move is a pool or domain
+     decision; flat with harvest low says the loop found nothing. Seq 8 was read
+     "the meta-agent is the problem" by a key with no language for a batch the loop
+     had nearly saturated — 15 of 15 reachable cells at its peak round.
 
 ## Per generation g (H_g is current, tagged; g starts at 0)
 
@@ -125,13 +176,39 @@ generation's measurement, and a measurement cannot run before its generation's b
      prompt does not inherit the scope its author reasoned about*; seq 6 added the
      sharper form (*the escape clause is what the model optimises against*) — when the
      mechanism is judgment, scope, verification, or arithmetic, prefer a structural
-     surface. **After ≥3 prior prompt mutations on one surface, a prompt-text-only set
-     is no longer self-certifying: the next set includes at least one
-     non-`instructions` change, or records a `surface_exhausted` finding backed by a
-     committed step-4b probe naming the fact that blocks each structural alternative.**
-     A paragraph alone does not discharge the flag.
+     surface. **The concentration flag is surface-general** (seq 8 measured why: the
+     instructions-only flag never fired while six changes landed on one surface and
+     the D24 surfaces went unexercised for the whole experiment — each repaired
+     gradient re-forms at the cheapest newly-legal surface). **After ≥3 prior
+     mutations on any single surface class, a set confined to that class is no longer
+     self-certifying: the next set includes at least one change on a surface class
+     this experiment has never exercised, or records a `surface_exhausted` finding in
+     the backlog naming, per unexercised surface, either a committed step-4b probe or
+     a measured batch fact (cited with its evidence path) that blocks it.** A
+     paragraph of argument alone does not discharge the flag — the citation is to a
+     measurement, not to reasoning (seq 8's one legitimate shape-argument, "the model
+     would have to choose to call it", is dissolved by the adoption-first rule below,
+     so it no longer discharges anything).
+   - **First use of a never-exercised surface is adoption-first** (from the seq-8
+     review): the change's falsifiable prediction targets *adoption and correct
+     invocation* — `pi_local_calls ≥ k` on the tasks it targets, well-formed
+     arguments, latency inside τ's frozen budget — and the reward-level prediction is
+     deliberately deferred to the following round and stated as deferred. A denied
+     adoption prediction (the model never calls it) is a mechanism denial and a
+     first-class revert trigger; a confirmed adoption with unmoved reward is not. A
+     first tool change may bundle the tool with its minimal usage instruction as one
+     coherent mechanism — capability and adoption path are one diagnosis, and
+     splitting them guarantees the "model must choose to call it" objection.
    - A **revert** of a prior change whose prediction the batch refuted is a
-     first-class change, enabled by per-change commits (step 5).
+     first-class change, enabled by per-change commits (step 5). **The trigger is a
+     refuted mechanism, never a refuted prediction alone**: a change whose prediction
+     was denied while its mechanism's counter moved on the tasks where it could fire
+     stays in (seq 8's clearest win came two rounds after its prediction was denied);
+     a change whose mechanism moved nothing anywhere it could fire is the revert
+     candidate. Target retirement carries the same bar: a retirement cites witnesses
+     from ≥2 rounds or a mechanism-level impossibility — on one round's evidence the
+     target is parked, not retired (seq 8 retired a target on one round's episode
+     shapes and had to un-retire it two rounds later).
    G bounds generations, not changes; per-change attribution inside a set is
    **mechanistic** — each prediction is scored against the next batch — while the
    statistical read stays at the generation level, and every record says so.
@@ -158,9 +235,27 @@ generation's measurement, and a measurement cannot run before its generation's b
    (`SYSTEM.md` `<instructions>`; recipe skills/tools/sub-agents per
    `references/recipe-growth.md`; the `<policy>` block is frozen benchmark text).
    `make check` must pass, plus `make smoke` when any change is mechanical (tools,
-   sub-agents, wiring). Push; open **one PR carrying the whole set**, citing per-change
+   sub-agents, wiring). **Extension code cites its host facts**: every line that keys
+   on a measured host behavior (message roles, block shapes, event timing) carries a
+   comment naming the committed probe evidence that establishes the fact — seq 8
+   spent a generation on a hook keyed to role `tool` where its own probe's
+   `hook_firings.json` had recorded `toolResult`, and the change was measured inert.
+   Push; open **one PR carrying the whole set**, citing per-change
    evidence, predictions, and what is deliberately not targeted. Return the work tree
    to `main` (it must keep serving H_g until the merge).
+
+5b. **Preflight — verify a change runs, never that it works.** Optional, bounded:
+   up to ~12 local-lane episodes per generation, on batch tasks only and only when
+   the lock's `allow_within_batch_verification` is true, covering execution checks
+   and up to three candidate forms of one change (the sanctioned within-generation
+   selection pressure — candidates are compared on execution and process counters,
+   never anointed by preflight reward). Two rules, both bought with a seq-8
+   generation: an injected text is verified **present in a fetched conversation**
+   before any behavioural number is read (F1's preflight showed 3/3 against a 0/12
+   baseline for a change that never executed — chance); and a preflight's
+   behavioural read is never evidence — the scheduled rounds are the measurement,
+   preflight runs are never record provenance, and the record's `evidence.summary`
+   names any preflights run with their episode counts.
 6. **Record as it happens**: `scripts/improvement_record.py --scaffold g --write`,
    fill evidence/signals/counterevidence/hypothesis and the per-change `changes` list
    (schema v3: mechanism, surface, evidence, expected_effect, risk, commit per item,
@@ -170,11 +265,19 @@ generation's measurement, and a measurement cannot run before its generation's b
    manifest — never from memory; **quoted instruction text comes from `git show`
    against the landed commit — never from memory** (a verdict attributed to words the
    text does not carry propagated through three seq-6 documents).
-7. **Human gate**: the user reviews and merges (or declines) the PR. The agent never
-   merges on its own authority. On merge: tag the merge commit `exp<seq>-g00<g+1>`
-   (annotated, pushed), set the record's `outcome: accepted` + `candidate_commit`,
-   re-verify, commit. On decline: `outcome: rejected` (or `identity`), H_{g+1} = H_g,
-   the next held-out round is skipped and the result carries forward at reveal.
+7. **Approval gate**: the user reviews and merges (or declines) the PR; the agent
+   does not merge on its own authority. On merge: tag the merge commit
+   `exp<seq>-g00<g+1>` (annotated, pushed), set the record's `outcome: accepted` +
+   `candidate_commit`, re-verify, commit. On decline: `outcome: rejected` (or
+   `identity`), H_{g+1} = H_g, the next held-out round is skipped and the result
+   carries forward at reveal. **The interactive shape of this step and step 4 assumes
+   the lock's `require_human_approval: true`.** A freeze may set it `false` (the
+   D23/D28 autonomy envelope, re-registered per experiment): the orchestrator then
+   holds decision authority over step 4's choices, this merge, the tag, and the
+   reveal — provenance recorded in every record's `human_approval` block — while
+   access limits are untouched (frozen surfaces, partition, `<policy>` block,
+   held-out firewall), and a freeze re-decision or a suspected seam defect remains a
+   halt-and-report in either mode.
 
 ## Close (after the final transition)
 
@@ -196,9 +299,14 @@ generation's measurement, and a measurement cannot run before its generation's b
    noise band, the trend verdict, and the trend-fragility report
    (`held_out/trend_fragility.json`: leave-one-task-out and endpoint-cell
    sensitivity — a significance that rests on one task's cells is reported as such,
-   next to the p-value it qualifies). Refuses a
-   missing final tag, a mixed-fingerprint curve, or a measurement for an identity
-   generation.
+   next to the p-value it qualifies). `summary.md` also narrates the churn its
+   transitions table carries — per-transition gains and regressions against the
+   net, ever-solved vs point-in-time at the endpoint, and the identity-pair deltas
+   when a pre-registered identity round exists (batch A/A; held-out carried-pair) —
+   seq 8's held-out lane held a second noise measurement (3–5 cells of churn per
+   transition against nets of −2…+3) that its closure never surfaced. Refuses a
+   missing final tag, a mixed-fingerprint curve, a measurement for an identity
+   generation, or a pre-registered identity generation whose record says otherwise.
 4. Walk protocol §29 and record it (`GUARDRAIL_WALK.md` beside the summary), including
    the §27 artifact inventory and the loop-mechanics verdict.
 5. Numbers are always labelled with their set and N; batch reads are diagnosis

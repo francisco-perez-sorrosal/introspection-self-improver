@@ -161,6 +161,7 @@ def test_scaffold_round_trips_and_names_its_own_gaps():
     assert parsed["batch"] == {"name": "batch_01", "task_ids": ["task_001"]}
     assert parsed["mutation"]["source_commit"] == "aaa111"
     assert parsed["held_out_result"] is None
+    assert parsed["schema_version"] == 4
     # The scaffold is deliberately not yet valid: the TODOs are the work.
     assert "TODO" in text
     assert records.validate(parsed, schema=SCHEMA)
@@ -339,6 +340,112 @@ def test_v2_records_are_exempt_from_v3_rules(tmp_path):
     record = _v3_record(schema_version=2)
     del record["changes"][0]["clauses"]
     assert _problems(record, filename="gen_000_to_001.yaml") == ""
+
+
+# ------------------------------------------------------- schema v4 (post-seq-8 review)
+
+
+def _v4_tool_change(**overrides) -> dict:
+    item = {
+        "mechanism": "deterministic reason-code lookup the model calls before a transfer",
+        "surface": "extension-tool",
+        "evidence": "conv_abc; backlog T3",
+        "expected_effect": ("adoption-first: reward prediction deferred to the following round"),
+        "risk": "latency inside the frozen budget",
+        "adoption_stage": True,
+        "adoption_criteria": (
+            "pi_local_calls >= 2 on the targeted tasks; arguments well-formed in every call"
+        ),
+        "host_facts": [
+            {
+                "fact": "tool-result messages carry role toolResult, never tool",
+                "probe_evidence": "generation_001/context_probe/hook_firings.json",
+            }
+        ],
+        "commit": "ddd444",
+    }
+    item.update(overrides)
+    return item
+
+
+def _v4_record(**overrides) -> dict:
+    base = _record(
+        schema_version=4,
+        changes=[_v4_tool_change()],
+        proposed_change="one adoption-first extension-tool change",
+    )
+    base.update(overrides)
+    return base
+
+
+def test_a_v4_adoption_first_record_holds(tmp_path):
+    _stamp_backlog(tmp_path)
+    assert _problems(_v4_record(), filename="gen_000_to_001.yaml") == ""
+
+
+def test_v4_adoption_stage_requires_criteria(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v4_record()
+    del record["changes"][0]["adoption_criteria"]
+    problems = _problems(record)
+    assert "adoption_stage without `adoption_criteria`" in problems
+
+
+def test_v4_adoption_stage_must_be_boolean(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v4_record()
+    record["changes"][0]["adoption_stage"] = "yes"
+    assert "adoption_stage must be a boolean" in _problems(record)
+
+
+def test_v4_extension_change_requires_host_facts(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v4_record()
+    del record["changes"][0]["host_facts"]
+    problems = _problems(record)
+    assert "without `host_facts`" in problems
+    assert "probe evidence" in problems
+
+
+def test_v4_host_fact_entries_must_be_filled_prose(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v4_record()
+    record["changes"][0]["host_facts"][0]["probe_evidence"] = "TODO: find the probe"
+    assert "host_facts[0].probe_evidence" in _problems(record)
+
+
+def test_v4_non_extension_change_needs_no_host_facts(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v4_record()
+    record["changes"] = [_change(surface="retrieval-usage", adoption_stage=False)]
+    assert _problems(record, filename="gen_000_to_001.yaml") == ""
+
+
+def test_v3_records_are_exempt_from_v4_rules(tmp_path):
+    _stamp_backlog(tmp_path)
+    record = _v3_record()
+    record["changes"][0]["surface"] = "extension-hook"
+    del record["changes"][0]["clauses"]
+    assert _problems(record, filename="gen_000_to_001.yaml") == ""
+
+
+def test_all_committed_seq8_records_still_validate():
+    """The additive-schema guarantee holds for seq 8's six v3 records (schema v4)."""
+    from pathlib import Path
+
+    repo_results = Path(records.__file__).resolve().parents[2] / "results"
+    record_paths = sorted(
+        (repo_results / "experiment_008_stratb-bm25-luna56" / "improvement_records").glob(
+            "gen_*.yaml"
+        )
+    )
+    assert len(record_paths) == 6, "seq 8 committed six transition records"
+    for path in record_paths:
+        record = records.load_record(path)
+        problems = records.validate(
+            record, filename=path.name, revealed=True, results_root=repo_results
+        )
+        assert problems == [], f"{path.name}: {problems}"
 
 
 def test_all_committed_seq6_records_still_validate():
