@@ -35,7 +35,8 @@
       ]
     },
     "extensions": [
-      "extensions/transfer-reason-lookup.ts"
+      "extensions/transfer-reason-lookup.ts",
+      "extensions/verification-logged.ts"
     ]
   }
 }
