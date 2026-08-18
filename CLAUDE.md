@@ -122,6 +122,8 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   | 6 | fixed-batch at depth (G=6, autonomous, composite sets) | REVEALED 2026-08-16 — null primary; held-out rose (p = 0.038, third exposure, not a claim); the two instruments could not be reconciled by that run | `experiment_006_fixedb-bm25-luna56/` + `INDEPENDENT_REVIEW.md` |
   | 8 | stratified batch, first run on the D24 seam (G=6, autonomous) | REVEALED 2026-08-17 — null on both instruments; the loop saturated the reachable batch range (15/15 non-walled cells at peak) and the endpoint test could not say yes; noise floor measured | `experiment_008_stratb-bm25-luna56/` + `INDEPENDENT_REVIEW.md` |
   | 10 | both-curves, marginal batch + pure holdout (G=8, identity gen-001, autonomous) | REVEALED 2026-08-18 — **null on both instruments** (batch primary Σ+1.333, p = 0.184; held-out trend z = 0.03, p = 0.486; endpoint +0.0 pp). Reading key cell `primary_flat_secondary_flat` with harvest 0.667: every precondition a prior null could be blamed on was removed and the loop still found nothing. FIRST graded use of a Pi-local surface in project history (`pi_local_calls` 0 → 39) | `experiment_010_adopt-bm25-luna56/` |
+  | 11 | ceiling probe (odd, PROVISIONAL — not an experiment) | H0 vs a hand-built H-expert over 35 tasks under both backends; chose `openai_embeddings` on headroom (+15.2 vs +6.7 pp), GO, envelope REACHABLE | `experiment_011_ceiling-probe/` + `benchmark/probes/2026-08-18-phase0-ceiling-probe/` |
+  | 12 | THE CEILING EXPERIMENT — first freeze with a measured maximum (G=7, B=26, T=36, embeddings, autonomous) | **FROZEN 2026-08-18, UNSTARTED.** Headroom +15.2 pp; 53 reachable failing cells at H0; primary reports gap-closure against the measured ceiling. Not comparable to seq ≤ 10 (backend changed) | `experiment_012_ceiling-emb-luna56/` |
 
   **Results under the D24 seam (seq 8 on) are not comparable to seq ≤ 6.** Under D33,
   in-loop sessions read prior experiments' `improvement_records/` and backlogs only —
@@ -168,34 +170,55 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   nothing in the process noticed. The futility check (`contract/protocol.md`) fires from
   the midpoint, and the response is to re-purpose the remaining slots for knowledge rather
   than to stop: seq 10's post-futility tail produced two of its best findings.
-- **SEQ 12 IS STAGED, NOT FROZEN — start at plan Phase 5.11, and Phase 0 comes before the
-  lock (D36).** The recipe is already reset to `h0-baseline` and `make reset_h0` reports
-  byte-identity. Nothing about seq 12 may be frozen until the **ceiling probe** runs, because
-  it decides two things: which retrieval backend to freeze (larger *harness headroom*
-  `H_expert − H0` wins; a tie goes to `openai_embeddings`, which is what τ² publishes and
-  whose key grading already requires), and **whether seq 12 runs at all** (headroom ≤ 5 pp
-  under both backends is a no-go, costing ~$16, and the next move is then a domain decision
-  — `telecom-workflow` being procedural and multi-step is the candidate). Build **H-expert**
-  by hand with full access to the candidate tasks: it is never shipped, never part of the
-  loop, and exists only to bound the range — but it still respects the frozen surfaces.
-  Instruments already landed: `scripts/headroom.py` (headroom, gap-closure, and the
-  *empirical* reachability oracle — a task H-expert passes is provably harness-reachable),
-  `scripts/endpoint_test.py` (the new primary: a within-task permutation on EPISODE outcomes
-  with a CMH cross-check, replacing the sign test that collapsed 36 episodes into 12
-  verdicts), plus `scripts/gold_diff.py` and `scripts/round_read.py`. Sizes: **G=7** with
-  `identity_generations: [1]` (six slots, 18–30 attempts at the D36 policy's 3–5
-  bundled changes each) and **`heldout_generations: [0, 4, 7]`** — a lock field added
-  for seq 12: omitted generations are carried like identity ones, and the batch gate
-  walks every *scheduled* measurement, so sparse never means optional. `num_trials` 3,
-  **B=30** (the size at which seq 10's own observed +11.1 pp would have been significant),
-  **T=36 which is FORCED** — the pool holds exactly 36 tasks no experiment has ever batched,
-  and D33 keeps batch-used tasks burnt forever. Loop policy is in `contract/protocol.md`:
-  bundle 3–5 non-interacting changes, a ≥3-task-or-structural target bar, counters stated as
-  DELTAS, ≤2 reverts, one slot reserved for `sub-agent` (still never exercised), and the
-  **futility check** from the midpoint — declare a dead primary out loud and re-purpose the
-  remaining slots for knowledge rather than score. Deferred by user decision: the control arm
-  (a non-diagnosing loop, the sharpest test of the self-improvement claim) and the
-  weak-H0/strong-H0 pair.
+- **SEQ 12 IS FROZEN AND UNSTARTED (2026-08-18) — the first experiment here that knows how
+  much room it is playing for.** `012_ceiling-emb-luna56`: G=7 with `identity_generations: [1]`,
+  `heldout_generations: [0, 4, 7]`, **B=26**, T=36, `num_trials` 3, `batch_mode: fixed`,
+  autonomy envelope ratified, nine-cell reading key copied from plan Phase 5.11. All four
+  gates PASS and committed (A.0a, seam canary, D24 suppression canary, power envelope);
+  `make reset_h0` reports byte-identity. **No graded episode has been run** — the next action
+  is H0's held-out round, then `batch_01`.
+- **Phase 0 measured the ceiling, and that is the number five prior experiments lacked.**
+  Under a seq 11 PROVISIONAL lock, an H0 arm and a hand-built **H-expert** arm ran 35
+  candidate tasks × 3 trials under BOTH backends (416/420 episodes, $12.82,
+  `benchmark/probes/2026-08-18-phase0-ceiling-probe/`):
+  **bm25 → H0 28.6%, expert 35.2%, headroom +6.7 pp; openai_embeddings → H0 23.8%, expert
+  39.1%, headroom +15.2 pp.** The backend rule (freeze the larger HARNESS HEADROOM, never
+  the larger absolute score) earned its keep on first use — the two criteria disagreed, and
+  embeddings has the LOWER H0. **`--retrieval-config` moving means seq 12's absolute numbers
+  do not compare to seq ≤ 10**; gap-closure against the measured ceiling is what normalizes
+  them, which is why the primary reports that way. `h0-baseline` was re-tagged at `f157fab`
+  for the regenerated `<policy>` region, mutable surface verified byte-identical.
+  τ² pins every `openai_embeddings*` variant to `text-embedding-3-large`; a `-small` variant
+  is not a published retrieval config and selecting one would mean editing the benchmark.
+- **The measured ceiling is a LOWER bound, and the reason is a standing lesson.** H-expert
+  *regressed* 5 tasks H0 passes under embeddings (7 under bm25): gross gain +21.0 pp against
+  gross loss −5.7 pp. Two opposite modes — over-work (24–25 tool calls where H0 used 5–11)
+  and early stopping (14–17 messages where H0 used 22–43). A long, carefully-reasoned
+  instruction block written by someone who *knew* about scope leakage still leaked. Read
+  +15.2 pp as conservative, and treat H-expert as the range's floor rather than its roof.
+- **The batch is the best this project has frozen, and its composition is a measurement.**
+  B=26 rather than the designed 30 because only 26 of 35 candidates earned an **empirical
+  reachability certificate** (a task H-expert passes is provably harness-reachable), and the
+  pre-registered rule says shrink (floor 24) rather than admit a wall. The certificate reads
+  as EITHER arm passing — the letter would have dropped `task_063` (H0 3/3) as "walled".
+  3 anchors / 12 marginals / **11 headroom**, no walled task, **53 reachable failing cells at
+  H0** against seq 10's 17 and seq 8's ~5 — the first headroom stratum admitted on proof
+  rather than on a trajectory guess. Envelope REACHABLE: 11.4 pp detectable at α inside
+  15.2 pp; 80% power would need 17.2 pp, which the headroom does not cover, and that is
+  recorded rather than smoothed.
+- **Round-to-round noise, measured a third time and at the largest scale yet.** 33 of the
+  Phase 0 candidates had been screened one day earlier under a recipe whose `target-agent`
+  tree hash is byte-identical (`50ac0d6`, verified): **12 of 33 task rates moved** — 7 up,
+  5 down, **+3.0 pp aggregate drift on no change at all**, largest single-task swing 2 cells.
+  With seq 10's identity round (14 of 36 trial cells flipping) this is settled: per-task cell
+  movement is not evidence on its own, and gen-001's identity round is doing real work.
+- Loop policy for seq 12 is in `contract/protocol.md`: bundle 3–5 non-interacting changes, a
+  ≥3-task-or-structural target bar, counters stated as DELTAS, ≤2 reverts, one slot reserved
+  for `sub-agent` (still never exercised — the suppression canary certifies the Pi-local path
+  it needs), and the **futility check** from the midpoint — declare a dead primary out loud
+  and re-purpose the remaining slots for knowledge rather than score. Deferred by user
+  decision: the control arm (a non-diagnosing loop, the sharpest test of the self-improvement
+  claim) and the weak-H0/strong-H0 pair.
 - **Seq 10 ran and closed (2026-08-18); read its closure's batch-derived half before
   designing seq 12.** Four results outlive it. (a) *The D24 structural surfaces work*: a
   registered extension tool went from zero Pi-local calls in project history to 39 in one
