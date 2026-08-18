@@ -1,0 +1,149 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+#
+# THIS IS THE PRE-REGISTERED IDENTITY TRANSITION (plan D30 rule 2, lock
+# protocol.identity_generations: [1]). H1 = H0 BY DESIGN, decided at freeze and before any
+# episode ran — not a rejected mutation, not a failed one. Its purpose is measurement:
+# batch_02 re-measures the identical harness, giving this experiment its round-to-round
+# noise floor BEFORE the first mutation instead of by accident in a late round, and pooling
+# the primary's H0 baseline to six trials per task (batch_01 + batch_02).
+transition:
+  from_generation: 0
+  to_generation: 1
+experiment: 010_adopt-bm25-luna56
+outcome: identity
+batch:
+  name: batch_01
+  task_ids:
+  - task_003
+  - task_005
+  - task_006
+  - task_008
+  - task_014
+  - task_023
+  - task_032
+  - task_055
+  - task_057
+  - task_063
+  - task_076
+  - task_089
+evidence:
+  conversation_ids:
+  - 01a01239-cf39-7637-892d-63919a43bb95
+  - 01a01270-e27b-71df-8861-c212a58e5edb
+  - 01a01242-8ad7-7108-b039-2e2a191ebeb8
+  - 01a0123a-4657-7543-9891-4a553131df01
+  - 01a0123f-69d7-74c1-b43b-7bad63227cb7
+  - 01a01244-5f55-72b1-8ebd-d05fb02ecffe
+  - 01a0123a-e065-75c4-8a84-48c2f9d0cf21
+  - 01a0123f-d7da-72b3-ac5c-9e5eaad47231
+  - 01a01244-d6fc-729e-901d-ce662ac74830
+  summary: >-
+    batch_01, the H0 baseline round: 36/36 episodes completed, 36/36 evidence_complete and
+    arm_sha_ok, all four sandbox seam counters zero, pi_local_calls 0 (H0's D24 suppression
+    registry is empty), $0.64, recipe f30e877 byte-identical to tag h0-baseline. Graded read
+    20/36 episodes = 55.6%, against the pre-partition screen's predicted 19/36 = 52.8%.
+    Inspected: every episode's graded action_checks re-read under a NORMALIZED three-way
+    comparison (MATCH / ARGS / ABSENT) against the actual tool calls in tau's trajectory,
+    because tau compares call_discoverable_*_tool payloads as JSON strings and cannot itself
+    tell "never called it" from "called it wrong"; plus the full platform conversation for
+    task_055 t0, which is what resolved the account-identifier symptom into T1's mechanism.
+    The observation harvest was not attempted: batch_01 is a complete 36-episode census, so
+    the full-population transcript read is the stronger evidence tier at this size. The nine
+    conversation ids listed are the decisive episodes; the round manifest at
+    generation_000/batch_01/episode_manifest.jsonl carries all 36.
+    PREFLIGHTS: none — an identity transition lands no change to preflight.
+    RECOVERY: the round's first pass lost task_003 trial 1 to the luna user-simulator
+    empty-completion signature past tau's four retries (weather on a frozen surface; all
+    four seam counters zero on that pass). The pair was resumed and the other 35 episodes
+    were not re-spent. Recorded because a round that needed a recovery should say so.
+signals:
+- description: >-
+    T1 — a bank-defined product class is chosen without resolving the rule that selects it.
+    The tool and the customer data are right and the class is wrong: task_003 applied for
+    "Gold Rewards Card" against gold "Silver Rewards Card" in 3/3 trials after only 1-4
+    KB_search calls; task_023 t0 applied for "Silver Rewards Card" against gold "Diamond
+    Elite Card"; task_055 opened "Green Account" / "Silver Account" / "Platinum Plus
+    Account" against gold "Silver Plus Account". On task_055 the transcript shows the chain
+    end to end — the wrong account class creates the wrong account, so every downstream
+    identifier is wrong, which means the account_id mismatch is T1's symptom rather than an
+    independent defect. Counted on the mechanism, not the symptom.
+  prevalence: 3/12 tasks, 8/36 episodes
+- description: >-
+    T2 — the user is handed a display fragment where the tool needs the exact string. The
+    agent grants deposit_check_3847 with a pre-filled machine payload while its prose
+    abbreviates the identifier ("ending in 9d4e"); the user then calls with "9d4e"
+    verbatim, and the agent's own correction message ("The full account ID is
+    36bec7cd2319d4ae. Please retry") is the proof of causation. Sibling failures: invented
+    tool names (mobile_check_deposit, deposit_check) and the argument key `amount` where
+    the KB document states `check_amount`. The retrieved document states the tool name, the
+    argument names and the call shape explicitly, so nothing here needs domain knowledge.
+  prevalence: 3/12 tasks, 7/36 episodes
+- description: >-
+    T3 — the transfer reason is a legal enum member and the wrong one. task_014 grades on
+    ACTION with compare_args ["reason"], so the transfer itself is correct: gold
+    unconfirmed_external_communication, chosen kb_search_unsuccessful_customer_requests_transfer
+    (t1) and customer_demands_after_unavailable_offer_refusal (t2). Same mechanism as T1 on a
+    different catalogue, filed separately so a T1 change's effect here measures whether the
+    mechanism generalizes.
+  prevalence: 1/12 tasks, 2/36 episodes
+- description: >-
+    T4 — the procedure stops after the first of the customer's two requests, or escalates
+    instead. task_063 t0/t2 end after apply_for_credit_card with verification, unlock and
+    the savings open all ABSENT; task_005 t0 and task_023 t2 transfer with gold actions
+    ABSENT. task_063 t1 performed every gold action semantically (6/6 MATCH) and still
+    scored 0.0 on the DB check, so that task carries a second defect in state the gold
+    actions do not capture. Held: the shape overlaps T1, and over-escalation has been moved
+    by none of eight prior mutations across four experiments.
+  prevalence: 2/12 tasks, 4/36 episodes
+- description: >-
+    Instrument health, recorded as a signal because it is what the freeze was built to buy.
+    Both anchors held 3/3, so the regression channel is live. The normalized verdict split
+    is MATCH 111 / ARGS 27 / ABSENT 9 across 147 gold-action checks: the dominant mode of
+    this batch at H0 is argument-value resolution, three to one over discovery — a
+    different dominant mode from the prior experiment's, and the one a marginal-only batch
+    was always going to surface.
+  prevalence: 147 gold-action checks over 36/36 episodes
+counterevidence: >-
+  Three things argue against acting on any of this yet, and together they are why gen-001
+  is an identity round rather than a wasted slot. (1) NO NOISE FLOOR EXISTS YET. batch_02
+  measures it directly, on this composition; until then every per-task cell above is a
+  single three-trial draw, and the prior experiment's floor (2 cells / 8.3 pp) was measured
+  on a different batch size and composition, so it does not transfer. T3's two episodes and
+  T4's four are exactly the magnitudes a floor could absorb. (2) T1 and T4 may be one
+  mechanism rather than two: an agent that cannot resolve a class stalls and escalates, and
+  the escalating episodes sit on the tasks whose values are hardest. Reading batch_02
+  before composing separates them. (3) The screen and the round disagree by up to one cell
+  on eight of twelve tasks (screen local lane, round platform lane), so any attribution
+  smaller than two cells is currently unreadable.
+hypothesis: >-
+  None advanced this transition, by design. The pre-registration is the claim: H1 = H0, so
+  batch_02 re-measures an identical harness and its per-task differences from batch_01 ARE
+  the round-to-round noise of this instrument, with no mutation to confound them. Every
+  attribution seq 10 makes later is read against that number.
+owning_layer: none (identity transition — no surface is targeted)
+proposed_change: >-
+  No change. This is the identity generation pre-registered in the freeze
+  (benchmark_lock.yaml protocol.identity_generations: [1], committed before the first
+  episode), not a rejected or failed mutation. The recipe stays byte-identical to tag
+  h0-baseline, H1's held-out measurement is H0's carried forward per D5, and the round the
+  transition produces (batch_02) is spent on measuring the instrument rather than on a
+  change. The four targets opened in improvement_backlog.md are ranked and carried into
+  gen-002, re-ranked against batch_02.
+schema_version: 4
+mutation:
+  branch: null
+  pr_url: null
+  source_commit: f30e8773275c61fb177b17eab219805e8acec7a8
+  candidate_commit: f30e8773275c61fb177b17eab219805e8acec7a8
+expected_effect: >-
+  batch_02 is an A/A measurement of the identical harness, so the pre-registered
+  expectation is no systematic movement: the round total should sit within sampling noise
+  of batch_01's 20/36, and both anchors should hold 3/3. Whatever per-task churn appears IS
+  the measurement — the number every later attribution in this experiment is read against,
+  and the reason a bare single-cell movement will not be attributed to any change.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-17'
+held_out_result: null
