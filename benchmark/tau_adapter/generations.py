@@ -170,3 +170,25 @@ def _git(args: list[str], repo_root: Path) -> str:
             f"git {' '.join(args)} failed: {(proc.stderr or proc.stdout).strip()}"
         )
     return proc.stdout
+
+
+def heldout_scheduled(generation: int, schedule: tuple[int, ...] | None) -> bool:
+    """Is this generation due a held-out round? (plan D36)
+
+    `schedule` None is the pre-D36 contract — every non-identity generation is measured.
+    A frozen schedule makes measurement sparse: the generations it omits are CARRIED, the
+    same way identity generations already are, so nothing downstream needs a new concept.
+    """
+    return True if schedule is None else generation in schedule
+
+
+def heldout_due_before(generation: int, schedule: tuple[int, ...] | None) -> list[int]:
+    """Scheduled measurements at or before `generation`, oldest first.
+
+    The batch gate walks this rather than testing one generation, so the measure-then-learn
+    guarantee keeps its original strength under a sparse schedule: a batch cannot run while
+    ANY scheduled measurement at or before its generation is missing, not merely the latest.
+    """
+    if schedule is None:
+        return [generation]
+    return [g for g in schedule if g <= generation]

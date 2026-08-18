@@ -480,11 +480,18 @@ def assemble(
         measured = load_measured(
             vault_experiment_dir / generation_dirname(generation), lock.num_trials
         )
-        if generation in identity:
+        scheduled = gensmod.heldout_scheduled(generation, lock.protocol.heldout_generations)
+        if generation in identity or not scheduled:
             if measured is not None:
+                reason = (
+                    "is an identity generation (its record's outcome pins H to its "
+                    "predecessor)"
+                    if generation in identity
+                    else "is not on the frozen held-out schedule "
+                    "(protocol.heldout_generations)"
+                )
                 raise RevealError(
-                    f"{generation_dirname(generation)} is an identity generation (its "
-                    "record's outcome pins H to its predecessor), yet the vault holds a "
+                    f"{generation_dirname(generation)} {reason}, yet the vault holds a "
                     "measurement for it — a held-out round that should never have run"
                 )
             results.append(GenerationResult(generation, dict(results[-1].stats), carried=True))

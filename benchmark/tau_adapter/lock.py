@@ -47,6 +47,7 @@ _PROTOCOL_KEYS = (
     "batch_mode",
     "reading_key",
     "identity_generations",
+    "heldout_generations",
 )
 
 #: The nine cells a mechanical reading key must name (plan D25): primary direction ×
@@ -110,6 +111,9 @@ class ProtocolConfig:
     #: under fresh batches an A/A round would measure a different task set and no noise.
     #: Default () keeps every pre-existing lock and snapshot valid.
     identity_generations: tuple[int, ...] = ()
+    #: Generations that get a held-out round; None means every non-identity generation
+    #: (the pre-D36 behaviour). See _parse_heldout_generations.
+    heldout_generations: tuple[int, ...] | None = None
 
 
 def _protocol_positive_int(section: dict, key: str) -> int:
@@ -151,6 +155,61 @@ def _parse_reading_key(section: dict) -> dict[str, str] | None:
             f"combination run-voiding, never be blank): {', '.join(empty)}"
         )
     return {cell: str(reading_key[cell]) for cell in READING_KEY_CELLS}
+
+
+def _parse_heldout_generations(
+    section: dict, generations: int, identity: tuple[int, ...]
+) -> tuple[int, ...] | None:
+    """Which generations get a held-out round — None means every non-identity one.
+
+    Through seq 10 the held-out set was measured once per generation, and it consumed roughly
+    two thirds of the episode budget to produce one flat line. Plan D36 makes the schedule a
+    frozen decision: a sparse schedule measures the baseline, a midpoint and the endpoint, and
+    the generations between are CARRIED exactly the way identity generations already are —
+    same mechanism, same `carried` label at reveal, no new concept.
+
+    The cadence guarantee is preserved in form rather than weakened: a batch still cannot run
+    until every SCHEDULED measurement at or before its generation exists, and the reveal still
+    refuses while any scheduled measurement is missing. What changes is the size of the
+    schedule, not whether it is enforced. Absent, behaviour is byte-for-byte the old one.
+
+    Validation refuses the two schedules that would void the experiment: one without the
+    baseline (nothing to compare against) and one without the endpoint (the final harness
+    unmeasured, which `make reveal` exists to prevent).
+    """
+    value = section.get("heldout_generations")
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        raise LockError("protocol.heldout_generations must be a list of generation numbers")
+    for entry in value:
+        if isinstance(entry, bool) or not isinstance(entry, int):
+            raise LockError(f"protocol.heldout_generations entry {entry!r} must be an integer")
+        if not 0 <= entry <= generations:
+            raise LockError(
+                f"protocol.heldout_generations entry {entry} is outside 0..{generations}"
+            )
+    if list(value) != sorted(set(value)):
+        raise LockError(
+            "protocol.heldout_generations must be strictly increasing with no duplicates"
+        )
+    if 0 not in value:
+        raise LockError(
+            "protocol.heldout_generations must include 0: without a measured baseline there "
+            "is nothing for the endpoint to be compared against"
+        )
+    if generations not in value:
+        raise LockError(
+            f"protocol.heldout_generations must include {generations}, the final generation — "
+            "an experiment whose last harness goes unmeasured is what `make reveal` refuses"
+        )
+    overlap = sorted(set(value) & set(identity))
+    if overlap:
+        raise LockError(
+            f"protocol.heldout_generations schedules identity generation(s) {overlap}, which "
+            "carry their predecessor's result forward and are never measured"
+        )
+    return tuple(value)
 
 
 def _parse_identity_generations(
@@ -347,14 +406,17 @@ class Lock:
             raise LockError(
                 f"protocol.batch_mode {batch_mode!r} must be one of {'/'.join(_BATCH_MODES)}"
             )
+        generations = _protocol_positive_int(section, "generations")
+        identity_generations = _parse_identity_generations(section, generations, batch_mode)
         config = ProtocolConfig(
             **{key: _protocol_positive_int(section, key) for key in _PROTOCOL_INT_KEYS},
             **{key: _protocol_bool(section, key) for key in _PROTOCOL_BOOL_KEYS},
             holdout_visibility=_parse_holdout_visibility(section),
             batch_mode=batch_mode,
             reading_key=_parse_reading_key(section),
-            identity_generations=_parse_identity_generations(
-                section, _protocol_positive_int(section, "generations"), batch_mode
+            identity_generations=identity_generations,
+            heldout_generations=_parse_heldout_generations(
+                section, generations, identity_generations
             ),
         )
         if config.batch_mode == BATCH_MODE_FIXED and not config.allow_within_batch_verification:

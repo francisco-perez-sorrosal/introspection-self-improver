@@ -361,6 +361,15 @@ def _heldout_cadence_problem(lock: lockmod.Lock, generation_name: str) -> str | 
     from tau_adapter import records as recordsmod
 
     index = int(generation_name.removeprefix("generation_"))
+    if not gensmod.heldout_scheduled(index, lock.protocol.heldout_generations):
+        scheduled = ", ".join(str(g) for g in (lock.protocol.heldout_generations or ()))
+        return (
+            f"{generation_name} is not on this experiment's frozen held-out schedule "
+            f"(protocol.heldout_generations: {scheduled}). Its result is CARRIED from the "
+            "most recent scheduled measurement, exactly as an identity generation's is — "
+            "measuring it would spend a round the freeze did not budget, and the reveal "
+            "would refuse the measurement it produced."
+        )
     if index == 0:
         return None
     experiment_dir = RESULTS_ROOT / f"experiment_{lock.experiment_id}"
@@ -444,21 +453,30 @@ def _batch_cadence_problem(lock: lockmod.Lock, batch_number: int) -> str | None:
             f"batch_{batch_number:02d} would run something other than "
             f"H{runner_generation}{carried}:\n  ✗ " + "\n  ✗ ".join(problems)
         )
-    graded = (
-        heldoutmod.vault_root()
-        / f"experiment_{lock.experiment_id}"
-        / generation_name
-        / heldoutmod.GRADED_DIR
-        / heldoutmod.GRADED_RESULTS
-    )
-    if not graded.exists():
-        return (
-            f"H{runner_generation} has no graded held-out measurement in the vault"
-            f"{carried}. The cadence is measure-then-learn: run "
-            f"`make heldout GEN={generation_name}` to completion before spending "
-            f"batch_{batch_number:02d} — a baseline skipped now becomes unmeasurable "
-            "once the next merge moves the recipe."
+    # Every SCHEDULED measurement at or before this generation, not merely the latest: a
+    # sparse held-out schedule (plan D36) makes measurement rarer, never optional.
+    for due in gensmod.heldout_due_before(effective, lock.protocol.heldout_generations):
+        due_name = f"generation_{due:03d}"
+        graded = (
+            heldoutmod.vault_root()
+            / f"experiment_{lock.experiment_id}"
+            / due_name
+            / heldoutmod.GRADED_DIR
+            / heldoutmod.GRADED_RESULTS
         )
+        if not graded.exists():
+            scope = (
+                f"H{runner_generation}"
+                if due == effective
+                else f"H{due}, which H{runner_generation} depends on,"
+            )
+            return (
+                f"{scope} has no graded held-out measurement in the vault{carried}. The "
+                "cadence is measure-then-learn: run "
+                f"`make heldout GEN={due_name}` to completion before spending "
+                f"batch_{batch_number:02d} — a baseline skipped now becomes unmeasurable "
+                "once the next merge moves the recipe."
+            )
     return None
 
 

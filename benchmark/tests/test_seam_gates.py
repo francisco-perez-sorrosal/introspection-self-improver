@@ -180,10 +180,33 @@ def test_seam_integrity_flags_daemon_patience_parks():
     assert any("daemon-patience" in finding for finding in findings)
 
 
-def _cadence_lock():
+def _cadence_lock(heldout_generations=None):
+    """A minimal lock for the cadence gates.
+
+    Carries a protocol block because the gates read `protocol.heldout_generations` (plan
+    D36) — in production that block is mandatory, so a fixture without one was testing a
+    lock shape that cannot exist. `heldout_generations` left None keeps the pre-D36
+    contract: every non-identity generation is measured.
+    """
     from tau_adapter.lock import Lock
 
-    return Lock(raw={"experiment": {"seq": 9, "name": "t"}})
+    protocol = {
+        "generations": 3,
+        "improvement_tasks_per_generation": 4,
+        "held_out_tasks": 8,
+        "allow_within_batch_verification": True,
+        "require_human_approval": False,
+        "holdout_visibility": {
+            "expose_tasks_to_orchestrator": False,
+            "expose_traces_to_orchestrator": False,
+            "expose_per_task_results_to_orchestrator": False,
+            "expose_aggregate_score_to_orchestrator": False,
+        },
+        "batch_mode": "fixed",
+    }
+    if heldout_generations is not None:
+        protocol["heldout_generations"] = heldout_generations
+    return Lock(raw={"experiment": {"seq": 9, "name": "t"}, "protocol": protocol})
 
 
 @pytest.fixture
@@ -283,3 +306,68 @@ def test_heldout_refuses_identity_generations_before_the_spend(cadence):
     (records_dir / "gen_000_to_001.yaml").write_text("outcome: identity\n", encoding="utf-8")
     problem = runmod._heldout_cadence_problem(_cadence_lock(), "generation_001")
     assert problem is not None and "carries" in problem
+
+
+# ── sparse held-out schedules (plan D36) ────────────────────────────────────────────────
+# Through seq 10 the held-out set was measured once per generation and consumed roughly two
+# thirds of the episode budget to produce one flat line. A frozen schedule makes measurement
+# sparse WITHOUT making it optional: the generations it omits are carried exactly as identity
+# generations are, and a batch still cannot run while any scheduled measurement is missing.
+
+
+def test_sparse_schedule_still_refuses_a_batch_whose_baseline_is_unmeasured(cadence):
+    lock = _cadence_lock(heldout_generations=[0, 2, 3])
+    problem = runmod._batch_cadence_problem(lock, 1)
+    assert problem is not None and "make heldout GEN=generation_000" in problem
+
+
+def test_sparse_schedule_lets_a_batch_run_past_an_unscheduled_generation(cadence):
+    # H1 is not on the schedule, so batch_02 (run by H1) needs H0's measurement and no more.
+    _grade_vault_round(cadence, "generation_000")
+    lock = _cadence_lock(heldout_generations=[0, 2, 3])
+    assert runmod._batch_cadence_problem(lock, 2) is None
+
+
+def test_sparse_schedule_refuses_a_batch_when_an_EARLIER_scheduled_round_is_missing(cadence):
+    # The gate walks every scheduled measurement at or before the generation, not just the
+    # latest — otherwise a sparse schedule would let a skipped baseline through.
+    _grade_vault_round(cadence, "generation_002")
+    lock = _cadence_lock(heldout_generations=[0, 2, 3])
+    problem = runmod._batch_cadence_problem(lock, 3)
+    assert problem is not None and "generation_000" in problem
+
+
+def test_heldout_refuses_an_unscheduled_generation_before_the_spend(cadence):
+    lock = _cadence_lock(heldout_generations=[0, 2, 3])
+    problem = runmod._heldout_cadence_problem(lock, "generation_001")
+    assert problem is not None
+    assert "not on this experiment's frozen held-out schedule" in problem
+
+
+def test_schedule_must_include_the_baseline_and_the_final_generation():
+    from tau_adapter.lock import LockError
+
+    with pytest.raises(LockError, match="must include 0"):
+        _cadence_lock(heldout_generations=[1, 3]).protocol
+    with pytest.raises(LockError, match="must include 3"):
+        _cadence_lock(heldout_generations=[0, 2]).protocol
+
+
+def test_schedule_may_not_name_an_identity_generation():
+    from tau_adapter.lock import Lock, LockError
+
+    protocol = dict(_cadence_lock(heldout_generations=[0, 1, 3]).raw["protocol"])
+    protocol["identity_generations"] = [1]
+    lock = Lock(raw={"experiment": {"seq": 9, "name": "t"}, "protocol": protocol})
+    with pytest.raises(LockError, match="carry their predecessor"):
+        lock.protocol
+
+
+def test_absent_schedule_reproduces_the_pre_D36_contract():
+    # The default must be byte-for-byte the old behaviour: every generation is due.
+    from tau_adapter import generations as gensmod
+
+    assert gensmod.heldout_scheduled(2, None) is True
+    assert gensmod.heldout_due_before(2, None) == [2]
+    assert gensmod.heldout_scheduled(1, (0, 2, 3)) is False
+    assert gensmod.heldout_due_before(3, (0, 2, 3)) == [0, 2, 3]
