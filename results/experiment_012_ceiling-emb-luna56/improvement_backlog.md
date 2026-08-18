@@ -421,3 +421,127 @@ rather than spent on a change that could not have worked, and gen-003's ladder o
 falls to `extension-hook` or `extension-tool`.
 
 <!-- transition: gen_001_to_002 -->
+
+---
+
+## Re-ranking against `batch_03` (H2, 2026-08-18)
+
+**The cleanest round so far**: 78/78 episodes, every row `evidence_complete` and
+`arm_sha_ok`, all four sandbox seam counters 0, zero stall warnings, `pi_local_calls` 0,
+zero incomplete episodes, $1.35. **Third round over the same twenty-six tasks — from here on
+every batch number measures a set the loop has been tuned on.**
+
+**A correction to the previous entry:** `task_003` trial 0 completed this round. It failed
+the same cell in `batch_01` and `batch_02` and then did not, so "deterministic for that
+cell" is **downgraded to high-rate weather**. Recorded as a correction rather than left
+standing.
+
+**Round: 29/78 (37.2%)** against the pooled H0 baseline 54/154 (35.1%). The round total is
+**not** evidence — the identity pair moved +2.6 pp on a byte-identical harness.
+
+### gen-002's predictions, scored
+
+| change | counter | predicted | measured | verdict |
+|---|---|---|---|---|
+| C1 | `close_bank_account_7392` with an optional key | 9 → ≤2 ep | **9 → 9 ep, 10 → 10 calls** | **mechanism DENIED** |
+| C2 | catch-all `reason` calls | 7 → ≤3; transfers not −4 | **7 → 3**; specific 14 → 21; transfers 19 → **21** | **CONFIRMED, both halves** |
+| C3 | distinct KB docs / episode | +≥3; `KB_search` ≤7.3; msgs ≤41.6 | **32.94 → 35.90 (+2.96)**; 6.28; 40.18 | **directional, 0.04 short; cost falsifiers unfired** |
+
+**C1 is a mechanism denial, not a denied prediction.** Its counter sat at 9 episodes / 10
+calls in *three consecutive rounds* — `batch_01` and `batch_02` before the instruction
+existed, `batch_03` after it. The change moved nothing anywhere it could fire, and the
+pre-registered clause-1 adversarial reading is now measured rather than hypothesised: the
+customer states a motive for closing the account, so *"only if the customer's request calls
+for it"* reads as permission.
+
+**C2 is confirmed twice over.** The counter moved as predicted, and the sole-cause
+enumeration — computed by different code — moved with it: `REASON`-only failing episodes
+5 → 2, task count 3 → 1.
+
+**C3's cost hazard did not reproduce.** The prior experiment's +31% `KB_search` blowout came
+in here at **+3.1%**, and gold-actions-ABSENT held at 12, so the "agent stopped looking"
+falsifier did not fire either.
+
+### The zero-noise stratum moved, and it moved on C3's tasks
+
+| stratum | `batch_01` | `batch_02` | `batch_03` |
+|---|---|---|---|
+| anchor | 4/9 | 7/9 | 5/9 |
+| marginal | 19/35 | 18/35 | 18/36 |
+| **headroom** | **3/33** | **3/33** | **6/33** |
+
+Movers: `task_002` (0/6 pooled → **2/3** — C3's own decisive transcript task), `task_055`
+(0/6 → 1/3), `task_056` (0/6 → 1/3). All three are T1 tasks, in the one stratum that showed
+**zero** movement across the byte-identical A/A pair.
+
+**Stated with its limits**, because the noise floor exists to stop selective reading: three
+cells is three cells; a stratum that has never moved has had its variance *bounded loosely*,
+not estimated; and the **anchors fell 7/9 → 5/9 over the same step**. Reading the rise while
+ignoring the fall would be the error this ledger is built to prevent.
+
+### T3 REPRODUCES, widens, and consumes gen-003 (C5)
+
+Counting every failing episode in which a gold discoverable-tool name was never unlocked or
+called, T3 reaches **8 tasks / 12 episodes** — `task_015` `task_046` `task_055` `task_056`
+`task_057` `task_060` `task_061` `task_094`. `task_046` is deterministic: 3/3 this round,
+and **0 of 9 lifetime** ever unlocking `get_user_dispute_history_7291`. It was held out of
+gen-002 only because it collided with C1 on the same call; C1's prose is gone, so is the
+collision.
+
+### T1's remainder is isolated, and gen-002's stated condition is met (C6)
+
+The wrong-named-class mechanism is **still the largest sole cause at 8 episodes / 5 tasks**
+even though C3's retrieval counter moved and its stratum moved with it. **Retrieving more was
+necessary and is not sufficient** — which is exactly the evidence gen-002's record said it
+would require before landing C3's second half. C6 lands it, worded as a *completed-state
+check with a search as its remedy* rather than a missing-precondition bar, and carries a
+safety falsifier that is scored **before** its own counter.
+
+### T2 moves to a structural surface (C4) — a controlled experiment, with its limit stated
+
+C1's rule is re-delivered as a `tool_result` hook that names the unlocked tool's own
+parameters, parsed from the unlock text τ just returned, at the moment the agent reads it,
+with no licensed alternative attached. The prose is removed **as part of the substitution,
+not as a revert** — C1's mechanism was never tested, because the keys were never removed.
+
+**What this can and cannot settle**, recorded now so a positive result is not over-claimed:
+the hook's content is *near*-identical to C1's, not identical (it names concrete parameters
+and drops the escape clause), so a win is consistent with either "structure beats prose" or
+"the escape clause was the whole problem". What a **null** would settle is sharper — if the
+counter stays at 9 with the parameters named explicitly at the point of use and no
+alternative licensed, the surface is not the axis and the content is.
+
+Injection verified before any behavioural number: present in **3/3** preflight Pi sessions
+with correctly parsed tool names, absent from all **119** τ-trajectory messages
+(`generation_002/g003_preflight/`, 3 local episodes on the burned non-partition `task_026`).
+
+### T5 is now the largest bucket, and is deliberately not consumed
+
+Gold actions never performed: 12 episodes / 11 tasks. Held because it is heterogeneous,
+because it overlaps the over-escalation shape no prior mutation has moved, and because **C6
+could plausibly increase it** — which would confound any change aimed at it. Its counter
+serves this set as the shared safety falsifier instead.
+
+### Slot accounting
+
+| Slot | Generation | Change(s) | Status |
+|---|---|---|---|
+| — | gen-001 | pre-registered identity | consumed as designed |
+| 1 | gen-002 | C1 instructions, C2 instructions, C3 instructions | C1 **DENIED**; C2 **CONFIRMED**; C3 directional |
+| 2 | gen-003 | C4 **extension-hook**, C5 instructions, C6 instructions | in flight — scored by `batch_04` |
+| 3–6 | gen-004…gen-007 | T5 held; T1/T2/T3 remainders | open. **Reverts used: 0 of 2** |
+
+**Surface concentration — THE LADDER IS DISCHARGED, by landing rather than by argument.**
+gen-002's three `instructions` mutations armed it; C4 lands on `extension-hook`, a class this
+experiment had not exercised. The project-scope ledger is now complete — **every surface
+class this repo can name has been exercised in a graded round or measured by probe**:
+
+| surface | exercised in THIS experiment | status |
+|---|---|---|
+| `instructions` | yes — C1, C2, C3, C5, C6 | live |
+| `extension-hook` | **yes — C4** | injection verified present, zero τ leak |
+| `extension-tool` | not yet | live, unblocked, no current target whose shape fits |
+| `sub-agent` | probed at g=0 | **`surface_exhausted` for every retrieval-shaped target** — a child cannot reach τ's tools (120 s daemon timeout, never reaches the bridge) |
+| declared skill | n/a | measured inert on this seam |
+
+<!-- transition: gen_002_to_003 -->

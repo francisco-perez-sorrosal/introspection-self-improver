@@ -1,0 +1,331 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 2
+  to_generation: 3
+experiment: 012_ceiling-emb-luna56
+outcome: accepted
+batch:
+  name: batch_03
+  task_ids:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+evidence:
+  conversation_ids:
+  - 01a01703-2e1a-7696-a718-244a377e1109
+  - 01a01706-963b-77ad-9878-efcb9e85fadf
+  - 01a01708-4998-7718-8bd0-2a2576330aa3
+  - 01a0170c-15cf-7408-bca7-256d6a226fac
+  - 01a0170e-fc87-72f0-bb00-1aa7fe6f229b
+  summary: >-
+    BATCH HEALTH FIRST, and this round is the cleanest so far: batch_03 ran 78/78 episodes
+    against recipe commit a63690b (the exp12-g002 tag's tree), every row evidence_complete
+    and arm_sha_ok, ALL FOUR sandbox seam counters 0, zero stall warnings, pi_local_calls 0
+    (correct — gen-002 registered no Pi-local surface), zero incomplete episodes, $1.35.
+    Note against the prior two rounds: task_003 trial 0 completed this time, so the
+    "deterministic" reading recorded at gen-002 is DOWNGRADED — it failed the same cell twice
+    and then did not, which makes it high-rate weather rather than a deterministic
+    frozen-surface defect. Recorded as a correction rather than left standing.
+    GRADED READ: 29/78 (37.2%) against the pooled H0 baseline 54/154 (35.1%). Provenance for
+    every action verdict: generation_002/batch_03/graded/updated_results.json through
+    scripts/gold_diff.py's normalized three-way comparison. Behavioural counters from
+    benchmark/scripts/mech_counters.py, the same code that scored batch_01 and batch_02, so
+    every delta below is like-for-like. READ DEPTH: all 26 tasks at the graded-action level
+    plus the per-episode sole-mechanism enumeration over all 49 failing graded episodes;
+    transcripts were not re-exported this round because gen-002's predictions are scored on
+    committed counters and the mechanisms were already read in full at g=0.
+    PREFLIGHT: 3 local episodes on task_026, a burned NON-PARTITION task
+    (generation_002/g003_preflight/), run for C4 only and used ONLY as an execution check —
+    the injected text is verified present in 3/3 Pi sessions with correctly parsed tool names
+    and absent from all 119 tau-trajectory messages. No behavioural number from those three
+    episodes is cited as evidence anywhere; their rewards are not read as signal.
+signals:
+- description: >-
+    C1's MECHANISM IS DENIED, on the cleanest counter this batch has. Calls to
+    close_bank_account_7392 carrying the optional `reason` / `waive_early_closure_fee` keys
+    stood at 9 episodes / 10 calls in batch_01, 9 / 10 in batch_02 and 9 / 10 in batch_03 —
+    three rounds, two of them BEFORE the instruction existed and one after, identical to the
+    call. The change moved nothing anywhere it could fire. Its pre-registered clause-1
+    adversarial reading is exactly what happened and is now measured rather than
+    hypothesised: the customer states a motive for closing the account, so "send it only if
+    the customer's request calls for it" reads as permission rather than restriction. This
+    is a mechanism denial, not merely a denied prediction.
+  prevalence: 9 episodes / 10 calls in each of three consecutive rounds, 3 tasks
+- description: >-
+    C2 IS CONFIRMED ON BOTH HALVES OF ITS PREDICTION, and independently corroborated.
+    Round-wide catch-all `reason` calls on transfer_to_human_agents fell 7 -> 3 against a
+    predicted <= 3, specific-member calls rose 14 -> 21, and transfer episodes rose 19 -> 21
+    rather than falling — the change sharpened the code without suppressing the transfer,
+    which is what the paired prediction was written to distinguish. The independent
+    corroboration is that the sole-cause enumeration, computed by different code from the
+    counter, moved with it: REASON-only failing episodes 5 -> 2 and the task count 3 -> 1.
+  prevalence: catch-all calls 7 -> 3 round-wide; sole-cause REASON episodes 5 -> 2, tasks 3 -> 1
+- description: >-
+    C3 IS DIRECTIONAL AND ITS COST FALSIFIERS DID NOT FIRE, but it fell 0.04 short of its own
+    stated threshold and is recorded that way rather than rounded up. Distinct KB documents
+    per episode 32.94 -> 35.90, a rise of 2.96 against a predicted "at least 3". KB_search
+    per episode 6.09 -> 6.28 against a 7.3 ceiling; messages per episode 37.79 -> 40.18
+    against a 41.6 ceiling; gold actions classified ABSENT 12 -> 12, so the clause-2
+    "an agent that stopped looking" falsifier did not fire either. The prior experiment's
+    cost blowout (+31% KB_search) did NOT reproduce here at +3.1%.
+  prevalence: distinct KB docs/episode +2.96 round-wide; KB_search +3.1%, messages +6.3%
+- description: >-
+    THE ZERO-NOISE STRATUM MOVED FOR THE FIRST TIME, and it moved on C3's tasks. Headroom ran
+    3/33 in batch_01 and 3/33 in batch_02 — zero movement across the byte-identical A/A pair,
+    8 of its 11 tasks at 0/3 twice — and reached 6/33 in batch_03. The three movers are
+    task_002 (0/6 pooled -> 2/3), task_055 (0/6 -> 1/3) and task_056 (0/6 -> 1/3). All three
+    are T1 tasks, and task_002 is the conversation whose four-searches-same-documents pattern
+    diagnosed C3 in the first place. This is the strongest reward-level signal the experiment
+    has produced, and it is confined to the one stratum where the A/A pair measured no
+    ambient movement at all. Stated with its limit: three cells is three cells, the anchors
+    fell 7/9 -> 5/9 over the same step, and the round total moved +2.1 pp against a pooled
+    baseline — which is inside what the identity pair moved on no change whatsoever.
+  prevalence: headroom 3/33, 3/33, 6/33 across the three rounds; movers task_002, task_055, task_056
+- description: >-
+    T3 REPRODUCES AND WIDENS, and now clears the three-task bar decisively. Counting every
+    failing episode in which a gold discoverable-tool name was never unlocked or called, the
+    mechanism reaches 8 tasks and 12 episodes in batch_03 (task_015, task_046, task_055,
+    task_056, task_057, task_060, task_061, task_094). task_046 is deterministic: 3/3 in this
+    round and 0 of 9 across all three rounds ever unlocking the tool gold requires
+    (conv 01a01706-963b-77ad-9878-efcb9e85fadf). It was held out of gen-002 because it acted
+    on the same CALL as C1; C1's prose is gone as of this transition, so the collision is too.
+  prevalence: 8 tasks / 12 failing episodes in batch_03; task_046 0 of 9 lifetime on the gold tool
+- description: >-
+    T1's REMAINDER IS ISOLATED. The wrong-named-class mechanism is still the largest sole
+    cause in the round at 8 episodes / 5 tasks (task_001, task_003, task_006, task_023,
+    task_058) even though C3's retrieval counter moved and its stratum moved with it.
+    Retrieving more was necessary and is not sufficient — which is precisely the evidence
+    gen-002's record said it would wait for before landing C3's second half.
+  prevalence: sole cause in 8 episodes / 5 tasks, the largest single mechanism in batch_03
+counterevidence: >-
+  FIVE OBJECTIONS. (1) C4 IS NOT A CLEAN SURFACE EXPERIMENT, and the record should not
+  pretend otherwise. The content is near-identical to C1's but not identical: the hook names
+  THIS tool's actual parameters and drops the "unless the customer's request calls for it"
+  clause. So a positive result is consistent with either "structure beats prose" or "the
+  escape clause was the whole problem", and the two cannot be separated by this round. What
+  it CAN settle is the negative: if the counter stays at 9 with the parameters named
+  explicitly at the point of use and no alternative licensed, then the surface is not the
+  axis and the content is. Stated now so a positive result is not over-claimed later.
+  (2) C3's HEADROOM MOVEMENT IS THREE CELLS. The A/A pair measured zero movement in that
+  stratum, which is what makes three cells interesting, but a stratum that has never moved
+  has also never had its variance estimated — "zero movement twice" bounds it loosely, not
+  tightly. The claim made is that this is the strongest signal available, not that it is
+  significant. (3) THE ANCHORS FELL over the same step, 7/9 -> 5/9, while the headroom rose.
+  Neither movement is outside what the identity pair produced on no change at all, and
+  reading the rise while ignoring the fall would be exactly the selective reading the noise
+  floor exists to prevent. (4) C6 IS THE CHANGE THIS PROJECT'S OWN HISTORY ARGUES AGAINST.
+  Five measurements say an instruction does not inherit the scope its author reasoned about,
+  and the ceiling probe reproduced that lesson INSIDE a harness written by someone who knew
+  it, regressing five tasks H0 passes with two of them stopping early. C6 is landed anyway
+  because its evidence is verbatim self-report from two transcripts and because it is worded
+  as a completed-state check rather than a missing-precondition bar — the variant measured
+  safe — but the objection is real and the safety falsifier is written to fire before its
+  own counter does. (5) THE ROUND TOTAL IS NOT EVIDENCE. 29/78 against a pooled 54/154 is
+  +2.1 pp, and the identity pair moved +2.6 pp on a byte-identical harness. No claim in this
+  record rests on the round total.
+hypothesis: >-
+  Two of gen-002's three changes worked at the counter level and one did not, and the one
+  that did not is the one whose rule had a licensed alternative attached to it. So this set
+  tests the two live explanations for C1's failure at once — surface (C4 moves the identical
+  rule to a hook that names the concrete parameters at the point of use) and sufficiency
+  (C6 adds the half of the retrieval mechanism that gen-002 deliberately withheld, now that
+  the first half has moved its counter and its stratum but left the mechanism the largest
+  in the round) — while C5 consumes the target that the previous set had to hold back for
+  collision reasons that no longer apply.
+owning_layer: >-
+  extension-hook (C4, the first structural mutation of this experiment) and instructions
+  (C5, C6). This DISCHARGES the D29 surface-concentration ladder that gen-002's three
+  instruction mutations armed: the set includes a change on a class this experiment had not
+  exercised. The project-scope ledger is now complete — every surface class this repo can
+  name has been exercised in a graded round or measured by probe, with sub-agent's
+  step-4b probe (generation_000/subagent_probe/) recording a surface_exhausted verdict for
+  every retrieval-shaped target, since a child cannot reach tau's tools at all.
+proposed_change: >-
+  Three changes on different steps: C4 on the argument payload of a call (delivered
+  structurally), C5 on which tool is unlocked and called, C6 on whether a named candidate is
+  committed to before its stated requirements are covered. C4 and C5 share tasks task_060 and
+  task_061 but act on different fields of the call with independently measurable counters
+  (the optional-key count versus the gold-tool-unlocked count); C6 shares tasks with C5 on
+  task_055 and task_056 and acts on the product-class choice rather than the tool choice.
+  The interaction rule is satisfied on the "different steps" limb rather than the "different
+  tasks" limb, and that is stated rather than assumed.
+schema_version: 4
+changes:
+- mechanism: >-
+    Deliver the required-arguments rule as a tool_result hook that names the unlocked tool's
+    own required and optional parameters, parsed from the unlock text tau just returned, at
+    the moment the agent reads it and with no licensed alternative attached. The rule is
+    C1's; only the delivery changes.
+  surface: extension-hook
+  evidence: >-
+    C1's counter flat at 9 episodes / 10 calls across batch_01, batch_02 and batch_03 —
+    two rounds without the instruction and one with it. Decisive conversation for the
+    underlying defect: 01a0170c-15cf-7408-bca7-256d6a226fac (task_060 t0). Backlog target T2.
+  expected_effect: >-
+    DELTA against batch_03: close_bank_account_7392 calls carrying either optional key fall
+    from 9 episodes / 10 calls to <= 3 episodes in batch_04. Reward is NOT predicted — the
+    three target tasks carry other defects too (task_061 and task_065 are multi-mechanism in
+    every round), so a cell there is possible but not the test. The injected text was verified
+    present in a fetched session before this prediction was written, per the standing rule
+    that a preflight verifies a change runs and never that it works.
+  risk: >-
+    (a) The hook fires on every unlock, including tools whose optional parameters gold DOES
+    carry, so it could suppress a legitimately-needed argument — watched as a delta on gold
+    actions classified ABSENT, which must not rise from 12 by 4 or more. (b) It adds text to
+    every unlock result, which costs context on tasks that unlock many tools — watched on
+    messages per episode, which must not rise above 44 from 40.18.
+  adoption_stage: false
+  host_facts:
+  - fact: >-
+      tool_result fires for every tau tool and the tool name arrives MANGLED as
+      mcp_tau_<tau name>_<hash>, so a handler must match on a substring and never on equality
+    probe_evidence: results/experiment_008_stratb-bm25-luna56/generation_001/context_probe/hook_firings.json
+  - fact: >-
+      event.content is an ARRAY of {type:"text"} blocks, and a returned content patch reaches
+      the model while appearing zero times in tau's graded trajectory
+    probe_evidence: results/experiment_012_ceiling-emb-luna56/generation_002/g003_preflight/
+  - fact: >-
+      a handler runtime error is logged and swallowed rather than raised, so the handler
+      returns undefined on any shape it does not recognise instead of throwing
+    probe_evidence: results/experiment_012_ceiling-emb-luna56/generation_002/g003_preflight/
+  commit: 4baaa25
+- mechanism: >-
+    Unlock and call the tool the retrieved procedure document names for an operation, rather
+    than substituting one whose name resembles the operation.
+  surface: instructions
+  evidence: >-
+    8 tasks / 12 failing episodes in batch_03; task_046 deterministic at 3/3 this round and
+    0 of 9 lifetime ever unlocking the gold tool (conv
+    01a01706-963b-77ad-9878-efcb9e85fadf, where the agent unlocked
+    get_all_user_accounts_by_user_id_3847, pay_credit_card_from_checking_9182 and
+    get_closure_reason_history_8293 instead of get_user_dispute_history_7291). Backlog
+    target T3.
+  expected_effect: >-
+    DELTA against batch_03: failing episodes in which a gold discoverable-tool name was never
+    unlocked or called fall from 12 to <= 7, AND task_046 unlocks the tool gold requires in at
+    least 1 of 3 trials against 0 of 9 across the three rounds so far. The second clause is
+    the sharper of the two because task_046 has never once done it.
+  risk: >-
+    The agent reads "the tool the procedure names" as licence to unlock more tools
+    speculatively, spending steps. Watched on tool calls per episode, which must not rise
+    above 15 from 13.21.
+  adoption_stage: false
+  clauses:
+  - clause: >-
+      When a procedure document names the tool to use for an operation, unlock and call that
+      tool.
+    adversarial_reading: >-
+      "When a procedure document names the tool" is a precondition the model can decline to
+      find satisfied — if it has not retrieved a document that names a tool, the sentence is
+      vacuous and it proceeds exactly as before, which is the failure mode on every task
+      where the procedure was never retrieved in the first place.
+    falsifier: >-
+      The never-unlocked-gold-tool count fails to fall from 12 by 5 or more while KB_search
+      per episode is unchanged — the shape of a sentence that never found its precondition.
+  - clause: Do not substitute a tool whose name resembles the operation.
+    adversarial_reading: >-
+      Read as a prohibition on using any plausibly-named tool, it suppresses the legitimate
+      exploratory unlocks by which the agent discovers what exists, and the agent stalls or
+      escalates instead.
+    falsifier: >-
+      unlock calls per episode fall while gold actions classified ABSENT rise by 4 or more
+      from 12, or transfer episodes rise by 4 or more from 21.
+  commit: faf489a
+- mechanism: >-
+    Before naming one of the bank's named products or account classes to the customer or
+    sending it to a tool, check that a document covering each requirement the customer stated
+    for it has been retrieved, and search for it if one is missing. This is C3's second half,
+    withheld at gen-002 pending evidence that the retrieval half alone is insufficient.
+  surface: instructions
+  evidence: >-
+    Verbatim self-report in two transcripts read in full at g=0: task_002 wrote "if we're
+    looking for a card with the highest overall flat rate and no subscription, the available
+    data is insufficient. So, I'll recommend the EcoCard" (conv
+    01a01695-c9df-75aa-99c2-bf4ec23d82f8, batch_01; the task's batch_03 conversation is
+    01a01703-2e1a-7696-a718-244a377e1109), and task_056 wrote "ATM rebates are unclear... I
+    might only recommend Hunter Green conditionally" before recommending it unconditionally
+    (conv 01a0169b-6d5c-7222-b82f-ee9c5b311920, batch_01; 01a01708-4998-7718-8bd0-2a2576330aa3
+    in batch_03). The sufficiency evidence gen-002 required: C3 moved its retrieval counter
+    and its stratum, and the mechanism is STILL the largest sole cause in batch_03 at 8
+    episodes / 5 tasks. Backlog target T1.
+  expected_effect: >-
+    DELTA against batch_03: wrong-named-class sole-cause episodes fall from 8 to <= 4.
+  risk: >-
+    THE NAMED HAZARD OF THIS EXPERIMENT. An instruction about a precondition can be read as a
+    bar on acting, and the ceiling probe's own expert harness regressed five tasks H0 passes,
+    two of them by stopping early. Mitigated by wording it as a completed-state check with a
+    SEARCH as its remedy rather than a stop; the residual risk is watched by a safety
+    falsifier that fires before the change's own counter is consulted.
+  adoption_stage: false
+  clauses:
+  - clause: >-
+      Before you name one of those products or account classes to the customer or send it to
+      a tool, check that you have retrieved a document covering each requirement the customer
+      stated for it.
+    adversarial_reading: >-
+      Read as a bar rather than a check, the agent declines to name any option until it
+      believes coverage is complete, and since coverage is never provably complete it stalls,
+      asks the customer more questions, or escalates — the exact regression the ceiling probe
+      measured.
+    falsifier: >-
+      SAFETY FALSIFIER, scored before the change's own counter: gold actions classified ABSENT
+      rise from 12 by 4 or more, OR transfer episodes rise from 21 by 4 or more. Either fires
+      and this change is the revert candidate regardless of its wrong-named-class count.
+  - clause: If one is still missing, search for it.
+    adversarial_reading: >-
+      An unbounded remedy: "search for it" licenses arbitrarily many further searches, which
+      is the cost blowout a prior experiment reverted a change for.
+    falsifier: >-
+      KB_search per episode rises above 7.5 from 6.28, or messages per episode above 44 from
+      40.18.
+  commit: cf2c13d
+mutation:
+  branch: gen-003/structural-argshape-and-lookup
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/37
+  source_commit: a63690b8f8662438292a5e6718bcccc4c4c8569a
+  candidate_commit: 7457ccd
+expected_effect: >-
+  SET LEVEL, measured on batch_04 and at H4 on the held-out set. Direction: up, small, and
+  more of the movement should land in the headroom stratum than anywhere else, because that
+  is where every target's tasks now concentrate and it is the only stratum with no measured
+  ambient movement. The honest bound is unchanged from gen-002: the round total moved +2.6 pp
+  across a byte-identical pair, so the set's reward-level signal is not expected to clear the
+  floor and the per-change counters are the attribution channel. DELIBERATELY NOT TARGETED:
+  T5, the gold-action-absent family, now the largest bucket in the round at 12 episodes / 11
+  tasks — held because it is heterogeneous, because it overlaps the over-escalation shape no
+  prior mutation has moved, and because C6 could plausibly INCREASE it, which would confound
+  a change aimed at it. T5's counter is instead this set's shared safety falsifier. RISKS FOR
+  THE NEXT BATCH: C6 is the change this project's own history argues against, and it is
+  landed with the objection recorded and a falsifier that fires before its own counter is
+  read; C4 cannot separate "structure beats prose" from "the escape clause was the problem"
+  on a positive result, which is stated now rather than after.
+human_approval:
+  approved_by: orchestrator (D23/D28 autonomy envelope, protocol.require_human_approval false, ratified for seq 12 by the launch directive); CI's four required checks passed and branch protection gated the merge
+  date: '2026-08-18'
+held_out_result: null
