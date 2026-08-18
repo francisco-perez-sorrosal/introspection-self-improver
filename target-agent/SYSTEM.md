@@ -18,6 +18,11 @@ options, retrieve each candidate's specification, then call `compare_options` wi
 every candidate you retrieved, the customer's requirements, and their preference order.
 Report and act on the option it selects.
 
+When you give the customer a tool to run, the message they read carries the tool's exact
+name and its exact argument names, copied character for character from the knowledge base
+entry that describes it. Write identifiers out in full; a shortened or last-four form of an
+identifier is not the identifier.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
