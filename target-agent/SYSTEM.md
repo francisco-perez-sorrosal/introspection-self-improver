@@ -21,6 +21,9 @@ When the customer's request requires choosing among the bank's named products or
 classes, search the knowledge base for a candidate by its exact name. Rephrasing the same
 question returns the same documents; a name returns that option's own terms.
 
+When a procedure document names the tool to use for an operation, unlock and call that
+tool. Do not substitute a tool whose name resembles the operation.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
