@@ -121,6 +121,7 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   | 5 | fixed-batch loop-reliability (odd; G=2, ×3 trials) | REVEALED 2026-08-16 — null primary, B flat; §29 carries the project's one WAIVED guardrail (human approval, by explicit user instruction) | `experiment_005_fixedb-bm25-luna56/` |
   | 6 | fixed-batch at depth (G=6, autonomous, composite sets) | REVEALED 2026-08-16 — null primary; held-out rose (p = 0.038, third exposure, not a claim); the two instruments could not be reconciled by that run | `experiment_006_fixedb-bm25-luna56/` + `INDEPENDENT_REVIEW.md` |
   | 8 | stratified batch, first run on the D24 seam (G=6, autonomous) | REVEALED 2026-08-17 — null on both instruments; the loop saturated the reachable batch range (15/15 non-walled cells at peak) and the endpoint test could not say yes; noise floor measured | `experiment_008_stratb-bm25-luna56/` + `INDEPENDENT_REVIEW.md` |
+  | 10 | both-curves, marginal batch + pure holdout (G=8, identity gen-001, autonomous) | REVEALED 2026-08-18 — **null on both instruments** (batch primary Σ+1.333, p = 0.184; held-out trend z = 0.03, p = 0.486; endpoint +0.0 pp). Reading key cell `primary_flat_secondary_flat` with harvest 0.667: every precondition a prior null could be blamed on was removed and the loop still found nothing. FIRST graded use of a Pi-local surface in project history (`pi_local_calls` 0 → 39) | `experiment_010_adopt-bm25-luna56/` |
 
   **Results under the D24 seam (seq 8 on) are not comparable to seq ≤ 6.** Under D33,
   in-loop sessions read prior experiments' `improvement_records/` and backlogs only —
@@ -154,6 +155,22 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   non-empty — executed by Pi, suppressed from τ, logged) yet **still unexercised in any
   graded round** — `pi_local_calls` was 0 across all 168 seq-8 platform episodes, and
   the platform lane pins the recipe to pushed main.
+- **Seq 10 ran and closed (2026-08-18); read its closure's batch-derived half before
+  designing seq 12.** Four results outlive it. (a) *The D24 structural surfaces work*: a
+  registered extension tool went from zero Pi-local calls in project history to 39 in one
+  round with well-formed arguments — the "unusable structural surfaces" hypothesis three
+  closures carried is dead, and the pre-freeze suppression canary is what killed it.
+  (b) *Adoption is not improvement*: that tool was adopted enthusiastically and moved no
+  reward. (c) *The bare-list null REPLICATES* — a list appended to what the model reads
+  moves nothing, now measured twice across different experiments, surfaces and subject
+  matter; do not spend a slot on one. (d) *Retrieval volume is the turn cost*, established
+  by elimination across three rounds (halve the tool calls: no change; raise KB_search 31%:
+  length rises; remove that instruction: KB_search 11.6 → 9.3, messages 46.5 → 43.3).
+  Method: a marginal-only batch buys dynamic range and pays in variance (14 of 36 trial
+  cells flip on an identical harness while the round total holds), so a pre-registered
+  identity round at generation 1 is the highest-value slot in the design — it fixes the
+  attribution bar before the first mutation. `sub-agent` remains the one surface class
+  never exercised and never probed; no `surface_exhausted` finding is claimed for it.
 - **The groundwork is landed in two waves and seq 10 is designed.** Wave one
   (2026-08-16, plan D24–D27, from the seq-6 review): the D24 seam suppression, record
   schema v3 (per-clause falsifiers, gated backlog stamp), the mechanical reading key +
