@@ -989,77 +989,163 @@ reports byte-identity to the re-tagged anchor.
 envelope REACHABLE; strata restated in the freeze snapshot; the identity
 pre-registration honored at reveal (mechanical).
 
-### Phase 5.11 — Seq-12 stage (D36; Phase 0 first, and the freeze waits on its result)
+### Phase 5.11 — Seq-12 stage: Phase 0 under a PROVISIONAL seq 11, then the seq-12 freeze (D36)
 
-**Nothing here is frozen yet, and that is deliberate**: the lock cannot be cut until Phase 0
-says which retrieval backend seq 12 runs on. Execute in order, in a fresh session under the
-D33 recall scope.
+**The sequencing matters and is not obvious.** Phase 0 must run episodes under a lock, and it
+must run them under BOTH retrieval backends — but seq 10's lock is frozen with a committed
+snapshot fingerprint, so running anything under a changed `retrieval_config` would either be
+refused or corrupt a closed experiment's record. The parity convention already names the
+answer: **odd seqs are experimentation** (D15). So Phase 0 runs under a **seq 11 lock with
+`frozen.status: PROVISIONAL`** — the status whose whole purpose is unenforced bring-up — and
+seq 12 is cut FROZEN afterwards, with the backend Phase 0 chose in its name.
 
-- [ ] **Preconditions.** `make check` green; `make reset_h0` reports byte-identity (the
-      recipe was returned to `h0-baseline` at seq 10's close, so this should say "the recipe
-      already was H0"); model-pair keys live; `make weather` clean.
+- [ ] **Preconditions.** `make check` green; `make reset_h0` reports byte-identity (the recipe
+      was returned to `h0-baseline` at seq 10's close); keys live; `make weather` clean.
 
-- [ ] **Phase 0 — the ceiling probe. This decides whether seq 12 runs at all.**
-      Build **H-expert**: a harness hand-built with full access to the candidate tasks and
-      unlimited effort. It is never shipped, never `h0-baseline`, and never part of the loop
-      — it exists only to bound the range, so it MAY do things a loop change may not (encode
-      procedure specific to the observed failure modes). It must still respect the frozen
-      surfaces: no `<policy>` edit, no model change, no reading `benchmark/vendor/` at
-      runtime, no gold values.
-      Run **H0-current** and **H-expert** over ~30 candidate tasks × 3 trials on the local
-      lane, **under both `bm25` and `openai_embeddings`** (switching needs `make policy` to
-      regenerate the frozen region and refresh the lock's tool catalogue).
-      Score with `scripts/headroom.py --h0 … --expert … --label <backend> --write …`.
-      Roughly 360 episodes ≈ $8 per backend.
+- [ ] **Cut seq 11 PROVISIONAL.** `experiment.seq: 11`, `name: ceiling-probe`,
+      `frozen.status: PROVISIONAL`. Protocol sizes are irrelevant here — nothing is measured
+      as a generation, these are probes. Results land under
+      `results/experiment_011_ceiling-probe/`, which is where probe evidence belongs.
 
-- [ ] **The two pre-registered decisions Phase 0 makes, written down BEFORE it runs.**
-      (a) **Backend**: freeze whichever yields the larger *harness headroom*
-      (`H_expert − H0`), not the larger absolute score; a tie goes to `openai_embeddings`
-      (what τ² publishes, restoring comparability, and the key is already required at grading
-      time). (b) **Go / no-go**: if headroom ≤ 5 pp under both backends, **seq 12 is not run**
-      — the objective offers too little for any harness to win, the loop would reproduce the
-      prior nulls without being able to explain them, and the next move is a domain decision
-      (`telecom-workflow` is the candidate: procedural and multi-step, where harness
-      discipline should actually bite). That outcome is a result, costs ~$16, and is written
-      up as one.
+- [ ] **Build H-expert.** A harness hand-built with full access to the candidate tasks and
+      unlimited effort. It is never shipped, never tagged `h0-baseline`, never part of any
+      loop — it exists ONLY to bound the range, so it MAY encode procedure specific to the
+      failure modes you can see. It must still respect the frozen surfaces: no `<policy>`
+      edit, no model or thinking-level change, no `read`/`bash`-class capability, no reading
+      `benchmark/vendor/` at runtime, no gold values or document ids.
+      Seq 10's evidence says where to aim it: **88% of gold actions at H0 were already the
+      right tool**, and the failures concentrated in *which value was chosen* — the wrong
+      card, the wrong account class, the wrong enum. So an expert harness should carry
+      constraint extraction at turn 1, per-candidate retrieval of category-specific figures,
+      an explicit filter-then-rank step, verification of a chosen value against the retrieved
+      evidence before any state-changing call, and exact-string handover. Seq 10's C1/C2/C3
+      (`results/experiment_010_adopt-bm25-luna56/`, reverted at close per D16) are a starting
+      point, not a ceiling.
 
-- [ ] **Compose the partition** (only if Phase 0 says go). **B = 30**, using the probe as the
-      *empirical* reachability oracle — a task H-expert passes is provably harness-reachable,
-      which is what makes a batch larger than the marginal band safe. **T = 36, and it is
-      forced**: the pool holds exactly 36 tasks never used as a batch task by any experiment,
-      and D33 keeps batch-used tasks burnt for held-out use forever. They are the same 36
-      seq 10 used, so the reuse declarations carry over per source with the D33 procedural
-      basis restated.
-      - batch-eligible stock, proven walls excluded (54): `task_001 task_002 task_003
-        task_004 task_005 task_006 task_008 task_010 task_014 task_015 task_020 task_023
-        task_024 task_027 task_029 task_032 task_037 task_038 task_040 task_041 task_043
-        task_045 task_046 task_047 task_050 task_053 task_054 task_055 task_056 task_057
-        task_058 task_060 task_061 task_062 task_063 task_064 task_065 task_066 task_069
-        task_071 task_074 task_076 task_077 task_079 task_080 task_081 task_083 task_087
-        task_088 task_089 task_090 task_094 task_101 task_102`
-      - held-out (36, forced): `task_007 task_012 task_016 task_017 task_018 task_019
-        task_021 task_022 task_025 task_031 task_033 task_035 task_036 task_039 task_044
-        task_048 task_049 task_051 task_052 task_059 task_067 task_068 task_073 task_075
-        task_078 task_084 task_085 task_086 task_091 task_092 task_093 task_095 task_097
-        task_098 task_099 task_100`
+- [ ] **Run the probe, both backends.** H0-current and H-expert over ~30 candidate tasks x 3
+      trials on the local lane, under `bm25` and then `openai_embeddings`. Switching is
+      mechanical but has a consequence to plan for: set `benchmark.retrieval_config`, run
+      `make policy` to regenerate the frozen `<policy>` region and refresh the lock's hash and
+      tool catalogue — **which changes `target-agent/SYSTEM.md` and therefore breaks
+      byte-identity with `h0-baseline`.** That is expected, not a fault: the harness is
+      unchanged and only the frozen benchmark text it carries moved. If seq 12 freezes on
+      embeddings, commit the regenerated region and **re-tag `h0-baseline` at that commit**
+      (the D16/D27/D31 re-tag precedent), then `make reset_h0` to verify.
+      Score each arm with `make headroom H0DIR=... EXPERT=... LABEL=<backend> WRITE=...`.
+      Roughly 360 episodes ~ $8 per backend.
 
-- [ ] **Cut the lock**: seq 12; `protocol:` **G=7**, `identity_generations: [1]`, **`heldout_generations: [0, 4, 7]`**, B=30, T=36, `num_trials: 3`,
-      `batch_mode: fixed`, `identity_generations: [1]`, `require_human_approval` per the
-      D23 envelope, the nine-cell reading key **restated for the gap-closure primary**, and
-      the retrieval backend Phase 0 chose. `make policy` if the backend moved.
+- [ ] **The three pre-registered decisions, written down BEFORE the probe runs.**
+      (a) **Backend**: freeze whichever yields the larger *harness headroom* (`H_expert - H0`),
+      not the larger absolute score; a tie goes to `openai_embeddings` (what tau2 publishes,
+      and the key is already required at grading time).
+      (b) **Go / no-go**: if headroom <= 5 pp under both backends, **seq 12 is not run.** The
+      objective offers too little for any harness to win, and the next move is a domain
+      decision (`telecom-workflow` — procedural and multi-step, where harness discipline
+      should bite). Write it up, update the ledger, stop. ~$16 for a real answer.
+      (c) **Envelope**: `power_envelope.py --headroom-pp <measured>` must return REACHABLE —
+      the smallest effect the episode-level primary can detect must sit INSIDE the measured
+      headroom. At B=30, `num_trials` 3 and a pooled baseline that is **10.6 pp**, so a
+      headroom below ~11 pp fails this gate even if it clears (b), and the response is more
+      trials or more tasks, never a softer test.
 
-- [ ] **Gates**: `make gate_a0a`; platform seam canary; suppression canary; power envelope.
-      Commit every verdict before the first graded episode.
+- [ ] **Cut seq 12 FROZEN** (only if (a)-(c) pass): `experiment.seq: 12`,
+      `name: ceiling-<backend>-luna56`; `protocol:` **G=7**, `identity_generations: [1]`,
+      **`heldout_generations: [0, 4, 7]`**, B=30, T=36, `num_trials: 3`,
+      `batch_mode: fixed`, `allow_within_batch_verification: true`,
+      `require_human_approval: false` (D23 envelope, ratified), the nine-cell `reading_key`
+      below, `operational.max_concurrency: 3`.
 
-- [ ] **Go**: H0 held-out → `batch_01` → gen-001 identity → `batch_02` → mutation slots under
-      the D36 composition policy (bundle 3–5 non-interacting changes, ≥3-task-or-structural
-      targets, delta-stated counters, ≤2 reverts, one slot reserved for `sub-agent`) with the
-      **futility check** from the midpoint on → endpoint round → reveal → §29 walk with the
-      D33 attestation → closure split batch-derived vs held-out.
+- [ ] **Partition.** B=30 composed with the Phase 0 probe as the *empirical* reachability
+      oracle — a task H-expert passes is provably harness-reachable, which is what makes a
+      batch beyond the marginal band safe. Batch-eligible stock, proven walls excluded (54):
+      `task_001 task_002 task_003 task_004 task_005 task_006 task_008 task_010 task_014
+      task_015 task_020 task_023 task_024 task_027 task_029 task_032 task_037 task_038
+      task_040 task_041 task_043 task_045 task_046 task_047 task_050 task_053 task_054
+      task_055 task_056 task_057 task_058 task_060 task_061 task_062 task_063 task_064
+      task_065 task_066 task_069 task_071 task_074 task_076 task_077 task_079 task_080
+      task_081 task_083 task_087 task_088 task_089 task_090 task_094 task_101 task_102`.
+      **T=36 is FORCED** — the pool holds exactly 36 tasks no experiment has ever batched, and
+      D33 keeps batch-used tasks burnt for held-out use forever: `task_007 task_012 task_016
+      task_017 task_018 task_019 task_021 task_022 task_025 task_031 task_033 task_035
+      task_036 task_039 task_044 task_048 task_049 task_051 task_052 task_059 task_067
+      task_068 task_073 task_075 task_078 task_084 task_085 task_086 task_091 task_092
+      task_093 task_095 task_097 task_098 task_099 task_100`. Reuse declared per source in
+      `partition_reuse.yaml` with the D33 procedural basis restated.
+
+- [ ] **Gates**: `make gate_a0a`; platform seam canary; suppression canary;
+      `power_envelope.py --headroom-pp <measured> --write`. Commit every verdict before the
+      first graded episode.
+
+- [ ] **Go**: H0 held-out -> `batch_01` -> gen-001 identity -> `batch_02` -> six mutation
+      slots under the D36 composition policy, with the futility check from the midpoint ->
+      `batch_08` endpoint -> reveal -> §29 walk with the D33 attestation -> closure split
+      batch-derived vs held-out.
+
+#### The seq-12 `reading_key`, pre-registered here so the freeze copies rather than composes it
+
+A key written after the data exists is not a key. **Primary** = `scripts/endpoint_test.py`
+(within-task permutation on episode outcomes, `batch_08` vs pooled `batch_01`+`batch_02`),
+reported as **gap-closure against the measured ceiling**: up = p < 0.05 with a positive sum;
+down = p < 0.05 on the mirrored one-sided read; flat = anything else. **Secondary** = the
+held-out endpoint H7 - H0 against its ±band (three measured points only, so an endpoint
+comparison with H4 as a midpoint read, not a trend).
+
+```yaml
+  reading_key:
+    primary_up_secondary_up: >-
+      THE PRE-REGISTERED SUCCESS CELL. The loop improved the tasks it watched AND the gain
+      appeared on a pure-holdout set it never tuned on. Report as gap-closure ("the loop
+      closed X% of the measured reachable headroom") with the raw endpoint test beside it,
+      the held-out endpoint against its band, and the identity round's noise floor. Name
+      which changes moved which strata, and whether any anchor paid for the gain.
+    primary_up_secondary_flat: >-
+      The loop optimizes what it measures and the gain does not generalize. The primary claim
+      stands; no capability claim is available. On a pure-holdout secondary this is evidence
+      about generalization rather than a confound, which makes it a stronger negative
+      statement than an exposed probe could carry. The endpoint diagnosis asks per change
+      whether its mechanism is batch-shaped.
+    primary_up_secondary_down: >-
+      Overfitting with collateral damage — the sharpest negative-transfer signal available.
+      The primary verdict is positive and must be reported with the held-out decline as its
+      headline caveat, never as a capability claim. Identify the changes that traded breadth
+      for the batch, and whether any of their own falsifiers had already fired.
+    primary_flat_secondary_up: >-
+      Read the co-metric first. High reachable harvest says the batch's harness-reachable
+      range was already spent and the secondary is the informative instrument; low harvest
+      with a rising holdout is more likely noise or general drift than targeted transfer.
+      Run the fragility read before writing any sentence about the secondary.
+    primary_flat_secondary_flat: >-
+      Null on both. The measured HEADROOM now decides which null this is, and that is the
+      whole point of Phase 0. Headroom large and harvest low: every precondition a prior null
+      could be blamed on was removed and the loop found nothing — say so plainly, and name
+      per unconsumed target the mechanism never reached. Headroom large and harvest high: the
+      reachable range was spent. Headroom small: Phase 0's gate should have stopped the
+      experiment, and the closure states why it did not.
+    primary_flat_secondary_down: >-
+      The batch held and the holdout fell: the loop is doing harm outside what it watches. A
+      first-class negative result about generalization on a pure-holdout lane. Name the
+      changes whose scope over-generalized; read the decline against the identity floor
+      before attributing it to any one of them.
+    primary_down_secondary_up: >-
+      The batch regressed while the holdout rose. The per-task cells say whether anchors
+      broke (a real regression the loop caused) or only marginals moved. No positive claim of
+      any kind; treat the divergence itself as the finding.
+    primary_down_secondary_flat: >-
+      The loop damaged what it stared at while the holdout stayed put. Negative result; name
+      the broken cells, attribute them to surviving changes, and record which revert the loop
+      should have taken and did not — with the revert bar (a denied MECHANISM, not a denied
+      prediction) applied in hindsight.
+    primary_down_secondary_down: >-
+      Worse on both instruments, and under this design it cannot be blamed on the instrument:
+      the ceiling was measured, the envelope was checked against it, the noise floor was
+      measured, and every surface class was reachable. State which surviving changes are the
+      candidates, whether any falsifier fired unheeded, and what the failure says about
+      bundled sets landing faster than the next batch can refute them.
+```
 
 **Validate:** headroom measured and committed before the first generation; the backend
-decision traceable to the probe rather than to preference; the primary reported as
-gap-closure with the raw endpoint test beside it.
+decision traceable to the probe rather than to preference; the envelope judged against
+measured headroom; the reading key copied from here, not composed later.
 
 ### Phase 6 — Full experiment + reporting (deferred; contingent on the § 8 groundwork)
 

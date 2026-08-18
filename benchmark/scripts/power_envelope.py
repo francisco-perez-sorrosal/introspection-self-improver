@@ -42,6 +42,72 @@ def movers_needed(alpha: float = ALPHA) -> int:
     return math.ceil(-math.log2(alpha))
 
 
+def episode_envelope(
+    batch_size: int,
+    num_trials: int,
+    baseline_rounds: int = 2,
+    alpha: float = ALPHA,
+    headroom_pp: float | None = None,
+) -> dict:
+    """The seq-12+ envelope: what the EPISODE-level primary can detect (plan D36).
+
+    scripts/endpoint_test.py compares episode outcomes stratified by task, so its resolution
+    is set by episode counts rather than by how many task-level signs happen to align. At
+    p = 0.5 the standard error of the endpoint difference is
+
+        SE = 0.5 * sqrt(1/(B*trials*baseline_rounds) + 1/(B*trials))
+
+    from which two numbers follow: the smallest effect reaching alpha one-sided (1.645*SE),
+    and the effect needed for 80% power (2.487*SE). `baseline_rounds` is 2 when a
+    generation-1 identity round pools the baseline — which is why registering the identity
+    round at generation 1 is a POWER decision and not only a noise-floor one.
+
+    REACHABILITY IS JUDGED AGAINST MEASURED HEADROOM when Phase 0 supplies it: an experiment
+    whose smallest detectable effect exceeds the room any harness has to move in cannot win
+    however good the loop is, and that is knowable before the first generation is spent.
+    """
+    baseline_episodes = batch_size * num_trials * baseline_rounds
+    endpoint_episodes = batch_size * num_trials
+    se = 0.5 * math.sqrt(1 / baseline_episodes + 1 / endpoint_episodes)
+    detectable = 1.645 * se
+    powered = 2.487 * se
+    result = {
+        "test": "within-task permutation on episode outcomes (scripts/endpoint_test.py)",
+        "alpha": alpha,
+        "batch_size": batch_size,
+        "num_trials": num_trials,
+        "baseline_rounds": baseline_rounds,
+        "baseline_episodes": baseline_episodes,
+        "endpoint_episodes": endpoint_episodes,
+        "se_pp": round(100 * se, 2),
+        "detectable_at_alpha_pp": round(100 * detectable, 1),
+        "effect_for_80pc_power_pp": round(100 * powered, 1),
+    }
+    if headroom_pp is not None:
+        result["measured_headroom_pp"] = headroom_pp
+        result["reachable"] = headroom_pp > 100 * detectable
+        result["headroom_verdict"] = (
+            "REACHABLE — the smallest detectable effect is inside the measured headroom"
+            if headroom_pp > 100 * detectable
+            else "UNREACHABLE — the smallest detectable effect exceeds the headroom any "
+            "harness has to move in; fix the composition, the trials or the objective"
+        )
+    return result
+
+
+def print_episode_envelope(result: dict) -> None:
+    print(f"   EPISODE-LEVEL primary (seq 12+, plan D36): B={result['batch_size']}, "
+          f"trials={result['num_trials']}, baseline pooled over "
+          f"{result['baseline_rounds']} round(s)")
+    print(f"     {result['baseline_episodes']} baseline vs {result['endpoint_episodes']} "
+          f"endpoint episodes -> SE {result['se_pp']} pp")
+    print(f"     detectable at alpha: {result['detectable_at_alpha_pp']} pp   "
+          f"80% power needs: {result['effect_for_80pc_power_pp']} pp")
+    if "headroom_verdict" in result:
+        print(f"     measured headroom {result['measured_headroom_pp']} pp — "
+              f"{result['headroom_verdict']}")
+
+
 def envelope(
     batch_size: int,
     anchors: int,
@@ -75,6 +141,15 @@ def main() -> int:
         action="store_true",
         help="commit the verdict to results/experiment_<id>/gates/power_envelope.json "
         "(freeze time only — never rewrite a closed experiment's gates)",
+    )
+    parser.add_argument(
+        "--headroom-pp",
+        type=float,
+        default=None,
+        help="measured harness headroom from Phase 0 (scripts/headroom.py). When given, the "
+        "episode-level envelope is judged REACHABLE only if the smallest detectable effect "
+        "is inside it — an experiment that cannot resolve anything smaller than the room "
+        "available cannot win however good the loop is.",
     )
     args = parser.parse_args()
 
@@ -112,6 +187,21 @@ def main() -> int:
     if "caveat" in verdict:
         print(f"   caveat: {verdict['caveat']}")
 
+    # The seq-12+ primary. The sign-flip numbers above stay printed because seq <= 10's gates
+    # recorded them and must keep reproducing; from seq 12 the EPISODE-level envelope is the
+    # one the freeze is judged on, and the exit status follows it.
+    episode = episode_envelope(
+        len(batch_tasks),
+        lock.num_trials,
+        baseline_rounds=2 if lock.protocol.identity_generations[:1] == (1,) else 1,
+        headroom_pp=args.headroom_pp,
+    )
+    verdict["episode_level"] = episode
+    print_episode_envelope(episode)
+    if args.headroom_pp is None:
+        print("     (no --headroom-pp given: reachability against measured headroom not judged")
+        print("      — Phase 0's scripts/headroom.py supplies it, plan D36)")
+
     if args.write:
         out_path = (
             args.results_root / f"experiment_{lock.experiment_id}" / "gates" / "power_envelope.json"
@@ -119,6 +209,8 @@ def main() -> int:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps(verdict, indent=2) + "\n", encoding="utf-8")
         print(f"   → {out_path}")
+    if args.headroom_pp is not None:
+        return 0 if episode.get("reachable") else 1
     return 0 if verdict["verdict"] == "REACHABLE" else 1
 
 

@@ -128,6 +128,12 @@ four highest-value extractions:
   unless the digest names that asymmetry out loud — an un-named instrumentation gradient
   is how a loop converges on one surface while believing it chose freely.
 
+From the midpoint generation onward the digest also carries the **futility numbers** — the
+endpoint delta significance would require, the delta accumulated, and the slots remaining
+(`contract/protocol.md`, plan D36). A primary that has become unreachable is declared on that
+round and the remaining slots are re-purposed for knowledge rather than score; a loop that
+drifts past that point without saying so spends its tail without deciding to.
+
 Then state a **recall digest** (≤10 lines) to the user before diagnosis begins, so the
 memory is visibly applied: generation chain so far, batch about to be read, predictions to
 check, top pending targets with witness counts, concentration flags **plus the surface
