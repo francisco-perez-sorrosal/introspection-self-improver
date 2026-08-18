@@ -273,3 +273,151 @@ holds the reservation. Seq 12 reserves one slot for `sub-agent` and the probe be
 decides whether the reservation is spendable.
 
 <!-- transition: gen_000_to_001 -->
+
+---
+
+## Re-ranking against `batch_02` (H1, the pre-registered identity round, 2026-08-18)
+
+Clean round: 78 episodes, 77 graded, all four sandbox seam counters zero, zero stall
+warnings, `pi_local_calls` 0, $1.19. **The same cell was lost as in `batch_01` — `task_003`
+trial 0, identical user-simulator signature.** Twice in two rounds on exactly one (task,
+trial) pair makes it **deterministic for that cell**, not weather; trials 1 and 2 complete
+normally, so `task_003` carries 2 graded trials per round. Recorded, not investigated: it is
+frozen-surface behaviour, and it is not the seq-1 class of defect, which killed every trial
+of its task.
+
+### The noise floor — the number gen-001 was pre-registered to buy
+
+On a **byte-identical harness** (`batch_01` → `batch_02`):
+
+| | |
+|---|---|
+| round total | **26/77 → 28/77, +2.6 pp** |
+| task rates moved | **13 of 26** |
+| rates that moved TWO cells | 3 — `task_005` 3/3→1/3, `task_014` 2/3→0/3, `task_063` 0/3→2/3 |
+| rate-equivalent trial cells flipped | 16 of 77 |
+
+**The floor is not uniform across strata, and that is the most useful thing this round
+found:**
+
+| stratum | `batch_01` | `batch_02` | movement |
+|---|---|---|---|
+| anchor (3 tasks) | 4/9 | 7/9 | **+3 cells** |
+| marginal (12 tasks) | 19/35 | 18/35 | −1 cell, 9 of 12 rates moved |
+| **headroom (11 tasks)** | **3/33** | **3/33** | **ZERO — 8 of 11 tasks 0/3 twice** |
+
+So this batch has two attribution regimes. A change whose target tasks are **headroom** has
+a channel with **no measured ambient noise**; a change whose targets are marginal or anchor
+has the noisiest channel this project has instrumented. Every set from here says which
+regime it is playing in.
+
+`batch_01`'s worrying anchor reading — `task_063` at 0/3 against Phase 0's local-lane 3/3 —
+**resolves itself**: it came back at 2/3. It was a draw, not a composition defect, and the
+freeze's anchor stratum is intact.
+
+> **The operational rule, this experiment's own:** a one-cell task movement is noise — half
+> the batch does it on an identical harness. Two cells is inside the measured range too.
+> **Nothing at the reward level is attributable without its own mechanism counter moving in
+> the predicted direction.** The headroom stratum is the single exception: movement there is
+> signal.
+
+gen-001's pre-registered expectation ("no systematic movement") is **CONFIRMED** on the
+round total (+2.6 pp, inside every prior identity measurement) and the per-cell churn is
+larger than any of them.
+
+### Counters, committed
+
+`benchmark/scripts/mech_counters.py` lands with this transition so both rounds and every
+later round are scored by the same code rather than by a re-derivation:
+
+| counter | `batch_01` | `batch_02` |
+|---|---|---|
+| KB_search / episode | 5.87 | 6.09 |
+| distinct query strings / episode | **5.87** | **6.09** |
+| distinct KB documents / episode | 33.04 | 32.94 |
+| new documents per search | 5.63 | 5.41 |
+| tool calls / episode | 12.34 | 12.86 |
+| messages / episode | 37.43 | 37.79 |
+
+**Distinct queries per episode equals KB_search per episode exactly, in both rounds.** The
+agent never repeats a query — it rephrases. That single line re-specified T1: the defect is
+query *formulation*, not query *volume*, and it is why C3 targets the wording of the query
+rather than the number of them.
+
+### T2 REPRODUCES EXACTLY and consumes gen-002 (C1)
+
+`close_bank_account_7392` carrying `reason` and/or `waive_early_closure_fee` — keys its own
+unlock text marks `(optional)` and gold's payload omits — appears in **9 episodes / 10 calls
+in `batch_01` and 9 episodes / 10 calls in `batch_02`**, on the same three tasks each time.
+All three are headroom, all 0/3 in both rounds: the clean regime.
+
+The counter was **tightened before landing**. A naive "volunteered optional argument" count
+also catches `task_037`, whose own tools mark `reason` **required** and which passes 3/3 then
+2/3. So the scored counter is specific to `close_bank_account_7392`, and `task_037`'s general
+count becomes the over-generalisation falsifier rather than part of the target.
+
+### T4 REPRODUCES EXACTLY and consumes gen-002 (C2)
+
+5 episodes / 3 tasks in `batch_01`, the **same** 5 episodes / 3 tasks in `batch_02`.
+Round-wide catch-all/specific split 9/12 then 7/14.
+
+### T1 REPRODUCES and consumes gen-002 (C3) — query formulation only
+
+Sole cause in 11 ep / 6 tasks then 7 ep / 5 tasks. **Only the query-formulation half lands.**
+The second half — *do not commit while a stated requirement is unverified for the option you
+are about to name* — has the stronger transcript evidence (both decisive conversations show
+the agent recording the gap in words and answering anyway) and is **held back deliberately**:
+it is the missing-precondition framing measured to suppress unasked actions, and Phase 0's
+own expert harness regressed five tasks H0 passes, two of them by early stopping. It waits
+for evidence that the retrieval half alone is insufficient.
+
+### T3 REPRODUCES but is deliberately NOT consumed
+
+Sole cause in 5 then 4 episodes. Held because it acts on the **same call** as C1 on
+`task_060` and `task_061`; landing both would make neither attributable. First candidate for
+gen-003.
+
+### A process slip, recorded rather than hidden
+
+C1's commit `c3f24a2` swept `batch_02`'s round data and `mech_counters.py` in alongside its
+three-line `SYSTEM.md` change, because the round outputs were untracked when the branch was
+cut. C2 (`7303bee`) and C3 (`f79c2f5`) are clean single-file commits. The commit is supposed
+to be the unit of selective revert, so the capability is preserved explicitly instead:
+**a C1 revert is `git revert -n c3f24a2 -- target-agent/SYSTEM.md`**, path-scoped, which
+leaves the committed round evidence in place. Later branches are cut from a clean tree.
+
+### Slot accounting
+
+| Slot | Generation | Target(s) | Status |
+|---|---|---|---|
+| — | gen-001 | **pre-registered identity** | consumed as designed — noise floor measured, baseline pooled |
+| 1 | gen-002 | T2 (C1), T4 (C2), T1 (C3) — all `instructions` | in flight — scored by `batch_03` |
+| 2–6 | gen-003…gen-007 | T3 next; T5 held | open |
+
+**Surface concentration — THE FLAG ARMS WITH THIS SET.** Three `instructions` mutations
+land together, so under D29 the **gen-003 set may not be confined to `instructions`**: it
+must include a change on a class this experiment has never exercised, or record a
+`surface_exhausted` finding citing a probe or a measured fact per unexercised class.
+
+That obligation is already **half-discharged by measurement**. The step-4b probe
+(`generation_000/subagent_probe/VERDICT.md`, run at g=0 as required) settled `sub-agent`:
+delegation is reachable and cleanly suppressed (`pi_local_calls` 2 per episode, 3/3
+episodes, zero occurrences in τ's graded trajectory), but **a child cannot use τ's tools at
+all** — every `mcp_tau_KB_search_*` call died at `MCP daemon: Timeout` after 120 s without
+reaching the bridge, and all three episodes collapsed to 6 messages and reward 0.0. So the
+project-scope ledger now reads:
+
+| surface | exercised ever | measurement status | blocker |
+|---|---|---|---|
+| `instructions` | yes | live | none |
+| `extension-hook` | yes | all three events measured functional on the real domain | none — **unexercised in THIS experiment** |
+| `extension-tool` | yes | reachable, correctly invoked; usefulness unmeasured | none — **unexercised in THIS experiment** |
+| `sub-agent` | **yes, as of this experiment's g=0 probe** | delegation works; **child cannot reach τ's tools** (120 s daemon timeout, never reaches the bridge) | `surface_exhausted` for every retrieval-shaped target, cited to the probe |
+| declared skill | n/a | measured inert on this seam | not a delivery surface |
+
+`sub-agent` is therefore **not** a candidate for T1/T3 — both need a child that can search
+the knowledge base, and a child cannot. The reserved slot is discharged by that measurement
+rather than spent on a change that could not have worked, and gen-003's ladder obligation
+falls to `extension-hook` or `extension-tool`.
+
+<!-- transition: gen_001_to_002 -->
