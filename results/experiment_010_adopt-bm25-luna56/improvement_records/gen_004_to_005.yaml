@@ -1,0 +1,177 @@
+transition:
+  from_generation: 4
+  to_generation: 5
+experiment: 010_adopt-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_05
+  task_ids:
+  - task_003
+  - task_005
+  - task_006
+  - task_008
+  - task_014
+  - task_023
+  - task_032
+  - task_055
+  - task_057
+  - task_063
+  - task_076
+  - task_089
+evidence:
+  conversation_ids:
+  - 01a01388-ad16-70dd-a7e9-a2514e773c75
+  - 01a0138f-6609-73f7-90a0-9e8358c4ba29
+  - 01a01393-f167-7608-9f88-a21ade110340
+  - 01a01388-e378-73d2-bfac-cb7e836d7ffd
+  - 01a0138e-4c5b-75a7-800a-f6275b6c159e
+  - 01a0139a-f955-76c8-8e0b-824631c32895
+  - 01a01389-ae62-72dd-998d-12ab7045d253
+  - 01a0138f-cb73-762b-8375-5d2e6a413fbe
+  - 01a0139b-58e8-73a1-9206-75aad389d867
+  - 01a0138a-3e30-702c-ab56-431e5280e96b
+  - 01a01397-2142-759d-a803-2a082dd21143
+  - 01a0139b-7bac-76a0-a502-52693e4f3dff
+  summary: >-
+    batch_05 under H4 (C1 + C2 + C3): 36/36 completed, evidence_complete and arm_sha_ok, all
+    four sandbox seam counters zero, every episode user_stop, zero max_steps, $1.00. FIFTH
+    round over the same twelve tasks — a set the loop has been tuned on. Read through the
+    normalized gold-action comparison, per-task pi_local_calls, the per-round episode
+    profile, and — for task_003 — the domain's own knowledge-base documents, which is what
+    finally resolved its failure mode. PREFLIGHTS: nine local-lane episodes across two
+    candidate forms of one change (generation_004/g005_preflight and g005_preflight_b),
+    inside the ~12 budget; compared on process counters, never on preflight reward, and
+    never provenance for anything here.
+signals:
+- description: >-
+    C3's MECHANISM CONFIRMED, its COST CLAIM DENIED, and the denial is the round's most
+    useful result. pi_local_calls fell 52 -> 28: task_055 15 -> 10, task_057 11 -> 5,
+    task_063 9 -> 4, while task_003 held at exactly one call per episode — the narrowing
+    concentrated the calls on genuine selections exactly as designed. But mean messages per
+    episode rose 42.1 -> 43.6, mean tool messages 14.4 -> 15.5, round cost $0.98 -> $1.00.
+    HALVING THE TOOL CALLS DID NOT SHORTEN EPISODES, so compare_options is not what drives
+    the turn cost. That hypothesis is dead; KB_search volume is the obvious next suspect and
+    no slot has been spent on it.
+  prevalence: 3/3 predicted call-count targets fell; 0/3 cost targets moved
+- description: >-
+    THE CURVE DOES NOT REPLICATE, and task_014 is most of why. Round totals: 20, 20, 17, 26,
+    19 of 36 (55.6, 55.6, 47.2, 72.2, 52.8%). batch_04's high did not survive a round whose
+    harness contained everything batch_04's did plus a narrowing. task_014 alone has run
+    1, 2, 0, 3, 0 across the five rounds — it supplied +3 of batch_04's rise and -3 of
+    batch_05's fall — and NO change in this experiment can act on it: it makes no
+    discoverable-user-tool handover and has never called compare_options. Against the
+    measured A/A floor (14 of 36 cells flipping on an identical harness) no round total in
+    the 17-26 band is yet evidence of anything.
+  prevalence: 5 rounds; task_014 contributes +/-3 cells of every swing
+- description: >-
+    T1's REMAINDER IS SOLVED AS A DIAGNOSIS, and it is a retrieval gap rather than a
+    comparison gap. Reading the domain's own documents: task_003's two finalists both clear
+    every hard requirement and tie on the customer's first stated tie-break ($0.00 annual
+    fee), so the decision falls to her second, highest cash back. The Gold Rewards Card is
+    2.5% flat; the Silver Rewards Card's overview says 1.0% "outside top categories", and
+    doc_credit_cards_silver_rewards_card_002 states 4.0% on TRAVEL — which the customer
+    names as her main expenditure. Silver wins on her own criteria and the deciding document
+    is in the task's required set. Measured over three preflight episodes, that document is
+    retrieved 0/3 while the word "travel" appears 41-75 times per episode. The agent argues
+    about travel constantly and never pulls the travel rate.
+  prevalence: task_003 1/15 episodes lifetime; deciding document retrieved 0/3
+- description: >-
+    A FALSIFIER MIS-SPECIFICATION, recorded as craft rather than buried. C3's clause-1
+    falsifier read "pi_local_calls ... stays at 0 on task_023". task_023 is indeed 0 in
+    batch_05 — but it was 0 in batch_04 too, BEFORE the narrowing, so the falsifier fires on
+    a pre-existing condition and diagnoses nothing. A falsifier keyed on an absolute level
+    rather than a DELTA against the prior round is not a falsifier. Every falsifier from
+    here states a delta.
+  prevalence: 1 of 2 clauses in the gen-004 record
+counterevidence: >-
+  Three objections to gen-005's change. (1) ITS EVIDENCE IS THIN AND IS STATED AS THIN: the
+  selected candidate form moved the retrieval counter from 0/3 to 1/3. That is a better
+  counter, not a solved mechanism, and one episode in three could be chance. (2) IT IS THE
+  THIRD INSTRUCTIONS CHANGE, and the instructions block has now grown in four of five
+  generations — accumulating instruction text is precisely how prior experiments lost scope
+  control, and each addition competes with the frozen policy for the model's attention. (3)
+  A DIFFERENT READING OF THE SAME EVIDENCE IS AVAILABLE: bm25 is a frozen surface, and if
+  the ranking simply will not return silver_002 for the queries this agent can plausibly
+  form, the ceiling is the retrieval backend rather than the harness — the class a prior
+  experiment retired a target over. The counter distinguishes them: if the document is
+  retrieved and the choice still does not move, the harness is not the limit; if the
+  document is never retrieved however the instruction is phrased, it is bm25.
+hypothesis: >-
+  The agent treats one document per candidate as the candidate's specification. Rates that
+  are split across an overview and a category document are therefore compared on their
+  headline values, and a customer whose stated use falls in a bonus category is quoted the
+  wrong number. Telling the agent that a product's terms are usually split, and to search
+  again per candidate using what the customer says they will use it for, should surface the
+  category document — and a retrieval-and-order instruction is the one prose shape a prior
+  experiment measured working, as against prohibitions and offered alternatives.
+owning_layer: instructions
+proposed_change: >-
+  One change. The evidence for it is a document-level diagnosis rather than a cell movement,
+  which is the strongest form this experiment has produced; but its preflight counter is
+  thin, so it lands alone and is read on the counter alone.
+schema_version: 4
+changes:
+- mechanism: >-
+    Tell the agent that a product's rates and benefits are usually split across an overview
+    document and further category, tier or condition documents, and to search again for each
+    candidate by name together with what the customer says they will use it for, using the
+    figure that applies to that use rather than the headline one.
+  surface: instructions
+  evidence: >-
+    Backlog target T1's remainder. task_003 1/15 episodes across five rounds choosing Gold
+    where gold is Silver; the domain's own doc_credit_cards_silver_rewards_card_002 carrying
+    the 4.0% travel rate that decides the task; that document retrieved 0/3 in preflight
+    while "travel" appears 41-75 times per episode. Conversations
+    01a01388-ad16-70dd-a7e9-a2514e773c75, 01a0138f-6609-73f7-90a0-9e8358c4ba29,
+    01a01393-f167-7608-9f88-a21ade110340.
+  expected_effect: >-
+    On batch_06: the category-specific document of a candidate is retrieved in at least 1 of
+    3 task_003 episodes, against 0 of 3 in batch_05, and round-wide KB_search calls per
+    episode do not fall. Reward is NOT the prediction — task_003 has passed once in fifteen
+    episodes and a single cell would be indistinguishable from its own variance.
+  risk: >-
+    Two. (a) "Search again for each candidate" invites more retrieval on every task, and the
+    turn cost is already unexplained and rising — this change could worsen it, which is why
+    round-wide KB_search per episode is in the prediction as a level to hold rather than to
+    raise. (b) It is the third instructions change; the block has grown in four of five
+    generations, and a fourth addition should be resisted unless its evidence exceeds this
+    one's.
+  adoption_stage: false
+  clauses:
+  - clause: >-
+      One document per option is rarely the whole picture: a product's rates and benefits
+      are usually split across an overview document and further documents covering specific
+      categories, tiers or conditions.
+    adversarial_reading: >-
+      Read as licensing indefinite re-searching: the agent keeps searching for a further
+      document that may not exist, spending turns inside a frozen step budget on tasks where
+      the overview genuinely is the whole picture.
+    falsifier: >-
+      Round-wide KB_search calls per episode rise by more than 20% against batch_05, or any
+      episode terminates on max_steps.
+  - clause: >-
+      use the figure that applies to that use rather than the headline one
+    adversarial_reading: >-
+      Read as a licence to prefer any category figure over the headline one even when the
+      customer's use does not fall in that category — quoting a bonus rate the customer
+      cannot earn, which is a worse error than quoting the headline.
+    falsifier: >-
+      An episode quotes or compares on a category rate whose category the customer's stated
+      use does not match, on any task other than task_003.
+  commit: 8724011e23fecd6b2a2185a5d885128e84a06f63
+mutation:
+  branch: gen-005/category-qualified-values
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/28
+  source_commit: c669b2984301847f3cb1641b7900139d71ee6bf2
+  candidate_commit: b3c45cbb2847ede62a27c227f36617b4863fb01b
+expected_effect: >-
+  The set is one change and its prediction is the retrieval counter above. THE LADDER IS NOW
+  ARMED: this is the third instructions mutation, so under D29 the gen-006 set may not be
+  confined to that class — it must include a change on a surface class this experiment has
+  never exercised (sub-agent is the only one remaining) or record a surface_exhausted
+  finding citing a probe or a measured fact per unexercised alternative. Recorded here so
+  gen-006 inherits the obligation rather than discovering it.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-18'
+held_out_result: null

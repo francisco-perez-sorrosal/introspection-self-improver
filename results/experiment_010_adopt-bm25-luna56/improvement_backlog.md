@@ -474,3 +474,74 @@ the set after that must include a change on a class this experiment has not exer
 fact per unexercised alternative. Recorded now so it is not discovered late.
 
 <!-- transition: gen_003_to_004 -->
+
+---
+
+## Re-ranking against `batch_05` (H4, 2026-08-18)
+
+Clean round: 36/36, all seam counters zero, zero `max_steps`, $1.00. Fifth round on a
+tuned-on set.
+
+### gen-004's prediction, scored — mechanism confirmed, cost claim denied
+
+| predicted | result |
+|---|---|
+| calls fall on `task_055`/`task_057`/`task_063` (15/11/9) | **CONFIRMED** — 10/5/4; total 52 → 28 |
+| `task_003` holds ≥1 call/episode | **CONFIRMED** — exactly 1 per episode |
+| mean messages falls toward ~37 | **DENIED** — 42.1 → 43.6; cost $0.98 → $1.00 |
+| no `batch_04` improver regresses >1 cell | **DENIED** — `task_008` −2, `task_014` −3 |
+
+**Halving the tool calls did not shorten episodes.** `compare_options` is not what drives
+the turn cost — that hypothesis is dead, and `KB_search` volume is the untouched suspect.
+C3 is kept: its own mechanism moved its own counter, and the bar is a denied mechanism.
+
+### The curve does not replicate
+
+20, 20, 17, 26, 19 of 36 — **55.6, 55.6, 47.2, 72.2, 52.8%**. `batch_04`'s high did not
+survive a harness that contained everything `batch_04`'s did plus a narrowing.
+**`task_014` has run 1, 2, 0, 3, 0** across the five rounds, supplying +3 of `batch_04`'s
+rise and −3 of `batch_05`'s fall — and **no change in this experiment can act on it**.
+Against the A/A floor of 14/36 cells, nothing in the 17–26 band is yet evidence.
+
+### T1's remainder — SOLVED as a diagnosis, consumed by gen-005 (C4)
+
+Reading the domain's own documents settles `task_003` (1/15 lifetime): both finalists clear
+every hard requirement and tie on the customer's first tie-break ($0.00 annual fee), so it
+falls to her second — highest cash back. Gold is **2.5% flat**; Silver's overview says 1.0%
+"outside top categories", and `doc_credit_cards_silver_rewards_card_002` states **4.0% on
+travel**, which she names as her main expenditure. Silver wins on her own criteria, and the
+deciding document is in the task's required set.
+
+**The agent never retrieves it** — 0/3 preflight episodes, while saying "travel" 41–75 times
+each. A *retrieval* gap, not a comparison gap. Two candidate forms were preflighted and
+selected on the process counter (0/3 vs **1/3**), never on preflight reward. The counter is
+thin and recorded as thin.
+
+**This also gives the task a clean reachability verdict**: `task_003` is harness-reachable —
+the deciding fact is retrievable and in the required set — which is why a slot is spent on
+it rather than declaring a wall.
+
+### A falsifier mis-specification, recorded as craft
+
+C3's clause-1 falsifier read *"stays at 0 on `task_023`"*. It is 0 — but it was 0 in
+`batch_04` too, **before** the narrowing. A falsifier keyed on an absolute level rather than
+a **delta** fires on a pre-existing condition and diagnoses nothing. Every falsifier from
+here states a delta.
+
+### Slot accounting
+
+| Slot | Generation | Target(s) | Status |
+|---|---|---|---|
+| 1 | gen-002 | T1 (C1, extension-tool) | adoption CONFIRMED; kept |
+| 2 | gen-003 | T2 (C2, instructions) | **CONFIRMED** on its counter |
+| 3 | gen-004 | T5 turn cost (C3, instructions) | mechanism CONFIRMED, cost claim DENIED; kept |
+| 4 | gen-005 | T1 remainder (C4, instructions) | in flight — scored by `batch_06` |
+| 5–7 | gen-006…gen-008 | T3, T4, `task_063`, KB_search volume | open |
+
+**Surface concentration — THE LADDER IS ARMED.** Three `instructions` mutations (C2, C3,
+C4) against one `extension-tool` (C1). Under D29 the **gen-006 set may not be confined to
+`instructions`**: it must include a change on a class this experiment has never exercised —
+**`sub-agent` is the only one remaining** — or record a `surface_exhausted` finding citing a
+probe or a measured fact per unexercised alternative. Argument alone does not discharge it.
+
+<!-- transition: gen_004_to_005 -->
