@@ -1,0 +1,769 @@
+{
+  "experiment": "010_adopt-bm25-luna56",
+  "computed_at": "2026-08-18T12:14:10+00:00",
+  "batch_mode": "fixed",
+  "rounds": [
+    {
+      "harness": "H0",
+      "round": "batch_01",
+      "measured": true,
+      "stats": {
+        "task_006": [
+          3,
+          3
+        ],
+        "task_005": [
+          2,
+          3
+        ],
+        "task_003": [
+          0,
+          3
+        ],
+        "task_008": [
+          3,
+          3
+        ],
+        "task_014": [
+          1,
+          3
+        ],
+        "task_023": [
+          1,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_063": [
+          0,
+          3
+        ],
+        "task_055": [
+          0,
+          3
+        ],
+        "task_057": [
+          2,
+          3
+        ],
+        "task_076": [
+          3,
+          3
+        ],
+        "task_089": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H1",
+      "round": "batch_02",
+      "measured": true,
+      "stats": {
+        "task_006": [
+          3,
+          3
+        ],
+        "task_003": [
+          0,
+          3
+        ],
+        "task_005": [
+          1,
+          3
+        ],
+        "task_014": [
+          2,
+          3
+        ],
+        "task_008": [
+          2,
+          3
+        ],
+        "task_023": [
+          1,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_063": [
+          1,
+          3
+        ],
+        "task_055": [
+          1,
+          3
+        ],
+        "task_076": [
+          3,
+          3
+        ],
+        "task_089": [
+          1,
+          3
+        ],
+        "task_057": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H2",
+      "round": "batch_03",
+      "measured": true,
+      "stats": {
+        "task_006": [
+          3,
+          3
+        ],
+        "task_005": [
+          1,
+          3
+        ],
+        "task_014": [
+          0,
+          3
+        ],
+        "task_008": [
+          3,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_023": [
+          1,
+          3
+        ],
+        "task_003": [
+          0,
+          3
+        ],
+        "task_057": [
+          0,
+          3
+        ],
+        "task_063": [
+          0,
+          3
+        ],
+        "task_055": [
+          2,
+          3
+        ],
+        "task_076": [
+          2,
+          3
+        ],
+        "task_089": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H3",
+      "round": "batch_04",
+      "measured": true,
+      "stats": {
+        "task_003": [
+          1,
+          3
+        ],
+        "task_005": [
+          2,
+          3
+        ],
+        "task_006": [
+          3,
+          3
+        ],
+        "task_014": [
+          3,
+          3
+        ],
+        "task_008": [
+          3,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_023": [
+          2,
+          3
+        ],
+        "task_063": [
+          0,
+          3
+        ],
+        "task_057": [
+          2,
+          3
+        ],
+        "task_076": [
+          3,
+          3
+        ],
+        "task_055": [
+          2,
+          3
+        ],
+        "task_089": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H4",
+      "round": "batch_05",
+      "measured": true,
+      "stats": {
+        "task_006": [
+          3,
+          3
+        ],
+        "task_005": [
+          1,
+          3
+        ],
+        "task_003": [
+          0,
+          3
+        ],
+        "task_014": [
+          0,
+          3
+        ],
+        "task_008": [
+          1,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_023": [
+          1,
+          3
+        ],
+        "task_057": [
+          3,
+          3
+        ],
+        "task_055": [
+          2,
+          3
+        ],
+        "task_063": [
+          1,
+          3
+        ],
+        "task_089": [
+          1,
+          3
+        ],
+        "task_076": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H5",
+      "round": "batch_06",
+      "measured": true,
+      "stats": {
+        "task_006": [
+          3,
+          3
+        ],
+        "task_005": [
+          1,
+          3
+        ],
+        "task_014": [
+          2,
+          3
+        ],
+        "task_003": [
+          2,
+          3
+        ],
+        "task_008": [
+          3,
+          3
+        ],
+        "task_023": [
+          1,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_057": [
+          2,
+          3
+        ],
+        "task_063": [
+          1,
+          3
+        ],
+        "task_076": [
+          2,
+          3
+        ],
+        "task_055": [
+          1,
+          3
+        ],
+        "task_089": [
+          1,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H6",
+      "round": "batch_07",
+      "measured": true,
+      "stats": {
+        "task_006": [
+          2,
+          3
+        ],
+        "task_003": [
+          0,
+          3
+        ],
+        "task_005": [
+          1,
+          3
+        ],
+        "task_023": [
+          1,
+          3
+        ],
+        "task_008": [
+          3,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_055": [
+          2,
+          3
+        ],
+        "task_057": [
+          3,
+          3
+        ],
+        "task_063": [
+          0,
+          3
+        ],
+        "task_014": [
+          2,
+          3
+        ],
+        "task_076": [
+          3,
+          3
+        ],
+        "task_089": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H7",
+      "round": "batch_08",
+      "measured": true,
+      "stats": {
+        "task_003": [
+          0,
+          3
+        ],
+        "task_005": [
+          1,
+          3
+        ],
+        "task_014": [
+          2,
+          3
+        ],
+        "task_006": [
+          3,
+          3
+        ],
+        "task_008": [
+          1,
+          3
+        ],
+        "task_023": [
+          0,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_055": [
+          2,
+          3
+        ],
+        "task_063": [
+          1,
+          3
+        ],
+        "task_076": [
+          3,
+          3
+        ],
+        "task_089": [
+          3,
+          3
+        ],
+        "task_057": [
+          3,
+          3
+        ]
+      }
+    },
+    {
+      "harness": "H8",
+      "round": "batch_09",
+      "measured": true,
+      "stats": {
+        "task_003": [
+          0,
+          3
+        ],
+        "task_005": [
+          0,
+          3
+        ],
+        "task_006": [
+          3,
+          3
+        ],
+        "task_014": [
+          1,
+          3
+        ],
+        "task_008": [
+          3,
+          3
+        ],
+        "task_023": [
+          2,
+          3
+        ],
+        "task_032": [
+          3,
+          3
+        ],
+        "task_057": [
+          3,
+          3
+        ],
+        "task_063": [
+          2,
+          3
+        ],
+        "task_055": [
+          3,
+          3
+        ],
+        "task_076": [
+          3,
+          3
+        ],
+        "task_089": [
+          1,
+          3
+        ]
+      }
+    }
+  ],
+  "endpoint_test": {
+    "test": "one-sided exact paired sign-flip permutation on per-task rate deltas",
+    "alpha": 0.05,
+    "tasks": 12,
+    "observed_delta_sum": 1.333333,
+    "per_task_deltas": {
+      "task_003": 0.0,
+      "task_005": -0.5,
+      "task_006": 0.0,
+      "task_008": 0.166667,
+      "task_014": -0.166667,
+      "task_023": 0.333333,
+      "task_032": 0.0,
+      "task_055": 0.833333,
+      "task_057": 0.333333,
+      "task_063": 0.5,
+      "task_076": 0.0,
+      "task_089": -0.166667
+    },
+    "p_value": 0.18359375,
+    "significant": false
+  },
+  "endpoint_status": "primary \u2014 H8 vs H0 pooled over batch_01, batch_02 (pre-registered identity) on the fixed batch",
+  "identity_generations": [
+    1
+  ],
+  "noise_floor": [
+    {
+      "identity_generation": 1,
+      "rounds": [
+        "batch_01",
+        "batch_02"
+      ],
+      "cells_moved": 6,
+      "pp_moved": 16.7,
+      "net_cells": 0,
+      "per_task_cell_deltas": {
+        "task_005": -1,
+        "task_008": -1,
+        "task_014": 1,
+        "task_055": 1,
+        "task_063": 1,
+        "task_089": -1
+      }
+    }
+  ],
+  "strata": {
+    "per_round": [
+      {
+        "round": "batch_01",
+        "harness": "H0",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 14,
+            "trials": 30,
+            "rate": 0.4667
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_02",
+        "harness": "H1",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 14,
+            "trials": 30,
+            "rate": 0.4667
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_03",
+        "harness": "H2",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 11,
+            "trials": 30,
+            "rate": 0.3667
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_04",
+        "harness": "H3",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 20,
+            "trials": 30,
+            "rate": 0.6667
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_05",
+        "harness": "H4",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 13,
+            "trials": 30,
+            "rate": 0.4333
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_06",
+        "harness": "H5",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 16,
+            "trials": 30,
+            "rate": 0.5333
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_07",
+        "harness": "H6",
+        "strata": {
+          "anchor": {
+            "passed": 5,
+            "trials": 6,
+            "rate": 0.8333
+          },
+          "marginal": {
+            "passed": 18,
+            "trials": 30,
+            "rate": 0.6
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_08",
+        "harness": "H7",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 16,
+            "trials": 30,
+            "rate": 0.5333
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      },
+      {
+        "round": "batch_09",
+        "harness": "H8",
+        "strata": {
+          "anchor": {
+            "passed": 6,
+            "trials": 6,
+            "rate": 1.0
+          },
+          "marginal": {
+            "passed": 18,
+            "trials": 30,
+            "rate": 0.6
+          },
+          "headroom": {
+            "passed": 0,
+            "trials": 0,
+            "rate": null
+          }
+        }
+      }
+    ],
+    "walled": [],
+    "reachable_harvest": {
+      "baseline": 0.5556,
+      "endpoint": 0.6667,
+      "note": "fraction of non-walled batch cells passed \u2014 the loop-failure vs headroom-exhaustion disambiguator (protocol.md \u00a7 0)"
+    }
+  },
+  "trend": {
+    "test": "one-sided trend, permutation-variance normal approximation",
+    "alpha": 0.05,
+    "measured_generations": [
+      "H0",
+      "H2",
+      "H3",
+      "H4",
+      "H5",
+      "H6",
+      "H7",
+      "H8"
+    ],
+    "excluded_identity": [
+      "H1"
+    ],
+    "statistic": 8.375,
+    "z": 1.3639427502438692,
+    "p_value": 0.08629279230161345,
+    "significant": false,
+    "status": "diagnostic unless the freeze's reading key names it"
+  }
+}
