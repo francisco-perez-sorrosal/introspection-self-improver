@@ -21,7 +21,8 @@
     ],
     "skills": [],
     "extensions": [
-      "extensions/compare-options.ts"
+      "extensions/compare-options.ts",
+      "extensions/search-index.ts"
     ],
     "mcp": {
       "servers": [
