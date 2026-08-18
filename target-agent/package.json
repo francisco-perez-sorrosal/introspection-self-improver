@@ -20,9 +20,6 @@
       "./agents/*.yaml"
     ],
     "skills": [],
-    "extensions": [
-      "extensions/noop-tool.ts"
-    ],
     "mcp": {
       "servers": [
         {
