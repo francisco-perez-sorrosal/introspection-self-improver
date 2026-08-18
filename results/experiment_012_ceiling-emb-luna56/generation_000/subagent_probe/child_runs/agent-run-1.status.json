@@ -1,0 +1,21 @@
+{
+  "id": "agent-run-1",
+  "agent": "kb-researcher",
+  "label": "atm-declines",
+  "prompt": "Search the knowledge base for Rho-Bank policy/procedure when multiple debit cards (including Green Account, Blue Account, and teen account card) are declined at an ATM, especially urgent cash needs. Identify troubleshooting steps, possible outages, user/agent tools, verification requirements, and transfer guidance. Return exact actionable guidance and any relevant tool names.",
+  "status": "completed",
+  "startedAt": "2026-08-18T21:23:37.510Z",
+  "completedAt": "2026-08-18T21:25:43.996Z",
+  "output": "{\"status\":\"unable_to_complete\",\"message\":\"The knowledge-base search timed out, so I could not reliably identify Rho-Bank’s exact troubleshooting steps, outage procedures, verification requirements, transfer guidance, or relevant tool names. I have not taken any account action or made any assumptions about policy.\"}",
+  "toolCalls": [
+    {
+      "id": "call_ROc3k8Y6g2x3F9PDTIDB39Nk|fc_01d867f76b28fd65016a84cd5c8a6887d092eb51ab7b19651c",
+      "name": "mcp_tau_KB_search_77c5623a9f",
+      "status": "failed",
+      "startedAt": "2026-08-18T21:23:41.179Z",
+      "completedAt": "2026-08-18T21:25:41.187Z",
+      "output": "MCP daemon: Timeout; remote outcome is unknown; do not retry automatically.",
+      "error": "MCP daemon: Timeout; remote outcome is unknown; do not retry automatically."
+    }
+  ]
+}

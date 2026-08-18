@@ -45,3 +45,9 @@ node_modules/
 # content changes; it is a 17 MB derived artifact keyed by content hash, not a source of
 # truth. openai_embeddings retrieval writes it here on first use (Phase 0, plan D36).
 benchmark/data/.embeddings_cache/
+
+# Pi sub-agent delegation run state, written per delegated run when `subagents:` is
+# non-empty. Generated runtime state, never repo content — the 2026-08-18 sub-agent probe
+# is what surfaced it (its two status.json files are preserved as probe evidence under
+# results/experiment_012_ceiling-emb-luna56/generation_000/subagent_probe/child_runs/).
+.pi/agents/

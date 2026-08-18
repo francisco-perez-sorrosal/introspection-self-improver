@@ -1,0 +1,30 @@
+{
+  "id": "agent-run-2",
+  "agent": "kb-researcher",
+  "label": "atm-declines",
+  "prompt": "Find the Rho-Bank policy/procedure for a customer reporting multiple debit cards declined at an ATM, including any troubleshooting steps, outage guidance, cash emergency options, verification requirements, and whether transfer to human is mandated. Return exact actionable guidance and any relevant tool names.",
+  "status": "completed",
+  "startedAt": "2026-08-18T21:25:58.723Z",
+  "completedAt": "2026-08-18T21:30:11.586Z",
+  "output": "{\"status\":\"unable_to_complete\",\"message\":\"I could not retrieve the Rho-Bank knowledge-base procedure because the knowledge-base search service timed out. I therefore cannot reliably provide the required troubleshooting steps, outage guidance, cash-emergency options, verification requirements, transfer rules, or relevant tool names without risking inaccurate information.\",\"tool_names\":[],\"next_step\":\"Please retry the policy lookup later or request a human-agent transfer if immediate assistance is needed.\"}",
+  "toolCalls": [
+    {
+      "id": "call_yoXorgSudvqlCPywnfTQlCHR|fc_0a5bc31dbe4838a6016a84cde9ab988199aff0c6e9204b6849",
+      "name": "mcp_tau_KB_search_77c5623a9f",
+      "status": "failed",
+      "startedAt": "2026-08-18T21:26:01.888Z",
+      "completedAt": "2026-08-18T21:28:01.896Z",
+      "output": "MCP daemon: Timeout; remote outcome is unknown; do not retry automatically.",
+      "error": "MCP daemon: Timeout; remote outcome is unknown; do not retry automatically."
+    },
+    {
+      "id": "call_MRGJJ4k0hiyftNT72T6FNGeC|fc_0a5bc31dbe4838a6016a84ce66556881998a82d8ace8d9110d",
+      "name": "mcp_tau_KB_search_77c5623a9f",
+      "status": "failed",
+      "startedAt": "2026-08-18T21:28:07.074Z",
+      "completedAt": "2026-08-18T21:30:07.087Z",
+      "output": "MCP daemon: Timeout; remote outcome is unknown; do not retry automatically.",
+      "error": "MCP daemon: Timeout; remote outcome is unknown; do not retry automatically."
+    }
+  ]
+}

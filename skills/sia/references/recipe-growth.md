@@ -23,7 +23,7 @@ they can reach). This file adds only the mapping and this repo's constraints:
 | Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or skill-shaped content delivered by a `before_agent_start` hook: a **declared** skill measurably reaches nothing on this seam's local lane (trap 1), so hook injection is the only working delivery |
 | Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — live under the D24 seam: a call whose name is in the suppression registry (`agents/agent.yaml` `tools:`) is executed by Pi and suppressed from τ's graded trajectory; an UNregistered call still leaks to τ as an invalid step (trap 4 has both halves). First use is adoption-first — predict adoption counters, not reward (protocol step 4; record-craft) — and may bundle the tool with its minimal usage instruction as one coherent mechanism |
 | Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline, or *acting on what was retrieved* | **extension event interception** — `tool_result` (measured on the real domain: sees every τ result with its input arguments, can rewrite what the model reads, invisible to grading) / `context` (inferred) / `before_agent_start` (measured). Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
-| A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — live under the D24 seam: the auto-generated `agent` tool joins the suppression registry when `subagents:` is non-empty (trap 4). The frozen model pair binds the child (trap 3), and **no sub-agent episode has ever run on this seam — it is the last unexercised class, and seq 12 reserves a slot for it** (`contract/protocol.md` step 4). The question a probe must settle first: whether a child's own tool calls travel the same bridge and therefore spend the PARENT's τ step budget, in which case delegating retrieval saves nothing. Verify per trap 7, and predict adoption first |
+| A bounded job over text the parent ALREADY HOLDS, with a stable contract and an independently checkable result | **sub-agent** — PROBED 2026-08-18 (`results/experiment_012_ceiling-emb-luna56/generation_000/subagent_probe/VERDICT.md`), and the probe changed what this row can promise. Delegation itself works: the auto-generated `agent` tool is called and fully suppressed from τ (`pi_local_calls` 2 per episode, 3/3 episodes, zero occurrences in the graded trajectory), and `from: agent` with no `ai:` block binds the frozen model pair as trap 3 says (verified in the child's session). **But a child CANNOT use τ's tools**: it resolves the mangled name and issues the call, and every call dies at `MCP daemon: Timeout` after 120 s without ever reaching the bridge (that run's `bridge_calls.jsonl` holds one row, the parent's). So the long-standing "does a child's tool call spend the PARENT's τ step budget" question is **moot — it spends no τ step because it never reaches τ**; it spends wall-clock against the frozen `timeout_seconds`, 120 s per attempt, and the probe's three episodes each collapsed to 6 messages and reward 0.0. Net: usable only for reasoning over parent-supplied text, competing directly with `context`/`tool_result` hooks that do the same work deterministically at zero latency. Verify per trap 7, and predict adoption first |
 | External service capability | MCP server — **not** a sanctioned growth surface here without explicit seam work: the tau binding/`--mcp` interplay is fragile (`dev_lane.py`), so surface it as a user decision, never land it as an ordinary mutation |
 
 ## Wiring by surface
@@ -219,8 +219,15 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
    multi-candidate arguments, no episode exceeding τ's frozen timeout, and zero occurrences
    in τ's graded trajectory. **The extension-tool surface is exercised and works; what it
    leaves open is usefulness, not reachability** — that tool moved no reward, which is
-   exactly why adoption-first defers the reward prediction a round. `sub-agent` is now the
-   ONLY class never exercised and never probed.
+   exactly why adoption-first defers the reward prediction a round. **`sub-agent` is no longer
+   unmeasured either: seq 12's step-4b probe (2026-08-18) ran it on the locked domain and
+   measured BOTH halves — delegation reaches Pi and is suppressed from τ cleanly, and a
+   child's τ tool calls time out in the sandbox MCP daemon at 120 s without reaching the
+   bridge.** Every surface class this repo can name has now been exercised at least once.
+   One new signature came with it, recorded because it is invisible elsewhere: a
+   fully-Pi-suppressed turn with nothing else in it produced one τ retry on
+   `AssistantMessage must have either content or tool_calls` — the assistant-side analogue
+   of the known user-simulator signature, reachable only when `subagents:` is non-empty.
 
    What stays legal is every extension hook that introduces **no tool call** —
    `before_agent_start` (replace/augment the system prompt; **measured functional on the
