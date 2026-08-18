@@ -25,6 +25,7 @@ from pathlib import Path
 
 import yaml
 
+from tau_adapter import manifest as manifestmod
 from tau_adapter.lock import BENCHMARK_DIR, REPO_ROOT, Lock
 
 RESULTS_ROOT = REPO_ROOT / "results"
@@ -38,6 +39,10 @@ COMPLETION_SENTINEL = "run_metadata.json"
 #: The held-out wrapper's console log. Created before the runner starts (it is the redirect
 #: target), so the round-directory lifecycle must not read its presence as prior results.
 CONSOLE_LOG = "console.log"
+
+#: Grading output, derived from results.json. Dropped with the sentinel when a round turns
+#: out to be incomplete, because grading computed over non-measurements is not the round's.
+GRADED_DIR = "graded"
 
 #: The surface `introspection dev` serves: the Recipe tree plus the Runtime manifest that
 #: resolves it. Dirt anywhere else cannot change what an episode runs.
@@ -147,17 +152,48 @@ def _enforce_snapshot_at(exp_dir: Path, lock: Lock, split_manifest_path: Path) -
     return f"freeze snapshot created ({SNAPSHOT_NAME})"
 
 
-def prepare_round_dir(out_dir: Path, overwrite: bool) -> str | None:
+def round_measured(out_dir: Path, expected_episodes: int) -> bool:
+    """Did this round actually measure every episode it owed?
+
+    Completed-episode rows counted from the manifest — row counts only, so this is safe
+    for the sealed held-out vault as well as for observable rounds: nothing graded is
+    read. The single definition of "measured" for both lanes; they diverged once, and the
+    divergence cost an operator a round.
+    """
+    rows = manifestmod.read_manifest(out_dir)
+    return sum(1 for row in rows if row.get("completed")) >= expected_episodes
+
+
+def prepare_round_dir(
+    out_dir: Path, overwrite: bool, *, expected_episodes: int | None = None
+) -> str | None:
     """Decide what an existing round directory means, and make it safe to run into.
 
-    Three cases, told apart by the completion sentinel rather than guessed:
+    Four cases, told apart by the completion sentinel and the manifest rather than guessed:
 
       empty / absent      → fresh round; create it.
-      sentinel present    → a completed record. Refused without --overwrite, because a
-                            previous round is not scratch.
+      sentinel present,   → a completed record. Refused without --overwrite, because a
+      round measured        previous round is not scratch.
+      sentinel present,   → the runner RETURNED but the round holds non-measurements — τ
+      round incomplete      gave up on an episode after its retries and wrote an
+                            `infrastructure_error` placeholder. **The sentinel means
+                            "runner returned", never "measured."** The sentinel and the
+                            grading derived from the incomplete results are dropped, and
+                            the interrupted-run path below resumes.
       results, no sentinel → an interrupted run. Kept as-is: τ's own checkpoint resume
                             (keyed (trial, task_id, seed), `auto_resume`) re-runs only what
                             is missing, and replaces infrastructure-error placeholders.
+
+    `expected_episodes` is what makes the third case distinguishable; without it (a run
+    whose episode count is not known up front) the sentinel is still taken at face value
+    and the round is refused, which is the safe direction.
+
+    Why the third case exists at all: provider weather on the FROZEN user-simulator surface
+    can kill one episode past τ's retry budget, and before this the only way forward was
+    --overwrite — re-spending, and re-drawing, every healthy episode in the round to
+    recover one. The held-out lane already implemented exactly this recovery privately
+    (`heldout.run_round`); the batch lane did not, so an operator hit the refusal with a
+    35-of-36 baseline round in hand. One rule, one place, both lanes.
 
     --overwrite keeps its rm -rf semantics for intentional restarts only.
     Returns a one-line status for the run banner, or None for a fresh directory.
@@ -171,6 +207,18 @@ def prepare_round_dir(out_dir: Path, overwrite: bool) -> str | None:
         out_dir.mkdir(parents=True, exist_ok=True)
         return None
     if (out_dir / COMPLETION_SENTINEL).exists():
+        if expected_episodes is not None and not round_measured(out_dir, expected_episodes):
+            measured = sum(
+                1 for row in manifestmod.read_manifest(out_dir) if row.get("completed")
+            )
+            (out_dir / COMPLETION_SENTINEL).unlink()
+            shutil.rmtree(out_dir / GRADED_DIR, ignore_errors=True)
+            return (
+                f"resuming an INCOMPLETE round ({measured}/{expected_episodes} episodes "
+                "measured) — the sentinel says the runner returned, not that the round was "
+                "measured; τ re-runs only the missing (trial, task, seed) pairs and "
+                "re-spends nothing already completed"
+            )
         raise ExperimentError(
             f"{out_dir} already holds a completed run ({COMPLETION_SENTINEL} present). "
             "Pass --overwrite to replace it, or point --out at a new directory — a "

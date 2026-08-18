@@ -967,7 +967,13 @@ def main() -> int:
     experiment_status = (
         enforce_snapshot_for_experiment(lock) if muted else enforce_snapshot(lock, out_dir)
     )
-    round_status = prepare_round_dir(out_dir, args.overwrite)
+    # The episode count this round owes, when it is knowable up front (an explicit task
+    # list, which every bound round has). It is what lets prepare_round_dir tell a
+    # measured round from one whose runner merely returned — see its docstring.
+    expected_episodes = len(task_ids) * lock.num_trials if task_ids else None
+    round_status = prepare_round_dir(
+        out_dir, args.overwrite, expected_episodes=expected_episodes
+    )
     generation = generation_of(out_dir)
     results_path = out_dir / "results.json"
     session_dir = out_dir / "pi_sessions"

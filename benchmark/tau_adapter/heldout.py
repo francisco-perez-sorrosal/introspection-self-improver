@@ -26,7 +26,7 @@ from typing import IO, Any
 
 from tau_adapter import manifest as manifestmod
 from tau_adapter import split as splitmod
-from tau_adapter.experiment import COMPLETION_SENTINEL, CONSOLE_LOG
+from tau_adapter.experiment import COMPLETION_SENTINEL, CONSOLE_LOG, round_measured
 from tau_adapter.lock import BENCHMARK_DIR, Lock
 
 VAULT_ENV = "SIA_VAULT_DIR"
@@ -79,12 +79,14 @@ def run_round(
 
     expected_episodes = len(held_ids) * lock.num_trials
     already_measured = (round_dir / COMPLETION_SENTINEL).exists()
-    if already_measured and not _measurement_complete(round_dir, expected_episodes):
+    if already_measured and not round_measured(round_dir, expected_episodes):
         # τ's runner returned, but the round holds non-measurements — e.g. an
         # infrastructure_error placeholder that τ's own resume replaces. The sentinel
         # means "runner returned", never "measured": drop it, and the grading derived
         # from the incomplete results, so the documented interrupted-run path resumes.
         # Completed episodes are not re-spent, and a complete round never reaches here.
+        # The rule itself lives in experiment.round_measured / prepare_round_dir, which
+        # the child runner applies too; this block only decides whether to spawn it.
         (round_dir / COMPLETION_SENTINEL).unlink()
         shutil.rmtree(round_dir / GRADED_DIR, ignore_errors=True)
         already_measured = False
@@ -113,12 +115,6 @@ def run_round(
     )
     print(report)
     return 0 if complete else 1
-
-
-def _measurement_complete(round_dir: Path, expected: int) -> bool:
-    """Row counts only, per this module's vault doctrine — nothing graded is read."""
-    rows = manifestmod.read_manifest(round_dir)
-    return sum(1 for row in rows if row.get("completed")) >= expected
 
 
 def _incident_totals(round_dir: Path) -> dict[str, int] | None:
