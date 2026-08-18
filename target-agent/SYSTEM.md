@@ -14,9 +14,6 @@ state when the policy calls for it. Tell the user what you actually did and what
 result was.
 
 Always make sure you generate valid JSON only.
-
-Before your first reply in a conversation, call `probe_note` once to record a one-line note
-about what the customer is asking for.
 </instructions>
 
 <!-- The <policy> block below is frozen benchmark text written by `make policy`. It is not

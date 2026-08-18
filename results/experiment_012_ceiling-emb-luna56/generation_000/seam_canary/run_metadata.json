@@ -1,0 +1,225 @@
+{
+  "mode": "locked",
+  "experiment": "012_ceiling-emb-luna56",
+  "freeze_fingerprint": "sha256:ae3e58ade0483d56edc798b8aa65b7123460b0e3e8346f171642417afa832bf2",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 3,
+  "max_concurrency": 3,
+  "bridge_executor_workers": 32,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a01642-9bd4-73e0-824b-9731870cafc1"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "f33930543a79dffbb461ff66bfbb4839605c6053",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 2,
+      "termination": "TerminationReason.INFRASTRUCTURE_ERROR",
+      "reward": null,
+      "completed": false,
+      "failure": {
+        "error_type": "ValueError",
+        "error": "UserMessage must have either content or tool_calls. Got UserMessage\nis_final_chunk: True",
+        "failed_after_attempts": 4
+      }
+    },
+    {
+      "task_id": "task_001",
+      "trial": 0,
+      "termination": "TerminationReason.INFRASTRUCTURE_ERROR",
+      "reward": null,
+      "completed": false,
+      "failure": {
+        "error_type": "ValueError",
+        "error": "UserMessage must have either content or tool_calls. Got UserMessage\nis_final_chunk: True",
+        "failed_after_attempts": 4
+      }
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 6,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 1,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 1,
+      "settle_timeouts": 0,
+      "zero_bridge_calls": 0
+    },
+    "unattributed": [
+      {
+        "stall_warnings": 0,
+        "prompt_409": 0,
+        "prompt_failures": 1,
+        "stream_failures": 0,
+        "sandbox_queue_waits": 0,
+        "start_gate_wait_seconds": 0,
+        "start_gate_timeouts": 0,
+        "stream_reattaches": 0,
+        "settle_timeouts": 0,
+        "zero_bridge_calls": 0
+      },
+      {
+        "stall_warnings": 0,
+        "prompt_409": 0,
+        "prompt_failures": 1,
+        "stream_failures": 0,
+        "sandbox_queue_waits": 0,
+        "start_gate_wait_seconds": 0,
+        "start_gate_timeouts": 0,
+        "stream_reattaches": 0,
+        "settle_timeouts": 0,
+        "zero_bridge_calls": 0
+      },
+      {
+        "stall_warnings": 0,
+        "prompt_409": 0,
+        "prompt_failures": 1,
+        "stream_failures": 0,
+        "sandbox_queue_waits": 0,
+        "start_gate_wait_seconds": 0,
+        "start_gate_timeouts": 0,
+        "stream_reattaches": 0,
+        "settle_timeouts": 0,
+        "zero_bridge_calls": 0
+      },
+      {
+        "stall_warnings": 0,
+        "prompt_409": 0,
+        "prompt_failures": 1,
+        "stream_failures": 0,
+        "sandbox_queue_waits": 0,
+        "start_gate_wait_seconds": 0,
+        "start_gate_timeouts": 0,
+        "stream_reattaches": 0,
+        "settle_timeouts": 0,
+        "zero_bridge_calls": 0
+      },
+      {
+        "stall_warnings": 0,
+        "prompt_409": 0,
+        "prompt_failures": 1,
+        "stream_failures": 0,
+        "sandbox_queue_waits": 0,
+        "start_gate_wait_seconds": 0,
+        "start_gate_timeouts": 0,
+        "stream_reattaches": 0,
+        "settle_timeouts": 0,
+        "zero_bridge_calls": 0
+      },
+      {
+        "stall_warnings": 0,
+        "prompt_409": 0,
+        "prompt_failures": 1,
+        "stream_failures": 0,
+        "sandbox_queue_waits": 0,
+        "start_gate_wait_seconds": 0,
+        "start_gate_timeouts": 0,
+        "stream_reattaches": 0,
+        "settle_timeouts": 0,
+        "zero_bridge_calls": 0
+      }
+    ],
+    "bridge": {},
+    "infra_failure_classes": {
+      "user_sim_empty_completions": 2
+    }
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a01642-9bd4-73e0-824b-9731870cafc1",
+    "environment": "development",
+    "dev_target": "tau-4ccf",
+    "task_ids": [
+      "01a01644-e429-7550-bc9a-feda0029d7a5"
+    ],
+    "tasks_created": [
+      "01a01644-e429-7550-bc9a-feda0029d7a5",
+      "01a01644-e5e6-7240-a464-e30d5b283572",
+      "01a01644-e81d-7736-b438-d6248ab7e83c",
+      "01a01645-54af-765a-b469-35b22c46f231",
+      "01a01645-7298-7752-a6f1-cad692ff2e9f"
+    ],
+    "orphaned_task_ids": [
+      "01a01644-e5e6-7240-a464-e30d5b283572",
+      "01a01644-e81d-7736-b438-d6248ab7e83c",
+      "01a01645-54af-765a-b469-35b22c46f231",
+      "01a01645-7298-7752-a6f1-cad692ff2e9f"
+    ],
+    "accounting": {
+      "01a01644-e429-7550-bc9a-feda0029d7a5": {
+        "cost": {
+          "usd": 0.00636168
+        },
+        "usage": {
+          "input_tokens": 148125,
+          "output_tokens": 800,
+          "total_tokens": 148925
+        },
+        "metrics": {
+          "duration_ms": 27212.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 7,
+          "span_count": 30,
+          "tool_use_count": 5,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "f33930543a79dffbb461ff66bfbb4839605c6053",
+        "evidence_complete": true,
+        "item_count": 35,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      }
+    },
+    "retitles": {
+      "applied": 1,
+      "failed": 0
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "pi_local_tools": [],
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 72.8
+}
