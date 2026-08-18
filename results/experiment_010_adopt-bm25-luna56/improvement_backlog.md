@@ -598,3 +598,54 @@ the prediction is a counter and not a reward.
 closure must state with a probe or a measured fact why it was not.
 
 <!-- transition: gen_005_to_006 -->
+
+---
+
+## Re-ranking against `batch_07` (H6, 2026-08-18)
+
+36/36, one sandbox counter tick, $1.22. **23/36 (63.9%)**; curve 20, 20, 17, 26, 19, 22, 23.
+
+### gen-006's prediction — direction held, mechanism did almost nothing
+
+`KB_search`/episode 12.3 → **11.6** (−5.7%); mean messages 48.7 → **47.7** (−2.1%). That
+counter had itself run 9.4 → 12.3 across the two preceding rounds under different harnesses,
+so a 0.7-call move is not separable from its own drift.
+
+**The first anchor movement of the experiment**: `task_006` 3/3 → **2/3** after 21
+consecutive identical-harness anchor episodes at 3/3. And C5's own target task fell —
+`task_003` 2/3 → **0/3**, undoing gen-005's gain.
+
+The hook worked exactly as specified (injection present in every preflight session, **0 of
+36** occurrences in τ's graded trajectory), which is what makes this a clean null rather
+than a wiring failure — the failure mode that cost a prior experiment a whole generation.
+
+### THE BARE-LIST NULL REPLICATES — gen-007 (C6) reverts
+
+A prior experiment measured that a bare **list** appended to what the model reads moves no
+counter, while a *missing-state* note moved one 0/3 → 3/3. The gen-006 record carried that
+objection **at landing time** and landed anyway, because this list described the agent's
+**own retrieval history** rather than the domain — a genuinely different case worth one slot.
+
+It produced the same null, across a different experiment, a different surface class and a
+different subject matter. **A replication across those three axes is a stronger finding than
+the original single measurement**, and it is the reason to revert rather than carry an inert
+change into the endpoint harness.
+
+The revert is justified on the *mechanism doing nothing*, not on the harm — one anchor cell
+and one task's two cells sit inside the measured noise. Its prediction tests the harm claim
+honestly: if `task_006` and `task_003` do not recover at `batch_08`, the harm was noise and
+the record will say so.
+
+### Slot accounting
+
+| Slot | Generation | Change | Status |
+|---|---|---|---|
+| 1 | gen-002 | C1 extension-tool | adoption CONFIRMED; kept |
+| 2 | gen-003 | C2 instructions | CONFIRMED |
+| 3 | gen-004 | C3 instructions | mechanism CONFIRMED, cost claim DENIED |
+| 4 | gen-005 | C4 instructions | counter CONFIRMED, cost falsifier FIRED |
+| 5 | gen-006 | C5 extension-hook | **null — reverted** |
+| 6 | gen-007 | C6 revert | in flight — scored by `batch_08` |
+| 7 | gen-008 | — | one slot left |
+
+<!-- transition: gen_006_to_007 -->

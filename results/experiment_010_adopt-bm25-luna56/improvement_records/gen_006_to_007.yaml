@@ -1,0 +1,116 @@
+transition:
+  from_generation: 6
+  to_generation: 7
+experiment: 010_adopt-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_07
+  task_ids: [task_003, task_005, task_006, task_008, task_014, task_023, task_032, task_055, task_057, task_063, task_076, task_089]
+evidence:
+  conversation_ids:
+  - 01a01429-b4cb-704b-ac9e-98de80daa972
+  - 01a0142f-f445-7758-9571-dcb8c5b8de3d
+  - 01a01435-c865-747d-ac51-76ae65814a56
+  - 01a01429-b30f-70c1-9317-e9133e9527c4
+  - 01a01430-7b38-7189-9fd7-5057cb5d0f82
+  - 01a01436-5831-7515-a9ec-e76bf29a1141
+  - 01a0142c-5e07-73ca-9568-7fe202777483
+  - 01a01432-7afd-7666-80bf-e6fa3310d2b7
+  - 01a01437-da48-7658-bbb5-ba8ece6a4049
+  summary: >-
+    batch_07 under H6 (C1-C5): 36/36 completed, one sandbox counter tick, mean messages 47.7,
+    $1.22, pi_local_calls 29. SEVENTH round on a tuned-on set. Read on the counters C5's
+    prediction named — KB_search per episode, mean messages, and per-task regressions — plus
+    a check that the hook's injected line appears 0 times in tau's graded trajectory.
+    PREFLIGHTS: none for this transition (a revert of a landed change needs no execution
+    check beyond make check, which passed).
+signals:
+- description: >-
+    C5's COUNTERS MOVED ONLY MARGINALLY AND INSIDE THEIR OWN VARIATION. KB_search per episode
+    12.3 -> 11.6 (-5.7%); mean messages 48.7 -> 47.7 (-2.1%). The same counter had run 9.4 ->
+    12.3 across the two preceding rounds under different harnesses, so a 0.7-call move is not
+    separable from its own drift. Directionally the prediction held; materially the mechanism
+    did almost nothing.
+  prevalence: 36/36 episodes
+- description: >-
+    THE FIRST ANCHOR MOVEMENT OF THE EXPERIMENT. task_006 broke 3/3 -> 2/3 after 21
+    consecutive identical-harness anchor episodes at 3/3 across seven rounds. task_032 held.
+    Separately C5's own target task fell: task_003 2/3 -> 0/3, undoing gen-005's gain. One
+    anchor cell is at the edge of what a single round can assert, which is exactly why the
+    revert's prediction is written on the anchor's recovery.
+  prevalence: 1/2 anchors, 1 cell
+- description: >-
+    THE HOOK ITSELF WORKED AS SPECIFIED, which is what makes the null interpretable rather
+    than a wiring failure. The injected line was present in every preflight session (80
+    occurrences) and appears 0 times in 36 graded trajectories — the D24/hook invisibility
+    property holding exactly as measured. So this is a change that ran, reached the model,
+    and did not move behaviour.
+  prevalence: 0/36 leaks; injection verified present pre-landing
+- description: >-
+    THE BARE-LIST NULL REPLICATES, and this is the transition's durable output. A prior
+    experiment measured that a bare LIST appended to what the model reads moved no counter,
+    while a missing-state note moved one 0/3 -> 3/3. The gen-006 record carried that
+    objection at landing time and landed anyway, because this list described the agent's OWN
+    retrieval history rather than the domain — a genuinely different case worth one slot. It
+    produced the same null, on a different experiment, a different surface class and a
+    different subject matter. A replication across those three axes is a stronger form of the
+    finding than the original single measurement.
+  prevalence: second independent measurement of the same shape
+counterevidence: >-
+  Two readings argue against reverting. (1) THE COUNTERS DID MOVE IN THE PREDICTED DIRECTION,
+  and the revert bar is a denied MECHANISM rather than a denied prediction — a strict reading
+  keeps C5. Against that: the movement is inside the counter's own round-to-round drift, and
+  the rule's purpose is to protect changes whose mechanism demonstrably fires, which this one
+  does not. (2) ONE ANCHOR CELL AND ONE TASK'S TWO CELLS ARE WITHIN THE MEASURED NOISE
+  (14 of 36 cells flip on an identical harness), so the harm may be imaginary. That is
+  precisely why the revert is not justified on the harm: it is justified on the mechanism
+  doing nothing, with the harm as a secondary reason not to carry an inert change into the
+  endpoint harness. The revert's own prediction tests the harm claim honestly — if task_006
+  and task_003 do not recover, the harm was noise and the record will say so.
+hypothesis: >-
+  C5 is inert. Showing the agent the ids it has already retrieved does not change how often
+  it searches, because the re-searching is driven by bm25's ranking rather than by the agent
+  forgetting its own history. Removing it should return the counters to their pre-C5 levels
+  and, if the two regressions were real rather than noise, restore them.
+owning_layer: revert
+proposed_change: >-
+  Revert C5 and nothing else. C1-C4 are untouched, so batch_08 reads the revert cleanly: this
+  is the second behavioural-identity-adjacent round the experiment gets, and the closest it
+  will come to a second noise measurement.
+schema_version: 4
+changes:
+- mechanism: >-
+    Remove the episode-scoped KB_search index: delete extensions/search-index.ts and its
+    package.json pi.extensions declaration, returning the harness to H5's extension set.
+  surface: revert
+  evidence: >-
+    C5's counters against batch_07 (KB_search 12.3 -> 11.6, messages 48.7 -> 47.7, both
+    inside the counter's own drift), the anchor break (task_006 3/3 -> 2/3 after 21
+    identical-harness episodes at 3/3), task_003 2/3 -> 0/3, and the prior experiment's
+    measured null on bare lists recorded as counterevidence in gen_005_to_006.yaml.
+  expected_effect: >-
+    On batch_08, as deltas against batch_07: task_006 returns to 3/3 and task_003 recovers
+    toward 2/3 IF the regressions were C5's; KB_search per episode returns toward 12.3 rather
+    than falling further, which is what distinguishes "the index was doing nothing" from "the
+    index was helping a little". If KB_search keeps falling with the index gone, C5 was
+    innocent of both the help and the harm and the record says so.
+  risk: >-
+    Reverting removes a change whose counters technically moved in the predicted direction;
+    if batch_08 shows KB_search rising materially, the revert cost a real if small gain. The
+    prediction is written so that outcome is legible rather than deniable.
+  adoption_stage: false
+  commit: 06f36c57a1d2024aa18da4abecfc8fd22428eeb6
+mutation:
+  branch: gen-007/revert-search-index
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/30
+  source_commit: 3a66003feededb80f8e118ce382795b70d64902e
+  candidate_commit: 86e8f8ff334e58388d0986326a54c014d818bb37
+expected_effect: >-
+  The set is one revert. Its value to the experiment is diagnostic as much as corrective:
+  batch_08 measures a harness identical to H5's, so it doubles as a second read on the
+  round-to-round noise the identity generation measured at batch_02 — on a harness five
+  changes further along.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-18'
+held_out_result: null
