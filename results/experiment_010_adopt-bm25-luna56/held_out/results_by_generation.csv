@@ -1,0 +1,10 @@
+generation,passed,total,percent,basis,trials_per_task
+H0,7.3,36,20.4,measured,3
+H1,7.3,36,20.4,carried,3
+H2,9.7,36,26.9,measured,3
+H3,7.3,36,20.4,measured,3
+H4,8,36,22.2,measured,3
+H5,9.3,36,25.9,measured,3
+H6,8.7,36,24.1,measured,3
+H7,8.3,36,23.1,measured,3
+H8,7.3,36,20.4,measured,3

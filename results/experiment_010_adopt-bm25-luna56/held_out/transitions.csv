@@ -1,0 +1,9 @@
+transition,gains,retained,regressions,unresolved,net,identity
+H0→H1,0,12,0,24,0,true
+H1→H2,8,7,3,18,5,false
+H2→H3,3,7,8,18,-5,false
+H3→H4,6,4,7,19,-1,false
+H4→H5,7,7,3,19,4,false
+H5→H6,4,4,8,20,-4,false
+H6→H7,6,3,6,21,0,false
+H7→H8,2,6,5,23,-3,false

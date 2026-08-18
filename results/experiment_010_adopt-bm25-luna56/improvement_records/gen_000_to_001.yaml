@@ -146,4 +146,8 @@ expected_effect: >-
 human_approval:
   approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
   date: '2026-08-17'
-held_out_result: null
+held_out_result:
+  passed: 7.3
+  total: 36
+  trials_per_task: 3
+  carried: true
