@@ -153,32 +153,61 @@
 #
 # Seq 10 is EVEN per D15: a reportable experiment. Seq 7 and seq 9 were never cut.
 # Results under the D24 seam (seq 8 onward) are not comparable to seq ≤ 6.
-# SEQ 11 — PHASE 0, THE CEILING PROBE (plan D36 / Phase 5.11, 2026-08-18). NOT an
-# experiment: an ODD seq per D15's parity convention, cut PROVISIONAL because probes are
-# exactly what an unenforced status is for. Nothing here is measured as a generation, no
-# partition is frozen, no improvement record is written, and no result under
-# results/experiment_011_ceiling-probe/ is reportable as a curve.
+# SEQ 12 (plan D36, 2026-08-18): THE CEILING EXPERIMENT — the first freeze in this
+# project's history that knows how much room it is playing for.
 #
-# WHY IT EXISTS. Four experiments asked "did the score go up" against an unknown maximum,
-# so four nulls left "the loop failed" and "there was nothing to find" equally alive.
-# Phase 0 measures the maximum: H0-current and an H-EXPERT harness — hand-built with full
-# access to the candidate tasks and unlimited effort, never shipped, never tagged, never
-# part of any loop — over the batch-eligible pool, under BOTH retrieval backends. Three
-# decisions come out of it, all pre-registered in Phase 5.11 BEFORE any episode ran:
-#   (a) BACKEND    freeze whichever gives the larger HARNESS HEADROOM (H_expert - H0),
-#                  not the larger absolute score; a tie goes to openai_embeddings.
-#   (b) GO/NO-GO   headroom <= 5 pp under BOTH backends means seq 12 is not run.
-#   (c) ENVELOPE   power_envelope.py --headroom-pp <measured> must return REACHABLE.
+# Five experiments (4, 5, 6, 8, 10) asked "did the score go up" against an UNKNOWN maximum,
+# so five nulls left "the loop failed" and "there was nothing to find" equally alive. Phase 0
+# measured the maximum before this lock was cut — seq 11, PROVISIONAL, an H0 arm and a
+# hand-built H-EXPERT arm over 35 candidate tasks x 3 trials under BOTH retrieval backends,
+# 416/420 episodes, $12.82, evidence at benchmark/probes/2026-08-18-phase0-ceiling-probe/:
 #
-# The protocol: block below is seq 10's, carried verbatim and INERT — the lock parser
-# validates it, nothing in Phase 0 reads it. `benchmark.retrieval_config` is the one field
-# Phase 0 moves, and moving it runs `make policy`, which rewrites the frozen <policy>
-# region and so breaks byte-identity with h0-baseline. That is expected: the harness is
-# unchanged and only the frozen benchmark text it carries moved. `h0-baseline` IS NOT
-# RE-TAGGED during Phase 0 — the tag decision is the first step of the seq-12 freeze.
+#     bm25                 H0 28.6%   H-expert 35.2%   headroom  +6.7 pp
+#     openai_embeddings    H0 23.8%   H-expert 39.1%   headroom +15.2 pp
+#
+# THE BACKEND IS A MEASUREMENT, NOT A PREFERENCE. The rule — freeze the larger HARNESS
+# HEADROOM, never the larger absolute score — was registered before the probe, and the two
+# criteria disagree: embeddings has the LOWER H0 and more than TWICE the headroom. Picking on
+# absolute score would have frozen bm25 and halved the room the loop can move in. Consequence
+# accepted and stated: --retrieval-config rewrites the tool set AND the graded policy text, so
+# seq 12's absolute numbers DO NOT compare to seq <= 10. Gap-closure against the measured
+# ceiling is what normalizes them, which is a further reason it is the primary's reporting form.
+#
+# WHAT PHASE 0 ALSO BOUGHT: an EMPIRICAL reachability oracle. A task H-expert passes is
+# provably harness-reachable — evidence no amount of trajectory reading can supply — and it is
+# what lets this batch admit a headroom stratum at all. B=26 rather than the designed 30
+# because only 26 of the 35 candidates earned that certificate, and the pre-registered
+# composition rule says SHRINK rather than admit a wall (floor 24). The shrink is recorded,
+# not smoothed over.
+#
+# H-EXPERT IS NOT H0 AND NEVER WAS. It was built on throwaway branches, never merged, never
+# tagged, and deleted; its source is preserved as probe evidence. A tagged H-expert would
+# silently become H0, the one mistake that would void the whole experiment.
+#
+# THE CEILING IS A LOWER BOUND. H-expert regressed 5 tasks H0 passes (gross gain +21.0 pp
+# against gross loss -5.7 pp) — the ceiling probe reproducing, inside itself, this project's
+# most-replicated lesson: an instruction added to a prompt does not inherit the scope its
+# author reasoned about. Read +15.2 pp as conservative.
+#
+# SIZES (D36): G=7 with identity_generations [1] — six mutation slots at the 3-5 bundled
+# changes the composition policy now requires, against seq 10's five single changes from seven
+# slots. heldout_generations [0, 4, 7]. B=26, T=36 FORCED (exactly 36 tasks no experiment has
+# ever batched, and D33 burns batch-used tasks for held-out use forever). num_trials 3 on both
+# lanes (D18, one knob). batch_mode fixed.
+#
+# AUTONOMY (D23's envelope, re-registered by D36 and ratified at this freeze by explicit user
+# instruction): require_human_approval stays false — every in-loop decision, PR merge included,
+# is the orchestrator's. What the delegation does NOT cover is unchanged and still enforced
+# mechanically: the frozen surfaces, the partition, the <policy> block, and the held-out
+# firewall. Autonomy is decision authority, never access. A freeze re-decision, a suspected
+# seam defect, a D8 viability read, or projected spend past the budget remains a
+# halt-and-report to the user in either mode.
+#
+# Seq 12 is EVEN per D15: a reportable experiment. Seq 11 was the ceiling probe (odd,
+# PROVISIONAL, not an experiment). Seq 7 and 9 were never cut.
 experiment:
-  seq: 11
-  name: ceiling-probe
+  seq: 12
+  name: ceiling-emb-luna56
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -235,8 +264,8 @@ benchmark:
 # local episodes; 9 batch rounds x 12 x 3 = 324 platform episodes. Estimated ≈ $29 at
 # seq-8 actuals, before the $2.57 pre-partition screen already spent.
 protocol:
-  generations: 8
-  improvement_tasks_per_generation: 12
+  generations: 7
+  improvement_tasks_per_generation: 26
   held_out_tasks: 36
 
   # CARRIED FROM SEQ 5/6/8 (plan D17, re-affirmed by D23/D28, re-registered by D34): one
@@ -282,6 +311,12 @@ protocol:
   # of a change that never executed, and that number re-read every attribution the project
   # had ever made. Seq 10 measures it on purpose, before the first mutation.
   identity_generations: [1]
+  # SEQ 12 (plan D36): the held-out set is measured at THREE points, not eight. Omitted
+  # generations are CARRIED exactly as identity generations already are, so reveal needed no
+  # new concept; the batch gate walks every SCHEDULED measurement at or before its generation,
+  # so sparse never means optional. Baseline, midpoint and endpoint: the secondary is an
+  # endpoint comparison with a midpoint read, not a trend, and the freeze says so.
+  heldout_generations: [0, 4, 7]
 
   # The full-quadrant reading key (plan D25 rule 3), pre-registered here because a key
   # written after the data exists is not a key. lock.py's READING_KEY_CELLS requires all
@@ -326,84 +361,66 @@ protocol:
   # Standing across all nine cells, stated once so no cell has to repeat it: results under
   # the D24 seam are NOT comparable to seq <= 6, and every claim the held-out lane carries
   # names its PROCEDURAL basis (plan D33) rather than an unqualified zero-exposure one.
+  # THE SEQ-12 READING KEY — copied VERBATIM from SIA_EVALUATION_PLAN.md Phase 5.11, which
+  # committed it before the ceiling probe ran. A key written after the data exists is not a
+  # key, and a key composed at freeze time from a plan that already contains one is a
+  # transcription risk for no benefit: this block was extracted mechanically from the plan.
+  #
+  # PRIMARY = scripts/endpoint_test.py, a within-task permutation on EPISODE outcomes
+  # (batch_08 vs pooled batch_01+batch_02), reported as GAP-CLOSURE against the measured
+  # ceiling — Phase 0 put the reachable headroom at +15.2 pp, so "the loop closed X% of the
+  # reachable headroom" is finally a sentence this project can write.
+  # SECONDARY = the held-out endpoint H7 - H0 against its band, with H4 as a midpoint read.
   reading_key:
     primary_up_secondary_up: >-
-      THE PRE-REGISTERED SUCCESS CELL, named before the first episode (plan D34). The loop
-      improved the tasks it stared at AND the gain appeared on a held-out set the loop
-      never tuned on. Seq 10 is the first freeze where this cell carries a capability
-      claim rather than corroboration: T=36 is pure-holdout — every task in it has zero
-      in-loop (batch) exposure in every experiment, and the D33 quarantine keeps prior
-      held-out results out of in-loop recall without expiry — so the claim rests on the
-      stated PROCEDURAL basis and says so, in those words, wherever it is reported. Report
-      as: loop demonstrated on the batch (pre-registered primary, exact paired sign-flip
-      batch_09 vs pooled batch_01+batch_02), with a concordant held-out trend over eight
-      measured points read against its noise band and its fragility report. The closure
-      names which changes moved which strata, whether any anchor paid for the gain, and
-      what the identity round (gen-001) measured as the floor.
+      THE PRE-REGISTERED SUCCESS CELL. The loop improved the tasks it watched AND the gain
+      appeared on a pure-holdout set it never tuned on. Report as gap-closure ("the loop
+      closed X% of the measured reachable headroom") with the raw endpoint test beside it,
+      the held-out endpoint against its band, and the identity round's noise floor. Name
+      which changes moved which strata, and whether any anchor paid for the gain.
     primary_up_secondary_flat: >-
-      The loop optimizes what it measures and the gain does not transfer — mutations are
-      batch-shaped. The primary claim stands; NO capability claim is available, and the
-      pure-holdout secondary makes that a stronger negative statement than seq 8's
-      exposed-probe version could have been: this is a set the loop never touched, so a
-      flat trend is evidence about generalization rather than a confound. The endpoint
-      diagnosis asks per change whether its mechanism is task-specific, and the closure
-      reports the batch win with the flat held-out curve as its principal limit.
+      The loop optimizes what it measures and the gain does not generalize. The primary claim
+      stands; no capability claim is available. On a pure-holdout secondary this is evidence
+      about generalization rather than a confound, which makes it a stronger negative
+      statement than an exposed probe could carry. The endpoint diagnosis asks per change
+      whether its mechanism is batch-shaped.
     primary_up_secondary_down: >-
-      The batch improved while the held-out set fell: overfitting with collateral damage,
-      and on a pure-holdout lane this is the sharpest negative-transfer signal the project
-      can produce. The primary verdict is positive and must be reported with the held-out
-      decline as its headline caveat — never as a capability claim. The closure identifies
-      the changes that plausibly traded breadth for the twelve, checks whether any of them
-      carried a suppression risk its own falsifier had already flagged (the standing
-      missing-state lesson), and states what the loop should have reverted.
+      Overfitting with collateral damage — the sharpest negative-transfer signal available.
+      The primary verdict is positive and must be reported with the held-out decline as its
+      headline caveat, never as a capability claim. Identify the changes that traded breadth
+      for the batch, and whether any of their own falsifiers had already fired.
     primary_flat_secondary_up: >-
-      Null primary with a rising held-out curve. READ THE CO-METRIC FIRST. Reachable
-      harvest ≥90% at the endpoint says the batch's harness-reachable range was already
-      spent — the primary had nothing left to move and the secondary is the informative
-      instrument; report the held-out trend against its band and fragility report, and
-      the next decision is a pool or domain decision, not a loop repair. Harvest low says
-      the loop failed on the tasks it watched while the held-out set moved anyway, which
-      on eight measured points and a set with zero in-loop exposure is more likely noise
-      or a general-capability drift than targeted transfer: run the fragility report
-      before writing any sentence about the secondary, and claim nothing without it.
+      Read the co-metric first. High reachable harvest says the batch's harness-reachable
+      range was already spent and the secondary is the informative instrument; low harvest
+      with a rising holdout is more likely noise or general drift than targeted transfer.
+      Run the fragility read before writing any sentence about the secondary.
     primary_flat_secondary_flat: >-
-      Null on both instruments. The co-metric decides which null this is, and this is the
-      cell seq 10 was designed to disambiguate. Harvest ≥90%: the objective's
-      harness-reachable range is EXHAUSTED — the loop passed what could be passed, and the
-      verdict is about the objective, not the meta-agent; the next move is a pool or
-      domain decision (the seq-12 path), stated as such. Harvest low (<90%) with ≥15
-      reachable failing cells at baseline, an attainable power envelope, a measured noise
-      floor and every surface class certified reachable: every precondition a prior null
-      could be blamed on has been removed, and the closure says plainly that the loop
-      found nothing. Name, per unconsumed target, the mechanism that was never reached.
+      Null on both. The measured HEADROOM now decides which null this is, and that is the
+      whole point of Phase 0. Headroom large and harvest low: every precondition a prior null
+      could be blamed on was removed and the loop found nothing — say so plainly, and name
+      per unconsumed target the mechanism never reached. Headroom large and harvest high: the
+      reachable range was spent. Headroom small: Phase 0's gate should have stopped the
+      experiment, and the closure states why it did not.
     primary_flat_secondary_down: >-
-      The batch held and the held-out set fell: the loop is doing harm outside what it
-      watches. On a pure-holdout lane this is a first-class negative result about
-      generalization, not a probe artifact. Report as negative; the endpoint diagnosis
-      names the changes whose scope over-generalized, any surviving change refuted this
-      way is recorded as a failed mutation, and the closure reads the decline against the
-      identity round's measured noise floor before attributing it to any single change.
+      The batch held and the holdout fell: the loop is doing harm outside what it watches. A
+      first-class negative result about generalization on a pure-holdout lane. Name the
+      changes whose scope over-generalized; read the decline against the identity floor
+      before attributing it to any one of them.
     primary_down_secondary_up: >-
-      The batch regressed while the held-out set rose. With two anchors frozen in, the
-      per-task cells say whether anchors broke (a real regression the loop caused) or only
-      marginals and headroom moved; an anchor break is the regression channel doing its
-      job and is reported as such. A held-out rise concurrent with a batch regression
-      supports NO positive claim: read both against the identity round's floor, and treat
-      the divergence itself as the finding — the closure states which changes are the
-      candidates for each side.
+      The batch regressed while the holdout rose. The per-task cells say whether anchors
+      broke (a real regression the loop caused) or only marginals moved. No positive claim of
+      any kind; treat the divergence itself as the finding.
     primary_down_secondary_flat: >-
-      The loop actively damaged what it stared at while the held-out set stayed put.
-      Report as a negative result and name the broken anchor or marginal cells; the
-      endpoint diagnosis attributes them to specific surviving changes, and the closure
-      records which revert the loop should have taken and did not — with the revert bar
-      (a denied MECHANISM, not a denied prediction) applied to each in hindsight.
+      The loop damaged what it stared at while the holdout stayed put. Negative result; name
+      the broken cells, attribute them to surviving changes, and record which revert the loop
+      should have taken and did not — with the revert bar (a denied MECHANISM, not a denied
+      prediction) applied in hindsight.
     primary_down_secondary_down: >-
-      The loop made the harness worse on both instruments — the strongest negative result
-      available, and under this design it cannot be blamed on the instrument. The closure
-      states which surviving changes are the candidates, whether any generation's own
-      falsifier had already fired unheeded, whether the concentration ladder pushed a
-      change onto a surface whose adoption was never confirmed, and what the failure says
-      about composite sets landing changes faster than the next batch can refute them.
+      Worse on both instruments, and under this design it cannot be blamed on the instrument:
+      the ceiling was measured, the envelope was checked against it, the noise floor was
+      measured, and every surface class was reachable. State which surviving changes are the
+      candidates, whether any falsifier fired unheeded, and what the failure says about
+      bundled sets landing faster than the next batch can refute them.
   allow_within_batch_verification: true
 
   # The held-out firewall, stated as configuration: nothing about the held-out set —
@@ -465,10 +482,10 @@ frozen:
   # semantics between experiments, so the suite covering the changed semantics must pass
   # before any seq-8 result exists.
   #
-  # PROVISIONAL for seq 11 (Phase 0): no freeze snapshot is written or enforced, because
-  # there is no freeze — these are probes. Seq 12 is cut FROZEN afterwards, with the
-  # backend Phase 0 chose in its name.
-  status: PROVISIONAL
+  # FROZEN for seq 12. Phase 0 ran PROVISIONAL because probes are what an unenforced status
+  # is for; this is a freeze, and the first run snapshots it into
+  # results/experiment_012_ceiling-emb-luna56/experiment.yaml, which every later run must match.
+  status: FROZEN
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which
