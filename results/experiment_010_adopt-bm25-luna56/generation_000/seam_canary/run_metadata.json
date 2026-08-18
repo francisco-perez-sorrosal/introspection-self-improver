@@ -16,18 +16,18 @@
     "tasks",
     "create",
     "--runtime-id",
-    "01a01274-8d7b-7662-8116-dc3b8cf7a20f"
+    "01a0127c-2665-7055-a5e6-947bc3457b37"
   ],
   "resumed": false,
   "arm": {
-    "sha": "a38c539ab4b809853e54177b48234bb0f72e219a",
+    "sha": "be98221c72898c27894155cc11b662b0da59c3d6",
     "dirty_paths": [],
     "allow_dirty": false
   },
   "episodes": [
     {
       "task_id": "task_001",
-      "trial": 2,
+      "trial": 1,
       "termination": "TerminationReason.USER_STOP",
       "reward": 1.0,
       "completed": true,
@@ -43,7 +43,7 @@
     },
     {
       "task_id": "task_001",
-      "trial": 1,
+      "trial": 2,
       "termination": "TerminationReason.USER_STOP",
       "reward": 1.0,
       "completed": true,
@@ -57,7 +57,7 @@
       "prompt_failures": 0,
       "stream_failures": 0,
       "sandbox_queue_waits": 0,
-      "start_gate_wait_seconds": 0,
+      "start_gate_wait_seconds": 1,
       "start_gate_timeouts": 0,
       "stream_reattaches": 1,
       "settle_timeouts": 0,
@@ -69,48 +69,50 @@
   },
   "platform": {
     "runtime": "target-agent",
-    "runtime_id": "01a01274-8d7b-7662-8116-dc3b8cf7a20f",
+    "runtime_id": "01a0127c-2665-7055-a5e6-947bc3457b37",
     "environment": "development",
-    "dev_target": "tau-8ce8",
+    "dev_target": "tau-7cd2",
     "task_ids": [
-      "01a01275-7d23-7645-9ab7-f1cc06e22652",
-      "01a01275-8760-76a1-bc9d-e56ad238f4b5",
-      "01a01277-202d-71e4-ae72-460bcc4b1e0d"
+      "01a01291-ae7b-715b-8b56-dd029c2a6ea7",
+      "01a01292-0ef8-74db-94ab-53fe66c4ea86",
+      "01a01292-b23f-72f4-ae8f-08498dc20e5c"
     ],
     "tasks_created": [
-      "01a01275-7d23-7645-9ab7-f1cc06e22652",
-      "01a01275-8010-77f0-950c-621635bc976a",
-      "01a01275-8760-76a1-bc9d-e56ad238f4b5",
-      "01a01276-79bd-73d6-b8f2-20751abe04bb",
-      "01a01277-202d-71e4-ae72-460bcc4b1e0d"
+      "01a01291-ad9f-75b3-965c-a88a03b22c55",
+      "01a01291-ae7b-715b-8b56-dd029c2a6ea7",
+      "01a01291-b23d-74e6-974a-967242a9a5ab",
+      "01a01292-0ef8-74db-94ab-53fe66c4ea86",
+      "01a01292-4fee-724e-95ac-2ac027c49362",
+      "01a01292-b23f-72f4-ae8f-08498dc20e5c"
     ],
     "orphaned_task_ids": [
-      "01a01275-8010-77f0-950c-621635bc976a",
-      "01a01276-79bd-73d6-b8f2-20751abe04bb"
+      "01a01291-ad9f-75b3-965c-a88a03b22c55",
+      "01a01291-b23d-74e6-974a-967242a9a5ab",
+      "01a01292-4fee-724e-95ac-2ac027c49362"
     ],
     "accounting": {
-      "01a01275-7d23-7645-9ab7-f1cc06e22652": {
+      "01a01291-ae7b-715b-8b56-dd029c2a6ea7": {
         "cost": {
-          "usd": 0.0041302299999999995
+          "usd": 0.00218648
         },
         "usage": {
-          "input_tokens": 61624,
-          "output_tokens": 535,
-          "total_tokens": 62159
+          "input_tokens": 19064,
+          "output_tokens": 403,
+          "total_tokens": 19467
         },
         "metrics": {
-          "duration_ms": 14187.0,
+          "duration_ms": 6797.0,
           "failed_llm_call_count": 0,
           "failed_tool_use_count": 0,
           "has_errors": false,
-          "llm_call_count": 4,
-          "span_count": 17,
-          "tool_use_count": 3,
+          "llm_call_count": 2,
+          "span_count": 9,
+          "tool_use_count": 1,
           "trace_count": 1
         },
-        "recipe_git_commit_sha": "a38c539ab4b809853e54177b48234bb0f72e219a",
+        "recipe_git_commit_sha": "be98221c72898c27894155cc11b662b0da59c3d6",
         "evidence_complete": true,
-        "item_count": 20,
+        "item_count": 10,
         "sandbox_tool_errors": 0,
         "sandbox_seam_disconnects": 0,
         "sandbox_seam_timeouts": 0,
@@ -125,28 +127,28 @@
           "openai"
         ]
       },
-      "01a01275-8760-76a1-bc9d-e56ad238f4b5": {
+      "01a01292-0ef8-74db-94ab-53fe66c4ea86": {
         "cost": {
-          "usd": 0.0036824
+          "usd": 0.003005
         },
         "usage": {
-          "input_tokens": 56030,
-          "output_tokens": 761,
-          "total_tokens": 56791
+          "input_tokens": 37063,
+          "output_tokens": 411,
+          "total_tokens": 37474
         },
         "metrics": {
-          "duration_ms": 18735.0,
+          "duration_ms": 10614.0,
           "failed_llm_call_count": 0,
           "failed_tool_use_count": 0,
           "has_errors": false,
-          "llm_call_count": 4,
-          "span_count": 18,
+          "llm_call_count": 3,
+          "span_count": 13,
           "tool_use_count": 2,
-          "trace_count": 2
+          "trace_count": 1
         },
-        "recipe_git_commit_sha": "a38c539ab4b809853e54177b48234bb0f72e219a",
+        "recipe_git_commit_sha": "be98221c72898c27894155cc11b662b0da59c3d6",
         "evidence_complete": true,
-        "item_count": 20,
+        "item_count": 15,
         "sandbox_tool_errors": 0,
         "sandbox_seam_disconnects": 0,
         "sandbox_seam_timeouts": 0,
@@ -161,28 +163,28 @@
           "openai"
         ]
       },
-      "01a01277-202d-71e4-ae72-460bcc4b1e0d": {
+      "01a01292-b23f-72f4-ae8f-08498dc20e5c": {
         "cost": {
-          "usd": 0.0069763099999999995
+          "usd": 0.00308317
         },
         "usage": {
-          "input_tokens": 118919,
-          "output_tokens": 1150,
-          "total_tokens": 120069
+          "input_tokens": 37125,
+          "output_tokens": 490,
+          "total_tokens": 37615
         },
         "metrics": {
-          "duration_ms": 23628.0,
+          "duration_ms": 9118.0,
           "failed_llm_call_count": 0,
           "failed_tool_use_count": 0,
           "has_errors": false,
-          "llm_call_count": 5,
-          "span_count": 24,
-          "tool_use_count": 5,
-          "trace_count": 2
+          "llm_call_count": 3,
+          "span_count": 13,
+          "tool_use_count": 2,
+          "trace_count": 1
         },
-        "recipe_git_commit_sha": "a38c539ab4b809853e54177b48234bb0f72e219a",
+        "recipe_git_commit_sha": "be98221c72898c27894155cc11b662b0da59c3d6",
         "evidence_complete": true,
-        "item_count": 29,
+        "item_count": 15,
         "sandbox_tool_errors": 0,
         "sandbox_seam_disconnects": 0,
         "sandbox_seam_timeouts": 0,
@@ -210,5 +212,5 @@
     "introspection": "introspection 0.28.0",
     "pi": "0.84.1"
   },
-  "elapsed_seconds": 145.1
+  "elapsed_seconds": 90.9
 }
