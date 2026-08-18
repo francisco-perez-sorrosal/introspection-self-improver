@@ -1028,11 +1028,19 @@ seq 12 is cut FROZEN afterwards, with the backend Phase 0 chose in its name.
       `make policy` to regenerate the frozen `<policy>` region and refresh the lock's hash and
       tool catalogue — **which changes `target-agent/SYSTEM.md` and therefore breaks
       byte-identity with `h0-baseline`.** That is expected, not a fault: the harness is
-      unchanged and only the frozen benchmark text it carries moved. If seq 12 freezes on
-      embeddings, commit the regenerated region and **re-tag `h0-baseline` at that commit**
-      (the D16/D27/D31 re-tag precedent), then `make reset_h0` to verify.
+      unchanged and only the frozen benchmark text it carries moved.
       Score each arm with `make headroom H0DIR=... EXPERT=... LABEL=<backend> WRITE=...`.
       Roughly 360 episodes ~ $8 per backend.
+
+      **`h0-baseline` IS NOT RE-TAGGED DURING PHASE 0.** Two things move the tree here and
+      neither touches the tag. (i) H-expert is built on a throwaway branch and is NEVER
+      merged and never tagged — a tagged H-expert would silently become H0, which is the one
+      mistake that would void the whole experiment. (ii) The embeddings arm needs the
+      regenerated `<policy>` region to run at all, so during that arm the recipe is
+      legitimately not byte-identical to `h0-baseline`; that is harmless because Phase 0
+      rounds are probes under a PROVISIONAL lock, not generations, and no cadence gate
+      applies to them. Run each arm from a COMMITTED branch state so `arm_sha` records real
+      lineage. The tag decision belongs to the freeze, below.
 
 - [ ] **The three pre-registered decisions, written down BEFORE the probe runs.**
       (a) **Backend**: freeze whichever yields the larger *harness headroom* (`H_expert - H0`),
@@ -1047,6 +1055,19 @@ seq 12 is cut FROZEN afterwards, with the backend Phase 0 chose in its name.
       headroom. At B=30, `num_trials` 3 and a pooled baseline that is **10.6 pp**, so a
       headroom below ~11 pp fails this gate even if it clears (b), and the response is more
       trials or more tasks, never a softer test.
+
+- [ ] **Settle `h0-baseline` — the FIRST step of the freeze, not of Phase 0.** Exactly one
+      of three outcomes, decided by (a) above:
+      - **bm25 chosen** — the tag does NOT move. Restore the `<policy>` region to its bm25
+        form (`benchmark.retrieval_config: bm25`, then `make policy`), delete the Phase 0
+        branches, and confirm `make reset_h0` reports "the recipe already was H0".
+      - **embeddings chosen** — the tag DOES move: commit the regenerated `<policy>` region
+        on `main` and **re-tag `h0-baseline` at that commit** (the D16/D27/D31 re-tag
+        precedent), then `make reset_h0` to verify byte-identity against the new anchor. H0's
+        harness is unchanged; only the frozen benchmark text it carries moved, and the plan
+        records that with the re-tag.
+      - **no-go** — the tag does NOT move. Restore the tree as in the bm25 case, write up the
+        finding, stop.
 
 - [ ] **Cut seq 12 FROZEN** (only if (a)-(c) pass): `experiment.seq: 12`,
       `name: ceiling-<backend>-luna56`; `protocol:` **G=7**, `identity_generations: [1]`,
