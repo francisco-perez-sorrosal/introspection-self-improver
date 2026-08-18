@@ -1,0 +1,296 @@
+{
+  "label": "openai_embeddings",
+  "tasks": 35,
+  "h0_round": "results/experiment_011_ceiling-probe/generation_000/h0_emb",
+  "expert_round": "results/experiment_011_ceiling-probe/generation_000/expert_emb",
+  "h0_mean_rate": 0.2381,
+  "expert_mean_rate": 0.3905,
+  "headroom_pp": 15.2,
+  "reachable_tasks": [
+    "task_001",
+    "task_002",
+    "task_003",
+    "task_004",
+    "task_005",
+    "task_006",
+    "task_008",
+    "task_014",
+    "task_015",
+    "task_023",
+    "task_024",
+    "task_029",
+    "task_032",
+    "task_037",
+    "task_046",
+    "task_055",
+    "task_056",
+    "task_057",
+    "task_058",
+    "task_060",
+    "task_061",
+    "task_065",
+    "task_076",
+    "task_094"
+  ],
+  "walled_tasks": [
+    "task_010",
+    "task_020",
+    "task_027",
+    "task_038",
+    "task_063",
+    "task_064",
+    "task_066",
+    "task_069",
+    "task_071",
+    "task_101",
+    "task_102"
+  ],
+  "reachable_count": 24,
+  "per_task": [
+    {
+      "task": "task_001",
+      "h0": "1/3",
+      "expert": "3/3",
+      "delta_pp": 66.7,
+      "reachable": true
+    },
+    {
+      "task": "task_002",
+      "h0": "0/3",
+      "expert": "2/3",
+      "delta_pp": 66.7,
+      "reachable": true
+    },
+    {
+      "task": "task_003",
+      "h0": "1/3",
+      "expert": "1/3",
+      "delta_pp": 0.0,
+      "reachable": true
+    },
+    {
+      "task": "task_004",
+      "h0": "0/3",
+      "expert": "1/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_005",
+      "h0": "1/3",
+      "expert": "1/3",
+      "delta_pp": 0.0,
+      "reachable": true
+    },
+    {
+      "task": "task_006",
+      "h0": "3/3",
+      "expert": "2/3",
+      "delta_pp": -33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_008",
+      "h0": "1/3",
+      "expert": "3/3",
+      "delta_pp": 66.7,
+      "reachable": true
+    },
+    {
+      "task": "task_010",
+      "h0": "2/3",
+      "expert": "0/3",
+      "delta_pp": -66.7,
+      "reachable": false
+    },
+    {
+      "task": "task_014",
+      "h0": "0/3",
+      "expert": "1/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_015",
+      "h0": "1/3",
+      "expert": "1/3",
+      "delta_pp": 0.0,
+      "reachable": true
+    },
+    {
+      "task": "task_020",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_023",
+      "h0": "1/3",
+      "expert": "1/3",
+      "delta_pp": 0.0,
+      "reachable": true
+    },
+    {
+      "task": "task_024",
+      "h0": "2/3",
+      "expert": "2/3",
+      "delta_pp": 0.0,
+      "reachable": true
+    },
+    {
+      "task": "task_027",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_029",
+      "h0": "2/3",
+      "expert": "1/3",
+      "delta_pp": -33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_032",
+      "h0": "3/3",
+      "expert": "2/3",
+      "delta_pp": -33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_037",
+      "h0": "1/3",
+      "expert": "3/3",
+      "delta_pp": 66.7,
+      "reachable": true
+    },
+    {
+      "task": "task_038",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_046",
+      "h0": "0/3",
+      "expert": "1/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_055",
+      "h0": "0/3",
+      "expert": "2/3",
+      "delta_pp": 66.7,
+      "reachable": true
+    },
+    {
+      "task": "task_056",
+      "h0": "0/3",
+      "expert": "1/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_057",
+      "h0": "1/3",
+      "expert": "2/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_058",
+      "h0": "0/3",
+      "expert": "1/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_060",
+      "h0": "0/3",
+      "expert": "3/3",
+      "delta_pp": 100.0,
+      "reachable": true
+    },
+    {
+      "task": "task_061",
+      "h0": "0/3",
+      "expert": "2/3",
+      "delta_pp": 66.7,
+      "reachable": true
+    },
+    {
+      "task": "task_063",
+      "h0": "3/3",
+      "expert": "0/3",
+      "delta_pp": -100.0,
+      "reachable": false
+    },
+    {
+      "task": "task_064",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_065",
+      "h0": "0/3",
+      "expert": "1/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_066",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_069",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_071",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_076",
+      "h0": "2/3",
+      "expert": "3/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_094",
+      "h0": "0/3",
+      "expert": "1/3",
+      "delta_pp": 33.3,
+      "reachable": true
+    },
+    {
+      "task": "task_101",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    },
+    {
+      "task": "task_102",
+      "h0": "0/3",
+      "expert": "0/3",
+      "delta_pp": 0.0,
+      "reachable": false
+    }
+  ]
+}

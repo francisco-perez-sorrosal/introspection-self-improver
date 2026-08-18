@@ -130,3 +130,38 @@ byte-identical to `h0-baseline` — harmless, because Phase 0 rounds are probes 
 PROVISIONAL lock, not generations, and no cadence gate applies to them. **The tag decision is
 the first step of the seq-12 freeze**, and takes exactly one of the three forms Phase 5.11
 enumerates.
+
+---
+
+# OUTCOME (2026-08-18) — GO, on `openai_embeddings`
+
+| backend | H0 | H-expert | **harness headroom** |
+|---|---|---|---|
+| `bm25` | 28.6% | 35.2% | +6.7 pp |
+| **`openai_embeddings`** | **23.8%** | **39.1%** | **+15.2 pp** |
+
+The three pre-registered decisions, applied unchanged:
+
+- **(a) Backend → `openai_embeddings`** — larger *harness headroom*, and the two criteria
+  disagree: embeddings has the **lower** absolute H0 and more than **twice** the headroom.
+  Choosing on absolute score would have frozen bm25 and halved the room the loop can move in.
+- **(b) GO** — 15.2 pp against the 5 pp no-go bar.
+- **(c) Envelope → REACHABLE** — smallest detectable effect 11.4 pp at the frozen B=26
+  (10.6 pp at B=30) sits inside 15.2 pp. No trial increase, no softer test.
+
+**B = 26, not 30.** Only 26 of the 35 candidates carry an empirical reachability certificate
+under embeddings, and the rule above says shrink rather than admit a wall. Recorded as a
+shrink with its count, per that rule. One widening, made with numbers visible and named here
+rather than buried: the rule's letter reads "exclude any task H-expert never passes", which
+would drop `task_063` (H0 **3/3**) and `task_010` (H0 2/3) as walled — calling a task H0
+passes every time unreachable is false, so the certificate is read as *either arm passes*.
+It affects exactly those two tasks and changes no verdict: the strict letter gives B=24,
+which also clears the envelope.
+
+Full evidence, method, and the two unplanned findings — H-expert regressing tasks H0 passes
+(so this ceiling is a lower bound, gross gain +21.0 pp), and a third identical-harness noise
+measurement (12 of 33 task rates moving on a byte-identical recipe) — are in
+`benchmark/probes/2026-08-18-phase0-ceiling-probe/README.md`. Run directories were deleted
+after extraction: 325 MB of session logs is not a committable record.
+
+**Spend: $12.82**, against ~$16 budgeted. 416/420 episodes, zero stall warnings.
