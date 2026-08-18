@@ -155,6 +155,30 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   non-empty — executed by Pi, suppressed from τ, logged) yet **still unexercised in any
   graded round** — `pi_local_calls` was 0 across all 168 seq-8 platform episodes, and
   the platform lane pins the recipe to pushed main.
+- **SEQ 12 IS STAGED, NOT FROZEN — start at plan Phase 5.11, and Phase 0 comes before the
+  lock (D36).** The recipe is already reset to `h0-baseline` and `make reset_h0` reports
+  byte-identity. Nothing about seq 12 may be frozen until the **ceiling probe** runs, because
+  it decides two things: which retrieval backend to freeze (larger *harness headroom*
+  `H_expert − H0` wins; a tie goes to `openai_embeddings`, which is what τ² publishes and
+  whose key grading already requires), and **whether seq 12 runs at all** (headroom ≤ 5 pp
+  under both backends is a no-go, costing ~$16, and the next move is then a domain decision
+  — `telecom-workflow` being procedural and multi-step is the candidate). Build **H-expert**
+  by hand with full access to the candidate tasks: it is never shipped, never part of the
+  loop, and exists only to bound the range — but it still respects the frozen surfaces.
+  Instruments already landed: `scripts/headroom.py` (headroom, gap-closure, and the
+  *empirical* reachability oracle — a task H-expert passes is provably harness-reachable),
+  `scripts/endpoint_test.py` (the new primary: a within-task permutation on EPISODE outcomes
+  with a CMH cross-check, replacing the sign test that collapsed 36 episodes into 12
+  verdicts), plus `scripts/gold_diff.py` and `scripts/round_read.py`. Sizes: `num_trials` 3,
+  **B=30** (the size at which seq 10's own observed +11.1 pp would have been significant),
+  **T=36 which is FORCED** — the pool holds exactly 36 tasks no experiment has ever batched,
+  and D33 keeps batch-used tasks burnt forever. Loop policy is in `contract/protocol.md`:
+  bundle 3–5 non-interacting changes, a ≥3-task-or-structural target bar, counters stated as
+  DELTAS, ≤2 reverts, one slot reserved for `sub-agent` (still never exercised), and the
+  **futility check** from the midpoint — declare a dead primary out loud and re-purpose the
+  remaining slots for knowledge rather than score. Deferred by user decision: the control arm
+  (a non-diagnosing loop, the sharpest test of the self-improvement claim) and the
+  weak-H0/strong-H0 pair.
 - **Seq 10 ran and closed (2026-08-18); read its closure's batch-derived half before
   designing seq 12.** Four results outlive it. (a) *The D24 structural surfaces work*: a
   registered extension tool went from zero Pi-local calls in project history to 39 in one
