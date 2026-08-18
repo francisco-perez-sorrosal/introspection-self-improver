@@ -1,0 +1,125 @@
+# Value snapshot written at freeze time by the runner (comments dropped; the
+# canonical commented file lives in benchmark/). Values cannot drift from the
+# experiment: the freeze fingerprint refuses any change.
+experiment:
+  seq: 12
+  name: ceiling-emb-luna56
+benchmark:
+  repository: sierra-research/tau2-bench
+  commit: fc0055dc4e0a316c3f83133267fbd6faaa770992
+  tag: v1.0.1
+  domain: banking_knowledge
+  retrieval_config: openai_embeddings
+  task_set_name: banking_knowledge
+  task_split_name: base
+protocol:
+  generations: 7
+  improvement_tasks_per_generation: 26
+  held_out_tasks: 36
+  batch_mode: fixed
+  identity_generations:
+  - 1
+  heldout_generations:
+  - 0
+  - 4
+  - 7
+  reading_key:
+    primary_up_secondary_up: THE PRE-REGISTERED SUCCESS CELL. The loop improved the
+      tasks it watched AND the gain appeared on a pure-holdout set it never tuned
+      on. Report as gap-closure ("the loop closed X% of the measured reachable headroom")
+      with the raw endpoint test beside it, the held-out endpoint against its band,
+      and the identity round's noise floor. Name which changes moved which strata,
+      and whether any anchor paid for the gain.
+    primary_up_secondary_flat: The loop optimizes what it measures and the gain does
+      not generalize. The primary claim stands; no capability claim is available.
+      On a pure-holdout secondary this is evidence about generalization rather than
+      a confound, which makes it a stronger negative statement than an exposed probe
+      could carry. The endpoint diagnosis asks per change whether its mechanism is
+      batch-shaped.
+    primary_up_secondary_down: "Overfitting with collateral damage \u2014 the sharpest\
+      \ negative-transfer signal available. The primary verdict is positive and must\
+      \ be reported with the held-out decline as its headline caveat, never as a capability\
+      \ claim. Identify the changes that traded breadth for the batch, and whether\
+      \ any of their own falsifiers had already fired."
+    primary_flat_secondary_up: Read the co-metric first. High reachable harvest says
+      the batch's harness-reachable range was already spent and the secondary is the
+      informative instrument; low harvest with a rising holdout is more likely noise
+      or general drift than targeted transfer. Run the fragility read before writing
+      any sentence about the secondary.
+    primary_flat_secondary_flat: "Null on both. The measured HEADROOM now decides\
+      \ which null this is, and that is the whole point of Phase 0. Headroom large\
+      \ and harvest low: every precondition a prior null could be blamed on was removed\
+      \ and the loop found nothing \u2014 say so plainly, and name per unconsumed\
+      \ target the mechanism never reached. Headroom large and harvest high: the reachable\
+      \ range was spent. Headroom small: Phase 0's gate should have stopped the experiment,\
+      \ and the closure states why it did not."
+    primary_flat_secondary_down: 'The batch held and the holdout fell: the loop is
+      doing harm outside what it watches. A first-class negative result about generalization
+      on a pure-holdout lane. Name the changes whose scope over-generalized; read
+      the decline against the identity floor before attributing it to any one of them.'
+    primary_down_secondary_up: The batch regressed while the holdout rose. The per-task
+      cells say whether anchors broke (a real regression the loop caused) or only
+      marginals moved. No positive claim of any kind; treat the divergence itself
+      as the finding.
+    primary_down_secondary_flat: "The loop damaged what it stared at while the holdout\
+      \ stayed put. Negative result; name the broken cells, attribute them to surviving\
+      \ changes, and record which revert the loop should have taken and did not \u2014\
+      \ with the revert bar (a denied MECHANISM, not a denied prediction) applied\
+      \ in hindsight."
+    primary_down_secondary_down: 'Worse on both instruments, and under this design
+      it cannot be blamed on the instrument: the ceiling was measured, the envelope
+      was checked against it, the noise floor was measured, and every surface class
+      was reachable. State which surviving changes are the candidates, whether any
+      falsifier fired unheeded, and what the failure says about bundled sets landing
+      faster than the next batch can refute them.'
+  allow_within_batch_verification: true
+  holdout_visibility:
+    expose_tasks_to_orchestrator: false
+    expose_traces_to_orchestrator: false
+    expose_per_task_results_to_orchestrator: false
+    expose_aggregate_score_to_orchestrator: false
+  require_human_approval: false
+frozen:
+  status: FROZEN
+  agent_model: openai/gpt-5.6-luna
+  agent_thinking_level: null
+  agent_llm_declared: openai/gpt-5.6-luna
+  user_llm: openai/gpt-5.6-luna
+  user_llm_args:
+    reasoning_effort: medium
+    timeout: 60
+  num_trials: 3
+  seed: 300
+  max_steps: 200
+  max_errors: 10
+  timeout_seconds: 600
+  enforce_communication_protocol: false
+operational:
+  max_concurrency: 3
+  process_metric_tools:
+    search: KB_search
+    transfer: transfer_to_human_agents
+    discoverable:
+    - unlock_discoverable_agent_tool
+    - call_discoverable_agent_tool
+    - give_discoverable_user_tool
+policy:
+  sha256: 0ed5b335e24f46d00b83e3a534909f0417f97f1b440e98ea41ae6bb2e62879cb
+  source_domain: banking_knowledge
+  source_retrieval_config: openai_embeddings
+tool_catalog:
+- KB_search
+- transfer_to_human_agents
+- get_current_time
+- get_user_information_by_id
+- get_user_information_by_name
+- get_user_information_by_email
+- change_user_email
+- get_referrals_by_user
+- get_credit_card_transactions_by_user
+- get_credit_card_accounts_by_user
+- log_verification
+- give_discoverable_user_tool
+- unlock_discoverable_agent_tool
+- call_discoverable_agent_tool
+- list_discoverable_agent_tools
