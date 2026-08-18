@@ -649,3 +649,57 @@ the record will say so.
 | 7 | gen-008 | — | one slot left |
 
 <!-- transition: gen_006_to_007 -->
+
+---
+
+## Re-ranking against `batch_08` (H7, 2026-08-18) — the final transition
+
+36/36, mean messages 46.5, `KB_search` 11.6/episode, $1.11. **22/36**; curve 20, 20, 17, 26,
+19, 22, 23, 22.
+
+### gen-007's revert prediction — confirmed on the decisive counter
+
+`KB_search`/episode is **11.6 with the index and 11.6 without it**, identical to one decimal
+place. That settles what `batch_07` alone could not: **C5 was inert, and its removal proves
+it** rather than asserting it.
+
+**The anchor recovered**: `task_006` 2/3 → 3/3. Across eight rounds the two anchors have
+moved exactly one cell between them — which is what makes every other movement in this
+experiment attributable rather than ambient.
+
+**`task_003` did not recover**, so the regression provisionally attributed to C5 was noise,
+not harm. gen-007 predicted exactly this test and the answer is recorded against it: C5 was
+innocent of the harm as well as of the help.
+
+### gen-008 (C7) — the last slot reverts C4
+
+`task_003` ran **2/3** at `batch_06` (C4's first round), then **0/3** and **0/3**, the last
+with C5 removed so C4 stood alone. One round's gain against two without it, while its cost
+falsifier fired at landing (+31% `KB_search` against a +20% threshold) and never un-fired.
+
+**Recorded as a judgement, not an entailment.** C4's mechanism is not *denied* — it fired
+once, visibly. What is denied is replication. A prior experiment's counterfactual (a change
+kept through a denied prediction that paid off two rounds later) argues the other way, and a
+reader weighing it more heavily would keep C4. The case for reverting: the cost is paid every
+round, the benefit appeared in one, and an endpoint harness should carry only mechanisms that
+held.
+
+**H8 = H0 + C1 + C2 + C3.**
+
+### Final slot accounting
+
+| Slot | Gen | Change | Surface | Verdict |
+|---|---|---|---|---|
+| — | 001 | identity (pre-registered) | — | noise floor measured, baseline pooled |
+| 1 | 002 | C1 `compare_options` | extension-tool | **adoption CONFIRMED** — kept |
+| 2 | 003 | C2 exact-string handover | instructions | **CONFIRMED**, persisted | 
+| 3 | 004 | C3 narrow the tool | instructions | mechanism CONFIRMED, cost claim DENIED — kept |
+| 4 | 005 | C4 per-candidate search | instructions | counter confirmed once, cost falsifier fired — **reverted at 008** |
+| 5 | 006 | C5 KB_search index | extension-hook | **null** — reverted at 007 |
+| 6 | 007 | C6 revert C5 | revert | **CONFIRMED** — counter identical without it |
+| 7 | 008 | C7 revert C4 | revert | in flight — scored by the endpoint round |
+
+**Surfaces exercised: 3 of 4** (extension-tool, instructions, extension-hook). `sub-agent`
+was never exercised; the closure must state why with a probe or a measured fact.
+
+<!-- transition: gen_007_to_008 -->

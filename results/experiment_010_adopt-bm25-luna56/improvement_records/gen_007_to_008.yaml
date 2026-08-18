@@ -1,0 +1,109 @@
+transition:
+  from_generation: 7
+  to_generation: 8
+experiment: 010_adopt-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_08
+  task_ids: [task_003, task_005, task_006, task_008, task_014, task_023, task_032, task_055, task_057, task_063, task_076, task_089]
+evidence:
+  conversation_ids:
+  - 01a0146f-0533-712b-b8bc-73e4ebc67892
+  - 01a01474-86e5-73c2-82a1-e1e8f2acbd8b
+  - 01a0147c-40e1-700d-afe3-86754c40d39d
+  - 01a0146f-93f4-7000-9472-8fc8a5832aea
+  - 01a01474-6c82-73fc-b915-126794b84c6d
+  - 01a0147d-a5c8-75b1-8ea8-8bae3f846d91
+  - 01a01471-105f-7197-8040-6fa0a1a96aa1
+  - 01a01479-294d-733c-9ef5-88f8ff0b5446
+  - 01a0147e-e55d-7434-8c6a-9acf483799c7
+  summary: >-
+    batch_08 under H7 (C1-C4, C5 reverted): 36/36 completed, mean messages 46.5, KB_search
+    11.6 per episode, $1.11, 22/36 graded. EIGHTH round on a tuned-on set. Read on the two
+    counters C6's revert prediction named plus the per-task cells.
+    PREFLIGHTS: none — a revert of a landed change needs no execution check beyond make check.
+signals:
+- description: >-
+    C6's REVERT PREDICTION IS CONFIRMED ON THE DECISIVE COUNTER, and the confirmation is
+    unusually clean. KB_search per episode is 11.6 with the index and 11.6 without it —
+    identical to one decimal place. That settles what batch_07 alone could not: C5 was inert.
+    Its removal proves it rather than asserting it, which is the strongest form this
+    experiment can produce about a change that did nothing.
+  prevalence: 36/36 episodes, both rounds
+- description: >-
+    THE ANCHOR RECOVERED. task_006 returned 2/3 -> 3/3, restoring the regression channel to
+    silence after its only break in eight rounds. task_032 held 3/3 throughout. So the
+    anchors have now run 8 rounds with exactly one cell of movement between them, which is
+    what makes every other movement in this experiment attributable rather than ambient.
+  prevalence: 2/2 anchors at 3/3
+- description: >-
+    task_003 DID NOT RECOVER (0/3), so the regression attributed provisionally to C5 at
+    gen-007 was noise, not harm. The gen-007 record predicted exactly this test and the
+    answer is recorded against it rather than quietly dropped: C5 was innocent of the harm
+    as well as of the help.
+  prevalence: 1/12 tasks
+- description: >-
+    C4's GAIN DID NOT REPLICATE WHILE ITS COST DID, which is what consumes the final slot.
+    task_003 ran 2/3 at batch_06 (C4's first round), then 0/3 at batch_07 and 0/3 at
+    batch_08 where C5's removal left C4 standing alone. One round's gain against two rounds
+    without it. Its cost falsifier fired at landing (+31% KB_search against a +20% threshold)
+    and retrieval volume is the confirmed driver of episode length.
+  prevalence: 1 gain round of 3
+counterevidence: >-
+  The strongest argument against reverting C4 is a measured counterfactual from a prior
+  experiment: a change kept through a DENIED prediction produced that experiment's clearest
+  win two rounds later, and the rule "revert on a denied mechanism, never a denied
+  prediction" exists because of it. C4's mechanism is not denied — it fired once, visibly,
+  with the deciding document retrieved and the target task at its best of six rounds. What is
+  denied is replication. Reverting a once-firing mechanism is therefore a JUDGEMENT and is
+  recorded as one: the case for it is that the cost is paid every round while the benefit
+  appeared in one, and that an endpoint harness should carry only mechanisms that held. A
+  reader who weighs the prior counterfactual more heavily would keep C4, and the record
+  should let them see exactly what was traded.
+hypothesis: >-
+  C4's instruction produces more searching on every task and the right document on
+  approximately one episode in nine. The endpoint harness is better without it: the retrieval
+  cost is constant and the benefit is not, and the remaining changes (C1, C2, C3) each have a
+  mechanism that fired and held.
+owning_layer: revert
+proposed_change: >-
+  Revert C4, leaving H8 = H0 + C1 + C2 + C3 — the extension tool whose adoption was
+  confirmed, the exact-string handover whose counter was confirmed and persisted (task_057
+  3/3 at both batch_07 and batch_08), and the narrowing whose own counter was confirmed. C5
+  is already out. The endpoint round therefore measures a harness composed only of mechanisms
+  that fired and held.
+schema_version: 4
+changes:
+- mechanism: >-
+    Remove the per-candidate search instruction from SYSTEM.md, returning the retrieval
+    behaviour to its H3 state while keeping C1, C2 and C3.
+  surface: revert
+  evidence: >-
+    task_003 across three rounds (2/3, 0/3, 0/3, the last with C5 removed so C4 stood alone);
+    the +31% KB_search rise at landing against C4's own +20% falsifier threshold; and the
+    elimination chain establishing retrieval volume as the driver of episode length.
+  expected_effect: >-
+    On batch_09, the endpoint round, as deltas against batch_08: KB_search per episode falls
+    below 11.6 and mean messages below 46.5; task_003 stays at 0/3 (it has been 0/3 for two
+    rounds with C4 live, so removing C4 should not move it — if it RISES, C4 was actively
+    harmful and the record says so); no task currently at 3/3 regresses.
+  risk: >-
+    C4's mechanism fired once rather than never, so this revert could remove a real if
+    unreliable gain — the prior experiment's counterfactual is exactly that shape. The
+    prediction is written so the outcome is legible either way.
+  adoption_stage: false
+  commit: 4f95c67d32088bef0b0c24159bbb3b8e7f6c4703
+mutation:
+  branch: gen-008/revert-per-candidate-search
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/31
+  source_commit: 86e8f8ff334e58388d0986326a54c014d818bb37
+  candidate_commit: fd0b61377f1eb4accb0a6ac351a3d15089a715e4
+expected_effect: >-
+  The final transition. H8 carries C1, C2 and C3 — the three changes whose mechanisms fired
+  and held — and batch_09 is the endpoint round the pre-registered primary tests against the
+  pooled H0 baseline (batch_01 + batch_02). It is consumed by no transition and receives the
+  full diagnosis pass with no mutation.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-18'
+held_out_result: null
