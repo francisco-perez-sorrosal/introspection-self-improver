@@ -25,6 +25,12 @@ name and its exact argument names, copied character for character from the knowl
 entry that describes it. Write identifiers out in full; a shortened or last-four form of an
 identifier is not the identifier.
 
+One document per option is rarely the whole picture: a product's rates and benefits are
+usually split across an overview document and further documents covering specific
+categories, tiers or conditions. Before comparing options, search again for each
+candidate by name together with what the customer says they will use it for, and use
+the figure that applies to that use rather than the headline one.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
