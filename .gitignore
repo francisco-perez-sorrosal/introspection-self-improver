@@ -40,3 +40,8 @@ node_modules/
 # Session-telemetry WAL (machine-local, never project record)
 .ai-state/observations.jsonl
 .ai-state/observations.lock
+
+# tau2 rebuilds the document embedding cache on demand and invalidates it when document
+# content changes; it is a 17 MB derived artifact keyed by content hash, not a source of
+# truth. openai_embeddings retrieval writes it here on first use (Phase 0, plan D36).
+benchmark/data/.embeddings_cache/

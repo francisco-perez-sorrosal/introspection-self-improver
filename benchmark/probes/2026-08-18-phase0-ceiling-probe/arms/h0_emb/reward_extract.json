@@ -1,0 +1,2867 @@
+[
+ {
+  "task_id": "task_002",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 12,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_004",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 16,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_005",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 24,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": true
+   },
+   {
+    "name": "log_verification",
+    "match": false
+   },
+   {
+    "name": "change_user_email",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_014",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 16,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_006",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 12,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_008",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 28,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_003",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 12,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_001",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 16,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_010",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 25,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_024",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 18,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_032",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 24,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "transfer_to_human_agents",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_023",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 28,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_020",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 51,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_037",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 33,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_046",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 30,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_038",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 33,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_029",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 59,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_015",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 34,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_027",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 97,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_055",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 67,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_061",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 33,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_060",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 48,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_058",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 45,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_056",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 66,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_057",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 70,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_063",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 58,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_076",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 36,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_071",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 32,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_094",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 36,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_069",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 66,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_001",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 10,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_101",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 33,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "get_referrals_by_user",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": false
+   },
+   {
+    "name": "submit_referral",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_064",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 63,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_002",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 22,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_066",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 73,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_004",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 18,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_006",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 16,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_102",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 29,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "get_referrals_by_user",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_003",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 12,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_005",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 28,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": true
+   },
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "change_user_email",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_008",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 22,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_010",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 28,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_015",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 10,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_024",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 16,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_023",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 29,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_065",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 118,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_014",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 14,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_032",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 22,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "transfer_to_human_agents",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_027",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 30,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_046",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 38,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_038",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 43,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_029",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 82,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_037",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 52,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_056",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 53,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_058",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 42,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_057",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 54,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_020",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 113,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_060",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 47,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_055",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 78,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_065",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 43,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_076",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 27,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_064",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 37,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_061",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 64,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_063",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 70,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_001",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 16,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_094",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 36,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_101",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 32,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "get_referrals_by_user",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": false
+   },
+   {
+    "name": "submit_referral",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_002",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 12,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_003",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 8,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_004",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 18,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_071",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 46,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_102",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 31,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "get_referrals_by_user",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_006",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 14,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_005",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 26,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": true
+   },
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "change_user_email",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_015",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 14,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_010",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 24,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_014",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 14,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_066",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 53,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_008",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 37,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "transfer_to_human_agents",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_024",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 14,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_032",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 22,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "transfer_to_human_agents",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_069",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 100,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_023",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 31,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_020",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 37,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_029",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 46,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_046",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 41,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_038",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 34,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_027",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 64,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_058",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 29,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_037",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 50,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_060",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 29,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_056",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 54,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_055",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 66,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_066",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 30,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_065",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 47,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_057",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 78,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_064",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 67,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_076",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 20,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_069",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 57,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_063",
+  "reward": 1.0,
+  "termination": "user_stop",
+  "messages": 66,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "apply_for_credit_card",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_101",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 27,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "get_referrals_by_user",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": false
+   },
+   {
+    "name": "submit_referral",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_094",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 36,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_071",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 67,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ },
+ {
+  "task_id": "task_102",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 31,
+  "db_match": true,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "get_referrals_by_user",
+    "match": true
+   },
+   {
+    "name": "submit_referral",
+    "match": true
+   }
+  ]
+ },
+ {
+  "task_id": "task_061",
+  "reward": 0.0,
+  "termination": "user_stop",
+  "messages": 121,
+  "db_match": false,
+  "action_checks": [
+   {
+    "name": "log_verification",
+    "match": true
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   },
+   {
+    "name": "give_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "call_discoverable_user_tool",
+    "match": false
+   },
+   {
+    "name": "unlock_discoverable_agent_tool",
+    "match": true
+   },
+   {
+    "name": "call_discoverable_agent_tool",
+    "match": false
+   }
+  ]
+ }
+]

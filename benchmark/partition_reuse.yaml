@@ -217,3 +217,83 @@ declarations:
       report these 8 additionally support a pre-registered ADVISORY exposure-stratified
       sub-read — the 8 against the 28 — which qualifies the secondary and never carries a
       claim of its own.
+  # ── SEQ 12 (plan D36) ─────────────────────────────────────────────────────────────────
+  # T=36 is FORCED rather than chosen. Exactly 36 tasks have never been a batch task of any
+  # experiment, and D33 burns batch-used tasks for held-out use forever, so this set is not
+  # a preference among alternatives — it is the whole of the eligible stock. Every row below
+  # is held_out_from_held_out against a REVEALED prior, declared per source because the check
+  # ranks severity per prior experiment and collapsing them would understate exposure.
+  #
+  # The basis is unchanged from seq 10 and stated in every number derived from T: zero
+  # IN-LOOP (batch) exposure in every experiment — no loop has ever read these transcripts as
+  # diagnosis evidence — plus the D33 cross-experiment quarantine, which keeps prior held-out
+  # artifacts out of in-loop recall without expiry. That is the PROCEDURAL basis, and seq 12
+  # names it wherever T=36 is reported. The unqualified zero-exposure claim still requires a
+  # pool no prior experiment touched, which banking_knowledge cannot supply: a domain
+  # decision, user-owned.
+  #
+  # One thing IS new here and cuts the other way. Seq 12 runs openai_embeddings, so every
+  # prior measurement of these 36 was taken under a different retrieval surface and a
+  # different graded <policy> text. That does not weaken the firewall — it was never about
+  # comparability — but it does mean seq 12's held-out numbers are not comparable to any
+  # prior experiment's, which the closure states alongside the batch-side non-comparability.
+  - experiment: 012_ceiling-emb-luna56
+    reuses_from: 010_adopt-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 36
+    reason: >-
+      Plan D33/D36. Seq 10's held-out 36 carried forward WHOLE, because it is the entire
+      never-batched remainder of the pool and no re-draw exists: 97 tasks minus the user-sim
+      crasher minus everything any experiment has ever batched leaves exactly these 36. Seq 10
+      REVEALED 2026-08-18, so its per-task results for this set are known to the project — and
+      are quarantined from every in-loop session of seq 12 by D33, without expiry, exactly as
+      they were before reveal. The pre-registered PRIMARY is the batch-side endpoint test
+      (scripts/endpoint_test.py over 26 tasks with 53 reachable failing cells at H0), whose
+      evidence is fully observable by design and therefore untouched by this reuse; the
+      held-out lane is the secondary and is measured at three points only
+      (heldout_generations [0, 4, 7]).
+  - experiment: 012_ceiling-emb-luna56
+    reuses_from: 008_stratb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D36, transitively. The legacy 28 inside seq 12's T=36 have been a hidden set
+      since the powered experiment and are now on their SIXTH consecutive experiment; seq 8
+      REVEALED 2026-08-17. Declared against its own source so accumulated exposure is counted
+      per prior experiment rather than absorbed into the seq-10 row. Same basis and same
+      accepted consequence as the row above.
+  - experiment: 012_ceiling-emb-luna56
+    reuses_from: 006_fixedb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D36, transitively. The same 28 were seq 6's hidden set; seq 6 REVEALED
+      2026-08-16. Declared against its own source. Same basis and same accepted consequence.
+  - experiment: 012_ceiling-emb-luna56
+    reuses_from: 005_fixedb-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D36, transitively. The same 28 were seq 5's hidden set; seq 5 REVEALED
+      2026-08-16. Declared against its own source. Same basis and same accepted consequence.
+  - experiment: 012_ceiling-emb-luna56
+    reuses_from: 004_powered-bm25-luna56
+    kinds: [held_out_from_held_out]
+    count: 28
+    reason: >-
+      Plan D33/D36, transitively. These 28 have been the hidden set since the powered
+      experiment, which REVEALED 2026-08-15. Declared against its own source. Same basis and
+      same accepted consequence.
+  - experiment: 012_ceiling-emb-luna56
+    reuses_from: 002_bm25-sonnet46
+    kinds: [held_out_from_held_out]
+    count: 8
+    reason: >-
+      Plan D33/D36. Seq 2's 8 held-out tasks complete T=36 alongside the legacy 28, as they
+      did for seq 10. They remain the least-exposed stock the pool has — last measured
+      2026-08-14 under the sonnet-4.6 pair, untouched by the luna lineage beyond the 97/97
+      user-sim crash screen, and never a batch task of any experiment. Seq 2 REVEALED
+      2026-08-14, so this is a held_out_from_held_out row carrying the same procedural basis
+      as the rows above. Seq 2's TWELVE batch tasks are deliberately NOT here: under D33 they
+      are burnt for held-out use forever, and four of them are seq 12 BATCH tasks instead,
+      reported as benign batch_from_batch notes.

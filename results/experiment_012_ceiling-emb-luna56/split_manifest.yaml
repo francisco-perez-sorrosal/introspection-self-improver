@@ -1,0 +1,288 @@
+# Value snapshot written at freeze time by the runner (comments dropped; the
+# canonical commented file lives in benchmark/). Values cannot drift from the
+# experiment: the freeze fingerprint refuses any change.
+version: 2
+domain: banking_knowledge
+task_split_name: base
+batch_mode: fixed
+batches:
+  batch_01:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+  batch_02:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+  batch_03:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+  batch_04:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+  batch_05:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+  batch_06:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+  batch_07:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+  batch_08:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+held_out:
+- task_007
+- task_012
+- task_016
+- task_017
+- task_018
+- task_019
+- task_021
+- task_022
+- task_025
+- task_031
+- task_033
+- task_035
+- task_036
+- task_039
+- task_044
+- task_048
+- task_049
+- task_051
+- task_052
+- task_059
+- task_067
+- task_068
+- task_073
+- task_075
+- task_078
+- task_084
+- task_085
+- task_086
+- task_091
+- task_092
+- task_093
+- task_095
+- task_097
+- task_098
+- task_099
+- task_100
+strata:
+  task_001: marginal
+  task_002: headroom
+  task_003: marginal
+  task_004: headroom
+  task_005: marginal
+  task_006: anchor
+  task_008: marginal
+  task_010: marginal
+  task_014: headroom
+  task_015: marginal
+  task_023: marginal
+  task_024: marginal
+  task_029: marginal
+  task_032: anchor
+  task_037: marginal
+  task_046: headroom
+  task_055: headroom
+  task_056: headroom
+  task_057: marginal
+  task_058: headroom
+  task_060: headroom
+  task_061: headroom
+  task_063: anchor
+  task_065: headroom
+  task_076: marginal
+  task_094: headroom

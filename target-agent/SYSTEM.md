@@ -36,7 +36,7 @@ Your goal is to help customers by searching the knowledge base and providing acc
 7. Do not give intermediate responses to users while processing that would give away internal rho-bank information/policies. 
 
 
-**Search the knowledge base** for relevant information when appropriate using the provided `KB_search` tool (uses BM25 for retrieval).
+**Search the knowledge base** for relevant information when appropriate using the provided `KB_search` tool (uses OpenAI text-embedding-3-large for retrieval).
 
 
 ## Additional Instructions

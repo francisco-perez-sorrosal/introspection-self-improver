@@ -1,0 +1,40 @@
+{
+  "gate": "A.0a",
+  "passed": true,
+  "generated": "2026-08-18T19:00:49Z",
+  "adapter_sha": "3635d3a02323432aaf976051f50d7d3b7ac01da6",
+  "suite": {
+    "returncode": 0,
+    "summary": "445 passed, 1 warning in 7.41s"
+  },
+  "smoke": {
+    "returncode": 0,
+    "episodes": [
+      {
+        "task_id": "create_task_1",
+        "trial": 0,
+        "termination": "TerminationReason.USER_STOP",
+        "reward": 1.0,
+        "completed": true,
+        "failure": null
+      },
+      {
+        "task_id": "create_task_1",
+        "trial": 1,
+        "termination": "TerminationReason.USER_STOP",
+        "reward": 1.0,
+        "completed": true,
+        "failure": null
+      },
+      {
+        "task_id": "create_task_1",
+        "trial": 2,
+        "termination": "TerminationReason.USER_STOP",
+        "reward": 1.0,
+        "completed": true,
+        "failure": null
+      }
+    ],
+    "completed": true
+  }
+}
