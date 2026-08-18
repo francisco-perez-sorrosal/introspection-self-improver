@@ -62,8 +62,15 @@ def main() -> int:
         passes = sum(1 for s in trials if (s["reward_info"].get("reward") or 0) > 0)
         total_pass += passes
         total += len(trials)
+        # reward_basis is null on an episode tau never graded (infrastructure_error);
+        # take the basis from the first trial that has one, so one lost episode does
+        # not blind the reader to the other trials of the same task.
+        basis = next(
+            (t["reward_info"]["reward_basis"] for t in trials if t["reward_info"].get("reward_basis")),
+            None,
+        )
         print(
-            f"\n=== {task}  {passes}/{len(trials)}  basis={','.join(trials[0]['reward_info']['reward_basis'])}"
+            f"\n=== {task}  {passes}/{len(trials)}  basis={','.join(basis) if basis else '?'}"
         )
         for s in trials:
             ri = s["reward_info"]

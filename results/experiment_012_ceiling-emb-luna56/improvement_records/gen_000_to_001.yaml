@@ -1,0 +1,187 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 0
+  to_generation: 1
+experiment: 012_ceiling-emb-luna56
+outcome: identity
+batch:
+  name: batch_01
+  task_ids:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+evidence:
+  conversation_ids:
+  - 01a01695-c9df-75aa-99c2-bf4ec23d82f8
+  - 01a0169b-6d5c-7222-b82f-ee9c5b311920
+  - 01a016a4-885f-7503-b524-69c420d77e12
+  - 01a0169d-52d0-758d-a38e-f61349d3697a
+  - 01a01696-7dbf-720e-ad93-79368554e46a
+  summary: >-
+    BATCH HEALTH FIRST. batch_01 ran 78 platform episodes (26 tasks x 3 trials) against
+    recipe commit c23d6d2 (arm_sha_ok on every completed row; recipe byte-identical to
+    h0-baseline, verified by `make reset_h0` before the round). All four sandbox seam
+    counters 0 across all rows, zero stall warnings, stream_reattaches 265 (benign),
+    pi_local_calls 0 on every episode — correct, H0's suppression registry is empty.
+    ONE EPISODE LOST: task_003 t0, "UserMessage must have either content or tool_calls"
+    after 4 attempts — the luna user-simulator empty-completion signature, frozen-surface
+    weather, not investigated per standing guidance. run.py refuses to resume a closed
+    round, so the loss is accepted and recorded rather than topped up; task_003 carries
+    2 graded trials here and the endpoint test handles unequal per-task n by construction.
+    77 episodes graded. GRADED READ, visible by design: 26/78 (33.3%), mean per-task rate
+    33.3% — Phase 0 measured H0 on this exact batch at 32.1%, so no D8 viability read
+    fires (neither 0/78 nor 78/78). Provenance of every action verdict:
+    generation_000/batch_01/graded/updated_results.json, read through scripts/gold_diff.py's
+    NORMALIZED three-way comparison (MATCH 197 / ARGS 94 / ABSENT 26), never through tau's
+    raw miss list. The observation harvest was not attempted: this batch is a complete
+    census (78 enumerated episodes), where the full-population transcript read is the
+    stronger evidence tier. READ DEPTH, with reasons: all 26 tasks read at the graded-action
+    level; five conversations exported in full via `introspection conversations get
+    --format trajectory` because the decisive evidence is a sentence the agent wrote about
+    its own uncertainty, which no action verdict can carry. NO PREFLIGHTS were run — this
+    transition lands no change.
+signals:
+- description: >-
+    T1 — a bank-defined named option (card_type / account_class / account_type) is committed
+    to before the attribute that selects it has been retrieved. The agent searches by INTENT,
+    which under openai_embeddings returns substantially the same high-scoring documents on
+    every re-ask, and it commits while a requirement-relevant per-candidate attribute is still
+    unretrieved. DECISIVE: task_002 conv 01a01695-c9df-75aa-99c2-bf4ec23d82f8 issued four
+    KB_search calls, got doc_credit_cards_gold_rewards_card_001 back at rank 1 in three of
+    them, held the complete eight-card catalogue by name in context (the Diamond Elite APY
+    table), never retrieved the Platinum document, and wrote in its own reasoning "the
+    available data is insufficient. So, I'll recommend the EcoCard". task_056 conv
+    01a0169b-6d5c-7222-b82f-ee9c5b311920 retrieved an ACTIVE promotion notice governing
+    business-checking recommendation order and never applied it, named Cobalt Blue in its own
+    candidate prose without retrieving that candidate's document, and wrote "ATM rebates are
+    unclear" before recommending unconditionally. Direction reverses across tasks (task_002
+    should be Platinum and chose EcoCard; task_058 should be EcoCard and chose Gold), so this
+    is not a product bias. SUPPORTING but NOT decisive: task_055's wrong downstream account_id
+    and task_056's wrong destination_account_id are this mechanism's symptom one step later,
+    counted on the mechanism rather than the symptom.
+  prevalence: >-
+    sole miss-mechanism in 11/78 episodes across 6 tasks (task_001 task_002 task_003 task_023
+    task_024 task_058); implicated in 21 of the 51 failing graded episodes across 10 tasks
+- description: >-
+    T2 — the agent volunteers optional arguments the gold call does not carry. Gold calls
+    close_bank_account_7392 with account_id alone; the agent adds `reason` and
+    `waive_early_closure_fee`, which the customer never asked for. Because a discoverable
+    tool's payload is compared as a whole nested object, the extra keys are a miss. DECISIVE:
+    task_060 t0 conv 01a0169d-52d0-758d-a38e-f61349d3697a performed the unlock and opened the
+    correct "Silver Plus Account", and the two volunteered arguments are its ONLY remaining
+    defect against gold. 8 of 9 instances add both keys, one adds `reason` alone.
+  prevalence: 9/9 episodes across 3 tasks (task_060, task_061, task_065) — fully deterministic
+- description: >-
+    T3 — the wrong member of the discoverable-tool catalogue is unlocked and called. task_046
+    conv 01a016a4-885f-7503-b524-69c420d77e12: gold unlocks and calls
+    get_user_dispute_history_7291; the agent unlocked get_all_user_accounts_by_user_id_3847,
+    pay_credit_card_from_checking_9182 and get_closure_reason_history_8293. task_060 t1/t2:
+    gold requires unlocking open_bank_account_4821; the agent unlocked three other tools and
+    never opened the account, dropping the additive half of the request. Filed separately from
+    T1 rather than merged: if a T1 change moves these tasks too the mechanism generalizes
+    across catalogues, and if it moves only the product classes it does not.
+  prevalence: >-
+    sole miss-mechanism in 5 episodes across 3 tasks (task_046, task_063, task_094);
+    agent_tool_name differs in 9 episodes across 5 tasks counting multi-mechanism episodes
+- description: >-
+    T4 — a generic catch-all enum member is chosen where a specific one applies. All three
+    tasks grade on ACTION with compare_args ["reason"], so the transfer is right and only the
+    code is wrong, and each passes on at least one trial, so the value is resolvable. task_004
+    gold account_ownership_dispute, agent customer_requests_human_no_specific_reason (t0, t1);
+    task_008 gold customer_demands_after_unavailable_offer_refusal, agent
+    kb_search_unsuccessful_customer_requests_transfer (t1) and unconfirmed_external_
+    communication (t2); task_014 gold unconfirmed_external_communication, agent
+    kb_search_unsuccessful_customer_requests_transfer. The pattern is one-directional —
+    reaching for a catch-all where a member naming the actual situation exists.
+  prevalence: sole miss-mechanism in 5 episodes across 3 tasks (task_004, task_008, task_014)
+- description: >-
+    T5 — the procedure stops before the customer's later requests (gold actions ABSENT).
+    Heterogeneous and HELD rather than consumed: the shape overlaps T1 (an agent that cannot
+    resolve a value stalls and escalates), and a prior experiment measured over-escalation
+    unmoved by all eight of its mutations. Re-ranked against batch_02, which measures the same
+    harness and will say which of these cells are noise.
+  prevalence: sole miss-mechanism in 8 episodes across 7 tasks
+counterevidence: >-
+  THREE OBJECTIONS, recorded so they can be judged rather than assumed. (1) THE H-EXPERT
+  COINCIDENCE, declared under the launch directive's rule. Phase 0's hand-built ceiling
+  harness — built with full access to these tasks and readable as batch-side evidence —
+  converged on "for a choice among bank-defined named options retrieve the full candidate list
+  and the per-candidate attributes the customer's requirements refer to". T1 as derived here
+  from batch_01's own transcripts overlaps that. Nothing was ported: the derivation ran from
+  the four-searches-same-documents pattern and the two verbatim self-reports of unresolved
+  attributes, neither of which is in the H-expert source. The overlap is recorded rather than
+  hidden, and it cuts BOTH ways — it corroborates the mechanism, and it warns that the ceiling
+  harness carrying this same idea REGRESSED five tasks H0 passes. (2) THE NULL RESULT THIS
+  BATCH IS SILENT ON. A prior experiment landed a per-candidate-search instruction, confirmed
+  its retrieval counter once, paid +31% KB_search against a +20% threshold, and reverted it.
+  This batch cannot distinguish "the mechanism is right and the delivery was wrong" from "the
+  mechanism does not pay". Any T1 landing must pre-register a KB_search-per-episode DELTA
+  falsifier, never a level. (3) THE ANCHOR STRATUM IS WEAKER THAN THE FREEZE ASSUMED. Phase 0
+  measured all three anchors 3/3 on the LOCAL lane; this platform round returns task_006 2/3,
+  task_032 2/3 and task_063 0/3. task_063 moving three cells exceeds every measured noise
+  floor, so the usable regression channel is task_006 + task_032 (five of six cells) plus
+  task_005 and task_037, which both ran 3/3 here. Every later change's falsifier names those
+  four instead of the frozen anchor list.
+hypothesis: >-
+  No hypothesis is consumed by this transition. Generation 1 is a PRE-REGISTERED BEHAVIOURAL
+  IDENTITY round (lock protocol.identity_generations [1]): H1 = H0 byte-for-byte, batch_02 is
+  the A/A measurement that fixes this experiment's own noise floor before any attribution bar
+  is applied, and its episodes pool with batch_01 into the primary's baseline (2 x num_trials
+  per task). The four targets above are opened, ranked and left pending; the first mutation
+  set is composed against batch_02, not against this round.
+owning_layer: >-
+  none — identity transition, no surface touched. The targets opened here name
+  retrieval-usage (T1, T3), call shape (T2) and value resolution (T4) as the candidate owning
+  layers, with surfaces_considered recorded per target in improvement_backlog.md.
+proposed_change: >-
+  None. H1 = H0. The pre-registered expectation for batch_02 is stated below as this record's
+  expected_effect so it can be scored mechanically at the next transition.
+schema_version: 4
+changes: []
+mutation:
+  branch: null
+  pr_url: null
+  source_commit: c23d6d2655cad8571fe1a369ae6d563d09c38454
+  candidate_commit: null
+expected_effect: >-
+  PRE-REGISTERED FOR batch_02, the A/A round on a byte-identical harness. No systematic
+  movement: the round total stays inside the movement the three prior identity measurements
+  predict (seq 8 measured 2 cells / 8.3 pp on a B=8x3 batch; seq 10 measured 14 of 36 trial
+  cells flipping with the round total unchanged; the Phase 0 re-screen measured 12 of 33 task
+  rates moving for +3.0 pp aggregate drift on a byte-identical recipe). The four tasks that ran
+  3/3 here — task_005, task_037 — plus task_006 and task_032 at 2/3 hold within one cell.
+  What batch_02 BUYS, and the reason gen-001 is spent on it: the per-task and per-cell churn
+  measured on this batch at this scale, which becomes the attribution bar every later change
+  is read against. DELIBERATELY NOT TARGETED: nothing. RISKS for the next round: none from a
+  harness that did not change; the only risk is procedural — reading batch_02's per-task
+  movement as signal, which the measured floor exists to prevent.
+human_approval:
+  approved_by: orchestrator (D23/D28 autonomy envelope, protocol.require_human_approval false, ratified for seq 12 by the launch directive)
+  date: '2026-08-18'
+held_out_result: null
