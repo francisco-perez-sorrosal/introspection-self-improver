@@ -200,7 +200,7 @@ benchmark:
   # backend is constant by construction) and retrieval *usage* — query formulation, k,
   # iteration, stopping — stays mutable harness territory.
   # Re-deciding this value means a NEW experiment id, never a new value under this one.
-  retrieval_config: bm25
+  retrieval_config: openai_embeddings
 
   # `base` is a task *split*, not a task set: tau's --task-set-name defaults to the domain's
   # own set, and --task-split-name defaults to "base". Two values, not one — conflating them
@@ -653,9 +653,9 @@ operational:
 # <policy> block of target-agent/SYSTEM.md; the adapter additionally compares the block
 # against the live env.get_policy() at episode start.
 policy:
-  sha256: 9c660d4354d7cb0858dd03dae0ad6ace1c25c181a07440b519442c48517fb176
+  sha256: 0ed5b335e24f46d00b83e3a534909f0417f97f1b440e98ea41ae6bb2e62879cb
   source_domain: banking_knowledge
-  source_retrieval_config: bm25
+  source_retrieval_config: openai_embeddings
 
 # Written by `make policy`. The bridge asserts the live tau tool set matches this list
 # exactly before the first episode, so a change to the graded tool surface cannot pass
