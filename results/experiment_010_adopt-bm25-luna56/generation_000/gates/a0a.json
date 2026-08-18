@@ -1,23 +1,15 @@
 {
   "gate": "A.0a",
   "passed": true,
-  "generated": "2026-08-17T20:16:45Z",
-  "adapter_sha": "1d6b7af3718c49aa243053c3a0763644692b5483",
+  "generated": "2026-08-18T01:20:58Z",
+  "adapter_sha": "a38c539ab4b809853e54177b48234bb0f72e219a",
   "suite": {
     "returncode": 0,
-    "summary": "430 passed, 1 warning in 8.04s"
+    "summary": "434 passed, 1 warning in 7.77s"
   },
   "smoke": {
     "returncode": 0,
     "episodes": [
-      {
-        "task_id": "create_task_1",
-        "trial": 1,
-        "termination": "TerminationReason.USER_STOP",
-        "reward": 1.0,
-        "completed": true,
-        "failure": null
-      },
       {
         "task_id": "create_task_1",
         "trial": 2,
@@ -29,6 +21,14 @@
       {
         "task_id": "create_task_1",
         "trial": 0,
+        "termination": "TerminationReason.USER_STOP",
+        "reward": 1.0,
+        "completed": true,
+        "failure": null
+      },
+      {
+        "task_id": "create_task_1",
+        "trial": 1,
         "termination": "TerminationReason.USER_STOP",
         "reward": 1.0,
         "completed": true,

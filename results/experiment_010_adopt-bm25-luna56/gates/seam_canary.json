@@ -1,8 +1,8 @@
 {
   "gate": "seam-canary",
   "passed": true,
-  "generated": "2026-08-17T20:19:32Z",
-  "adapter_sha": "1d6b7af3718c49aa243053c3a0763644692b5483",
+  "generated": "2026-08-18T01:24:11Z",
+  "adapter_sha": "a38c539ab4b809853e54177b48234bb0f72e219a",
   "task": "task_001",
   "findings": [],
   "infra_failures": {},
@@ -15,7 +15,7 @@
       "sandbox_seam_timeouts": 0,
       "sandbox_seam_unclassified": 0,
       "sandbox_tool_errors": 0,
-      "bridge_calls": 3,
+      "bridge_calls": 2,
       "bridge_park_max_seconds": 0.0
     },
     {
@@ -26,8 +26,8 @@
       "sandbox_seam_timeouts": 0,
       "sandbox_seam_unclassified": 0,
       "sandbox_tool_errors": 0,
-      "bridge_calls": 3,
-      "bridge_park_max_seconds": 0.002
+      "bridge_calls": 5,
+      "bridge_park_max_seconds": 0.097
     },
     {
       "trial": 2,
@@ -37,7 +37,7 @@
       "sandbox_seam_timeouts": 0,
       "sandbox_seam_unclassified": 0,
       "sandbox_tool_errors": 0,
-      "bridge_calls": 2,
+      "bridge_calls": 3,
       "bridge_park_max_seconds": 0.0
     }
   ]

@@ -31,14 +31,6 @@
   "episodes": [
     {
       "task_id": "create_task_1",
-      "trial": 1,
-      "termination": "TerminationReason.USER_STOP",
-      "reward": 1.0,
-      "completed": true,
-      "failure": null
-    },
-    {
-      "task_id": "create_task_1",
       "trial": 2,
       "termination": "TerminationReason.USER_STOP",
       "reward": 1.0,
@@ -48,6 +40,14 @@
     {
       "task_id": "create_task_1",
       "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "create_task_1",
+      "trial": 1,
       "termination": "TerminationReason.USER_STOP",
       "reward": 1.0,
       "completed": true,
