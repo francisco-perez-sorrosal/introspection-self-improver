@@ -1,0 +1,139 @@
+transition:
+  from_generation: 5
+  to_generation: 6
+experiment: 010_adopt-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_06
+  task_ids: [task_003, task_005, task_006, task_008, task_014, task_023, task_032, task_055, task_057, task_063, task_076, task_089]
+evidence:
+  conversation_ids:
+  - 01a013dd-48ce-759c-9d58-80f38c6705c7
+  - 01a013e2-95d5-7610-8026-837571151abb
+  - 01a013e7-5d75-738e-8f30-e827a5906ede
+  - 01a013dc-b27b-75b8-9796-370fc5bbd1bb
+  - 01a013e2-f26a-72b0-83ec-ce0e40c0b626
+  - 01a013e7-f401-7155-af90-3030473ead5d
+  - 01a013de-0d65-72c6-8470-9bf331d10b7c
+  - 01a013e4-0f96-71c4-aae5-75c5956b18a1
+  - 01a013e9-5e48-7148-9d78-40a2540b560d
+  - 01a013de-0e59-74d2-bbfb-b385bcc8e0db
+  summary: >-
+    batch_06 under H5 (C1-C4): 36/36 completed, every episode user_stop, zero max_steps, one
+    sandbox counter tick, $1.26. SIXTH round on a tuned-on set. Read through the normalized
+    gold-action comparison, per-task pi_local_calls, per-episode KB_search counts (the
+    round's decisive instrument), and per-episode retrieval of the specific document that
+    decides task_003.
+    PREFLIGHTS: three local-lane episodes (generation_005/g006_preflight/), injection-presence
+    checks only, never provenance.
+signals:
+- description: >-
+    C4's COUNTER IS CONFIRMED and its cost falsifier FIRED — both, and the pair is the
+    finding. Confirmed: doc_credit_cards_silver_rewards_card_002, the document carrying the
+    4.0% travel rate that decides task_003, was retrieved in 1 of 3 episodes against 0 of 3
+    in batch_05, the 4.0% figure surfaced in 3 of 3, and task_003 went 0/3 -> 2/3, its best
+    of six rounds. Fired: clause 1's falsifier set +20% on round-wide KB_search per episode;
+    the actual rise was 9.4 -> 12.3, +31%, with mean messages 43.6 -> 48.7 and round cost
+    $1.00 -> $1.26. The change works on its target and pays for it in retrieval volume,
+    exactly as its risk (a) predicted.
+  prevalence: task_003 2/3 this round, 3/18 lifetime; KB_search +31% round-wide
+- description: >-
+    RETRIEVAL VOLUME IS THE TURN COST, now established by elimination rather than assumed.
+    gen-004 halved compare_options calls (52 -> 28) and episode length did not move; gen-005
+    raised KB_search 31% and episode length rose with it. Across the six rounds mean messages
+    per episode runs 37.3, 36.2, 41.5, 42.1, 43.6, 48.7 and KB_search tracks it. The suspect
+    named at gen-005 as untouched is now the confirmed driver, and gen-006 targets it.
+  prevalence: 6 rounds; messages up 31% against H0, KB_search the covarying counter
+- description: >-
+    The curve still does not settle: 20, 20, 17, 26, 19, 22 of 36 (55.6, 55.6, 47.2, 72.2,
+    52.8, 61.1%). Against the A/A floor of 14 of 36 cells flipping on an identical harness,
+    the band 17-26 remains uninformative on its own, and every claim in this experiment rests
+    on counters rather than on the total. task_014 continues to swing (1, 2, 0, 3, 0, 2) with
+    no change able to act on it.
+  prevalence: 6 rounds
+counterevidence: >-
+  Three objections to gen-006's hook. (1) IT MAY NOT REDUCE SEARCHING AT ALL. The agent may
+  re-search because bm25 ranks poorly for its query, not because it forgot what it holds; in
+  that case the index is inert and the cost stands. The counter distinguishes them and the
+  prediction is written on it. (2) IT ADDS TEXT TO EVERY KB_search RETURN, so it spends
+  context to save turns — on a task that already retrieves 12 times per episode the index
+  itself grows, and the net could be negative. MAX_SHOWN caps it at 40 ids, which bounds but
+  does not eliminate this. (3) A PRIOR EXPERIMENT MEASURED THAT A BARE LIST CHANGES NOTHING:
+  its C1 appended a list of KB-named tools and moved no counter, while a missing-state note
+  moved one 0/3 -> 3/3. This hook appends a bare list, which is the shape with a measured
+  null behind it. It is landed anyway because the list here is about the agent's OWN
+  history rather than about the domain — the agent cannot otherwise know it — but the prior
+  null is the reason the prediction is a counter and not a reward.
+hypothesis: >-
+  The agent re-searches because it cannot see what it already holds: nothing in its context
+  summarises the documents this episode has returned, so it reissues overlapping queries and
+  pays turns for documents it has. Appending the ids it has already received should let it
+  notice coverage and stop, reducing KB_search per episode and episode length without
+  removing or altering anything tau returned.
+owning_layer: extension-hook
+proposed_change: >-
+  One change, on the class the D29 ladder requires. gen-005 was the third instructions
+  mutation, so a set confined to instructions was no longer self-certifying; the obligation
+  is discharged by landing on extension-hook — a class this experiment has never exercised —
+  rather than by argument, which the rule explicitly does not accept.
+schema_version: 4
+changes:
+- mechanism: >-
+    After every KB_search return, append the document ids this episode has already received.
+    Nothing tau returned is removed, rewritten or hidden; the model reads the original result
+    plus one line naming its own retrieval history. The hook cannot name a document the
+    episode has not seen, which is the line between tracking retrieval and supplying an
+    answer.
+  surface: extension-hook
+  evidence: >-
+    Per-episode KB_search counts across batch_05 and batch_06 (9.4 -> 12.3), mean messages
+    across all six rounds (37.3, 36.2, 41.5, 42.1, 43.6, 48.7), round cost ($0.64 -> $1.26),
+    and gen-004's elimination of compare_options as the driver (calls halved, length
+    unchanged). Conversations 01a013dd-48ce-759c-9d58-80f38c6705c7,
+    01a013e2-95d5-7610-8026-837571151abb, 01a013e7-5d75-738e-8f30-e827a5906ede.
+  expected_effect: >-
+    On batch_07, as deltas against batch_06: mean KB_search per episode falls below 12.3;
+    mean messages per episode falls below 48.7; and no task that improved at batch_06
+    regresses by more than one cell. Reward is not the prediction — this is a cost-side
+    change and a flat round total with the counters moving is a CONFIRMED outcome.
+  risk: >-
+    The index spends context to save turns and could net negative on retrieval-heavy tasks
+    (bounded, not eliminated, by the 40-id cap). It may also be inert if the agent
+    re-searches because bm25 ranks poorly rather than because it forgot — the prior
+    experiment's measured null on bare lists is the standing reason to expect that.
+  adoption_stage: false
+  host_facts:
+  - fact: >-
+      tool_result fires on every tau tool return and a returned content patch reaches the
+      model — 56 firings over three banking-domain episodes, and a patch reached the model in
+      24/24 firings while appearing 0 times in tau's graded trajectory.
+    probe_evidence: benchmark/probes/2026-08-16-surface-probes/ (tool_result probe, banking domain, local lane)
+  - fact: >-
+      The tool name arrives mangled as mcp_tau_<tau name>_<10-hex>, so a handler must match on
+      a SUBSTRING and never on equality.
+    probe_evidence: benchmark/probes/2026-08-16-surface-probes/ and contract/constraints.md divergence 1
+  - fact: >-
+      event.content is an ARRAY of {type:"text"} blocks, not a string.
+    probe_evidence: benchmark/probes/2026-08-16-surface-probes/ (tool_result probe)
+  - fact: >-
+      No message ROLE literal is used by this hook, so the roles vocabulary
+      (benchmark/probes/host_facts.yaml) is not a fact it depends on — the dependency that
+      cost a prior experiment a generation when a hook keyed on `tool` where the host spells
+      it `toolResult`.
+    probe_evidence: benchmark/probes/host_facts.yaml and results/experiment_008_stratb-bm25-luna56/generation_001/context_probe/hook_firings.json
+  commit: 7103d81b4b3cf30484b0f5e75c3dc3bf8ab89411
+mutation:
+  branch: gen-006/kb-search-index
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/29
+  source_commit: b3c45cbb2847ede62a27c227f36617b4863fb01b
+  candidate_commit: 3a66003feededb80f8e118ce382795b70d64902e
+expected_effect: >-
+  The set is one change and its prediction is the counter pair above. The D29 ladder is
+  discharged by exercising extension-hook; after this generation the experiment will have
+  landed changes on three distinct surface classes (extension-tool, instructions,
+  extension-hook), leaving sub-agent as the only class never exercised — and the closure
+  must state, with a probe or a measured fact, why it was not.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-18'
+held_out_result: null

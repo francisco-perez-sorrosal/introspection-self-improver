@@ -545,3 +545,56 @@ C4) against one `extension-tool` (C1). Under D29 the **gen-006 set may not be co
 probe or a measured fact per unexercised alternative. Argument alone does not discharge it.
 
 <!-- transition: gen_004_to_005 -->
+
+---
+
+## Re-ranking against `batch_06` (H5, 2026-08-18)
+
+36/36, every episode `user_stop`, zero `max_steps`, one sandbox counter tick, $1.26.
+**22/36 (61.1%)**; curve 20, 20, 17, 26, 19, 22.
+
+### gen-005's prediction — counter CONFIRMED, cost falsifier FIRED
+
+Both, and the pair is the finding. `doc_credit_cards_silver_rewards_card_002` — the document
+carrying the 4.0% travel rate that decides `task_003` — was retrieved **1/3** against 0/3 at
+`batch_05`, the 4.0% figure surfaced 3/3, and **`task_003` went 0/3 → 2/3, its best of six
+rounds**. But clause 1's falsifier set +20% on round-wide `KB_search`: the rise was
+**9.4 → 12.3, +31%**, with messages 43.6 → 48.7 and cost $1.00 → $1.26. The change works on
+its target and pays in retrieval volume, exactly as its risk (a) said it might.
+
+### Retrieval volume is the turn cost — established by elimination
+
+gen-004 halved `compare_options` calls and episode length did not move; gen-005 raised
+`KB_search` 31% and length rose with it. Mean messages across six rounds: 37.3, 36.2, 41.5,
+42.1, 43.6, **48.7**. The suspect named at gen-005 as untouched is the confirmed driver, and
+gen-006 targets it.
+
+### gen-006 (C5) — and the ladder discharged by landing, not by argument
+
+An `extension-hook` on `tool_result` appending the document ids this episode has already
+received. **`extension-hook` is a class this experiment has never exercised**, which is what
+D29 requires after three `instructions` mutations — the rule explicitly does not accept a
+paragraph of reasoning in its place.
+
+Recorded against it, because the prior art is a null: a previous experiment appended a bare
+**list** of KB-named tools and moved no counter, while a *missing-state* note moved one
+0/3 → 3/3. This hook appends a bare list. It lands anyway because this list is about the
+agent's **own history**, which it has no other way to know — but that measured null is why
+the prediction is a counter and not a reward.
+
+### Slot accounting
+
+| Slot | Generation | Target(s) | Status |
+|---|---|---|---|
+| 1 | gen-002 | T1 (C1, extension-tool) | adoption CONFIRMED; kept |
+| 2 | gen-003 | T2 (C2, instructions) | CONFIRMED |
+| 3 | gen-004 | T5 turn cost (C3, instructions) | mechanism CONFIRMED, cost claim DENIED |
+| 4 | gen-005 | T1 remainder (C4, instructions) | counter CONFIRMED, cost falsifier FIRED |
+| 5 | gen-006 | T5 re-specified (C5, **extension-hook**) | in flight — scored by `batch_07` |
+| 6–7 | gen-007, gen-008 | T3, T4, `task_063` | open |
+
+**Surfaces exercised: 3 of 4** — `extension-tool`, `instructions`, `extension-hook`.
+**`sub-agent` remains the only class never exercised in this project's history**, and the
+closure must state with a probe or a measured fact why it was not.
+
+<!-- transition: gen_005_to_006 -->
