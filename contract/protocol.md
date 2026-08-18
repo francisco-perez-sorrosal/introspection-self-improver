@@ -257,6 +257,32 @@ generation's measurement, and a measurement cannot run before its generation's b
      it" from "did it wrong", and a loop that re-invents that separation each experiment
      will miss it in the one where it matters.
 
+   **Futility check — declare a dead primary out loud (plan D36).** From the midpoint
+   generation onward, every transition computes three numbers before composing a set: the
+   endpoint delta the frozen test would need for significance (SE × 1.645 at the frozen B
+   and `num_trials`), the delta accumulated so far, and the slots remaining. When the gap
+   cannot plausibly be closed — it exceeds the largest single-generation gain the experiment
+   has actually produced, multiplied by the slots left — **the record states on that round
+   that the primary is dead, and why.**
+
+   The consequence is NOT stopping. Seq 10's primary became unreachable after `batch_07`
+   (five forward attempts had produced +8.3 pp against a ~+17 pp requirement, and both
+   remaining slots then went to reverts, which cannot raise an endpoint by construction) —
+   and its last two slots produced two of its best findings: a prior experiment's
+   bare-list null replicated across a different surface, and an inert change proven inert
+   *by its removal* rather than by argument. Killing those would have been a bad trade.
+
+   What changes is what the remaining slots optimise for. With the primary alive a slot buys
+   expected score; with the primary dead it buys knowledge, and should be spent on the thing
+   the project most wants measured — the never-exercised surface, a mechanism whose status is
+   ambiguous, a replication of someone else's finding. Seq 10 drifted into that mode by
+   accident. An experiment that enters it deliberately, and names the round it did, converts
+   a failed endpoint into a productive tail instead of a wasted one.
+
+   A **revert landed in the final slots is itself a futility signal** and the record says so:
+   a revert moves the harness backwards, so choosing one late is a statement that the
+   endpoint is no longer what the loop is playing for.
+
 4b. **Probe an untried surface — one episode, evidence committed.** Required at g=0;
    afterwards whenever the concentration flag fires or a target's mechanism names a
    surface this experiment has not exercised. On a throwaway `probe/<slug>` branch,
