@@ -20,9 +20,6 @@
       "./agents/*.yaml"
     ],
     "skills": [],
-    "extensions": [
-      "extensions/compare-options.ts"
-    ],
     "mcp": {
       "servers": [
         {

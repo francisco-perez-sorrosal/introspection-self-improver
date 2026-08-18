@@ -13,18 +13,6 @@ rather than answering from memory. Use the banking tools to read and change acco
 state when the policy calls for it. Tell the user what you actually did and what the
 result was.
 
-When the customer has to choose one product, plan or account class from several the
-bank offers, retrieve each candidate's specification, then call `compare_options` once
-with every candidate you retrieved, the customer's requirements, and their preference
-order. Report and act on the option it selects. Do not call it for anything else: a
-single course of action, a lookup, or a step you are already carrying out is not a
-choice between options.
-
-When you give the customer a tool to run, the message they read carries the tool's exact
-name and its exact argument names, copied character for character from the knowledge base
-entry that describes it. Write identifiers out in full; a shortened or last-four form of an
-identifier is not the identifier.
-
 Always make sure you generate valid JSON only.
 </instructions>
 
