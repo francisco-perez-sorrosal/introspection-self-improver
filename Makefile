@@ -1,7 +1,7 @@
 # Lane entry points. Each target belongs to exactly one lane, and the lanes do not reach into
 # each other: benchmark/ drives target-agent/ by path, never the reverse.
 
-.PHONY: help bootstrap check policy propose_split smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a gate_seam gate_suppression weather grade dashboard batch_curve
+.PHONY: help bootstrap check policy propose_split smoke single_task bench batch heldout reset_h0 reveal fidelity gate_a0a gate_seam gate_suppression weather grade dashboard batch_curve endpoint_test headroom round_read gold_diff
 
 BENCH  := benchmark
 VENDOR := $(BENCH)/vendor/tau2-bench
@@ -50,7 +50,11 @@ help:
 	@echo "make heldout     hidden held-out round into the vault: make heldout GEN=generation_000"
 	@echo "make reset_h0    restore the recipe to the h0-baseline tag (replace, not merge)"
 	@echo "make reveal      end-of-experiment: unseal the vault into results/ (final tag required)"
-	@echo "make batch_curve fixed-batch saturation curve + paired endpoint test (batch_mode fixed)"
+	@echo "make batch_curve fixed-batch saturation curve + the seq<=10 paired sign test"
+	@echo "make endpoint_test the seq-12 primary: within-task permutation on EPISODE outcomes"
+	@echo "make headroom    Phase 0 ceiling probe: H_expert - H0, gap-closure, reachability"
+	@echo "make round_read  per-task/per-trial reader for one round (diagnosis)"
+	@echo "make gold_diff   normalized gold-action diff: MATCH / ARGS / ABSENT (diagnosis)"
 	@echo "make fidelity    run one task in BOTH lanes and check the adapter invariants"
 	@echo "make gate_a0a    A.0a gate: adapter suite + mock smoke, verdict under gates/"
 	@echo "make gate_seam   platform seam canary; batch rounds refuse to start without a fresh PASS"
@@ -240,3 +244,45 @@ dashboard:
 grade:
 	@test -n "$(OUT)" || (echo "usage: make grade OUT=results/<experiment>/<gen>/<run>" && exit 1)
 	@$(RUN) python scripts/grade.py $(CURDIR)/$(OUT)/results.json
+
+# The seq-12 primary (plan D36). The sign test batch_curve computes collapsed each task's
+# trials into one better/worse/flat verdict and needed ~5 to align, while seq 10's identity
+# round measured 6 of 12 task rates moving on a byte-identical harness. This permutes, WITHIN
+# each task, which of that task's own episodes are labelled endpoint — exact conditional on
+# the task's total, so between-task difficulty cancels by construction. Validated on seq 10's
+# own data: the same +11.1 pp reads p = 0.133 here against 0.184 under the sign test.
+#   make endpoint_test BASELINE="dirA dirB" ENDPOINT=dirC [WRITE=path]
+BASELINE ?=
+ENDPOINT ?=
+WRITE    ?=
+endpoint_test:
+	@test -n "$(BASELINE)" -a -n "$(ENDPOINT)" || { echo 'BASELINE and ENDPOINT are required (repo-relative dirs)' >&2; exit 2; }
+	@$(RUN) python scripts/endpoint_test.py --baseline $(BASELINE) --endpoint $(ENDPOINT) $(if $(WRITE),--write $(WRITE),)
+
+# Phase 0's ceiling probe analysis (plan D36): how much better could ANY harness be? Reports
+# headroom (H_expert - H0), the gap-closure denominator, and per-task reachability as an
+# EMPIRICAL verdict — a task the expert harness passes is provably harness-reachable. Warns at
+# <= 5 pp, the pre-registered no-go for running a loop against the objective at all.
+#   make headroom H0DIR=dirA EXPERT=dirB [LABEL="bm25"] [WRITE=path]
+H0DIR  ?=
+EXPERT ?=
+LABEL  ?=
+headroom:
+	@test -n "$(H0DIR)" -a -n "$(EXPERT)" || { echo 'H0DIR and EXPERT are required (repo-relative dirs)' >&2; exit 2; }
+	@$(RUN) python scripts/headroom.py --h0 $(H0DIR) --expert $(EXPERT) $(if $(LABEL),--label "$(LABEL)",) $(if $(WRITE),--write $(WRITE),)
+
+# Diagnosis instruments, committed so no experiment re-derives them (plan D36).
+# gold_diff carries the reading correction that matters: tau compares discoverable-tool
+# payloads as JSON STRINGS, so identical calls read as misses on whitespace, and its miss
+# list cannot separate "never did it" from "did it wrong" — two defects, two owning layers.
+#   make round_read ROUND=<dir> [TASKS=task_003,task_014]
+#   make gold_diff  ROUND=<dir> [TASKS=...] [QUIET=1]
+ROUND ?=
+TASKS ?=
+QUIET ?=
+round_read:
+	@test -n "$(ROUND)" || { echo 'ROUND=<round dir> is required (repo-relative)' >&2; exit 2; }
+	@$(RUN) python scripts/round_read.py ../$(ROUND) $(if $(TASKS),--tasks $(TASKS),)
+gold_diff:
+	@test -n "$(ROUND)" || { echo 'ROUND=<round dir> is required (repo-relative)' >&2; exit 2; }
+	@$(RUN) python scripts/gold_diff.py ../$(ROUND) $(if $(TASKS),--tasks $(TASKS),) $(if $(QUIET),--quiet,)

@@ -23,7 +23,7 @@ they can reach). This file adds only the mapping and this repo's constraints:
 | Behavioral guidance, policy application, judgment | `SYSTEM.md` `<instructions>` (the default) — or skill-shaped content delivered by a `before_agent_start` hook: a **declared** skill measurably reaches nothing on this seam's local lane (trap 1), so hook injection is the only working delivery |
 | Deterministic operation that should not depend on model judgment (parsing, checking, structured transformation, value verification) | **extension tool** — live under the D24 seam: a call whose name is in the suppression registry (`agents/agent.yaml` `tools:`) is executed by Pi and suppressed from τ's graded trajectory; an UNregistered call still leaks to τ as an invalid step (trap 4 has both halves). First use is adoption-first — predict adoption counters, not reward (protocol step 4; record-craft) — and may bundle the tool with its minimal usage instruction as one coherent mechanism |
 | Retrieval-usage enforcement instructions failed to hold — search budgets, stopping rules, k discipline, or *acting on what was retrieved* | **extension event interception** — `tool_result` (measured on the real domain: sees every τ result with its input arguments, can rewrite what the model reads, invisible to grading) / `context` (inferred) / `before_agent_start` (measured). Do NOT block a τ tool call from `tool_call`: trap 4 shows τ executes it regardless |
-| A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — live under the D24 seam: the auto-generated `agent` tool joins the suppression registry when `subagents:` is non-empty (trap 4). The frozen model pair binds the child (trap 3), and no sub-agent episode has ever run on this seam — verify per trap 7 before relying on latency or behavior assumptions, and predict adoption first |
+| A bounded job delegatable with a stable contract and an independently checkable result | **sub-agent** — live under the D24 seam: the auto-generated `agent` tool joins the suppression registry when `subagents:` is non-empty (trap 4). The frozen model pair binds the child (trap 3), and **no sub-agent episode has ever run on this seam — it is the last unexercised class, and seq 12 reserves a slot for it** (`contract/protocol.md` step 4). The question a probe must settle first: whether a child's own tool calls travel the same bridge and therefore spend the PARENT's τ step budget, in which case delegating retrieval saves nothing. Verify per trap 7, and predict adoption first |
 | External service capability | MCP server — **not** a sanctioned growth surface here without explicit seam work: the tau binding/`--mcp` interplay is fragile (`dev_lane.py`), so surface it as a user decision, never land it as an ordinary mutation |
 
 ## Wiring by surface
@@ -211,13 +211,16 @@ platform sandbox uses that host is unverified; measure, don't assume). Consequen
    - **blocking a τ tool call** from a `tool_call` hook remains forbidden: the call is
      still forwarded, τ executes the write while the agent is told it was stopped, and
      agent and grader histories diverge.
-   *Measurement status, kept honest:* suppression is measured end-to-end on the local
-   lane, mock domain (probe P6: 3/3 episodes called a registered `probe_note`, τ saw
-   only its own tools, `pi_local_calls: 1` logged). **The suppressing path has never
-   engaged in a graded round or on the platform lane** — one all-hooks experiment ran
-   the D24 seam with `pi_local_calls = 0` across 168 platform episodes — so the
-   pre-freeze suppression canary (`contract/protocol.md` step 0) converts that
-   assumption to a measurement before any experiment relies on it.
+   *Measurement status, kept honest and UPDATED by seq 10:* suppression is measured
+   end-to-end on the local lane's mock domain (probe P6), on the platform lane by the
+   pre-freeze suppression canary, **and now in a graded round**. Seq 10's C1 registered a
+   real extension tool and took `pi_local_calls` from 0 — across all 168 platform episodes
+   of the preceding all-hooks experiment — to **39 in one round**, with well-formed
+   multi-candidate arguments, no episode exceeding τ's frozen timeout, and zero occurrences
+   in τ's graded trajectory. **The extension-tool surface is exercised and works; what it
+   leaves open is usefulness, not reachability** — that tool moved no reward, which is
+   exactly why adoption-first defers the reward prediction a round. `sub-agent` is now the
+   ONLY class never exercised and never probed.
 
    What stays legal is every extension hook that introduces **no tool call** —
    `before_agent_start` (replace/augment the system prompt; **measured functional on the

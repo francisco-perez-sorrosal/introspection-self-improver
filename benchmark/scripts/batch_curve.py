@@ -19,6 +19,16 @@ at the freeze and computed over the endpoint pair only:
 
 Writes results/experiment_<id>/batch_curve.json and prints the table. Reads only graded
 batch artifacts already in tree; never touches the vault.
+
+
+SUPERSEDED AS THE PRIMARY FROM SEQ 12 (plan D36). The endpoint statistic below is the
+exact paired SIGN test, which collapses each task's trials into one better/worse/flat
+verdict and needs ~5 to align — while seq 10's identity round measured 6 of 12 task
+rates moving on a byte-identical harness. It stays here unchanged because seq <= 10's
+closures cite it and their numbers must keep reproducing. Seq 12 onward reports
+scripts/endpoint_test.py (a within-task permutation on EPISODE outcomes) as the
+pre-registered primary; the curve, strata, harvest and noise-floor blocks below remain
+the descriptive instrument for every experiment.
 """
 
 from __future__ import annotations

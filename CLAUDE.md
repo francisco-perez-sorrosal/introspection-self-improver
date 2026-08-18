@@ -134,8 +134,10 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   one of them landed WITH structural guards built against exactly that mode. (b) *The
   escape clause is what the model optimises against*, and sharper (seq 8): **any**
   injected statement about a missing precondition can read as a bar to acting — framing,
-  not surface, moves an injected note (bare list inert; missing-state changes behaviour
-  and suppresses unasked; completed-state safe; consequence-stating confirmed).
+  not surface, moves an injected note (bare list inert — **replicated by seq 10 on a
+  different surface and subject matter, so this one is settled: do not spend a slot on a
+  bare list**; missing-state changes behaviour and suppresses unasked; completed-state
+  safe; consequence-stating confirmed).
   (c) Changes telling the agent what to RETRIEVE or in what ORDER confirmed; prohibitions
   and offered alternatives failed (seq 6, eleven changes). (d) Transfer is a single
   dial: seven mutations moved the rate before one (seq 8's missing-state context hook)
@@ -150,11 +152,22 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   injected text in a fetched conversation before reading any behavioural number.
   (h) Surface status is measured, never inherited: a DECLARED skill reaches NOTHING on
   this seam (hook injection is the only skill delivery); the no-tool-call hooks are
-  measured functional on the real domain; extension tools and sub-agents are live under
-  the D24 suppression registry (`agent.yaml tools:` + `agent` when `subagents:` is
-  non-empty — executed by Pi, suppressed from τ, logged) yet **still unexercised in any
-  graded round** — `pi_local_calls` was 0 across all 168 seq-8 platform episodes, and
-  the platform lane pins the recipe to pushed main.
+  measured functional on the real domain; and **the extension-tool surface is EXERCISED
+  and works** — seq 10's C1 took `pi_local_calls` from 0 across all 168 seq-8 platform
+  episodes to **39 in one graded round**, well-formed arguments, no leak into τ's
+  trajectory, after the pre-freeze suppression canary converted the D24 path from
+  assumption to measurement. **`sub-agent` is now the ONLY class never exercised and never
+  probed**; no `surface_exhausted` finding is claimed for it, and the open question a probe
+  must answer first is whether a child's own tool calls spend the PARENT's τ step budget.
+  (i) **Adoption is not improvement** (seq 10): C1 was adopted enthusiastically and moved
+  no reward. That a surface is reachable and that it is useful are separate claims needing
+  separate evidence — which is what adoption-first keeps apart, and why a confirmed
+  adoption with unmoved reward is not a mechanism denial. (j) **A dead primary is declared,
+  not drifted into** (seq 10): its endpoint became arithmetically unreachable after
+  `batch_07` — both remaining slots went to reverts, which cannot raise an endpoint — and
+  nothing in the process noticed. The futility check (`contract/protocol.md`) fires from
+  the midpoint, and the response is to re-purpose the remaining slots for knowledge rather
+  than to stop: seq 10's post-futility tail produced two of its best findings.
 - **SEQ 12 IS STAGED, NOT FROZEN — start at plan Phase 5.11, and Phase 0 comes before the
   lock (D36).** The recipe is already reset to `h0-baseline` and `make reset_h0` reports
   byte-identity. Nothing about seq 12 may be frozen until the **ceiling probe** runs, because
