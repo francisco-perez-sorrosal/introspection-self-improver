@@ -989,6 +989,78 @@ reports byte-identity to the re-tagged anchor.
 envelope REACHABLE; strata restated in the freeze snapshot; the identity
 pre-registration honored at reveal (mechanical).
 
+### Phase 5.11 — Seq-12 stage (D36; Phase 0 first, and the freeze waits on its result)
+
+**Nothing here is frozen yet, and that is deliberate**: the lock cannot be cut until Phase 0
+says which retrieval backend seq 12 runs on. Execute in order, in a fresh session under the
+D33 recall scope.
+
+- [ ] **Preconditions.** `make check` green; `make reset_h0` reports byte-identity (the
+      recipe was returned to `h0-baseline` at seq 10's close, so this should say "the recipe
+      already was H0"); model-pair keys live; `make weather` clean.
+
+- [ ] **Phase 0 — the ceiling probe. This decides whether seq 12 runs at all.**
+      Build **H-expert**: a harness hand-built with full access to the candidate tasks and
+      unlimited effort. It is never shipped, never `h0-baseline`, and never part of the loop
+      — it exists only to bound the range, so it MAY do things a loop change may not (encode
+      procedure specific to the observed failure modes). It must still respect the frozen
+      surfaces: no `<policy>` edit, no model change, no reading `benchmark/vendor/` at
+      runtime, no gold values.
+      Run **H0-current** and **H-expert** over ~30 candidate tasks × 3 trials on the local
+      lane, **under both `bm25` and `openai_embeddings`** (switching needs `make policy` to
+      regenerate the frozen region and refresh the lock's tool catalogue).
+      Score with `scripts/headroom.py --h0 … --expert … --label <backend> --write …`.
+      Roughly 360 episodes ≈ $8 per backend.
+
+- [ ] **The two pre-registered decisions Phase 0 makes, written down BEFORE it runs.**
+      (a) **Backend**: freeze whichever yields the larger *harness headroom*
+      (`H_expert − H0`), not the larger absolute score; a tie goes to `openai_embeddings`
+      (what τ² publishes, restoring comparability, and the key is already required at grading
+      time). (b) **Go / no-go**: if headroom ≤ 5 pp under both backends, **seq 12 is not run**
+      — the objective offers too little for any harness to win, the loop would reproduce the
+      prior nulls without being able to explain them, and the next move is a domain decision
+      (`telecom-workflow` is the candidate: procedural and multi-step, where harness
+      discipline should actually bite). That outcome is a result, costs ~$16, and is written
+      up as one.
+
+- [ ] **Compose the partition** (only if Phase 0 says go). **B = 30**, using the probe as the
+      *empirical* reachability oracle — a task H-expert passes is provably harness-reachable,
+      which is what makes a batch larger than the marginal band safe. **T = 36, and it is
+      forced**: the pool holds exactly 36 tasks never used as a batch task by any experiment,
+      and D33 keeps batch-used tasks burnt for held-out use forever. They are the same 36
+      seq 10 used, so the reuse declarations carry over per source with the D33 procedural
+      basis restated.
+      - batch-eligible stock, proven walls excluded (54): `task_001 task_002 task_003
+        task_004 task_005 task_006 task_008 task_010 task_014 task_015 task_020 task_023
+        task_024 task_027 task_029 task_032 task_037 task_038 task_040 task_041 task_043
+        task_045 task_046 task_047 task_050 task_053 task_054 task_055 task_056 task_057
+        task_058 task_060 task_061 task_062 task_063 task_064 task_065 task_066 task_069
+        task_071 task_074 task_076 task_077 task_079 task_080 task_081 task_083 task_087
+        task_088 task_089 task_090 task_094 task_101 task_102`
+      - held-out (36, forced): `task_007 task_012 task_016 task_017 task_018 task_019
+        task_021 task_022 task_025 task_031 task_033 task_035 task_036 task_039 task_044
+        task_048 task_049 task_051 task_052 task_059 task_067 task_068 task_073 task_075
+        task_078 task_084 task_085 task_086 task_091 task_092 task_093 task_095 task_097
+        task_098 task_099 task_100`
+
+- [ ] **Cut the lock**: seq 12; `protocol:` G, B=30, T=36, `num_trials: 3`,
+      `batch_mode: fixed`, `identity_generations: [1]`, `require_human_approval` per the
+      D23 envelope, the nine-cell reading key **restated for the gap-closure primary**, and
+      the retrieval backend Phase 0 chose. `make policy` if the backend moved.
+
+- [ ] **Gates**: `make gate_a0a`; platform seam canary; suppression canary; power envelope.
+      Commit every verdict before the first graded episode.
+
+- [ ] **Go**: H0 held-out → `batch_01` → gen-001 identity → `batch_02` → mutation slots under
+      the D36 composition policy (bundle 3–5 non-interacting changes, ≥3-task-or-structural
+      targets, delta-stated counters, ≤2 reverts, one slot reserved for `sub-agent`) with the
+      **futility check** from the midpoint on → endpoint round → reveal → §29 walk with the
+      D33 attestation → closure split batch-derived vs held-out.
+
+**Validate:** headroom measured and committed before the first generation; the backend
+decision traceable to the probe rather than to preference; the primary reported as
+gap-closure with the raw endpoint test beside it.
+
 ### Phase 6 — Full experiment + reporting (deferred; contingent on the § 8 groundwork)
 
 > **Amended by D32/D33 (2026-08-17):** the pool ledger shows **zero virgin tasks**, so a
