@@ -1,0 +1,220 @@
+{
+  "mode": "locked",
+  "experiment": "012_ceiling-emb-luna56",
+  "freeze_fingerprint": "sha256:ae3e58ade0483d56edc798b8aa65b7123460b0e3e8346f171642417afa832bf2",
+  "domain": "banking_knowledge",
+  "generation": "generation_000",
+  "split": null,
+  "num_trials": 3,
+  "max_concurrency": 3,
+  "bridge_executor_workers": 32,
+  "max_concurrent_starts": 2,
+  "transport": "platform",
+  "launcher": null,
+  "launch_argv": [
+    "introspection",
+    "tasks",
+    "create",
+    "--runtime-id",
+    "01a01648-7340-7025-b280-0593f99997de"
+  ],
+  "resumed": false,
+  "arm": {
+    "sha": "4ca9c7a546521a05146513a4798adb0e11853810",
+    "dirty_paths": [],
+    "allow_dirty": false
+  },
+  "episodes": [
+    {
+      "task_id": "task_001",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_001",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    }
+  ],
+  "incidents": {
+    "totals": {
+      "stall_warnings": 0,
+      "prompt_409": 0,
+      "prompt_failures": 0,
+      "stream_failures": 0,
+      "sandbox_queue_waits": 0,
+      "start_gate_wait_seconds": 0,
+      "start_gate_timeouts": 0,
+      "stream_reattaches": 4,
+      "settle_timeouts": 0,
+      "zero_bridge_calls": 0
+    },
+    "unattributed": [],
+    "bridge": {},
+    "infra_failure_classes": {}
+  },
+  "platform": {
+    "runtime": "target-agent",
+    "runtime_id": "01a01648-7340-7025-b280-0593f99997de",
+    "environment": "development",
+    "dev_target": "tau-6fc5",
+    "task_ids": [
+      "01a0164a-965f-7411-be45-7cd1778290b0",
+      "01a0164b-4893-7451-8c49-322cd0191062",
+      "01a0164c-4d5d-778f-9419-98218907512b"
+    ],
+    "tasks_created": [
+      "01a0164a-915d-748d-9a9b-be1e9f36222a",
+      "01a0164a-9463-70fc-a55c-9ce87e058c3b",
+      "01a0164a-965f-7411-be45-7cd1778290b0",
+      "01a0164a-e68e-76de-a6fa-f707b9eb1e85",
+      "01a0164b-4893-7451-8c49-322cd0191062",
+      "01a0164b-6f5b-741d-a86b-c5b77ec48204",
+      "01a0164c-4d5d-778f-9419-98218907512b"
+    ],
+    "orphaned_task_ids": [
+      "01a0164a-915d-748d-9a9b-be1e9f36222a",
+      "01a0164a-9463-70fc-a55c-9ce87e058c3b",
+      "01a0164a-e68e-76de-a6fa-f707b9eb1e85",
+      "01a0164b-6f5b-741d-a86b-c5b77ec48204"
+    ],
+    "accounting": {
+      "01a0164a-965f-7411-be45-7cd1778290b0": {
+        "cost": {
+          "usd": 0.006307699999999999
+        },
+        "usage": {
+          "input_tokens": 137540,
+          "output_tokens": 1320,
+          "total_tokens": 138860
+        },
+        "metrics": {
+          "duration_ms": 28670.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 8,
+          "span_count": 35,
+          "tool_use_count": 5,
+          "trace_count": 3
+        },
+        "recipe_git_commit_sha": "4ca9c7a546521a05146513a4798adb0e11853810",
+        "evidence_complete": true,
+        "item_count": 39,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a0164b-4893-7451-8c49-322cd0191062": {
+        "cost": {
+          "usd": 0.0031598
+        },
+        "usage": {
+          "input_tokens": 42686,
+          "output_tokens": 554,
+          "total_tokens": 43240
+        },
+        "metrics": {
+          "duration_ms": 10920.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 4,
+          "span_count": 17,
+          "tool_use_count": 3,
+          "trace_count": 1
+        },
+        "recipe_git_commit_sha": "4ca9c7a546521a05146513a4798adb0e11853810",
+        "evidence_complete": true,
+        "item_count": 19,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      },
+      "01a0164c-4d5d-778f-9419-98218907512b": {
+        "cost": {
+          "usd": 0.006189739999999999
+        },
+        "usage": {
+          "input_tokens": 118489,
+          "output_tokens": 1384,
+          "total_tokens": 119873
+        },
+        "metrics": {
+          "duration_ms": 24799.0,
+          "failed_llm_call_count": 0,
+          "failed_tool_use_count": 0,
+          "has_errors": false,
+          "llm_call_count": 7,
+          "span_count": 30,
+          "tool_use_count": 5,
+          "trace_count": 2
+        },
+        "recipe_git_commit_sha": "4ca9c7a546521a05146513a4798adb0e11853810",
+        "evidence_complete": true,
+        "item_count": 33,
+        "sandbox_tool_errors": 0,
+        "sandbox_seam_disconnects": 0,
+        "sandbox_seam_timeouts": 0,
+        "sandbox_seam_unclassified": 0,
+        "effective_models": [
+          "gpt-5.6-luna"
+        ],
+        "effective_reasoning": [
+          "medium"
+        ],
+        "effective_providers": [
+          "openai"
+        ]
+      }
+    },
+    "retitles": {
+      "applied": 3,
+      "failed": 0
+    },
+    "arm_sha_mismatches": []
+  },
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
+  "pi_local_tools": [
+    "probe_note"
+  ],
+  "toolchain": {
+    "introspection": "introspection 0.28.0",
+    "pi": "0.84.1"
+  },
+  "elapsed_seconds": 157.5
+}
