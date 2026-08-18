@@ -1,0 +1,234 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+transition:
+  from_generation: 1
+  to_generation: 2
+experiment: 010_adopt-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_02
+  task_ids:
+  - task_003
+  - task_005
+  - task_006
+  - task_008
+  - task_014
+  - task_023
+  - task_032
+  - task_055
+  - task_057
+  - task_063
+  - task_076
+  - task_089
+evidence:
+  conversation_ids:
+  - 01a01294-8f6d-726c-beb1-6ea99ed368ec
+  - 01a01298-0a52-7093-adc9-736ec9c85f0a
+  - 01a0129f-0ab4-7764-a75c-a556b35bac8f
+  - 01a01295-6c9e-7591-9956-d5372cd33819
+  - 01a0129a-40eb-72e2-9fba-078dcf009be9
+  - 01a012a0-7525-71cf-929a-860d316272ec
+  - 01a01295-b168-73b8-8b35-3c512358c0e1
+  - 01a0129b-1756-72b0-a438-bccc04e35522
+  - 01a012a1-42f9-762f-b8ce-8a1917f9e31c
+  - 01a0129c-58ec-7559-856a-3a68205b5e85
+  summary: >-
+    batch_02, the pre-registered identity (A/A) round under H1 = H0: 36/36 completed,
+    evidence_complete and arm_sha_ok, all four sandbox seam counters ZERO, pi_local_calls 0,
+    $0.63. Read together with batch_01 as a paired identical-harness comparison, and read
+    per-task through the same NORMALIZED three-way gold-action comparison (MATCH / ARGS /
+    ABSENT) used at g=0. batch_02's own split is MATCH 106 / ARGS 34 / ABSENT 7.
+    A VOIDED FIRST PASS of this round is preserved at generation_001/batch_02_seam_incident/
+    with its own README: two episodes took the documented "local MCP 'tau' is disconnected"
+    daemon signature 5.4s apart at round start, were denied their tools and graded 0.0. It
+    was re-measured rather than annotated because batch_02 is half the pooled H0 baseline of
+    the pre-registered primary and both contaminated cells sat on movable tasks, which would
+    bias that baseline toward this experiment's own hypothesis. The platform seam canary ran
+    PASS 3/3 with all counters zero immediately afterwards. The voided pass is treated as a
+    third identical-harness draw for the noise analysis and as evidence for nothing else.
+    PREFLIGHTS: one, 6 local-lane episodes (task_003 + task_023 x 3) at
+    generation_001/g002_preflight/ — execution and invocation checks only. Per protocol step
+    5b no behavioural number from it is provenance for anything in this record.
+signals:
+- description: >-
+    THE NOISE FLOOR, and it is this transition's most consequential measurement. On a
+    byte-identical harness (batch_01 -> batch_02) the round total was UNCHANGED at 20/36
+    (+0.0 pp) while 14 of 36 trial cells flipped and 6 of 12 task rates moved, every one of
+    them by exactly +/-1. Both anchors held 3/3. Adding the voided pass as a third draw:
+    task_008 measured 3, 2 and 0 (range 3), task_089 and task_014 range 2, nine tasks range
+    <= 1, and task_006 / task_032 / task_076 were stable at 9/9. The aggregate is a far
+    better-behaved statistic than any single cell — gains and losses cancel almost exactly.
+    Operational consequence for the remaining slots, stricter than the prior experiment's
+    2-cell rule: a one-cell task movement is noise, two is suggestive, and NO single-task
+    movement is attributable without its own mechanism counter moving in the predicted
+    direction. This is the number gen-001 was pre-registered to buy, obtained before the
+    first mutation rather than by accident in a late round.
+  prevalence: 36/36 episodes, paired against batch_01's 36/36
+- description: >-
+    T1 REPRODUCES and is the round's strongest target. task_003 applied for the Gold Rewards
+    Card against gold's Silver in 3/3 episodes here, 6/6 across both rounds, with
+    annual_income and rho_bank_subscription always correct — the tool and the customer data
+    are right and only the class is wrong. task_023 chose Silver against gold's Diamond
+    Elite in 2/3 here, 4/6 across both rounds. The counterfactual is measured rather than
+    argued: task_055 t0 passed in this round precisely because it opened the Silver Plus
+    Account gold requires, where every batch_01 trial opened Green, Silver or Platinum Plus.
+    task_003's customer states the selection rule in words — hard requirements, then
+    "the one with the smallest annual fee", then "the highest cash back" — so this is
+    filtering and ordering over retrieved values, not domain judgment.
+  prevalence: 2/12 tasks stable across both rounds, 10/12 episodes on those tasks
+- description: >-
+    T2 THINS, and that is why it did not consume this slot. In batch_01 the exact-string
+    handover mode had 3 tasks / 7 episodes; in batch_02 its clear witness is task_057 t2
+    alone (the user calling `mobile_check_deposit` with an `amount` key where the KB
+    document states `deposit_check_3847(account_id, check_amount)`). The ARGS verdicts on
+    give_discoverable_user_tool in the passing task_057 trials are duplicate grants, which
+    are benign. Under D22's "the weaker-evidenced one waits" T2 goes to gen-003, re-ranked
+    against batch_03.
+  prevalence: 1/12 tasks with a clear witness this round, down from 3/12
+- description: >-
+    T4 held and remains ambiguous. task_063 still fails 2/3 with log_verification, the
+    unlock and the savings open ABSENT, and its t1 performed every gold action semantically
+    and still failed the DB check — a second defect in state the gold actions do not
+    capture. task_005 lost a cell (2/3 -> 1/3) and task_063 gained one (0/3 -> 1/3), both
+    inside the measured noise. Not consumed.
+  prevalence: 2/12 tasks, 7/36 episodes across the two rounds
+counterevidence: >-
+  Three objections stand against this change and are recorded rather than answered away.
+  (1) THE TOOL CANNOT FIX ITS OWN INPUTS. The preflight showed the model supplying Gold at a
+  flat 2.5% cash back against Silver's "cash back outside top categories" 1.0% while the
+  customer's stated spend is travel — so the ranking it returns is correct on the values
+  given and the values are what is incomplete. If the true defect is attribute selection
+  rather than ordering, this change moves the failure one layer up and does not remove it.
+  That is a legitimate outcome for an adoption-first round and is exactly what batch_03 will
+  show. (2) task_023 did not call the tool at all in the preflight, so the mechanism's reach
+  may be narrower than its evidence — task_023's customer asks about a rebate rather than
+  asking to choose, and the product decision is implicit. (3) The bundled instruction carries
+  a conditional ("when the customer states requirements or preferences and you are choosing
+  between options"), and the standing lesson across three experiments is that any injected
+  precondition can read as a bar to acting. Its falsifiers are recorded per clause below.
+hypothesis: >-
+  The agent fails these tasks not by failing to retrieve and not by failing to act, but at a
+  filtering-and-ordering step it performs in prose: given several candidates and a stated
+  preference order, it selects on the salient attribute instead. Moving that step onto a
+  deterministic surface the model calls — one that also names which attributes were not
+  supplied — should make the selection follow the stated order, and should make an
+  incomplete retrieval visible as an explicit gap rather than a silent default.
+owning_layer: extension-tool (with its bundled usage instruction as one mechanism)
+proposed_change: >-
+  One change. Not a set: this is the first change ever landed on the extension-tool surface
+  in this project's history, and adoption-first makes it a one-round bet whose prediction is
+  adoption rather than reward. Adding a second change would confound the round for no gain,
+  because the reward read is deferred either way — and the prior experiment's clearest
+  lesson about first uses of a surface (a hook that never executed, whose preflight looked
+  3/3 by chance) argues for keeping this one unconfounded. T2 was the alternative and waits
+  for gen-003 on the weaker-evidence rule.
+schema_version: 4
+changes:
+- mechanism: >-
+    Move constrained multi-candidate selection off prose and onto a deterministic tool: the
+    model supplies the candidates it retrieved with their attribute values, the customer's
+    hard requirements, and the customer's preference order; the tool filters, reports why
+    each excluded candidate failed, names the attributes not supplied, and ranks the
+    qualifiers by the stated order. The tool encodes NO domain knowledge — no document ids,
+    product names, thresholds or gold values — and has no filesystem, network, subprocess or
+    cross-call state. The bundled one-paragraph usage instruction is part of the same
+    mechanism per D29: a capability and its adoption path are one diagnosis.
+  surface: extension-tool
+  evidence: >-
+    Backlog target T1. task_003 6/6 episodes across batch_01 and batch_02 applying for the
+    Gold Rewards Card against gold's Silver; task_023 4/6 choosing Silver against gold's
+    Diamond Elite; task_055's measured counterfactual (t0 passed in batch_02 on the correct
+    Silver Plus Account). Conversations 01a01294-8f6d-726c-beb1-6ea99ed368ec,
+    01a01298-0a52-7093-adc9-736ec9c85f0a, 01a0129f-0ab4-7764-a75c-a556b35bac8f (task_003,
+    batch_02) and the batch_01 set recorded in gen_000_to_001.yaml.
+  expected_effect: >-
+    ADOPTION-FIRST. Predicted for batch_03: pi_local_calls >= 1 on task_003 (the task whose
+    customer states an explicit preference ordering) in at least 2 of 3 trials, with
+    well-formed arguments — two or more candidates, each carrying the attributes named in
+    the requirements — and no episode exceeding tau's frozen 600s timeout. Round-wide
+    pi_local_calls must move off zero, where it has sat for every platform episode of every
+    experiment. THE REWARD PREDICTION IS DEFERRED to batch_04 and is stated as deferred: a
+    confirmed adoption with unmoved reward is NOT a denial, while a denied adoption (the
+    model does not call it) is a mechanism denial and a first-class revert trigger.
+  risk: >-
+    Three. (a) The tool ranks what it is given, so incomplete or mis-selected attribute
+    values produce a confidently wrong answer — the preflight already showed this shape.
+    (b) The bundled instruction's conditional could be read as a precondition and suppress
+    action, the standing failure mode of injected preconditions. (c) Pi-local execution
+    spends wall-clock and tokens inside tau's frozen episode budget; the tool is pure
+    computation over its arguments, but adoption adds turns. The anchors task_006 and
+    task_032 are the regression channel for all three and must hold 3/3.
+  adoption_stage: true
+  adoption_criteria: >-
+    Adoption and correct invocation, measured on batch_03 and nothing else: (1)
+    pi_local_calls >= 1 on task_003 in >= 2 of 3 trials and >= 1 round-wide on any other
+    task where a product recommendation is due; (2) well-formed arguments — >= 2 candidates
+    per call, each with attributes matching the requirement names, verified by reading the
+    call payloads in a fetched conversation rather than inferred from the counter; (3)
+    latency inside tau's frozen timeout_seconds with no episode terminating on it. The
+    reward-level prediction is DEFERRED to batch_04.
+  host_facts:
+  - fact: >-
+      A tool call whose name appears in agents/agent.yaml `tools:` is executed by Pi and
+      never forwarded to tau — the list IS the D24 Pi-local suppression registry — costing
+      no tau step and none of the ten max_errors, and logged in
+      raw_data.pi_suppressed_tool_names with the manifest deriving pi_local_calls. This is
+      the fact the whole change depends on, and it was an ASSUMPTION on the platform lane
+      until this experiment measured it.
+    probe_evidence: >-
+      results/experiment_010_adopt-bm25-luna56/gates/suppression_canary.json (platform lane,
+      3/3 episodes, pi_local_calls 1 each, probe_note absent from tau's graded trajectory,
+      all four seam counters zero) and benchmark/probes/2026-08-16-surface-probes/ probe P6
+      (local lane, mock domain).
+  - fact: >-
+      An extension is declared once, in package.json `pi.extensions`; agent.yaml has no
+      extension counterpart, and a registered tool becomes model-callable only by ALSO being
+      allowlisted in agent.yaml `tools:`. A tool registered without that entry leaks to tau
+      as a graded invalid call.
+    probe_evidence: >-
+      benchmark/probes/2026-08-16-surface-probes/ (P3/P6) plus this experiment's own
+      suppression canary, which exercised exactly this wiring end to end on pushed main
+      before being reverted (commits 5c9b1ec and its revert 8ef635a).
+  clauses:
+  - clause: >-
+      When the customer states requirements or preferences and you are choosing between
+      options, retrieve each candidate's specification, then call `compare_options` with
+      every candidate you retrieved, the customer's requirements, and their preference order.
+    adversarial_reading: >-
+      The conditional is read as a precondition on ACTING rather than on calling: an agent
+      that judges the customer's preferences insufficiently "stated", or that judges itself
+      not to be "choosing between options", skips both the tool and the recommendation. This
+      is the exact shape measured three times — any injected statement about a missing
+      precondition can read as a bar to acting.
+    falsifier: >-
+      apply_for_credit_card / open_bank_account calls fall on task_003, task_023 or task_063
+      relative to batch_01 + batch_02, or transfer-carrying episodes rise round-wide. Either
+      fires and the clause, not the tool, is the suspect.
+  - clause: Report and act on the option it selects.
+    adversarial_reading: >-
+      Read as licensing deference to the tool's output over the agent's own reading of the
+      knowledge base, so a wrong ranking built from wrong inputs is followed rather than
+      questioned — the tool becomes an authority instead of a calculator.
+    falsifier: >-
+      An episode calls compare_options, receives a ranking whose inputs the transcript shows
+      to be incomplete (an UNDECIDABLE or NOT SUPPLIED line in the tool's own output), and
+      applies for the ranked option anyway without retrieving the missing attribute.
+  commit: ef2992bc3ab17db666933ea2589e54d94a4107d1
+mutation:
+  branch: gen-002/compare-options-tool
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/25
+  source_commit: f30e8773275c61fb177b17eab219805e8acec7a8
+  candidate_commit: 157266bef1a58717c096fa9efa5c20bd8a00db69
+expected_effect: >-
+  The set is one change, so the set-level prediction is that change's: adoption on batch_03,
+  reward deferred to batch_04. Two things must hold for the round to be readable at all —
+  both anchors at 3/3 (the regression channel), and round-wide pi_local_calls moving off
+  zero, where it has sat across every platform episode of every experiment this project has
+  run. Against the noise floor measured this transition (14 of 36 cells flip on an identical
+  harness), the reward total is expected to be uninformative on its own; the adoption counter
+  is the readable signal precisely because it is currently exactly zero.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-18'
+held_out_result: null

@@ -1,12 +1,12 @@
 {
-  "mode": "diagnostic",
+  "mode": "locked",
   "experiment": "010_adopt-bm25-luna56",
   "freeze_fingerprint": "sha256:50553b93863c4efb40360501de175609f04af9f40be1994cd4af2035d0c48f74",
-  "domain": "mock",
-  "generation": "generation_000",
+  "domain": "banking_knowledge",
+  "generation": "generation_001",
   "split": null,
   "num_trials": 3,
-  "max_concurrency": 3,
+  "max_concurrency": 6,
   "bridge_executor_workers": 32,
   "max_concurrent_starts": null,
   "transport": "local",
@@ -14,23 +14,28 @@
   "launch_argv": [
     "pi",
     "--recipe",
-    "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
+    "/Users/fperez/dev/introspection-self-improver/target-agent",
     "--agent",
     "agent",
     "--mode",
     "rpc",
     "--session-dir",
-    "/Users/fperez/dev/introspection-self-improver/results/experiment_010_adopt-bm25-luna56/generation_000/mock_smoke/pi_sessions"
+    "/Users/fperez/dev/introspection-self-improver/results/experiment_010_adopt-bm25-luna56/generation_001/g002_preflight/pi_sessions"
   ],
   "resumed": false,
   "arm": {
-    "sha": null,
-    "dirty_paths": [],
+    "sha": "cdbc26e6b4114502376814fa2074ff08f2ebe2e8",
+    "dirty_paths": [
+      "M target-agent/SYSTEM.md",
+      "M target-agent/agents/agent.yaml",
+      "M target-agent/package.json",
+      "?? target-agent/extensions/compare-options.ts"
+    ],
     "allow_dirty": false
   },
   "episodes": [
     {
-      "task_id": "create_task_1",
+      "task_id": "task_023",
       "trial": 2,
       "termination": "TerminationReason.USER_STOP",
       "reward": 1.0,
@@ -38,7 +43,15 @@
       "failure": null
     },
     {
-      "task_id": "create_task_1",
+      "task_id": "task_023",
+      "trial": 0,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 1.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_023",
       "trial": 1,
       "termination": "TerminationReason.USER_STOP",
       "reward": 0.0,
@@ -46,10 +59,26 @@
       "failure": null
     },
     {
-      "task_id": "create_task_1",
+      "task_id": "task_003",
+      "trial": 2,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_003",
       "trial": 0,
       "termination": "TerminationReason.USER_STOP",
-      "reward": 1.0,
+      "reward": 0.0,
+      "completed": true,
+      "failure": null
+    },
+    {
+      "task_id": "task_003",
+      "trial": 1,
+      "termination": "TerminationReason.USER_STOP",
+      "reward": 0.0,
       "completed": true,
       "failure": null
     }
@@ -72,7 +101,7 @@
     "infra_failure_classes": {}
   },
   "platform": null,
-  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/.diagnostic-workspace/target-agent",
+  "recipe_dir": "/Users/fperez/dev/introspection-self-improver/target-agent",
   "pi_local_tools": [
     "compare_options"
   ],
@@ -80,5 +109,5 @@
     "introspection": "introspection 0.28.0",
     "pi": "0.84.1"
   },
-  "elapsed_seconds": 14.7
+  "elapsed_seconds": 143.8
 }

@@ -214,3 +214,101 @@ backlog records why none of the open targets' mechanisms fit. **T1's leading alt
 an extension tool, and that is the obligation's most natural home.**
 
 <!-- transition: gen_000_to_001 -->
+
+---
+
+## Re-ranking against `batch_02` (H1, the pre-registered identity round, 2026-08-18)
+
+Clean round: 36/36, all four sandbox seam counters zero, `pi_local_calls` 0. A first pass of
+this round was VOIDED for seam contamination and preserved at
+`generation_001/batch_02_seam_incident/`; it is used below as a third identical-harness draw
+and as evidence for nothing else.
+
+### The noise floor — the number gen-001 was pre-registered to buy
+
+On a **byte-identical harness** (`batch_01` → `batch_02`):
+
+| | |
+|---|---|
+| round total | **20/36 → 20/36, +0.0 pp** |
+| task rates moved | **6 of 12**, every one by exactly ±1 |
+| trial cells flipped | **14 of 36 (39%)** |
+| anchors | `task_006` 3/3 → 3/3, `task_032` 3/3 → 3/3 |
+
+With the voided pass as a third draw: `task_008` 3/2/0 (**range 3**), `task_089` and
+`task_014` range 2, nine tasks range ≤1, and `task_006`/`task_032`/`task_076` stable at 9/9.
+
+**The aggregate is a far better-behaved statistic than any single cell** — gains and losses
+cancel almost exactly. The operational rule for the seven mutation slots, stricter than the
+prior experiment's 2-cell version:
+
+> A one-cell task movement is noise. Two is suggestive. **No single-task movement is
+> attributable without its own mechanism counter moving in the predicted direction.**
+
+gen-001's pre-registered expectation ("no systematic movement; both anchors hold 3/3") is
+**CONFIRMED**.
+
+### T1 REPRODUCES and consumes gen-002 (C1)
+
+`task_003` applied for the Gold Rewards Card against gold's Silver in **6/6 episodes across
+both rounds**, with `annual_income` and `rho_bank_subscription` correct every time — the
+tool and the customer data are right, only the class is wrong. `task_023` chose Silver
+against gold's Diamond Elite in 4/6. The counterfactual is measured: **`task_055` t0 passed
+in `batch_02` precisely because it opened the `Silver Plus Account` gold requires**, where
+every `batch_01` trial opened Green, Silver or Platinum Plus.
+
+`task_003`'s customer states the selection rule in words — hard requirements, then "the one
+with the smallest annual fee", then "the highest cash back". That is filtering and ordering
+over retrieved values, not domain judgment, which is why it goes to a deterministic surface.
+
+**Surface decision, and the ladder's obligation discharged at the first slot.** The
+project-scope ledger above records `extension-tool` as never exercised in a graded round of
+any experiment, with its blocker discharged by this experiment's platform suppression
+canary. C1 is therefore **adoption-first**: the prediction targets `pi_local_calls` and
+correct invocation, the reward prediction is deferred to `batch_04`, and the tool bundles
+its minimal usage instruction as one mechanism (D29). Preflight (6 local episodes,
+`generation_001/g002_preflight/`) confirmed the tool is called 3/3 on `task_003` with
+well-formed multi-candidate arguments, and 0/3 on `task_023` whose customer never asks to
+choose. **A preflight verifies a change runs, never that it works** — no behavioural number
+from it is provenance.
+
+The preflight did move the diagnosis a layer, and it is recorded here as the live risk: the
+model supplied Gold at a flat 2.5% cash back against Silver's *"cash back outside top
+categories"* 1.0% while the customer's stated spend is travel. **The ranking is correct on
+the values supplied; the values are what is incomplete.** If the true defect is attribute
+selection rather than ordering, C1 moves the failure one layer up rather than removing it —
+which is a legitimate adoption-first outcome and precisely what `batch_03` reads.
+
+### T2 THINS and waits for gen-003
+
+`batch_01` gave the exact-string handover mode 3 tasks / 7 episodes; `batch_02`'s clear
+witness is `task_057` t2 alone (the user calling `mobile_check_deposit` with an `amount` key
+where the KB document states `deposit_check_3847(account_id, check_amount)`). The `ARGS`
+verdicts on `give_discoverable_user_tool` in `task_057`'s *passing* trials are duplicate
+grants and benign. Under D22's "the weaker-evidenced one waits", T2 is re-ranked against
+`batch_03`. It is **parked, not retired** — one round of thinner evidence is not a
+retirement, and the retirement bar is witnesses from ≥2 rounds or a mechanism-level
+impossibility.
+
+### T3 and T4 held
+
+T3's `task_014` went 1/3 → 2/3, a one-cell movement that the floor measured this round
+absorbs entirely. T4's `task_005` lost a cell and `task_063` gained one, likewise inside the
+floor; `task_063` t1 again performed every gold action semantically and still failed the DB
+check, so its second defect stands unexplained and is worth a transcript read before any
+slot is spent on it.
+
+### Slot accounting
+
+| Slot | Generation | Target(s) | Status |
+|---|---|---|---|
+| — | gen-001 | **pre-registered identity** | consumed as designed — noise floor measured, baseline pooled |
+| 1 | gen-002 | T1 (C1, **extension-tool**, adoption-first) | in flight — scored by `batch_03` |
+| 2–7 | gen-003…gen-008 | T2 parked, T3/T4 held | open |
+
+**Surface concentration:** 1 mutation, on `extension-tool`. The flag is nowhere near firing,
+and the experiment-level surface-exercise obligation is **discharged at the first slot**
+rather than deferred to the end — the failure mode the prior experiment demonstrated when
+six of six changes landed on the one surface that had a template.
+
+<!-- transition: gen_001_to_002 -->
