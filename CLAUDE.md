@@ -182,7 +182,11 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   *empirical* reachability oracle — a task H-expert passes is provably harness-reachable),
   `scripts/endpoint_test.py` (the new primary: a within-task permutation on EPISODE outcomes
   with a CMH cross-check, replacing the sign test that collapsed 36 episodes into 12
-  verdicts), plus `scripts/gold_diff.py` and `scripts/round_read.py`. Sizes: `num_trials` 3,
+  verdicts), plus `scripts/gold_diff.py` and `scripts/round_read.py`. Sizes: **G=7** with
+  `identity_generations: [1]` (six slots, 18–30 attempts at the D36 policy's 3–5
+  bundled changes each) and **`heldout_generations: [0, 4, 7]`** — a lock field added
+  for seq 12: omitted generations are carried like identity ones, and the batch gate
+  walks every *scheduled* measurement, so sparse never means optional. `num_trials` 3,
   **B=30** (the size at which seq 10's own observed +11.1 pp would have been significant),
   **T=36 which is FORCED** — the pool holds exactly 36 tasks no experiment has ever batched,
   and D33 keeps batch-used tasks burnt forever. Loop policy is in `contract/protocol.md`:
