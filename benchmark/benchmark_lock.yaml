@@ -153,9 +153,32 @@
 #
 # Seq 10 is EVEN per D15: a reportable experiment. Seq 7 and seq 9 were never cut.
 # Results under the D24 seam (seq 8 onward) are not comparable to seq ≤ 6.
+# SEQ 11 — PHASE 0, THE CEILING PROBE (plan D36 / Phase 5.11, 2026-08-18). NOT an
+# experiment: an ODD seq per D15's parity convention, cut PROVISIONAL because probes are
+# exactly what an unenforced status is for. Nothing here is measured as a generation, no
+# partition is frozen, no improvement record is written, and no result under
+# results/experiment_011_ceiling-probe/ is reportable as a curve.
+#
+# WHY IT EXISTS. Four experiments asked "did the score go up" against an unknown maximum,
+# so four nulls left "the loop failed" and "there was nothing to find" equally alive.
+# Phase 0 measures the maximum: H0-current and an H-EXPERT harness — hand-built with full
+# access to the candidate tasks and unlimited effort, never shipped, never tagged, never
+# part of any loop — over the batch-eligible pool, under BOTH retrieval backends. Three
+# decisions come out of it, all pre-registered in Phase 5.11 BEFORE any episode ran:
+#   (a) BACKEND    freeze whichever gives the larger HARNESS HEADROOM (H_expert - H0),
+#                  not the larger absolute score; a tie goes to openai_embeddings.
+#   (b) GO/NO-GO   headroom <= 5 pp under BOTH backends means seq 12 is not run.
+#   (c) ENVELOPE   power_envelope.py --headroom-pp <measured> must return REACHABLE.
+#
+# The protocol: block below is seq 10's, carried verbatim and INERT — the lock parser
+# validates it, nothing in Phase 0 reads it. `benchmark.retrieval_config` is the one field
+# Phase 0 moves, and moving it runs `make policy`, which rewrites the frozen <policy>
+# region and so breaks byte-identity with h0-baseline. That is expected: the harness is
+# unchanged and only the frozen benchmark text it carries moved. `h0-baseline` IS NOT
+# RE-TAGGED during Phase 0 — the tag decision is the first step of the seq-12 freeze.
 experiment:
-  seq: 10
-  name: adopt-bm25-luna56
+  seq: 11
+  name: ceiling-probe
 
 benchmark:
   repository: sierra-research/tau2-bench
@@ -441,7 +464,11 @@ frozen:
   # blocking per experiment AND newly load-bearing here: D24 changed the adapter's
   # semantics between experiments, so the suite covering the changed semantics must pass
   # before any seq-8 result exists.
-  status: FROZEN
+  #
+  # PROVISIONAL for seq 11 (Phase 0): no freeze snapshot is written or enforced, because
+  # there is no freeze — these are probes. Seq 12 is cut FROZEN afterwards, with the
+  # backend Phase 0 chose in its name.
+  status: PROVISIONAL
 
   # The model that actually serves the agent. Authoritative copy lives in
   # target-agent/agents/agent.yaml; the runner refuses to start if the two disagree, which

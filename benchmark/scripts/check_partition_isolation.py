@@ -178,6 +178,22 @@ def main() -> int:
 
     lock = lockmod.load_lock()
     experiment_id = lock.experiment_id
+
+    # A PROVISIONAL lock is not a freeze, and reuse is a FREEZE decision (this file's whole
+    # premise). Phase 0's ceiling probe runs under exactly such a lock — seq 11, plan D36 —
+    # with no partition of its own: the manifest on disk still describes the previous
+    # experiment, so every prior-experiment overlap it reports is an artifact of the seq
+    # bump rather than a decision anyone took. Declaring that overlap would be fiction, and
+    # a fictional declaration is worse than an unchecked one. The gate returns the moment
+    # the next experiment is cut FROZEN with its own partition. Same reasoning as
+    # experiment.py's snapshot bypass: PROVISIONAL means unenforced, uniformly.
+    if lock.provisional:
+        print(
+            f"— partition isolation skipped for {experiment_id}: the lock is PROVISIONAL, "
+            "so there is no frozen partition to check (probes, not a freeze)"
+        )
+        return 0
+
     current = partition_of(yaml.safe_load(args.manifest.read_text(encoding="utf-8")) or {})
     declared = load_declarations(args.declarations, experiment_id)
 
