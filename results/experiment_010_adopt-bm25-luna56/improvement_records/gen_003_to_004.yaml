@@ -1,0 +1,188 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+transition:
+  from_generation: 3
+  to_generation: 4
+experiment: 010_adopt-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_04
+  task_ids:
+  - task_003
+  - task_005
+  - task_006
+  - task_008
+  - task_014
+  - task_023
+  - task_032
+  - task_055
+  - task_057
+  - task_063
+  - task_076
+  - task_089
+evidence:
+  conversation_ids:
+  - 01a01337-12a7-7769-aef0-31319224ecfa
+  - 01a0133b-5fe1-75f1-8345-c83c3dfb2a66
+  - 01a01345-c721-7104-b554-823480a1442c
+  - 01a01337-d376-7288-916b-4eac9d3fc8bd
+  - 01a0133c-9619-745e-81e7-c019824bda06
+  - 01a01347-059e-7774-b6c0-7ca1dd31b865
+  - 01a01338-bb37-7478-bfd9-e0be1949a5f3
+  - 01a0133d-b0b2-709d-a8a2-6d193093a764
+  - 01a01348-435d-71c0-902c-d01e8596efc3
+  - 01a01338-fc2a-7466-83b5-6c6b84c3a1e0
+  - 01a01346-1c27-735c-bebd-9369600b4fe1
+  - 01a01348-4a0d-737c-b54b-7dec6ff13766
+  summary: >-
+    batch_04 under H3 (C1 + C2): 36/36 completed, evidence_complete and arm_sha_ok, all four
+    sandbox seam counters zero, every episode terminating user_stop with ZERO max_steps,
+    $0.98. FOURTH round over the same twelve tasks — batch_mode is fixed, so this measures a
+    set the loop has been tuned on, and every figure here says so. Read through the normalized
+    three-way gold-action comparison, the per-episode pi_local_calls counters, the per-task
+    user-call tool names and argument keys (C2's counter, enumerated against batch_03's), and
+    the per-round message and cost profile.
+    PREFLIGHTS: one, 6 local-lane episodes (task_003 + task_063 x 3) at
+    generation_003/g004_preflight/ — invocation checks only, never provenance.
+signals:
+- description: >-
+    C2's PREDICTION IS CONFIRMED on its counter, and the enumeration is exact. batch_03's
+    task_057 t0 and t1 each produced three invented user-tool names
+    (mobile_check_deposit, mobile_deposit, deposit_check, mobile_deposit_check) with an
+    `amount` argument key; batch_04's task_057 t0 and t1 each produced exactly ONE user
+    call, `deposit_check_3847` with `check_amount`. task_055 went from a spurious
+    `amount`-key call alongside the correct one in t0 and t2, to exactly one correct call in
+    all three trials. ZERO invented tool names round-wide. task_089 made no user call in
+    either round, so the third target of the prediction is UNOBSERVABLE rather than
+    confirmed, and is recorded as such.
+  prevalence: 2/3 predicted tasks confirmed, 1/3 unobservable; 0 invented names in 36 episodes
+- description: >-
+    The round rose to 26/36 (72.2%) from batch_03's 17/36 (47.2%), against a pooled H0
+    baseline of 40/72 (55.6%). Both anchors held 3/3 for the fourth consecutive round.
+    THE ROUND TOTAL OVERSTATES WHAT THE CHANGES DID, and this is recorded before any
+    narrative is built on it: task_014 contributed 3 of the 9-cell rise, and NEITHER change
+    can act on it — it makes no discoverable-user-tool handover for C2 to shape and it called
+    compare_options in neither round. Its identity-draw range was already 2. The defensible
+    attribution is C2's counter plus the tool-mediated movement on task_003 (0/6 pooled ->
+    1/3, its first pass of the experiment) and task_076 (2/3 -> 3/3, recovering the fall
+    flagged at gen-003 as the sharpest test available).
+  prevalence: 26/36 episodes; 9-cell rise of which 3 cells are unattributable
+- description: >-
+    C1's SCOPE PROBLEM, measured rather than suspected, and the reason gen-004 exists. The
+    tool is called hardest on tasks that are not choices between products: task_055 9 -> 15
+    calls, task_057 5 -> 11, task_063 9 -> 9 with the task still 0/3 across all four rounds.
+    Its cost is now quantified across the curve: mean messages per episode 37.3 and 36.2 at
+    H0, 41.5 and 42.1 at H2 and H3; mean tool messages 11.9 -> 14.4; round cost $0.64 ->
+    $0.98. H3's held-out round additionally produced this experiment's FIRST max_steps
+    termination (1 of 108, a completeness fact — no held-out reward was read) where H0's and
+    H2's produced none. Step exhaustion is a harness cost to fix (user direction,
+    2026-08-18), not a budget to raise: max_steps is frozen, and raising it mid-experiment
+    would let a later generation improve by being allowed to do more.
+  prevalence: 3/12 tasks over-calling; +13% messages and +52% round cost against H0
+- description: >-
+    T1's remainder is unchanged and now isolated. task_003 called the tool in 3/3 episodes
+    and moved to 1/3 — its first pass — but the mechanism that still fails is ATTRIBUTE
+    SELECTION, not ordering: the model supplies a flat cash-back figure for one candidate
+    against a category-qualified figure for another while the customer's stated spend sits
+    in that category. The tool ranks what it is given, correctly. task_063 remains 0/3 across
+    all four rounds while calling the tool 9 times per round, and its batch_01 t1 performed
+    every gold action semantically and still failed the DB check — an unexplained second
+    defect that no slot has yet been spent on.
+  prevalence: task_003 1/3 after four rounds; task_063 0/12 episodes lifetime
+counterevidence: >-
+  Two objections to gen-004's change, recorded rather than answered away. (1) IT MIGHT
+  SUPPRESS THE TOOL WHERE IT HELPS. The narrowing names what a choice is not, and the
+  standing lesson across four experiments is that any injected statement about a
+  precondition can read as a bar to acting — an agent that under-classifies a genuine choice
+  will stop calling the tool on task_003 and task_023, the two tasks it demonstrably helps.
+  That is the first clause's falsifier and the primary risk. (2) THE COST MAY NOT BE THE
+  TOOL'S. Messages per episode rose from 37 to 42 between H0 and H2, but H2 also sits four
+  rounds into a tuned-on batch and the identity round showed 14 of 36 cells flipping on an
+  unchanged harness; a five-message shift is not obviously outside that. Against this: the
+  per-task call counts are not noise — 15 and 11 calls on tasks that are not choices are
+  counted invocations, and the round cost rose 52%, which no cell-level noise explains.
+hypothesis: >-
+  C1's mechanism is right and its trigger is too wide. The model reads "choosing between
+  options" as covering any deliberation, so it calls a ranking tool while carrying out a
+  single prescribed procedure, spending turns inside a frozen step budget for no decision.
+  Naming what a choice is — one product, plan or account class out of several the bank
+  offers — and naming what it is not should keep the calls on the tasks where a selection
+  actually happens, and return the episode profile toward H0's while keeping the gains.
+owning_layer: instructions
+proposed_change: >-
+  One change, again for an attribution reason: batch_04 carried two live changes and its
+  9-cell rise could not be split between them, with 3 of those cells attributable to
+  neither. Landing a single narrowing keeps batch_05 a clean read on whether the cost falls
+  without the gains going with it. C1 is NOT reverted and NOT modified in its code — the
+  tool's own behaviour is correct — only its usage instruction narrows.
+schema_version: 4
+changes:
+- mechanism: >-
+    Narrow compare_options' trigger to a genuine selection: one product, plan or account
+    class out of several the bank offers, called once with every retrieved candidate — and
+    say explicitly what is not a choice (a single course of action, a lookup, or a step
+    already being carried out). The tool's code is untouched; only the condition under which
+    the model reaches for it changes.
+  surface: instructions
+  evidence: >-
+    Per-task pi_local_calls across batch_03 and batch_04 (task_055 9 -> 15, task_057 5 -> 11,
+    task_063 9 -> 9 while 0/3 lifetime), the per-round episode profile (mean messages 37.3/36.2
+    at H0 -> 41.5/42.1 at H2/H3; round cost $0.64 -> $0.98), and H3's held-out round carrying
+    this experiment's first max_steps termination. Conversations
+    01a01338-bb37-7478-bfd9-e0be1949a5f3, 01a0133d-b0b2-709d-a8a2-6d193093a764,
+    01a01348-435d-71c0-902c-d01e8596efc3.
+  expected_effect: >-
+    On batch_05: pi_local_calls falls on task_055, task_057 and task_063 against batch_04's
+    15, 11 and 9, while HOLDING at >= 1 per episode on task_003 and task_023 — the two tasks
+    where a selection genuinely happens. Mean messages per episode falls back toward H0's
+    ~37 and round cost below $0.98. No task that improved at batch_04 regresses by more than
+    one cell. If calls fall on task_003 as well, the narrowing over-fired and the clause, not
+    the tool, is the suspect.
+  risk: >-
+    The narrowing could suppress the tool where it helps — an agent that under-classifies a
+    genuine choice stops calling it on task_003 and task_023. Secondary: the instructions
+    block has now grown or changed in three of four generations, and accumulating instruction
+    text is how prior experiments lost scope control; a fourth addition should be resisted
+    unless its evidence is at least this strong.
+  adoption_stage: false
+  clauses:
+  - clause: >-
+      When the customer has to choose one product, plan or account class from several the
+      bank offers, retrieve each candidate's specification, then call `compare_options` once
+      with every candidate you retrieved
+    adversarial_reading: >-
+      "has to choose ... from several the bank offers" is read narrowly enough that a task
+      where the choice is implicit — the customer describes a need rather than asking to
+      pick — no longer qualifies, so the tool stops firing on exactly the tasks it helps.
+      task_023's customer asks about a rebate and never asks to choose, and it is the most
+      exposed to this reading.
+    falsifier: >-
+      pi_local_calls falls below 1 per episode on task_003, or stays at 0 on task_023, in
+      batch_05.
+  - clause: >-
+      Do not call it for anything else: a single course of action, a lookup, or a step you
+      are already carrying out is not a choice between options.
+    adversarial_reading: >-
+      A prohibition, and prohibitions are the shape a prior experiment measured failing
+      (eleven changes, prohibitions and offered alternatives denied while retrieval-and-order
+      instructions confirmed). Read maximally it could suppress deliberation generally, not
+      just the tool call — the agent doing less comparing rather than less calling.
+    falsifier: >-
+      KB_search calls per episode fall round-wide against batch_04, or any task that
+      improved at batch_04 regresses by two or more cells.
+  commit: a2a914c60e63f0bd567ad511575e4b5a554be1aa
+mutation:
+  branch: gen-004/narrow-tool-scope
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/27
+  source_commit: 206209a0e8c2142f2f44ee070dbbc0822c91f6f5
+  candidate_commit: c669b2984301847f3cb1641b7900139d71ee6bf2
+expected_effect: >-
+  The set is one change and its prediction is the set's: the tool's calls concentrate on
+  genuine selections, the episode profile returns toward H0's, and the batch_04 gains hold.
+  This is a cost-side change; the reward-side expectation is explicitly NEUTRAL, and a flat
+  round total with the call counts and message profile moving as predicted is a CONFIRMED
+  outcome, not a null one.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-18'
+held_out_result: null

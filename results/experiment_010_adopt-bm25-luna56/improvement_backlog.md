@@ -390,3 +390,87 @@ target.
 is at 3; the flag is not near firing, and the ladder's obligation was discharged at slot 1.
 
 <!-- transition: gen_002_to_003 -->
+
+---
+
+## Re-ranking against `batch_04` (H3, 2026-08-18)
+
+Clean round: 36/36, all four seam counters zero, **every episode `user_stop` with zero
+`max_steps`**, $0.98. Fourth round over the same twelve tasks — a set the loop has been
+tuned on.
+
+### gen-003's prediction, scored
+
+**C2 — CONFIRMED on its counter, exactly.** `task_057` t0/t1 went from *three invented
+user-tool names per episode* (`mobile_check_deposit`, `mobile_deposit`, `deposit_check`,
+`mobile_deposit_check`, all with an `amount` key) to **exactly one call, `deposit_check_3847`
+with `check_amount`**. `task_055` went from a spurious `amount`-key call alongside the
+correct one, to one correct call in all three trials. **Zero invented names round-wide.**
+`task_089` made no user call in either round — that third target is **unobservable**, not
+confirmed.
+
+### The round rose, and the honest attribution is smaller than the rise
+
+**26/36 (72.2%)**, up from 17/36, against the pooled H0 baseline 40/72 (55.6%). Anchors
+3/3 for the fourth round running.
+
+**`task_014` contributed 3 of the 9-cell rise and neither change can act on it** — no
+user handover for C2 to shape, and it called the tool in neither round. Its identity-draw
+range was already 2. Recorded before any narrative is built on the total. What is defensibly
+attributable: C2's counter, `task_003` 0/6 → **1/3** (its first pass of the experiment,
+tool called 3/3), and `task_076` 2/3 → **3/3**, recovering the fall named at gen-003 as the
+sharpest available test.
+
+### C1's scope problem — measured, and consuming gen-004 (C3)
+
+The tool is called hardest where it does not belong: `task_055` 9 → **15** calls,
+`task_057` 5 → **11**, `task_063` 9 → 9 **while still 0/3 across all four rounds**.
+
+| | H0 (`batch_01`/`02`) | H2 (`batch_03`) | H3 (`batch_04`) |
+|---|---|---|---|
+| mean msgs/episode | 37.3 / 36.2 | 41.5 | 42.1 |
+| mean tool msgs | 11.9 / 11.6 | 14.6 | 14.4 |
+| round cost | $0.64 / $0.63 | $0.95 | $0.98 |
+
+Plus H3's held-out round carrying this experiment's **first `max_steps` termination**
+(1 of 108 — a completeness fact; no held-out reward was read) where H0's and H2's carried
+none. **Step exhaustion is a harness cost to fix** (user direction, 2026-08-18), not a
+budget to raise: `max_steps` is frozen, and raising it mid-experiment would let a later
+generation improve by being allowed to do more.
+
+gen-004 narrows the **usage instruction**, not the tool — the tool ranks what it is given,
+correctly. **This is not a revert**: C1's mechanism was confirmed, and a confirmed mechanism
+with a scope problem earns a narrowing.
+
+### T1's remainder is isolated, and T5 opens
+
+`task_003` reached 1/3 — its first pass — but what still fails is **attribute selection**,
+not ordering: the model supplies a flat cash-back figure for one candidate against a
+category-qualified figure for another, while the customer's stated spend sits in that
+category. Carried as the leading gen-005 candidate.
+
+**T5 — turn efficiency, opened as a first-class target** by user direction. The measurable
+is the episode profile above plus `max_steps` terminations, and C3 is its first change.
+
+**`task_063` is the experiment's hardest cell**: 0/12 episodes lifetime, calling the tool 9
+times a round, and its `batch_01` t1 performed every gold action semantically yet failed the
+DB check. That second defect is unexplained and no slot has been spent on it. It needs a
+transcript read before it earns one — parked with the reason recorded, not retired.
+
+### Slot accounting
+
+| Slot | Generation | Target(s) | Status |
+|---|---|---|---|
+| — | gen-001 | pre-registered identity | consumed as designed |
+| 1 | gen-002 | T1 (C1, extension-tool, adoption-first) | adoption CONFIRMED; kept; scope problem found |
+| 2 | gen-003 | T2 (C2, instructions) | **CONFIRMED** on its counter |
+| 3 | gen-004 | T5 turn cost / C1 scope (C3, instructions) | in flight — scored by `batch_05` |
+| 4–7 | gen-005…gen-008 | T1 re-specified (attribute selection), T3, T4, `task_063` | open |
+
+**Surface concentration:** 3 mutations — 1 `extension-tool`, 2 `instructions`. The
+`instructions` class reaches 3 at the next instructions change, which arms the D29 ladder:
+the set after that must include a change on a class this experiment has not exercised
+(`sub-agent`, or a hook), or record a `surface_exhausted` finding citing a probe or measured
+fact per unexercised alternative. Recorded now so it is not discovered late.
+
+<!-- transition: gen_003_to_004 -->
