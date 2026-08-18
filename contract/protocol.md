@@ -225,6 +225,38 @@ generation's measurement, and a measurement cannot run before its generation's b
    **mechanistic** — each prediction is scored against the next batch — while the
    statistical read stays at the generation level, and every record says so.
 
+   **Composition policy, from seq 12 (plan D36), each rule bought with a seq-10
+   measurement:**
+   - **Land 3–5 non-interacting changes per generation, not one.** Seq 10 landed one at a
+     time to keep credit clean and got five forward attempts from seven slots. The caution
+     protected nothing: the noise floor (14 of 36 cells flipping on a byte-identical
+     harness) meant reward-level attribution was never available, and every conclusion the
+     experiment actually reached came from per-change behaviour counters — which work
+     unchanged when several changes land together. Bundled changes must act on different
+     steps or different tasks; the interaction rule above is what enforces it.
+   - **A target must reach ≥3 tasks, or be structural** (a verification, ordering or
+     state-tracking pattern that applies across the batch by construction). Applied to
+     seq 10 this bar would have blocked exactly one forward change — the one later
+     reverted — freeing two slots. Single-task targets are diagnosis material, not slot
+     material, however precisely they are understood.
+   - **Score every change on a pre-registered counter stated as a DELTA against the prior
+     round**, never on a level and never on the round total. Seq 10's C3 carried a
+     falsifier reading "stays at 0 on task_023"; it was 0 before the change too, so it
+     fired on a pre-existing condition and diagnosed nothing.
+   - **At most two reverts per experiment.** Reverts are first-class and both of seq 10's
+     were correct, but they consumed two of seven slots. Bundling makes a bad change cost a
+     fraction of a generation instead of a whole one.
+   - **One slot is reserved for a surface class this project has never exercised.** Seq 10
+     discharged the D29 ladder on `extension-hook` and left `sub-agent` unexercised and
+     unprobed — no episode has ever run one on this seam — because the remaining slots went
+     to reverts the evidence demanded. Reserving it means the reservation cannot be eaten by
+     the loop's own housekeeping.
+   - **Run the diagnosis instrument, do not re-derive it.** `scripts/gold_diff.py` (the
+     normalized MATCH / ARGS / ABSENT comparison), `scripts/round_read.py`, and
+     `scripts/endpoint_test.py` are committed. τ's own miss list cannot separate "never did
+     it" from "did it wrong", and a loop that re-invents that separation each experiment
+     will miss it in the one where it matters.
+
 4b. **Probe an untried surface — one episode, evidence committed.** Required at g=0;
    afterwards whenever the concentration flag fires or a target's mechanism names a
    surface this experiment has not exercised. On a throwaway `probe/<slug>` branch,
