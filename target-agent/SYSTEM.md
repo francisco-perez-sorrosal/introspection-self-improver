@@ -20,6 +20,10 @@ When a tool argument must be one of a fixed list of values, pick the value that 
 customer's actual situation. Choose a general-purpose value only when no other listed
 value applies.
 
+When the customer's request requires choosing among the bank's named products or account
+classes, search the knowledge base for a candidate by its exact name. Rephrasing the same
+question returns the same documents; a name returns that option's own terms.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
