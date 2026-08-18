@@ -1,0 +1,181 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+transition:
+  from_generation: 2
+  to_generation: 3
+experiment: 010_adopt-bm25-luna56
+outcome: accepted
+batch:
+  name: batch_03
+  task_ids:
+  - task_003
+  - task_005
+  - task_006
+  - task_008
+  - task_014
+  - task_023
+  - task_032
+  - task_055
+  - task_057
+  - task_063
+  - task_076
+  - task_089
+evidence:
+  conversation_ids:
+  - 01a012e5-4629-72c2-8222-e6ba28a88c24
+  - 01a012e7-ee58-72b2-9574-53cb4a98a50f
+  - 01a012ed-70a7-764b-a78d-94d6958d9239
+  - 01a012e5-589b-77ac-ba87-940faa993647
+  - 01a012e9-8d5a-721c-8f86-100989e54086
+  - 01a012f0-0a0a-77dd-82e9-73311e9c2816
+  - 01a012e5-7626-7253-a418-544f49ef8321
+  - 01a012e9-f295-7756-b5bb-700d7bcf354b
+  - 01a012f0-afd8-75fe-8d1f-f1d8d4fe5549
+  - 01a012e7-1b0e-74c4-9493-e6315ae88ed2
+  - 01a012f0-6a84-741f-9387-609b6e1baa8d
+  - 01a012f2-edc2-765e-82b6-f766f1ee21bb
+  summary: >-
+    batch_03 under H2, the first round measuring a harness with a registered Pi-local tool:
+    36/36 completed, evidence_complete and arm_sha_ok, all four sandbox seam counters zero,
+    $0.95 (up from $0.63 — the tool adds turns, which the change's own risk (c) named).
+    BATCH-MODE CAVEAT: batch_mode is fixed and this is the third round over the same twelve
+    tasks, so from batch_02 on every batch number measures a set the loop has been tuned on.
+    Read through the same normalized three-way gold-action comparison, plus full graded
+    trajectories for task_057 and task_076 (the two tasks whose fall exceeded their own
+    identity-draw range) and the per-episode pi_local_calls counters.
+    PREFLIGHTS: one, 6 local-lane episodes (task_057 + task_089 x 3) at
+    generation_002/g003_preflight/ — invocation checks only, never provenance.
+signals:
+- description: >-
+    C1's ADOPTION PREDICTION IS CONFIRMED on every clause, and it is the project's first
+    graded use of a Pi-local surface. pi_local_calls went from ZERO — across all 168
+    platform episodes of the prior experiment and every episode before it — to 39, in 18 of
+    36 episodes across 6 of 12 tasks. task_003, the task whose customer states an explicit
+    preference ordering, called it in 3 of 3 trials against a predicted >= 2 of 3.
+    Arguments are well-formed multi-candidate payloads carrying the attributes named in the
+    requirements. No episode terminated on tau's frozen timeout. The D24 suppressing path,
+    which three closures named as the live hypothesis for why this loop could not improve,
+    is now demonstrably usable rather than assumed.
+  prevalence: 39 calls over 18/36 episodes, 6/12 tasks
+- description: >-
+    C1's REWARD did not follow, and the round fell: 17/36 (47.2%) against the pooled H0
+    baseline 40/72 (55.6%). The reward prediction was pre-registered as DEFERRED to batch_04
+    and stays deferred; this is recorded as an observation, not scored as a denial. Both
+    anchors held 3/3, so the regression channel is silent and no anchor paid for it. Read per
+    task against its OWN identity-draw range rather than a global band: task_057 4/6 -> 0/3
+    (range 1, outside), task_076 stable 9/9 at H0 -> 2/3 (range 0, outside), task_055 1/6 ->
+    2/3 (range 1, outside, a GAIN), task_014 3/6 -> 0/3 (range 2, inside — and it never
+    called the tool), task_003 0/6 -> 0/3 (the target task: called 3/3, unmoved).
+  prevalence: 17/36 episodes against a 40/72 pooled baseline
+- description: >-
+    THE ROUND'S DECISIVE FINDING, and it re-opens a parked target: task_057's collapse is not
+    the tool. All three trials fail on T2 — the user calling mobile_check_deposit,
+    mobile_deposit, deposit_check and mobile_deposit_check with an `amount` key, where the
+    retrieved KB document states deposit_check_3847(account_id, check_amount). Three invented
+    names PER EPISODE, against batch_02's single witness. batch_01 carried the same mode on
+    3 tasks / 7 episodes including the decisive causal witness (the agent said "ending in
+    9d4e", the user called with "9d4e", and the agent corrected itself with the full id). T2
+    now has witnesses from two rounds and is the strongest unconsumed target.
+  prevalence: 1/12 tasks at 3/3 episodes this round, 3/12 tasks and 7/36 episodes at batch_01
+- description: >-
+    An open question C1 leaves behind, recorded so batch_04 answers it rather than
+    rediscovering it: the tool was called on tasks that are not product-selection tasks
+    (task_057, task_063, task_076, task_006), and two of those fell. That is consistent with
+    over-application costing turns, and equally consistent with the noise the identity round
+    measured plus T2 firing independently. task_076's fall is the sharpest test available —
+    it was 9/9 across three identical-harness draws and is now 2/3.
+  prevalence: 4/6 tool-calling tasks are not selection tasks
+counterevidence: >-
+  Two objections stand against consuming T2 now. (1) The round in which T2's evidence
+  strengthened is also the round the harness changed, so a sceptic can argue that C1's added
+  turns pushed task_057's episodes into a shape where the handover degrades — the invented
+  names are downstream of a longer, busier episode rather than an independent defect. Against
+  that: the same mode, with the same invented names, was present at batch_01 under H0 on
+  three tasks before any change existed, and the causal witness there was the agent's own
+  self-correction. (2) The measured noise floor is severe — 14 of 36 cells flip on an
+  identical harness — so task_057's 4/6 -> 0/3 is suggestive rather than settled on its own.
+  It is consumed on the MECHANISM (the invented names are counted, not inferred) rather than
+  on the cell movement, which is the rule this experiment adopted after measuring its floor.
+hypothesis: >-
+  The gold action is the USER's call, and the only channel the agent has to it is the prose
+  the customer reads. When that prose paraphrases the tool name or abbreviates an identifier,
+  the user calls the paraphrase. Making the handover message carry the exact name and the
+  exact argument names, copied from the knowledge base entry, should move the user's calls
+  onto the gold strings — a change to how one call is written, with no scope to
+  over-generalise into.
+owning_layer: instructions
+proposed_change: >-
+  One change again, and for a different reason than gen-002's. C1 is deliberately NOT
+  touched: its mechanism was confirmed and its reward prediction is deferred rather than
+  denied, and the revert bar is a denied mechanism. Leaving it alone makes batch_04 a clean
+  read on both C1's deferred reward prediction and C2's counter. Adding a third change now
+  would confound the one round that can settle C1.
+schema_version: 4
+changes:
+- mechanism: >-
+    The handover message the customer reads carries the tool's exact name and its exact
+    argument names, copied character for character from the knowledge base entry that
+    describes it, with identifiers written out in full. The gold action is the user's call;
+    the prose is the only channel to it.
+  surface: instructions
+  evidence: >-
+    Backlog target T2, witnesses from two rounds. batch_03 task_057 3/3 episodes with
+    mobile_check_deposit / mobile_deposit / deposit_check / mobile_deposit_check and an
+    `amount` key (conversations 01a012e5-7626-7253-a418-544f49ef8321,
+    01a012e9-f295-7756-b5bb-700d7bcf354b, 01a012f0-afd8-75fe-8d1f-f1d8d4fe5549); batch_01
+    3 tasks / 7 episodes including the self-correcting "ending in 9d4e" witness recorded in
+    gen_000_to_001.yaml.
+  expected_effect: >-
+    On task_057, task_055 and task_089, the user's call_discoverable_user_tool carries the
+    exact gold tool name in >= 2 of 3 trials each — against 0 of 3 on task_057 in batch_03 —
+    and no episode's user call carries an invented tool name. The counter is the prediction;
+    reward is not. If the counter moves and reward does not, the mechanism is confirmed and
+    the remaining failure is elsewhere (task_057's preflight already showed account_class,
+    i.e. T1, as the next layer).
+  risk: >-
+    The instruction could be read as a bar rather than a rule — an agent that lacks a full
+    identifier declining to hand the tool over at all, or dropping the friendly account
+    description customers rely on. Anchors task_006 and task_032 plus the round-wide
+    give_discoverable_user_tool count are the regression channel. Secondary risk: it adds a
+    third paragraph to an instructions block that has now grown twice in three generations,
+    and instruction blocks that accumulate are how prior experiments lost scope control.
+  adoption_stage: false
+  clauses:
+  - clause: >-
+      the message they read carries the tool's exact name and its exact argument names,
+      copied character for character from the knowledge base entry that describes it
+    adversarial_reading: >-
+      "the knowledge base entry that describes it" is read as a precondition: an agent that
+      has not retrieved a document it considers authoritative for the tool declines to name
+      the tool at all, or declines the handover, rather than naming it from what it has.
+    falsifier: >-
+      give_discoverable_user_tool calls fall round-wide below batch_03's level, or
+      transfer-carrying episodes rise on task_055 / task_057 / task_089.
+  - clause: >-
+      Write identifiers out in full; a shortened or last-four form of an identifier is not
+      the identifier.
+    adversarial_reading: >-
+      Read as a prohibition on describing accounts in human terms at all, so the agent stops
+      saying which account it means and the customer picks the wrong one — trading a
+      truncation defect for an ambiguity defect.
+    falsifier: >-
+      A user call carries a full but WRONG account_id (a different account of the same
+      customer) in an episode where batch_03's user call carried the right account
+      abbreviated. task_057 t2's preflight already shows this shape once and it is the
+      counter to watch.
+  commit: 4ffa31ee1b7af8a0a287661141179993f4558821
+mutation:
+  branch: gen-003/exact-string-handover
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/26
+  source_commit: 157266bef1a58717c096fa9efa5c20bd8a00db69
+  candidate_commit: 206209a0e8c2142f2f44ee070dbbc0822c91f6f5
+expected_effect: >-
+  The set is one change, so the set-level prediction is C2's counter: the user's calls carry
+  the exact gold tool name on task_057, task_055 and task_089. batch_04 additionally settles
+  C1's deferred reward prediction, which is why nothing else lands this round. Against the
+  measured floor (14 of 36 cells flip on an identical harness) neither change is readable
+  from the round total alone; both are read on their counters.
+human_approval:
+  approved_by: orchestrator (autonomous; frozen require_human_approval false — plan D34 re-registering D23/D28)
+  date: '2026-08-18'
+held_out_result: null

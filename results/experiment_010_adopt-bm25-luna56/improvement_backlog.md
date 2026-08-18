@@ -312,3 +312,81 @@ rather than deferred to the end — the failure mode the prior experiment demons
 six of six changes landed on the one surface that had a template.
 
 <!-- transition: gen_001_to_002 -->
+
+---
+
+## Re-ranking against `batch_03` (H2, 2026-08-18)
+
+Clean round: 36/36, all four sandbox seam counters zero, $0.95. **Third round over the same
+twelve tasks — from `batch_02` on, every batch number measures a set the loop has been tuned
+on.**
+
+### gen-002's prediction, scored
+
+**C1 — ADOPTION CONFIRMED on every clause.** `pi_local_calls` **0 → 39**, in 18 of 36
+episodes across 6 of 12 tasks; `task_003` called it 3/3 against a predicted ≥2/3; arguments
+well-formed multi-candidate payloads; no episode hit τ's timeout. This is the project's
+**first graded use of a Pi-local surface** — the D24 path three closures named as the live
+hypothesis for why the loop could not improve is usable, not assumed.
+
+**C1's reward is DEFERRED, not denied,** per its pre-registration. The round fell to 17/36
+(47.2%) against the pooled H0 baseline 40/72 (55.6%). Anchors held 3/3. Per task against its
+own identity-draw range: `task_057` 4/6 → 0/3 (outside), `task_076` 9/9 → 2/3 (outside),
+`task_055` 1/6 → **2/3** (outside, a gain), `task_014` 3/6 → 0/3 (inside range, and it never
+called the tool), `task_003` 0/6 → 0/3 (called 3/3, unmoved).
+
+**C1 is not reverted.** The bar is a denied *mechanism*; its mechanism was confirmed and its
+reward prediction has not come due. Reverting on a deferred prediction would be the exact
+error the prior experiment's counterfactual warned about.
+
+### T2 RE-OPENED and consumed by gen-003 (C2)
+
+`task_057`'s collapse is not the tool. All three trials fail on the handover: the user calls
+`mobile_check_deposit`, `mobile_deposit`, `deposit_check`, `mobile_deposit_check` with an
+`amount` key where the retrieved KB document states
+`deposit_check_3847(account_id, check_amount)` — **three invented names per episode**,
+against `batch_02`'s single witness.
+
+T2 was **parked** at gen-002 when its evidence thinned. That was right, and so is the
+reopening: *one round's thin evidence is no more grounds for dismissal than for retirement*.
+Two rounds of witnesses now exist, and the target is consumed on the **counted mechanism**
+(invented names, enumerated) rather than on the cell movement, which the measured floor
+cannot support on its own.
+
+Preflight (`generation_002/g003_preflight/`, 6 local episodes): all three `task_057` trials
+now carry `deposit_check_3847` and `check_amount` in the user's call, invented names gone.
+The remaining failure there is `account_class` — **T1's** mechanism, not T2's. A preflight
+verifies a change runs, never that it works.
+
+### The open question `batch_04` must answer
+
+The tool was called on four tasks that are **not** product-selection tasks (`task_057`,
+`task_063`, `task_076`, `task_006`), and two of those fell. That is consistent with
+over-application costing turns, and equally consistent with the measured noise plus T2 firing
+independently. **`task_076` is the sharpest test available**: 9/9 across three
+identical-harness draws, now 2/3. If it does not recover in `batch_04` with T2 repaired, C1's
+usage instruction needs narrowing to selection contexts — and that, not a revert, is the
+proportionate response to a confirmed mechanism with a scope problem.
+
+### T1 stands, unmoved and now better understood
+
+`task_003` called the tool 3/3 and stayed 0/3. The preflight at gen-002 already showed why:
+the model supplies Gold at a flat 2.5% against Silver's *"cash back outside top categories"*
+1.0% while the customer's stated spend is travel. **The ranking is correct on the values
+supplied; the values are what is incomplete.** T1's remainder is therefore *attribute
+selection*, not ordering — a re-specification, recorded here rather than treated as a fresh
+target.
+
+### Slot accounting
+
+| Slot | Generation | Target(s) | Status |
+|---|---|---|---|
+| — | gen-001 | pre-registered identity | consumed as designed |
+| 1 | gen-002 | T1 (C1, extension-tool, adoption-first) | adoption CONFIRMED; reward deferred to `batch_04`; KEPT |
+| 2 | gen-003 | T2 re-opened (C2, instructions) | in flight — scored by `batch_04` |
+| 3–7 | gen-004…gen-008 | T1 re-specified (attribute selection), T3, T4 | open |
+
+**Surface concentration:** 2 mutations — one `extension-tool`, one `instructions`. No class
+is at 3; the flag is not near firing, and the ladder's obligation was discharged at slot 1.
+
+<!-- transition: gen_002_to_003 -->
