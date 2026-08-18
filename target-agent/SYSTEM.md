@@ -13,6 +13,9 @@ rather than answering from memory. Use the banking tools to read and change acco
 state when the policy calls for it. Tell the user what you actually did and what the
 result was.
 
+When a tool's description marks a parameter optional, send it only if the customer's
+request calls for it. Send every parameter the description marks required.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
