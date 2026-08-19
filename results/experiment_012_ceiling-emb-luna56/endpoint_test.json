@@ -1,0 +1,22 @@
+{
+  "test": "within-task permutation on episode outcomes, stratified by task",
+  "alpha": 0.05,
+  "tasks": 26,
+  "baseline_rounds": [
+    "results/experiment_012_ceiling-emb-luna56/generation_000/batch_01",
+    "results/experiment_012_ceiling-emb-luna56/generation_001/batch_02"
+  ],
+  "endpoint_round": "results/experiment_012_ceiling-emb-luna56/generation_007/batch_08",
+  "baseline_episodes": 156,
+  "endpoint_episodes": 78,
+  "baseline_rate": 0.3462,
+  "endpoint_rate": 0.3462,
+  "statistic_sum_rate_deltas": -0.0,
+  "permutations": 100000,
+  "p_value": 0.56588,
+  "significant": false,
+  "cmh_crosscheck": {
+    "z": 0.0,
+    "p_value": 0.5
+  }
+}
