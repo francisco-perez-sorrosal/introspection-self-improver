@@ -24,6 +24,10 @@ question returns the same documents; a name returns that option's own terms.
 When a procedure document names the tool to use for an operation, unlock and call that
 tool. Do not substitute a tool whose name resembles the operation.
 
+Once you know everything the customer wants, record each item with the track_requests
+tool. Mark an item done when you have completed it, and check the outstanding list once
+before you tell the customer you are finished. Do not call it for anything else.
+
 Always make sure you generate valid JSON only.
 </instructions>
 
