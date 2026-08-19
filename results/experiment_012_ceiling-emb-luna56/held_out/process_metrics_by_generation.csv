@@ -1,0 +1,4 @@
+generation,tasks,passed,db_matched,db_basis_tasks,actions_matched,actions_total,action_match_pct,writes_matched,writes_total,write_match_pct,partial_action_reward_pct,kb_search_calls,discoverable_ops,transfers,messages_mean,cost_usd_mean
+generation_000,108,15,11,99,326,1080,30.1852,101,726,13.9118,34.5748,490,701,19,40.2593,0.0177
+generation_004,108,24,17,99,327,1080,30.2778,102,726,14.0496,36.4885,581,789,16,43.5093,0.0241
+generation_007,108,20,14,99,334,1080,30.9259,105,726,14.4628,37.6077,615,768,19,43.1944,0.0239

@@ -1,0 +1,230 @@
+{
+  "note": "sensitivity of the pre-registered trend verdict; advisory context beside the p-value, never a gate and never a replacement test",
+  "base": {
+    "statistic": 6.555555555555558,
+    "z": 1.112613572446954,
+    "p_value": 0.1329372143955292,
+    "significant": false
+  },
+  "leave_one_task_out": [
+    {
+      "task_id": "task_007",
+      "z": 0.7516329215933915,
+      "p_value": 0.22613591976780473,
+      "significant": false
+    },
+    {
+      "task_id": "task_012",
+      "z": 1.108437656995129,
+      "p_value": 0.13383642470924806,
+      "significant": false
+    },
+    {
+      "task_id": "task_016",
+      "z": 1.337769586028604,
+      "p_value": 0.09048577957867111,
+      "significant": false
+    },
+    {
+      "task_id": "task_017",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_018",
+      "z": 0.9235235529729354,
+      "p_value": 0.17786721601119568,
+      "significant": false
+    },
+    {
+      "task_id": "task_019",
+      "z": 1.108437656995129,
+      "p_value": 0.13383642470924806,
+      "significant": false
+    },
+    {
+      "task_id": "task_021",
+      "z": 1.1363694175311831,
+      "p_value": 0.1279009947354637,
+      "significant": false
+    },
+    {
+      "task_id": "task_022",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_025",
+      "z": 1.2161146398140732,
+      "p_value": 0.11197062721172084,
+      "significant": false
+    },
+    {
+      "task_id": "task_031",
+      "z": 1.3361617362161613,
+      "p_value": 0.09074820738147477,
+      "significant": false
+    },
+    {
+      "task_id": "task_033",
+      "z": 0.7376433061167331,
+      "p_value": 0.23036561599353048,
+      "significant": false
+    },
+    {
+      "task_id": "task_035",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_036",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_039",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_044",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_048",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_049",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_051",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_052",
+      "z": 1.1466596451673747,
+      "p_value": 0.1257611575107862,
+      "significant": false
+    },
+    {
+      "task_id": "task_059",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_067",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_068",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_073",
+      "z": 1.108437656995129,
+      "p_value": 0.13383642470924806,
+      "significant": false
+    },
+    {
+      "task_id": "task_075",
+      "z": 0.5846033834615268,
+      "p_value": 0.2794072160656159,
+      "significant": false
+    },
+    {
+      "task_id": "task_078",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_084",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_085",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_086",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_091",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_092",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_093",
+      "z": 1.3377695860286039,
+      "p_value": 0.0904857795786712,
+      "significant": false
+    },
+    {
+      "task_id": "task_095",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_097",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_098",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_099",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    },
+    {
+      "task_id": "task_100",
+      "z": 1.112613572446954,
+      "p_value": 0.1329372143955292,
+      "significant": false
+    }
+  ],
+  "load_bearing_tasks": [],
+  "endpoint_only_first_passes": [],
+  "without_endpoint_first_passes": null
+}
