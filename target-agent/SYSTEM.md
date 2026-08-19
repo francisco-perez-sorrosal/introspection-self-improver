@@ -24,10 +24,6 @@ question returns the same documents; a name returns that option's own terms.
 When a procedure document names the tool to use for an operation, unlock and call that
 tool. Do not substitute a tool whose name resembles the operation.
 
-Before you name one of those products or account classes to the customer or send it to a
-tool, check that you have retrieved a document covering each requirement the customer
-stated for it. If one is still missing, search for it.
-
 Always make sure you generate valid JSON only.
 </instructions>
 
