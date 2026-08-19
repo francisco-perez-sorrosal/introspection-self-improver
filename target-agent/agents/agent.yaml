@@ -25,7 +25,6 @@ ai:
 # (tool name probe_note), and first use is adoption-first (contract/protocol.md step 4).
 tools:
   - track_requests
-  - compare_candidates
 
 # Empty, and measured to stay that way on this seam: a DECLARED skill reaches nothing on
 # the local lane — not the prompt, not the session, with or without `read` (probe P2,
