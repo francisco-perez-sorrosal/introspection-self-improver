@@ -761,3 +761,84 @@ C8 is deliberately untouched so its deferred reward prediction can be scored cle
 | 5–6 | 006, 007 | — | open. **Reverts used: 2 of 2** |
 
 <!-- transition: gen_004_to_005 -->
+
+---
+
+## Re-ranking against `batch_06` (H5, 2026-08-18)
+
+78/78 graded, zero incomplete. **32/78 (41.0%)**; curve 33.8, 36.4, 37.2, 39.0, 43.4, **41.0%**.
+
+### gen-005's predictions, scored
+
+| change | counter | predicted | measured | verdict |
+|---|---|---|---|---|
+| C9 apply the retrieved rule | wrong-named-class sole-cause | 5 → ≤2 | **5 → 8** | **DENIED, wrong direction** |
+| C10 revert C5 | never-unlocked-gold-tool | ≤16 | **16 → 15** | **CONFIRMED** — the rise stopped |
+| C8 (deferred reward, due) | ABSENT failing episodes | — | **15 → 13 → 10** over its two rounds | **mechanism CONFIRMED, reward NOT** |
+
+### An error in my own prediction, recorded rather than dropped
+
+C9's second clause named `task_056` as *"0 of 15 across every round so far"*. The record shows
+**1 of 15** — it passed 1/3 at `batch_03`. It went 0/3 → 1/3 this round, exactly what it had
+already done once *without* C9. **The clause fired on a pre-existing condition and diagnoses
+nothing** — the level-versus-delta error the composition policy warns about, committed in a
+record that quotes the rule. C9's verdict rests on its first clause alone, which is denied.
+
+### THE SHAPE HYPOTHESIS FAILED ITS FIRST PROSPECTIVE TEST
+
+gen-005 proposed, from six measurements, that changes succeed when they ask for a **positive
+choice among alternatives already visible** and fail when they ask the model to withhold,
+verify, or rest on a precondition it can decline. **C9 was built deliberately in the confirmed
+shape and was denied, counter moving the wrong way.** It was recorded as post-hoc when
+proposed; one out-of-sample test refutes it.
+
+What survives is the narrower, better-evidenced statement underneath: **instruction-shaped
+demands on this harness have now been denied five times running (C1, C4, C5, C6, C9), across
+two delivery surfaces.**
+
+### C8's deferred reward comes due, and splits
+
+| | |
+|---|---|
+| its own mechanism counter (ABSENT failing episodes) | **15 → 13 → 10** across both rounds carrying the tool |
+| round total over the same step | 43.4% → 41.0% |
+
+**Mechanism confirmed; reward not.** This reproduces a prior experiment's central finding on a
+different tool and a different mechanism, and sharpens it: *adoption is not improvement — and a
+moving mechanism counter is not improvement either.*
+
+### gen-006 — one change, deliberately
+
+- **C11** (`extension-tool`) — a per-episode tool holding candidates × stated requirements and
+  returning the pairs not yet retrieved. Targets wrong-named-class, which has resisted C3
+  (partial), C6 (denied, reverted) and C9 (denied). **Rationale**: the only pattern confirmed in
+  this experiment's back half is *a tool that holds state the model cannot silently lose*; the
+  decisive transcripts show the agent articulating the gap and then losing it, so computing it
+  back is the one delivery never tried for this mechanism. C9's sentence is **replaced**, not
+  reverted (none remains).
+
+**Preflighted twice, and the second one carried the information.** `task_038`: called **0**
+times — ambiguous between "not applicable" and "not registered", so **not** treated as a
+verdict. `task_056`, where the mechanism demonstrably applies: **43–46 invocations/session**,
+`pi_local_calls` 47/47/48. Cost checked against **the same task's own baseline** (66/66/66 at
+b5, 70/90/76 at b6, preflight 60/61/73) rather than the round mean — no inflation.
+
+**No revert remains**, so C11 ships whatever `batch_07` says about it. The pre-committed
+reading, written now so it cannot be avoided later: **if C11's counter moves and reward does
+not — the C8 pattern — the conclusion is that these mechanism counters are not the binding
+constraint on this objective, not that the next tool will work.**
+
+### Slot accounting
+
+| Slot | Gen | Change(s) | Status |
+|---|---|---|---|
+| 1 | 002 | C1, C2, C3 | C1 DENIED · **C2 CONFIRMED** · C3 directional |
+| 2 | 003 | C4 (hook), C5, C6 | all DENIED; C6's safety falsifier held |
+| 3 | 004 | C7 revert, C8 tool | C7 CONFIRMED · **C8 adoption CONFIRMED**, mechanism CONFIRMED, reward NOT |
+| 4 | 005 | C9, C10 revert | C9 **DENIED** · C10 **CONFIRMED** |
+| 5 | 006 | C11 tool | in flight — scored by `batch_07` |
+| 6 | 007 | — | last slot. **Reverts used: 2 of 2** |
+
+Primary still reachable: accumulated **+6.4 pp**, gap 5.0 pp, 3.8 × 2 = 7.6 pp.
+
+<!-- transition: gen_005_to_006 -->
