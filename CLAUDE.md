@@ -123,7 +123,7 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   | 8 | stratified batch, first run on the D24 seam (G=6, autonomous) | REVEALED 2026-08-17 — null on both instruments; the loop saturated the reachable batch range (15/15 non-walled cells at peak) and the endpoint test could not say yes; noise floor measured | `experiment_008_stratb-bm25-luna56/` + `INDEPENDENT_REVIEW.md` |
   | 10 | both-curves, marginal batch + pure holdout (G=8, identity gen-001, autonomous) | REVEALED 2026-08-18 — **null on both instruments** (batch primary Σ+1.333, p = 0.184; held-out trend z = 0.03, p = 0.486; endpoint +0.0 pp). Reading key cell `primary_flat_secondary_flat` with harvest 0.667: every precondition a prior null could be blamed on was removed and the loop still found nothing. FIRST graded use of a Pi-local surface in project history (`pi_local_calls` 0 → 39) | `experiment_010_adopt-bm25-luna56/` |
   | 11 | ceiling probe (odd, PROVISIONAL — not an experiment) | H0 vs a hand-built H-expert over 35 tasks under both backends; chose `openai_embeddings` on headroom (+15.2 vs +6.7 pp), GO, envelope REACHABLE | `experiment_011_ceiling-probe/` + `benchmark/probes/2026-08-18-phase0-ceiling-probe/` |
-  | 12 | THE CEILING EXPERIMENT — first freeze with a measured maximum (G=7, B=26, T=36, embeddings, autonomous) | **FROZEN 2026-08-18, UNSTARTED.** Headroom +15.2 pp; 53 reachable failing cells at H0; primary reports gap-closure against the measured ceiling. Not comparable to seq ≤ 10 (backend changed) | `experiment_012_ceiling-emb-luna56/` |
+  | 12 | THE CEILING EXPERIMENT — first freeze with a measured maximum (G=7, B=26, T=36, embeddings, autonomous) | REVEALED 2026-08-19 — **null on both instruments with every prior excuse removed**. Primary 34.62% → 34.62%, Σ −0.000, p = 0.566: the loop closed **0.0% of the measured +20.5 pp headroom**. Held-out endpoint +4.6 pp, trend p = 0.133. Key cell `primary_flat × secondary_flat`, harvest low (0.346). Not comparable to seq ≤ 10 (backend changed) | `experiment_012_ceiling-emb-luna56/` |
 
   **Results under the D24 seam (seq 8 on) are not comparable to seq ≤ 6.** Under D33,
   in-loop sessions read prior experiments' `improvement_records/` and backlogs only —
@@ -170,13 +170,27 @@ frozen D23-envelope autonomy) → next generation → hidden held-out evaluation
   nothing in the process noticed. The futility check (`contract/protocol.md`) fires from
   the midpoint, and the response is to re-purpose the remaining slots for knowledge rather
   than to stop: seq 10's post-futility tail produced two of its best findings.
-- **SEQ 12 IS FROZEN AND UNSTARTED (2026-08-18) — the first experiment here that knows how
-  much room it is playing for.** `012_ceiling-emb-luna56`: G=7 with `identity_generations: [1]`,
-  `heldout_generations: [0, 4, 7]`, **B=26**, T=36, `num_trials` 3, `batch_mode: fixed`,
-  autonomy envelope ratified, nine-cell reading key copied from plan Phase 5.11. All four
-  gates PASS and committed (A.0a, seam canary, D24 suppression canary, power envelope);
-  `make reset_h0` reports byte-identity. **No graded episode has been run** — the next action
-  is H0's held-out round, then `batch_01`.
+- **SEQ 12 RAN AND CLOSED (2026-08-19), and its most useful number is not a score:
+  THE NOISE AND THE HEADROOM ARE THE SAME SIZE.** The A/A identity round moved
+  **16 cells / 20.5 pp on a byte-identical harness**, and the batch's entire measured harness
+  headroom is also **20.5 pp** — this instrument cannot resolve the effect it was built to
+  detect, and that was knowable before the first mutation. Twelve changes landed across six
+  mutation slots: **one confirmed (C2), one directional (C3), six denied, three reverts**. The
+  primary closed **0.0%** of the reachable range. Read the closure's `§ Batch-derived
+  findings`; its `§ Held-out reveal analysis` is quarantined (D33). Four things outlive it:
+  (a) **the surface is not the axis for demands the model does not want to satisfy** — one
+  rule denied through prose AND through a hook verified firing on the graded lane, counter
+  9/9/9/8 across four rounds, which narrows the "prefer a structural surface" doctrine to
+  mechanisms needing STATE the model cannot hold; (b) **adoption is not improvement and
+  neither is a moving mechanism counter** — two state tools called 578 and 1515 times, no
+  reward; (c) **the futility check is unstable near its threshold** — it fired at gen-004 on a
+  0.3 pp margin and the next round refuted it, then fired correctly at gen-007 on 8.9 pp, so
+  require two consecutive firings or compute capacity from the ceiling; (d) **`sub-agent` is
+  exercised at last** — delegation works and is cleanly suppressed, but a child cannot reach
+  τ's tools at all (120 s daemon timeout, never reaches the bridge), so the long-carried
+  step-budget question is moot. A future experiment wanting a different answer should change
+  the INSTRUMENT — more trials per cell, or a batch whose rates are not concentrated where the
+  A/A pair moved most — not the loop.
 - **Phase 0 measured the ceiling, and that is the number five prior experiments lacked.**
   Under a seq 11 PROVISIONAL lock, an H0 arm and a hand-built **H-expert** arm ran 35
   candidate tasks × 3 trials under BOTH backends (416/420 episodes, $12.82,
