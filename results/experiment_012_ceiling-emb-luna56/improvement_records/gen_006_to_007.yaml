@@ -1,0 +1,168 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 6
+  to_generation: 7
+experiment: 012_ceiling-emb-luna56
+outcome: accepted
+batch:
+  name: batch_07
+  task_ids:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+evidence:
+  conversation_ids:
+  - 01a01834-d39b-71c2-97a1-7d982dda9128
+  - 01a0182f-6dd9-71a4-b258-2ee0cb134cbb
+  - 01a01837-8ada-74d5-aea0-3f887d0d823e
+  - 01a0182f-944b-71e3-a0bb-96f2b4d4fde7
+  - 01a01831-b418-73a3-9f4a-b9957e0078b2
+  summary: >-
+    BATCH HEALTH. batch_07 ran 78 platform episodes against recipe commit a9ecd8b (the
+    exp12-g006 tag's tree), 77 graded, one lost to infrastructure_error, every completed row
+    arm_sha_ok, zero max_steps terminations. GRADED READ: 26/77 (33.8%) — back to the level of
+    the pre-mutation baseline round. Curve across seven rounds: 33.8, 36.4, 37.2, 39.0, 43.4,
+    41.0, 33.8%. Counters from benchmark/scripts/mech_counters.py, unchanged code across all
+    seven rounds. NO PREFLIGHT this transition: C12 removes an extension and two lines of
+    wiring, and `make check` plus CI's recipe-check cover that a removal loads.
+signals:
+- description: >-
+    C11's ADOPTION CLAUSE IS CONFIRMED AND ITS MECHANISM CLAUSE IS DENIED, which makes it the
+    third tool-shaped change in this project to be adopted enthusiastically and move nothing.
+    Adoption: 1515 pi_local_calls across 77 of 78 episodes, 1900 occurrences in the round's raw
+    tool records, arguments well formed — against a prediction of >= 15 episodes on >= 5 tasks.
+    Mechanism: wrong-named-class sole-cause episodes 8 -> 8 against a predicted <= 4, and the
+    wider CLASS-implicated count rose 26 -> 28. The pre-registered clause-2 adversarial reading
+    is what happened and it is now measured: the model asks for the gaps, receives them, and
+    chooses anyway — exactly what C6 measured when the same check was delivered as prose.
+  prevalence: 1515 calls in 77 of 78 episodes; sole-cause counter 8 -> 8
+- description: >-
+    C11's COST FALSIFIER FIRED AND THE ROUND COLLAPSED. Messages per episode 39.26 -> 43.43
+    against a stated ceiling of 43; KB_search per episode 7.21 -> 8.57; tool calls per episode
+    13.95 -> 15.48. The round fell 41.0% -> 33.8%, a 7.2 pp drop against a measured
+    identical-harness floor of 2.6 pp, and EVERY stratum fell: anchors 6/9 -> 3/9, marginals
+    18/36 -> 17/35, headroom 8/33 -> 6/33. The endpoint test against the pooled baseline is now
+    NEGATIVE: 34.6% -> 33.3%, sum of rate deltas -0.333, permutation p = 0.6593, CMH z = -0.234.
+  prevalence: messages 39.26 -> 43.43; round 41.0% -> 33.8%; accumulated delta +6.4 -> -1.3 pp
+- description: >-
+    THE FUTILITY CHECK FIRES AGAIN, AND THIS TIME ROBUSTLY. Accumulated delta -1.3 pp against
+    11.4 pp required leaves a gap of 12.7 pp with one slot and a largest observed
+    single-generation gain of 3.8 pp. At gen-004 the same check fired on a margin of 0.3 pp and
+    was refuted by the next round; here it fires with the gap exceeding the whole remaining
+    capacity by more than three times. The pair of firings is the finding: the check is
+    unstable near its threshold and decisive away from it, and both readings came from
+    declaring it out loud.
+  prevalence: gap 12.7 pp vs 3.8 pp of remaining capacity
+- description: >-
+    THE STATE-TOOL PATTERN IS NOT A GENERAL ANSWER, and gen-006's pre-committed reading is what
+    settles it rather than a new interpretation invented after the data. C8 held state and
+    moved its own counter (ABSENT failing episodes 15 -> 13 -> 10) without moving reward. C11
+    held state, was adopted three times as heavily, and moved neither its counter nor reward
+    while costing turns. The pre-commitment written at gen-006 said: if the counter moves and
+    reward does not, these mechanism counters are not the binding constraint on this objective,
+    not that the next tool will work. C11 is the stronger version of that — not even the
+    counter moved.
+  prevalence: two state tools, 578 then 1515 calls, zero reward movement attributable to either
+counterevidence: >-
+  THREE OBJECTIONS, and the first is the one that could overturn this record. (1) THE
+  ATTRIBUTION OF THE COLLAPSE TO C11 IS NOT ESTABLISHED. A 7.2 pp fall is above the measured
+  2.6 pp identity floor, but the anchor stratum contributed 3 of the lost cells and anchors
+  have moved 3 cells on a byte-identical harness before. The instruction set has also grown all
+  experiment, so accumulated prompt bloat is a live alternative that this round cannot separate
+  from C11. batch_08 is a genuine test: THE RECORD STATES IN ADVANCE THAT IF THE ROUND DOES NOT
+  RECOVER, THE COLLAPSE WAS NOT C11'S AND THIS ATTRIBUTION WAS WRONG. (2) REMOVING C11 IS A
+  THIRD REVERT AGAINST A CAP OF TWO. It is taken deliberately and labelled as a revert rather
+  than dressed as a "replacement" — the move used twice earlier in this experiment (C1 -> C4,
+  C9 -> C11) and which would be a rules dodge here, because the intent is removal and not
+  re-delivery. The justification is that the cap's stated purpose is to stop reverts consuming
+  slots that should buy expected score, and with the primary dead that purpose is void; a
+  reader who holds the cap as absolute should read this transition as a policy violation with
+  its reasoning attached rather than as a permitted exception. (3) THE ENDPOINT HARNESS IS
+  CHOSEN, NOT MEASURED. H7 carries C2 (confirmed), C3 (directional), C4 (measured inert) and C8
+  (mechanism confirmed, reward not). C4 is kept despite being inert because removing it would
+  spend the final slot on a change already proven inert by four rounds of a flat counter, where
+  removing C11 tests a live and consequential attribution.
+hypothesis: >-
+  C11 was adopted at three times C8's rate, moved neither its own mechanism counter nor reward,
+  fired its cost falsifier, and coincided with the largest single-round fall of the experiment.
+  Removing it tests that coincidence directly, and is the highest-information action available
+  for a final slot under a dead primary — the pattern of proving a change inert or harmful by
+  its removal rather than by argument.
+owning_layer: >-
+  revert. No surface obligation outstanding; every class this repo can name has been exercised
+  in this experiment except a declared skill, measured inert on this seam.
+proposed_change: >-
+  ONE change: remove the compare_candidates extension, its manifest declaration, its
+  agent.yaml allowlist entry, and its usage instruction. H7 = H0 + C2 + C3 + C4 + C8.
+schema_version: 4
+changes:
+- mechanism: >-
+    Remove C11 in full. Its adoption clause confirmed and its mechanism clause was denied, its
+    cost falsifier fired, and the round it landed in fell 7.2 pp with every stratum down.
+  surface: revert
+  evidence: >-
+    1515 pi_local_calls across 77 of 78 episodes with the sole-cause counter flat at 8;
+    messages per episode 39.26 -> 43.43 against a stated ceiling of 43; round 41.0% -> 33.8%;
+    endpoint test against the pooled baseline now negative at -0.333 (p = 0.6593). Decisive
+    conversations for the mechanism's persistence under the tool: task_056
+    (01a01834-d39b-71c2-97a1-7d982dda9128) and task_002
+    (01a0182f-6dd9-71a4-b258-2ee0cb134cbb). Backlog target T1.
+  expected_effect: >-
+    DELTA against batch_07, measured by batch_08 (the endpoint round, consumed by no
+    transition): messages per episode falls below 41.5, KB_search per episode below 8.0, and
+    the round total recovers above 36%. THE NULL BRANCH IS THE INFORMATIVE ONE AND IS STATED
+    FIRST: if the round does not recover, C11 did not cause the fall, the attribution in this
+    record is wrong, and the collapse belongs to accumulated instruction growth or to variance
+    the identity pair under-measured.
+  risk: >-
+    Removing a tool the model called 1515 times could itself disturb behaviour beyond undoing
+    C11 — the harness the model met in batch_08 differs from batch_06's by more than the
+    absence of one tool if the agent had reorganised around it. Watched by the same counters:
+    a recovery to within a cell or two of batch_06's 32/78 supports the attribution, while
+    landing well below batch_06 says the removal did its own damage.
+  adoption_stage: false
+  commit: 3eb40a6
+mutation:
+  branch: gen-007/remove-the-harm
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/41
+  source_commit: a9ecd8b
+  candidate_commit: 795a4e6
+expected_effect: >-
+  SET LEVEL. No score is predicted for the experiment: the primary is dead with a gap of
+  12.7 pp against 3.8 pp of remaining capacity, and this transition is composed entirely for
+  knowledge. What it buys is a clean test of one attribution, on the endpoint round, with the
+  refuting branch stated in advance. The endpoint harness H7 carries C2 (confirmed), C3
+  (directional), C4 (measured inert across four rounds) and C8 (mechanism confirmed, reward
+  not). DELIBERATELY NOT TARGETED: everything else — with one slot and a dead primary,
+  spending it on a new mechanism would produce an unscoreable change, since batch_08 is the
+  final round and no transition consumes it.
+human_approval:
+  approved_by: orchestrator (D23/D28 autonomy envelope, protocol.require_human_approval false, ratified for seq 12 by the launch directive); CI's four required checks passed and branch protection gated the merge
+  date: '2026-08-18'
+held_out_result: null

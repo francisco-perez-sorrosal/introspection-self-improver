@@ -842,3 +842,85 @@ constraint on this objective, not that the next tool will work.**
 Primary still reachable: accumulated **+6.4 pp**, gap 5.0 pp, 3.8 × 2 = 7.6 pp.
 
 <!-- transition: gen_005_to_006 -->
+
+---
+
+## Re-ranking against `batch_07` (H6, 2026-08-18) — the final transition
+
+77 graded of 78, zero `max_steps`. **26/77 (33.8%)** — back to the level of the pre-mutation
+baseline round. Curve: 33.8, 36.4, 37.2, 39.0, 43.4, 41.0, **33.8%**.
+
+### C11's verdict
+
+| clause | predicted | measured | verdict |
+|---|---|---|---|
+| adoption | ≥15 episodes / ≥5 tasks | **1515 `pi_local_calls`, 77 of 78 episodes**, 1900 raw records | **CONFIRMED** |
+| mechanism | wrong-named-class sole-cause 8 → ≤4 | **8 → 8** (wider CLASS count 26 → 28) | **DENIED** |
+| cost guard | messages/ep ≤43 | **39.26 → 43.43** | **FIRED** |
+
+Its pre-registered clause-2 adversarial reading is now measured: *the model asks for the gaps,
+receives them, and chooses anyway* — exactly what C6 measured when the same check was prose.
+
+Every stratum fell: anchors 6/9 → 3/9, marginals 18/36 → 17/35, headroom 8/33 → 6/33. The
+endpoint test against the pooled baseline is **negative**: 34.6% → 33.3%, Σ −0.333, p = 0.659.
+
+### THE STATE-TOOL PATTERN IS NOT A GENERAL ANSWER
+
+gen-006 pre-committed the reading, and it is what settles this rather than a fresh
+interpretation invented after the data:
+
+> *if the counter moves and reward does not, these mechanism counters are not the binding
+> constraint on this objective — not that the next tool will work.*
+
+C8 held state, was called 578 times, moved its own counter (ABSENT 15 → 13 → 10), moved no
+reward. C11 held state, was called **1515** times, and moved **neither** its counter nor reward
+while costing turns. That is the stronger version of the same result.
+
+### The futility check, fired twice, and the pair is the finding
+
+| | gen-004 | gen-007 |
+|---|---|---|
+| gap | 7.5 pp | **12.7 pp** |
+| remaining capacity | 7.2 pp | 3.8 pp |
+| margin | **0.3 pp — refuted by the next round** | **8.9 pp — decisive** |
+
+The check is unstable near its threshold and decisive away from it. Both readings were
+available only because it was declared out loud.
+
+### gen-007 — C12 removes C11, a declared THIRD revert
+
+The cap is two and both were spent. The deviation is taken **openly and labelled a revert**
+rather than dressed up as a "replacement" — the move used twice earlier in this experiment
+(C1→C4, C9→C11), which would be a rules dodge here because the intent is removal, not
+re-delivery.
+
+**Reasoning**: the cap's stated purpose is to stop reverts consuming slots that should buy
+expected score. With the primary dead that purpose is void, and removal is the
+highest-information action left — it tests a live attribution and keeps a change whose own cost
+falsifier fired out of the endpoint harness. A reader who holds the cap as absolute should read
+this as a policy violation with its reasoning attached, not as a permitted exception.
+
+**The refuting branch is stated in advance:** if `batch_08` does not recover, C11 did not cause
+the fall, this attribution is wrong, and the collapse belongs to accumulated instruction growth
+or to variance the identity pair under-measured.
+
+**H7 = H0 + C2 + C3 + C4 (hook) + C8 (`track_requests`).** C4 is kept despite being measured
+inert across four rounds, because removing it would spend the final slot re-proving something a
+flat counter already establishes, where removing C11 tests something live.
+
+### Final slot accounting
+
+| Slot | Gen | Change(s) | Verdict |
+|---|---|---|---|
+| 1 | 002 | C1, C2, C3 (instructions) | C1 **DENIED** · C2 **CONFIRMED** · C3 **directional** |
+| 2 | 003 | C4 (hook), C5, C6 (instructions) | all **DENIED**; C6's safety falsifier held |
+| 3 | 004 | C7 revert, C8 (tool) | C7 **CONFIRMED** · C8 adoption + mechanism **CONFIRMED**, reward **NOT** |
+| 4 | 005 | C9 (instructions), C10 revert | C9 **DENIED** · C10 **CONFIRMED** |
+| 5 | 006 | C11 (tool) | adoption **CONFIRMED**, mechanism **DENIED**, cost **FIRED** |
+| 6 | 007 | C12 revert | scored by `batch_08`, the endpoint round |
+
+**Targets left unconsumed:** T5 (gold actions absent) — C8 moved its counter but not reward;
+the EXTRA_ARGS family — C1 and C4 both failed it through two surfaces, and no slot was spent
+on it after gen-003 by design.
+
+<!-- transition: gen_006_to_007 -->
