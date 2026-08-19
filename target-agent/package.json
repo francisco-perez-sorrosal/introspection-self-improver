@@ -36,8 +36,7 @@
     },
     "extensions": [
       "extensions/required-args.ts",
-      "extensions/request-tracker.ts",
-      "extensions/candidate-tracker.ts"
+      "extensions/request-tracker.ts"
     ]
   }
 }
