@@ -671,3 +671,93 @@ these numbers.
 declared skill, which is measured inert on this seam. No concentration flag is outstanding.
 
 <!-- transition: gen_003_to_004 -->
+
+---
+
+## Re-ranking against `batch_05` (H4, 2026-08-18)
+
+78 episodes, 76 graded (two lost to `infrastructure_error`), zero stall warnings, $1.69.
+**33/76 (43.4%)** — the best round of the experiment. Curve 33.8, 36.4, 37.2, 39.0, **43.4%**.
+
+### gen-004's predictions, scored
+
+| change | counter | predicted | measured | verdict |
+|---|---|---|---|---|
+| C7 revert C6 | `KB_search`/ep; msgs/ep | <7.0 and <41.5 | **7.58 → 7.05**; **42.78 → 41.21** | msgs **CONFIRMED**; `KB_search` **missed by 0.05**, reported as missed. Both fell — C6 was a cost driver |
+| C8 `track_requests` | `pi_local_calls` | 0 → ≥20 on ≥6 tasks | **0 → 578**, 76 of 78 episodes, all 26 tasks | **ADOPTION MASSIVELY CONFIRMED** |
+
+C8's reward prediction is **deferred to `batch_06`** by design and was not read. Risk
+falsifiers held: msgs/ep 41.21 (ceiling 47), zero `max_steps`, no episode near the 600 s
+timeout, zero `track_requests` occurrences in τ's graded trajectory.
+
+### THE gen-004 FUTILITY DECLARATION IS REFUTED — by the very next round
+
+| | at gen-004 | now |
+|---|---|---|
+| accumulated delta | +3.9 pp | **+7.7 pp** (34.6% → 42.3%, Σ +2.000, p = 0.1112, CMH z = 1.386) |
+| gap to α | 7.5 pp | **3.7 pp** |
+| largest single-generation gain | 1.8 pp | **3.8 pp** |
+| largest × slots remaining | 7.2 pp → **dead** | 3 × 3.8 = 11.4 pp → **REACHABLE** |
+
+It fired on a margin of **0.3 pp** and the next round overturned it.
+
+> **The process finding, and it outlives this experiment:** a futility check computed from
+> *"the largest gain the experiment has actually produced"* is **unstable while the experiment
+> has produced few gains** — the statistic it depends on is updated by the very round that
+> would refute it. Declaring it out loud is what made the refutation visible; a loop that had
+> quietly drifted into knowledge mode would never have noticed it was wrong.
+
+### The rise is dominated by the noisiest stratum, and the quiet one fell
+
+| stratum | b1 | b2 | b3 | b4 | b5 |
+|---|---|---|---|---|---|
+| anchor | 4/9 | 7/9 | 5/9 | 3/9 | **7/9** |
+| marginal | 19/35 | 18/35 | 18/36 | 19/35 | 20/34 |
+| **headroom** | 3/33 | 3/33 | 6/33 | 8/33 | **6/33** |
+
+The A/A pair already moved the anchors 3 cells on a byte-identical harness, so +4 there is
+inside measured noise — while the stratum that moved **zero** cells across that pair went
+**backwards**. No claim in this transition rests on the round total.
+
+### THE SHAPE HYPOTHESIS — six measurements, and it composed gen-005
+
+The changes separate by the **shape of the demand**, not by delivery surface:
+
+| verdict | changes | what they ask the model to do |
+|---|---|---|
+| **confirmed / directional** | C2, C3 | make a **positive choice among alternatives already visible** |
+| **denied** | C1, C4 | **withhold** something it wants to emit — denied through prose **and** a verified structural injection |
+| **denied** | C5 | rest on a **precondition** the model can decline to find satisfied |
+| **denied** | C6 | **verify** before committing |
+
+Recorded honestly as **post-hoc**: it is a grouping of this experiment's own verdicts, not a
+pre-registration, and **C9 is its first prospective test**.
+
+### gen-005
+
+- **C9** (instructions) — apply the selection rule the KB states to the candidates
+  retrieved. Built deliberately in the confirmed shape. `task_056` is the clean case: 0/3 in
+  every round, having *retrieved* an active promotion notice stating the recommendation
+  priority and then not applied it. Prediction: wrong-named-class sole-cause 5 → ≤2, **and**
+  `task_056` opens "Cobalt Blue" in ≥1 of 3 against **0 of 15** lifetime.
+- **C10** — **revert C5** (revert **2 of 2**). Counter **12 → 14 → 16**: wrong direction,
+  two rounds of witnesses, `task_046` 0 of 15 lifetime.
+
+**No revert remains.** gen-006 and gen-007 carry whatever they land into the endpoint
+harness, and both will be composed on that basis — favouring changes whose falsifiers can
+fire within a single round.
+
+C8 is deliberately untouched so its deferred reward prediction can be scored cleanly at
+`batch_06`; that is why this set is two changes rather than three.
+
+### Slot accounting
+
+| Slot | Gen | Change(s) | Status |
+|---|---|---|---|
+| 1 | 002 | C1, C2, C3 | C1 DENIED · **C2 CONFIRMED** · C3 directional |
+| 2 | 003 | C4 (hook), C5, C6 | all DENIED; C6's safety falsifier held |
+| 3 | 004 | C7 revert, C8 **tool** | C7 CONFIRMED (msgs) · **C8 adoption CONFIRMED**, reward due `batch_06` |
+| 4 | 005 | C9, C10 revert | in flight — scored by `batch_06` |
+| 5–6 | 006, 007 | — | open. **Reverts used: 2 of 2** |
+
+<!-- transition: gen_004_to_005 -->

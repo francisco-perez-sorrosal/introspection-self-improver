@@ -1,0 +1,240 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 4
+  to_generation: 5
+experiment: 012_ceiling-emb-luna56
+outcome: accepted
+batch:
+  name: batch_05
+  task_ids:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+evidence:
+  conversation_ids:
+  - 01a017b0-8dc7-7789-a06d-724f4e5733e1
+  - 01a017af-85ca-7006-b2b2-253c650be3e1
+  - 01a017b2-d300-71bd-b1c3-8a38c678e01f
+  - 01a017b3-5d8a-77f8-8630-c57f1645b16b
+  - 01a017aa-9e4e-7163-84d0-89f016d76068
+  summary: >-
+    BATCH HEALTH. batch_05 ran 78 platform episodes against recipe commit beaef96 (the
+    exp12-g004 tag's tree), 76 graded, every completed row evidence_complete and arm_sha_ok,
+    zero stall warnings, cost $1.69. Two episodes lost to infrastructure_error. GRADED READ:
+    33/76 (43.4%), the best round of the experiment; curve 33.8, 36.4, 37.2, 39.0, 43.4%.
+    Provenance: generation_004/batch_05/graded/updated_results.json via scripts/gold_diff.py
+    and benchmark/scripts/mech_counters.py, the same code that scored all five rounds. NO
+    PREFLIGHTS this transition: C9 is instruction text and C10 removes instruction text, so
+    there is nothing whose execution needs verifying.
+signals:
+- description: >-
+    C8's ADOPTION PREDICTION IS MASSIVELY CONFIRMED, and it is the second time this project
+    has put a Pi-local surface into a graded round. pi_local_calls went from 0 across all 312
+    platform episodes of this experiment to 578 in one round, in 76 of 78 episodes and on all
+    26 tasks, against a prediction of >= 20 on >= 6 tasks. Arguments well formed, zero
+    max_steps terminations, no episode near the frozen 600 s timeout, and zero occurrences of
+    track_requests in tau's graded trajectory. Its per-episode distribution runs 0 to 22
+    (conv 01a017b0-8dc7-7789-a06d-724f4e5733e1 is the heaviest at 21). THE REWARD PREDICTION
+    IS DEFERRED TO batch_06 BY DESIGN and is not read here — adoption is not improvement, and
+    a prior experiment's first tool was adopted enthusiastically and moved no reward.
+  prevalence: 578 calls across 76 of 78 episodes and all 26 tasks, from a lifetime base of 0
+- description: >-
+    C7 IS CONFIRMED ON ONE HALF AND MISSED THE OTHER BY 0.05, reported as missed rather than
+    rounded. Messages per episode 42.78 -> 41.21 against a predicted < 41.5: confirmed.
+    KB_search per episode 7.58 -> 7.05 against a predicted < 7.0: missed. Both fell, so C6
+    WAS a cost driver and the +20.7% attributed to it at gen-004 is substantially confirmed;
+    the residual above 7.0 is consistent with C3 and C9's retrieval instructions carrying
+    part of the level.
+  prevalence: KB_search 7.58 -> 7.05; messages 42.78 -> 41.21
+- description: >-
+    THE FUTILITY DECLARATION MADE AT gen-004 IS REFUTED BY THE VERY NEXT ROUND, and this is a
+    process finding worth more than the arithmetic that produced it. At gen-004 the
+    accumulated delta was +3.9 pp, the gap 7.5 pp, the largest single-generation gain 1.8 pp
+    and four slots remained: 1.8 x 4 = 7.2 < 7.5, so the primary was declared dead on a
+    margin of 0.3 pp. batch_05 moved the accumulated delta to +7.7 pp (34.6% -> 42.3%, sum of
+    rate deltas +2.000, permutation p = 0.1112, CMH z = 1.386), which makes the largest
+    single-generation gain 3.8 pp and the gap 3.7 pp against three remaining slots: 3.8 x 3 =
+    11.4 >> 3.7. THE PRIMARY IS REACHABLE AGAIN. The lesson: a futility check computed from
+    "the largest gain the experiment has actually produced" is unstable while the experiment
+    has produced few gains, because the statistic it depends on is itself updated by the very
+    round that would refute it. Declaring it out loud is what made the refutation visible.
+  prevalence: gap 7.5 -> 3.7 pp; largest single-generation gain 1.8 -> 3.8 pp
+- description: >-
+    THE RISE IS DOMINATED BY THE NOISIEST STRATUM AND THE QUIET ONE FELL. Anchors 3/9 -> 7/9
+    (+4 cells), marginals 19/35 -> 20/34, headroom 8/33 -> 6/33 (-2 cells). The A/A identity
+    pair already moved the anchors 4/9 -> 7/9 on a byte-identical harness, so a +4 anchor
+    swing is inside measured noise, while the headroom stratum — which moved zero cells
+    across that same pair — went backwards. The round total is therefore the weakest evidence
+    in the round and the per-change counters remain the attribution channel.
+  prevalence: anchors +4 cells, headroom -2 cells, marginals +1 cell
+- description: >-
+    C5's TARGET MOVED MONOTONICALLY THE WRONG WAY FOR A SECOND ROUND, which meets the revert
+    bar on both limbs. Failing episodes in which a gold discoverable-tool name was never
+    unlocked or called: 12 before C5 landed, 14 after one round, 16 after two. task_046 is 0
+    of 15 lifetime on the tool gold requires (conv 01a017af-85ca-7006-b2b2-253c650be3e1). A
+    refuted MECHANISM rather than a refuted prediction, with witnesses from two rounds rather
+    than one.
+  prevalence: 12 -> 14 -> 16 failing episodes across 8 tasks
+- description: >-
+    SIX MEASUREMENTS NOW SEPARATE BY SHAPE RATHER THAN BY SURFACE, and this is the finding
+    that composed C9. Confirmed or directional: C2, pick the enum member that names the
+    situation; C3, search a candidate by its exact name. Both direct the model to make a
+    POSITIVE CHOICE among alternatives already visible to it. Denied: C1 and C4, send only
+    the required arguments (WITHHOLD) — denied through prose AND through a verified
+    point-of-use structural injection; C5, use the tool the procedure names (a PRECONDITION
+    the model can decline to find satisfied); C6, check coverage before committing (VERIFY).
+    The axis that predicts success here is the shape of the demand, not the delivery surface.
+  prevalence: 2 confirmed/directional and 4 denied, across 2 surfaces and 5 rounds
+counterevidence: >-
+  FOUR OBJECTIONS. (1) THE SHAPE HYPOTHESIS IS BUILT ON SIX POINTS AND FITS THEM AFTER THE
+  FACT. It was not pre-registered; it is a post-hoc grouping of this experiment's own
+  verdicts, and C9 is its first genuine out-of-sample test. If C9's counter moves, the
+  hypothesis earns one prospective confirmation and no more than that. (2) C9 CARRIES THE
+  EXACT ESCAPE HATCH THAT KILLED C5. "When the knowledge base states a rule" is a
+  precondition the model can decline to find satisfied, which is the diagnosed cause of C5's
+  vacuity. The defence — a selection rule is what the agent is already searching for when it
+  faces a choice, unlike a tool-naming procedure it has no reason to seek — is an argument,
+  and this experiment has watched arguments of that shape fail. Its falsifier is written to
+  catch exactly this. (3) THE ROUND'S RISE IS NOT EVIDENCE FOR ANY CHANGE IN IT. +4 anchor
+  cells against an A/A pair that moved 3 on nothing, with the quiet stratum falling 2. No
+  claim here rests on the round total. (4) SPENDING THE LAST REVERT NOW IS A REAL COST. C10
+  uses revert 2 of 2, so nothing gen-006 or gen-007 lands can be removed. The trade is
+  accepted because C5 is measured denied across two rounds and carrying a known-inert
+  sentence into the endpoint harness is itself a cost; the consequence is recorded so the
+  final two sets are composed conservatively rather than discovering the constraint late.
+hypothesis: >-
+  The changes that have worked in this experiment share a shape rather than a surface: they
+  direct the model to make a positive choice among alternatives already in front of it. The
+  changes that have failed asked it to withhold, to verify, or rested on a precondition it
+  can decline to find satisfied — and the withholding case failed identically through prose
+  and through a verified structural injection, which rules out delivery as the explanation.
+  C9 tests this prospectively on the second-largest remaining mechanism, and C10 removes the
+  clearest instance of the failing shape from the harness.
+owning_layer: >-
+  instructions (C9) and revert (C10). Every surface class this repo can name has already been
+  exercised in this experiment except a declared skill, which is measured inert on this seam,
+  so no concentration obligation is outstanding. The surface choice for C9 is deliberate
+  rather than default: C4 established that this defect family is not surface-limited, so the
+  cheapest delivery is the correct one.
+proposed_change: >-
+  Two changes on disjoint mechanisms: C9 acts on which named option is chosen after retrieval,
+  C10 removes an instruction about which tool to unlock. Their counters (wrong-named-class
+  sole-cause episodes; never-unlocked-gold-tool episodes) are computed by different code paths
+  and share no task where both are the sole cause. Neither touches C8, whose reward prediction
+  comes due at batch_06 and must be scored without confounding — that is why this set is two
+  changes rather than three.
+schema_version: 4
+changes:
+- mechanism: >-
+    Apply the selection rule the knowledge base states — a priority order, an eligibility
+    condition, a tie-break — to the candidates already retrieved. The deciding rule is
+    retrieved and then not applied.
+  surface: instructions
+  evidence: >-
+    task_056 is 0/3 in every round of this experiment and is the clean case: at its second
+    search it retrieved doc_bank_accounts_bank_accounts_(general)_013, an ACTIVE promotion
+    notice stating the recommendation priority for business checking accounts outright, then
+    recommended a different account without applying it (batch_05 conv
+    01a017b0-8dc7-7789-a06d-724f4e5733e1; the mechanism was first read in full at g=0 in conv
+    01a0169b-6d5c-7222-b82f-ee9c5b311920). Wrong-named-class is sole cause in 5 episodes / 4
+    tasks in batch_05 and present in 10 of the round's 25 multi-mechanism failing episodes.
+    Backlog target T1.
+  expected_effect: >-
+    DELTA against batch_05: wrong-named-class sole-cause episodes fall from 5 to <= 2, AND
+    task_056 performs the gold open_bank_account_4821 call with account_class "Cobalt Blue"
+    in at least 1 of 3 trials against 0 of 15 across every round so far. The second clause is
+    the sharper one because task_056 has never once done it.
+  risk: >-
+    The precondition "when the knowledge base states a rule" is the same escape hatch that
+    made C5 vacuous. Cost is the secondary risk: KB_search per episode must not rise above
+    7.8 from 7.05, and messages per episode not above 44 from 41.21.
+  adoption_stage: false
+  clauses:
+  - clause: >-
+      When the knowledge base states a rule for choosing among named options — a priority
+      order, an eligibility condition, a tie-break — apply that rule to the candidates you
+      retrieved.
+    adversarial_reading: >-
+      "When the knowledge base states a rule" is declined: the model does not recognise a
+      promotion notice or an eligibility checklist as "a rule for choosing", so the sentence
+      never fires and behaves exactly as C5 did.
+    falsifier: >-
+      The wrong-named-class sole-cause count fails to fall by 2 or more from 5 while distinct
+      KB documents per episode is unchanged from 37.37 — the signature of a sentence whose
+      precondition was never satisfied.
+  - clause: apply that rule to the candidates you retrieved
+    adversarial_reading: >-
+      "the candidates you retrieved" licenses applying the rule to an incomplete candidate
+      set, ranking correctly over the wrong universe — which is the defect C3 addressed and
+      would re-introduce one layer up.
+    falsifier: >-
+      The counter falls while task_056 stays at 0/3, i.e. the rule is applied but to a
+      candidate set that never contained the gold option.
+  commit: 4dcd553
+- mechanism: >-
+    Remove C5's instruction to unlock and call the tool a procedure document names. Its
+    counter moved nothing anywhere it could fire and moved the wrong way twice.
+  surface: revert
+  evidence: >-
+    Failing episodes in which a gold discoverable-tool name was never unlocked or called:
+    12 before C5 landed, 14 after batch_04, 16 after batch_05. task_046 is 0 of 15 lifetime
+    on get_user_dispute_history_7291 (conv 01a017af-85ca-7006-b2b2-253c650be3e1). Backlog
+    target T3.
+  expected_effect: >-
+    DELTA against batch_05: the never-unlocked-gold-tool counter stops rising from 16 — it
+    does not exceed 16 in batch_06. The null branch is informative: if it keeps rising with
+    the sentence gone, the rise was never attributable to C5 and belongs to the growing
+    instruction set or to drift.
+  risk: >-
+    Removing the only instruction aimed at tool selection could let the counter rise further.
+    Watched by the same counter; a rise above 20 would say the sentence was doing something
+    after all, in the opposite direction to its prediction.
+  adoption_stage: false
+  commit: 010ec80
+mutation:
+  branch: gen-005/apply-the-rule
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/39
+  source_commit: beaef96d0a51fc2f7cbbbcd76a63d38ee9e00e30
+  candidate_commit: 7241443
+expected_effect: >-
+  SET LEVEL, measured on batch_06 and at H7 on the held-out set. Direction: up, small. THE
+  PRIMARY IS RE-DECLARED REACHABLE on this round, reversing gen-004's futility call: the gap
+  is 3.7 pp against three remaining slots and a largest observed single-generation gain of
+  3.8 pp. That reversal is itself recorded as a finding about the check rather than buried —
+  it fired on a 0.3 pp margin and was refuted by the next round. DELIBERATELY NOT TARGETED:
+  C8's mechanism, untouched so that its deferred reward prediction can be scored cleanly at
+  batch_06; and the EXTRA_ARGS family, which C1 and C4 have both failed to move and which the
+  shape hypothesis says is the least tractable demand this harness makes. RISKS: no revert
+  remains after this set, so gen-006 and gen-007 carry whatever they land into the endpoint
+  harness; both will be composed on that basis, favouring changes whose falsifiers can fire
+  within one round.
+human_approval:
+  approved_by: orchestrator (D23/D28 autonomy envelope, protocol.require_human_approval false, ratified for seq 12 by the launch directive); CI's four required checks passed and branch protection gated the merge
+  date: '2026-08-18'
+held_out_result: null
