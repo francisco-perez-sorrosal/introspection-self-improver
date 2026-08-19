@@ -545,3 +545,129 @@ class this repo can name has been exercised in a graded round or measured by pro
 | declared skill | n/a | measured inert on this seam |
 
 <!-- transition: gen_002_to_003 -->
+
+---
+
+## Re-ranking against `batch_04` (H3, 2026-08-18) — **the futility turn**
+
+78 episodes, 77 graded (one lost to the user-sim signature), one stall warning, 274 benign
+`stream_reattaches`, seam counters otherwise clean. **30/77 (39.0%)**; curve 33.8, 36.4,
+37.2, **39.0%**.
+
+### gen-003's predictions, scored — all three denied
+
+| change | counter | predicted | measured | verdict |
+|---|---|---|---|---|
+| C4 required-args as a **hook** | `close_bank_account_7392` with an optional key | 9 → ≤3 ep | **9 → 8 ep, 10 → 8 calls** | **DENIED** |
+| C5 procedure-named tool | failing eps, gold tool never unlocked | 12 → ≤7; `task_046` ≥1/3 | **12 → 14**; `task_046` **0/3** | **DENIED, wrong direction** |
+| C6 requirement coverage | wrong-named-class sole-cause eps | 8 → ≤4 | **8 → 7**; **cost falsifier FIRED** | **DENIED** |
+
+### C4 is the most valuable result this experiment has produced
+
+**The hook fired on the graded platform lane** — verified in the episode itself before any
+verdict was written (conv `01a01740-509b-7710-8bfa-c5de19ce9db9`, `task_060` t0), which
+injected, twice, verbatim:
+
+> *Argument set for close_bank_account_7392 — required: account_id. The remaining parameters
+> (reason, waive_early_closure_fee) are optional; this call sends the required arguments and
+> nothing else.*
+
+The agent read that and sent both optional keys anyway.
+
+**The counter across four rounds: 9, 9, 9, 8.** Two rounds with no instruction, one with the
+rule as prose, one with the rule as a point-of-use structural injection naming the concrete
+parameters with no escape clause. **The surface is not the axis for this defect.**
+
+That contradicts the standing project intuition — carried in `contract/protocol.md` step 4
+and in the sia skill — that judgment/scope/verification/arithmetic mechanisms should prefer a
+structural surface. The refinement this round supports: **the intuition survives for
+mechanisms that need STATE the model cannot hold, and does not survive for mechanisms that
+need the model to withhold something it wants to emit.**
+
+What this does *not* license: "hooks don't work" — this experiment's own hook demonstrably
+reached the model. The negative is the unambiguous branch, and gen-003's record named it as
+such before the data existed.
+
+### C6's safety falsifier did NOT fire — a finding about wording
+
+ABSENT failing episodes 12 → 15 against a ≥4 threshold; transfers 21 → 22 against the same.
+The **completed-state** framing did not produce the suppression the **missing-precondition**
+framing is measured to produce, and which the ceiling probe reproduced inside its own expert
+harness by regressing five tasks H0 passes. Landing the safe variant of a known-dangerous
+shape and measuring that it is safe is worth more than C6's target counter was.
+
+### Strata — both halves recorded
+
+| stratum | b1 | b2 | b3 | b4 |
+|---|---|---|---|---|
+| anchor | 4/9 | 7/9 | 5/9 | **3/9** |
+| marginal | 19/35 | 18/35 | 18/36 | 19/35 |
+| **headroom** | 3/33 | 3/33 | 6/33 | **8/33** |
+
+The headroom stratum — zero movement across the byte-identical A/A pair — is up five cells
+from baseline. The anchors are down from a 7/9 peak to 3/9, which is larger than the three
+cells they moved on no change at all, and is **not** dismissed here.
+
+### THE FUTILITY CHECK FIRES — the primary is declared dead
+
+| | |
+|---|---|
+| accumulated delta (`batch_04` vs pooled `batch_01`+`batch_02`) | **+3.9 pp** (34.6% → 38.5%, Σ +1.000, permutation p = 0.2997, CMH z = 0.695) |
+| required at α (committed power envelope) | **11.4 pp** |
+| gap | 7.5 pp |
+| largest single-generation gain actually produced | 1.8 pp |
+| slots remaining incl. gen-004 | 4 |
+| 1.8 × 4 | **7.2 pp < 7.5 pp** |
+
+**It fires narrowly**, and the sensitivity is the point: a 2.0 pp estimate instead of 1.8
+would leave the primary alive at 8.0 pp. Declared as firing because the rule says to use the
+largest gain the experiment has *actually produced*.
+
+**This is not "the loop found nothing."** The correct statement is that the **endpoint test
+cannot reach α from here**. The remaining slots now buy knowledge, and gen-004 is the first
+set composed under that rule.
+
+### gen-004 — two changes, and the deviation is deliberate
+
+- **C7 reverts C6** (revert **1 of 2**). Both a harness repair and a measurement: if
+  `KB_search`/episode falls back below 7.0, C6 was the cost driver and the +20.7% is
+  attributed; if it does not, the rise belongs to C5 or to drift, and the experiment learns
+  its cost attribution was wrong.
+- **C8 lands `track_requests`**, an **extension-tool** — the last surface class this
+  experiment had not exercised — against the largest remaining mechanism (15 failing episodes
+  / 10 tasks losing reward to a gold action never performed). **Chosen as a tool because of
+  C4's null**: two channels that *tell the model something it must remember* have now failed
+  on one counter, so this one **holds the state** instead. **Adoption-first**; reward deferred
+  to `batch_06` and stated as deferred.
+
+The 3–5 composition policy is deviated from deliberately: adding a third instruction sentence
+to a harness whose cost falsifier just fired would confound exactly the measurement C7 exists
+to make.
+
+**C5 is left in place** despite being denied and moving the wrong way — only one revert
+remains, and a second removal this round would confound C7's measurement.
+
+### Preflight, and a methodological slip recorded
+
+6 local episodes on burned non-partition tasks. Adoption confirmed: `pi_local_calls`
+28/13/10 (form A), 25/4/15 (form B), well-formed, none near the 600 s ceiling. Form A showed
+the over-application signature, so form B bounds the usage instruction.
+
+**The A/B comparison is uninterpretable and was not used**: the two forms ran on *different
+tasks*, so their message counts are confounded by task and neither task has a baseline. Form
+B was selected on the prior — over-application is a measured hazard of a first tool — not on
+these numbers.
+
+### Slot accounting
+
+| Slot | Generation | Change(s) | Status |
+|---|---|---|---|
+| 1 | gen-002 | C1, C2, C3 (instructions) | C1 **DENIED**; C2 **CONFIRMED**; C3 directional |
+| 2 | gen-003 | C4 (hook), C5, C6 (instructions) | **all three DENIED**; C6's safety falsifier held |
+| 3 | gen-004 | C7 revert, C8 **extension-tool** | in flight — scored by `batch_05` |
+| 4–6 | gen-005…gen-007 | knowledge mode | open. **Reverts used: 1 of 2** |
+
+**Every surface class this repo can name has now been exercised in this experiment** except a
+declared skill, which is measured inert on this seam. No concentration flag is outstanding.
+
+<!-- transition: gen_003_to_004 -->

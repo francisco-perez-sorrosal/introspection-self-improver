@@ -1,0 +1,278 @@
+# Improvement record for one generation transition (protocol §24; schema:
+# contract/improvement_record.schema.yaml). Written while the transition happens.
+# held_out_result stays null — `make reveal` fills it after the final generation.
+# Verify with: scripts/improvement_record.py --verify <this file>
+transition:
+  from_generation: 3
+  to_generation: 4
+experiment: 012_ceiling-emb-luna56
+outcome: accepted
+batch:
+  name: batch_04
+  task_ids:
+  - task_001
+  - task_002
+  - task_003
+  - task_004
+  - task_005
+  - task_006
+  - task_008
+  - task_010
+  - task_014
+  - task_015
+  - task_023
+  - task_024
+  - task_029
+  - task_032
+  - task_037
+  - task_046
+  - task_055
+  - task_056
+  - task_057
+  - task_058
+  - task_060
+  - task_061
+  - task_063
+  - task_065
+  - task_076
+  - task_094
+evidence:
+  conversation_ids:
+  - 01a01740-509b-7710-8bfa-c5de19ce9db9
+  - 01a0173c-f72c-7556-9372-5ba017cfbb32
+  - 01a01741-cfec-73a8-a533-db060a181331
+  - 01a01737-67f4-746a-9044-b273ea7b75e5
+  - 01a01737-f6ec-7532-a054-a958d3257a01
+  summary: >-
+    BATCH HEALTH FIRST. batch_04 ran 78 platform episodes against recipe commit 7ef0afb (the
+    exp12-g003 tag's tree), every completed row arm_sha_ok, 77 graded, one episode lost to
+    the luna user-simulator empty-completion signature. One stall warning and 274 benign
+    stream_reattaches; sandbox seam counters otherwise clean. GRADED READ: 30/77 (39.0%);
+    the curve over four rounds is 33.8, 36.4, 37.2, 39.0%.
+    THE CRITICAL VERIFICATION OF THIS ROUND, done before any verdict was written: C4's hook
+    was confirmed to have FIRED ON THE PLATFORM LANE, not merely in preflight. Conversation
+    01a01740-509b-7710-8bfa-c5de19ce9db9 (task_060 t0) carries the injected note twice,
+    verbatim: "Argument set for close_bank_account_7392 - required: account_id. The
+    remaining parameters (reason, waive_early_closure_fee) are optional; this call sends the
+    required arguments and nothing else." The agent read that and sent both optional keys
+    anyway. Without this check the round would have been indistinguishable from a hook that
+    never executed, which is the failure mode that cost a prior experiment a whole
+    generation. Provenance: generation_003/batch_04/graded/updated_results.json via
+    scripts/gold_diff.py, counters via benchmark/scripts/mech_counters.py — the same code
+    that scored all four rounds. PREFLIGHTS: 6 local episodes on burned NON-PARTITION tasks
+    for C8 (generation_003/g004_preflight_formA/ on task_027, g004_preflight_formB/ on
+    task_028), used only as execution and adoption checks. Their A/B comparison is
+    DECLARED UNINTERPRETABLE and is not used: the two candidate forms ran on different
+    tasks, so their message counts are confounded by task and neither task has a baseline.
+    No behavioural number from those six episodes is evidence anywhere.
+signals:
+- description: >-
+    C4 IS DENIED, AND IT IS THE MOST VALUABLE RESULT THIS EXPERIMENT HAS PRODUCED. The
+    close_bank_account_7392 optional-key counter reads 9, 9, 9, 8 episodes across batch_01
+    through batch_04 — two rounds with no instruction at all, one with the rule as prose
+    (C1), and one with the rule delivered as a tool_result hook that names the concrete
+    parameters at the moment of unlocking with no licensed alternative attached (C4). The
+    hook is verified to have fired and injected on the graded lane. So the same rule has now
+    failed through both delivery channels this repo has, on a counter with zero ambient
+    noise, and the pre-registered sharp negative is the one that landed: THE SURFACE IS NOT
+    THE AXIS FOR THIS DEFECT. That contradicts the standing project intuition — recorded in
+    contract/protocol.md step 4 and in the sia skill — that when a mechanism is judgment,
+    scope, verification or arithmetic one should prefer a structural surface. The intuition
+    survives for mechanisms that need STATE the model cannot hold; it does not survive for
+    mechanisms that need the model to withhold something it wants to emit.
+  prevalence: 9, 9, 9, 8 episodes across four consecutive rounds on the same 3 tasks
+- description: >-
+    C5 IS DENIED AND MOVED THE WRONG WAY. Failing episodes in which a gold discoverable-tool
+    name was never unlocked or called went 12 -> 14 against a predicted <= 7, and task_046 —
+    the task the prediction named because it had never once done it — unlocked the gold tool
+    in 0 of 3 trials, making it 0 of 12 lifetime (conv
+    01a0173c-f72c-7556-9372-5ba017cfbb32). The pre-registered clause-1 adversarial reading is
+    the likely explanation and is now the leading account: "When a procedure document names
+    the tool" is a precondition the model can decline to find satisfied, so on every task
+    where the naming procedure was never retrieved the sentence is simply vacuous.
+  prevalence: 12 -> 14 failing episodes across 8 tasks; task_046 0 of 12 lifetime
+- description: >-
+    C6 IS DENIED ON ITS OWN COUNTER AND ITS COST FALSIFIER FIRED. Wrong-named-class sole-cause
+    episodes 8 -> 7 against a predicted <= 4. KB_search per episode 6.28 -> 7.58 against a
+    pre-registered ceiling of 7.5 — fired — and the other cost dials moved with it: messages
+    per episode 40.18 -> 42.78, tool calls per episode 13.21 -> 14.71.
+  prevalence: own counter 8 -> 7; KB_search +20.7% against a +19.4% ceiling
+- description: >-
+    C6's SAFETY FALSIFIER DID NOT FIRE, and this is a finding about WORDING rather than about
+    the change. Gold-action-absent failing episodes rose 12 -> 15 against a >= 4 threshold,
+    and transfer episodes 21 -> 22 against the same. The completed-state framing ("check that
+    you have retrieved a document covering each requirement... if one is still missing,
+    search for it") did NOT produce the suppression that the missing-precondition framing is
+    measured to produce, and which the ceiling probe reproduced inside its own expert
+    harness by regressing five tasks H0 passes. Landing the safe variant of a known-dangerous
+    shape and measuring that it is safe is the one thing C6 establishes, and it is worth more
+    than its target counter was.
+  prevalence: ABSENT 12 -> 15 (threshold 16), transfers 21 -> 22 (threshold 25)
+- description: >-
+    THE ZERO-NOISE STRATUM KEEPS RISING WHILE THE ANCHORS FALL, and both halves are recorded.
+    Headroom: 3/33, 3/33, 6/33, 8/33 — a stratum that moved not at all across the
+    byte-identical A/A pair. Anchors: 4/9, 7/9, 5/9, 3/9. The anchor stratum holds nine cells
+    and moved three of them on no change whatsoever between batch_01 and batch_02, so it is
+    the least reliable channel in the batch, but a fall from a 7/9 peak to 3/9 is larger than
+    that measured movement and is not dismissed here. The net across strata is what the round
+    total reports, +1.8 pp on the round and +3.9 pp against the pooled baseline.
+  prevalence: headroom 3, 3, 6, 8 of 33; anchors 4, 7, 5, 3 of 9
+counterevidence: >-
+  FOUR OBJECTIONS. (1) C4's NULL DOES NOT PROVE "STRUCTURE CANNOT WORK", and gen-003's record
+  said so before the data existed. The hook's content was near-identical to C1's but not
+  identical, so a POSITIVE would have been ambiguous between surface and wording; the
+  NEGATIVE is the unambiguous branch, and it is the branch that landed. What it licenses is
+  narrow and stated narrowly: for this defect, on this counter, naming the parameters at the
+  point of use with no escape clause changed nothing. It does not license "hooks do not
+  work" — this experiment's own hook demonstrably reached the model. (2) THE FUTILITY CHECK
+  FIRES NARROWLY AND THE SENSITIVITY IS THE POINT. Gap 7.5 pp against largest-gain x slots =
+  7.2 pp. Substituting 2.0 pp for the largest observed single-generation gain instead of
+  1.8 leaves the primary alive at 8.0 pp. The check is declared as firing because the rule
+  says to use the largest gain the experiment has ACTUALLY produced, and that number is 1.8;
+  a reader who prefers the other estimate should read the declaration as "marginal" rather
+  than as "settled". (3) DECLARING THE PRIMARY DEAD IS NOT "THE LOOP FOUND NOTHING". The
+  headroom stratum has moved five cells from baseline and it is the only stratum with no
+  measured ambient movement. The correct statement is that the ENDPOINT TEST cannot reach
+  alpha from here, not that nothing moved. (4) C8 IS THE THIRD ATTEMPT AT A FAMILY OF
+  MECHANISMS THAT HAS FAILED TWICE, and the honest prior is poor. Its defence is that it is
+  categorically different — C1 and C4 both told the model something it then had to remember
+  and apply, while C8 holds state and returns it computed — but "categorically different" is
+  an argument, and this experiment has just measured an argument of exactly that shape (C4's)
+  failing. That is why its prediction is adoption-only and its reward prediction is deferred.
+hypothesis: >-
+  The primary is unreachable, so this set stops buying expected score and starts buying
+  knowledge, and it buys two specific things. C7 removes the change whose cost falsifier
+  fired, which is simultaneously a harness repair and a measurement: if KB_search per episode
+  falls back, C6 was the cost driver and the +20.7% is attributed; if it does not, the rise
+  belongs to C5 or to drift and the next round has to say which. C8 exercises the one surface
+  class this experiment has not touched, against the largest remaining mechanism, with the
+  design chosen BECAUSE of C4's null — two channels that tell the model something it must
+  remember have now failed on one counter, so this one holds the state instead of asserting
+  it.
+owning_layer: >-
+  revert (C7) and extension-tool (C8). With C8 this experiment has exercised every surface
+  class this repo can name except a declared skill, which is measured inert on this seam:
+  instructions (C1, C2, C3, C5, C6), extension-hook (C4), extension-tool (C8), and sub-agent
+  by probe at g=0 (generation_000/subagent_probe/, surface_exhausted for every
+  retrieval-shaped target because a child cannot reach tau's tools at all). No surface
+  concentration flag is outstanding.
+proposed_change: >-
+  TWO changes, and the deviation from the 3-5 composition policy is deliberate rather than an
+  oversight. The round's purpose is to measure a removal cleanly; adding a third instruction
+  sentence to a harness whose cost falsifier has just fired would confound exactly the
+  measurement C7 exists to make. The two do not interact: C7 removes a retrieval-side
+  instruction, C8 adds a Pi-local tool with its own minimal usage instruction, and their
+  counters (KB_search per episode; pi_local_calls) are disjoint.
+schema_version: 4
+changes:
+- mechanism: >-
+    Remove C6's requirement-coverage check. Its own counter was denied and its pre-registered
+    cost falsifier fired, so the change bought retrieval volume and moved its target by one
+    episode.
+  surface: revert
+  evidence: >-
+    C6's counter 8 -> 7 against a predicted <= 4; KB_search per episode 6.28 -> 7.58 against
+    a stated 7.5 ceiling; messages per episode 40.18 -> 42.78; tool calls per episode
+    13.21 -> 14.71. Backlog target T1's second half.
+  expected_effect: >-
+    DELTA against batch_04: KB_search per episode falls below 7.0 and messages per episode
+    below 41.5. THE NULL BRANCH IS INFORMATIVE AND IS THE REASON THIS IS WORTH A SLOT: if
+    neither falls, C6 was not the cost driver, the +20.7% belongs to C5 or to drift, and the
+    experiment has learned that its cost attribution was wrong.
+  risk: >-
+    The wrong-named-class mechanism, still the largest sole cause in the round, loses its
+    only countermeasure and rises. Watched as a delta: wrong-named-class sole-cause episodes
+    must not rise from 7 by 4 or more.
+  adoption_stage: false
+  commit: ac3cdfd
+- mechanism: >-
+    A deterministic per-episode request tracker the model calls to record what the customer
+    asked for, mark items done, and read back what is outstanding. It holds state the model
+    cannot silently lose, rather than telling the model something it must remember.
+  surface: extension-tool
+  evidence: >-
+    15 failing episodes across 10 tasks in batch_04 lost reward to a gold action never
+    performed at all — the largest single mechanism in the round. The shape is a
+    multi-request conversation where the agent completes the first request and never returns
+    to the rest: task_060 closed the account and never opened the replacement (conv
+    01a01740-509b-7710-8bfa-c5de19ce9db9); task_063 applied for the card and never logged the
+    verification or opened the savings account (conv 01a01741-cfec-73a8-a533-db060a181331).
+    Backlog target T5. The choice of surface is evidenced by C4's null in this same round.
+  expected_effect: >-
+    ADOPTION-FIRST (protocol step 4; first use of extension-tool in this experiment). The
+    REWARD PREDICTION IS DEFERRED to batch_06 and is stated here as deferred. For batch_05,
+    DELTA against batch_04: pi_local_calls rises from 0 — across all 312 platform episodes of
+    this experiment so far — to >= 20 in the round, on >= 6 of the 26 tasks, with arguments
+    well formed (action in add/done/list) and no episode exceeding the frozen timeout_seconds
+    of 600.
+  risk: >-
+    Over-application, which is the measured hazard of a first tool: a prior experiment's
+    first tool was adopted enthusiastically, fired hardest where it did not belong, and
+    needed a narrowing generation. The preflight showed that signature on candidate form A
+    (up to 28 calls in one episode), so the landed form B bounds the usage instruction. The
+    residual risk is episode length inside a frozen budget — watched as a delta: messages per
+    episode must not rise above 47 from 42.78, and any max_steps termination is a fired
+    falsifier since this experiment has had none.
+  adoption_stage: true
+  adoption_criteria: >-
+    pi_local_calls >= 20 across batch_05 and on >= 6 distinct tasks; arguments well formed
+    with action in {add, done, list}; no episode exceeding timeout_seconds; zero occurrences
+    of track_requests in tau's graded trajectory (the D24 suppression path, already certified
+    by this experiment's gates/suppression_canary.json and re-measured by the g=0 sub-agent
+    probe). A denied adoption prediction — the model never calls it — is a mechanism denial
+    and a first-class revert trigger. Confirmed adoption with unmoved reward is NOT a denial,
+    and the reward falsifier lands in the following round as the second stage.
+  host_facts:
+  - fact: >-
+      a tool name listed in agents/agent.yaml `tools:` is executed by Pi and never forwarded
+      to tau, while an unregistered name leaks to tau as a graded invalid call
+    probe_evidence: results/experiment_012_ceiling-emb-luna56/gates/suppression_canary.json
+  - fact: >-
+      the auto-generated delegation path over the same registry produced zero occurrences in
+      tau's graded trajectory across three episodes, re-confirming the suppression contract
+      inside this experiment
+    probe_evidence: results/experiment_012_ceiling-emb-luna56/generation_000/subagent_probe/VERDICT.md
+  clauses:
+  - clause: >-
+      Once you know everything the customer wants, record each item with the track_requests
+      tool.
+    adversarial_reading: >-
+      "Once you know everything the customer wants" never becomes true in a conversation
+      where requests arrive incrementally, so the model defers recording indefinitely and the
+      tool is never called on exactly the multi-request tasks it targets.
+    falsifier: >-
+      pi_local_calls stays below 20 round-wide, or reaches 20 while concentrating on fewer
+      than 6 tasks — adoption present but absent from the multi-request tasks.
+  - clause: Do not call it for anything else.
+    adversarial_reading: >-
+      Read strictly, the model treats any uncertainty about whether something is "an item" as
+      grounds not to call, suppressing the tracking entirely.
+    falsifier: Same adoption counter; a denied adoption prediction is a mechanism denial here.
+  commit: 1823041
+mutation:
+  branch: gen-004/futility-turn
+  pr_url: https://github.com/francisco-perez-sorrosal/introspection-self-improver/pull/38
+  source_commit: 7ef0afbe1ae9e91d0a4bb2bb18b8f2c72e1e9e59
+  candidate_commit: beaef96
+expected_effect: >-
+  THE PRIMARY IS DECLARED DEAD ON THIS ROUND, per the futility check (contract/protocol.md
+  step 4, plan D36). The arithmetic: accumulated delta on the endpoint-test scale is +3.9 pp
+  (batch_04 vs pooled batch_01+batch_02, 34.6% -> 38.5%, sum of rate deltas +1.000,
+  permutation p = 0.2997); significance at alpha needs 11.4 pp per the freeze's committed
+  power envelope; the gap is 7.5 pp; the largest single-generation gain this experiment has
+  actually produced is 1.8 pp; four slots remain including this one; 1.8 x 4 = 7.2 pp < 7.5
+  pp. It fires NARROWLY — a 2.0 pp estimate for the largest gain would leave the primary
+  alive at 8.0 pp — and the sensitivity is recorded rather than smoothed. The consequence is
+  not stopping: from here the remaining slots buy knowledge, and this set is the first
+  composed under that rule. What is explicitly NOT claimed is that the loop found nothing —
+  the headroom stratum, the only one with no measured ambient movement, has gone 3/33 to
+  8/33; the correct statement is that the endpoint test cannot reach alpha from here.
+  SET-LEVEL DIRECTION: none predicted. C7 predicts a cost reduction, C8 predicts adoption
+  only. DELIBERATELY NOT TARGETED: the wrong-named-class mechanism, which loses its only
+  countermeasure this round and is watched rather than addressed; and C5, which is denied and
+  moved the wrong way but is left in place because only one revert remains and a second
+  removal this round would confound C7's measurement.
+human_approval:
+  approved_by: orchestrator (D23/D28 autonomy envelope, protocol.require_human_approval false, ratified for seq 12 by the launch directive); CI's four required checks passed and branch protection gated the merge
+  date: '2026-08-18'
+held_out_result: null
