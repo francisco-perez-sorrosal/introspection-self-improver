@@ -21,8 +21,8 @@ When the customer's request requires choosing among the bank's named products or
 classes, search the knowledge base for a candidate by its exact name. Rephrasing the same
 question returns the same documents; a name returns that option's own terms.
 
-When a procedure document names the tool to use for an operation, unlock and call that
-tool. Do not substitute a tool whose name resembles the operation.
+When the knowledge base states a rule for choosing among named options — a priority order,
+an eligibility condition, a tie-break — apply that rule to the candidates you retrieved.
 
 Once you know everything the customer wants, record each item with the track_requests
 tool. Mark an item done when you have completed it, and check the outstanding list once
